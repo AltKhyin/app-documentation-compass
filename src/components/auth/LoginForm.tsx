@@ -35,7 +35,7 @@ const LoginForm = () => {
 
   return (
     <>
-      <h2 className="text-3xl font-bold mb-8">Sign In</h2>
+      <h2 className="text-4xl font-bold mb-8">Sign In</h2>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField

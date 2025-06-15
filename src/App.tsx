@@ -12,7 +12,7 @@ import { AuthSessionProvider } from "./components/auth/AuthSessionProvider";
 import { ThemeProvider } from "next-themes";
 
 const App = () => (
-  <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+  <ThemeProvider attribute="class" defaultTheme="light">
     <TooltipProvider>
       <Toaster />
       <Sonner />
