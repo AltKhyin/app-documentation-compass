@@ -54,7 +54,7 @@ const CollapsibleSidebar = ({ isCollapsed, onToggle }: CollapsibleSidebarProps) 
           <ChevronsLeft className={cn('h-5 w-5 transition-transform', isCollapsed && 'rotate-180')} />
         </Button>
       </div>
-      <div className={cn("border-t", isCollapsed && "flex justify-center p-2")}>
+      <div className="border-t">
         <UserProfileBlock isCollapsed={isCollapsed} />
       </div>
     </aside>
