@@ -4,7 +4,7 @@ import React from 'react';
 import {
   Home,
   Users,
-  BookMarked,
+  Box,
   ChevronsLeft,
   CircleUserRound,
 } from 'lucide-react';
@@ -15,7 +15,7 @@ import { Button } from '../ui/button';
 
 const navItems = [
   { href: '/', label: 'Início', icon: Home },
-  { href: '/acervo', label: 'Acervo', icon: BookMarked },
+  { href: '/acervo', label: 'Acervo', icon: Box },
   { href: '/comunidade', label: 'Comunidade', icon: Users },
   { href: '/perfil', label: 'Perfil', icon: CircleUserRound },
 ];
