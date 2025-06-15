@@ -12,7 +12,6 @@ import NavItem from './NavItem';
 import UserProfileBlock from './UserProfileBlock';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
-import RLogo from '../icons/RLogo';
 
 const navItems = [
   { href: '/', label: 'Início', icon: Home },
@@ -36,9 +35,11 @@ const CollapsibleSidebar = ({ isCollapsed, onToggle }: CollapsibleSidebarProps) 
     >
       <div className="flex h-16 items-center px-4 border-b">
         {isCollapsed ? (
-          <RLogo className="h-8 w-8 text-foreground mx-auto" />
+          <h1 className="mx-auto font-serif text-3xl font-medium tracking-tight text-foreground">
+            R.
+          </h1>
         ) : (
-          <h1 className="font-serif font-medium tracking-tight text-3xl text-black flex items-center">
+          <h1 className="flex items-center font-serif text-3xl font-medium tracking-tight text-foreground">
             Reviews.
           </h1>
         )}
