@@ -9,6 +9,41 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      Notifications: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean
+          link: string | null
+          practitioner_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          practitioner_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          practitioner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Notifications_practitioner_id_fkey"
+            columns: ["practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "Practitioners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       OnboardingAnswers: {
         Row: {
           answer: Json
