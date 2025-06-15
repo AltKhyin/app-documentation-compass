@@ -5,9 +5,43 @@
 
 @layer base {
   :root {
-    /* Light Theme from [DOC_7] */
-    --background: 0 0% 98%; /* Almost white */
-    --foreground: 0 0% 7%; /* Almost black */
+    --background: 0 0% 7%;
+    --foreground: 0 0% 96%;
+
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 96%;
+
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 96%;
+
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 7%;
+
+    --secondary: 0 0% 13%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 60%;
+    --muted-foreground: 0 0% 85%;
+
+    --accent: 0 0% 13%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 76% 36%;
+    --warning: 38 92% 50%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 0 0% 40%;
+
+    --radius: 6px;
+  }
+
+  .light {
+    --background: 0 0% 98%;
+    --foreground: 0 0% 7%;
 
     --card: 0 0% 100%;
     --card-foreground: 0 0% 7%;
@@ -29,52 +63,13 @@
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    
+      
     --success: 142 76% 36%;
     --warning: 38 92% 50%;
 
     --border: 0 0% 87%;
     --input: 0 0% 87%;
     --ring: 0 0% 15%;
-
-    --radius: 6px;
-
-    --font-sans: 'Inter', sans-serif;
-    --font-serif: 'Source Serif Pro', serif;
-  }
-
-  .dark {
-    /* Dark Theme from [DOC_7] */
-    --background: 0 0% 7%; /* Almost black */
-    --foreground: 0 0% 96%; /* Almost white */
-
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 96%;
-
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 96%;
-
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 7%;
-
-    --secondary: 0 0% 13%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 0 0% 60%;
-    --muted-foreground: 0 0% 85%;
-
-    --accent: 0 0% 13%;
-    --accent-foreground: 0 0% 98%;
-
-    --destructive: 0 84% 60%; /* Red */
-    --destructive-foreground: 0 0% 100%;
-
-    --success: 142 76% 36%; /* Green */
-    --warning: 38 92% 50%; /* Yellow */
-
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 0 0% 40%; /* Focus ring */
   }
 }
 
@@ -84,6 +79,22 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-sans);
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 }

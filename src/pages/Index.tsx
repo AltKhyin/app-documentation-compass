@@ -1,11 +1,113 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+// ABOUTME: Main homepage that fetches data and renders all homepage modules.
+
+import React from 'react';
+import { useHomepageFeedQuery } from '../../packages/hooks/useHomepageFeedQuery';
+import FeaturedReview from '../components/homepage/FeaturedReview';
+import ReviewCarousel from '../components/homepage/ReviewCarousel';
+import NextEditionModule from '../components/homepage/NextEditionModule';
 
 const Index = () => {
+  const { data, isLoading, isError, error } = useHomepageFeedQuery();
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-7xl mx-auto space-y-8">
+          {/* Featured Review Skeleton */}
+          <div className="w-full h-96 bg-muted animate-pulse rounded-md" />
+          
+          {/* Carousel Skeletons */}
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="space-y-4">
+              <div className="h-8 bg-muted animate-pulse rounded-md w-64" />
+              <div className="flex gap-4">
+                {[1, 2, 3, 4].map((j) => (
+                  <div key={j} className="w-64 h-48 bg-muted animate-pulse rounded-md flex-shrink-0" />
+                ))}
+              </div>
+            </div>
+          ))}
+          
+          {/* NextEdition Skeleton */}
+          <div className="w-full h-80 bg-muted animate-pulse rounded-md" />
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold text-foreground">Erro ao carregar a página</h1>
+          <p className="text-muted-foreground">
+            {error?.message || 'Ocorreu um erro inesperado. Tente novamente.'}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-primary text-primary-foreground px-6 py-2 rounded-md font-semibold hover:bg-primary/90 transition-colors"
+          >
+            Tentar Novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Render modules based on layout order from API
+  const renderModule = (moduleType: string) => {
+    switch (moduleType) {
+      case 'featured':
+        return <FeaturedReview key="featured" review={data?.featured || null} />;
+      
+      case 'recent':
+        return (
+          <ReviewCarousel 
+            key="recent"
+            title="Edições Recentes" 
+            reviews={data?.recent || []} 
+          />
+        );
+      
+      case 'popular':
+        return (
+          <ReviewCarousel 
+            key="popular"
+            title="Mais acessados" 
+            reviews={data?.popular || []} 
+          />
+        );
+      
+      case 'recommendations':
+        return (
+          <ReviewCarousel 
+            key="recommendations"
+            title="Recomendados para você" 
+            reviews={data?.recommendations || []} 
+          />
+        );
+      
+      case 'suggestions':
+        return (
+          <NextEditionModule 
+            key="suggestions"
+            suggestions={data?.suggestions || []} 
+          />
+        );
+      
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto p-6 space-y-8">
+        {/* Render modules in the order specified by the layout array */}
+        {data?.layout?.map((moduleType) => renderModule(moduleType))}
       </div>
     </div>
   );
