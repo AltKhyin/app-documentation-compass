@@ -10,16 +10,21 @@ type NavItemProps = {
   icon: React.ElementType;
   label: string;
   isCollapsed?: boolean;
+  isMobile?: boolean;
 };
 
-const NavItem = ({ href, icon: Icon, label, isCollapsed = false }: NavItemProps) => {
+const NavItem = ({ href, icon: Icon, label, isCollapsed = false, isMobile = false }: NavItemProps) => {
   const linkContent = (
     <NavLink
       to={href}
       className={({ isActive }) =>
         cn(
-          'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
-          { 'bg-muted text-primary': isActive },
+          'flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary',
+          isActive
+            ? isMobile
+              ? 'text-primary'
+              : 'bg-muted text-primary'
+            : 'text-muted-foreground',
           { 'justify-center': isCollapsed }
         )
       }

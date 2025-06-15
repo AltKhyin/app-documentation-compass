@@ -14,9 +14,9 @@ const navItems = [
 const BottomTabBar = () => {
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-10 border-t bg-background">
-      <div className="grid h-16 grid-cols-4 items-center">
+      <div className="grid h-16 grid-cols-4 items-center justify-items-center">
         {navItems.map((item) => (
-          <NavItem key={item.href} {...item} isCollapsed={true} />
+          <NavItem key={item.href} {...item} isCollapsed={true} isMobile={true} />
         ))}
       </div>
     </nav>
