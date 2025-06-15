@@ -1,7 +1,7 @@
 # **\[Blueprint\] 02: Main Application Shell**
 
-Version: 1.0  
-Date: June 14, 2025  
+Version: 1.1  
+Date: June 15, 2025  
 Purpose: This document provides the canonical, feature-specific blueprint for the main application shell of the EVIDENS platform. It defines the persistent navigation, layout, and identity components that frame all user-facing content. This blueprint is the single source of truth for the application's core structure and ergonomics.
 
 ## **1.0 Core Principles & User Experience**
@@ -27,31 +27,25 @@ To provide a consistent, intuitive, ergonomic, and aesthetically pleasing applic
 
 This section defines the precise look, feel, and behavior of the application shell across different viewports.
 
-### **2.1 Desktop View (\>= 1024px)**
+### **2.1 Large Desktop View (>= 1024px)**
 
-* **Layout:** A persistent, two-column layout.  
-  * **Left Column (CollapsibleSidebar):** Fixed width of 240px. When collapsed, it shrinks to 80px. It is always present on screen.  
-  * **Right Column (Main Content Area):** Occupies the remaining screen width. This is where the content of each page (/, /acervo, etc.) is rendered.  
-* **Components & Behavior:**  
-  * **CollapsibleSidebar:**  
-    * **Appearance:** Styled with bg-background, it contains the "Reviews." logotype at the top, followed by a list of NavItem components, and a user profile/logout section at the bottom.  
-    * **Navigation Items:** Each NavItem consists of an icon and a text label. The currently active NavItem is styled differently (e.g., with bg-secondary) to indicate the user's location.  
-    * **Collapse Interaction:** A dedicated "Esconder" (Hide) button with a chevron icon is present at the bottom of the sidebar.  
-      * Clicking this button smoothly transitions the sidebar width from 240px to 80px. The transition for the width property should use an ease-in-out timing function over 200ms.  
-      * In the collapsed state, the text labels for NavItems disappear, leaving only the icons. The main logotype is replaced with a smaller logomark. The collapse button's icon flips to indicate it will expand.  
-  * **Header:** The header area above the main content is minimal, perhaps only containing the title of the current page. The primary branding and navigation are owned by the sidebar.
+*   **Layout:** A persistent, two-column layout.
+    *   **Left Column (CollapsibleSidebar):** Fixed width of 240px. The sidebar is **expanded by default**.
+    *   **Right Column (Main Content Area):** Occupies the remaining screen width.
 
-### **2.2 Mobile View (\< 1024px)**
+### **2.2 Tablet View (768px to 1023px)**
 
-* **Layout:** A single-column layout. The two-column desktop structure is completely replaced.  
-* **RULE:** The CollapsibleSidebar component **IS NOT RENDERED** on mobile viewports.  
-* **Components & Behavior:**  
-  * **Header:** The mobile header is more prominent. It is fixed to the top of the viewport. It contains the "Reviews." logotype on the left and a NotificationBell icon button on the right.  
-  * **BottomTabBar:**  
-    * **Appearance:** A bar fixed to the bottom of the viewport, styled with bg-card to give it slight separation from the page content. It contains 4-5 NavItem components.  
-    * **Ergonomics:** This is the primary navigation mechanism on mobile. Each NavItem is an icon paired with a text label, with generous tap targets (minimum 44px height).  
-    * **Active State:** The currently active NavItem is clearly indicated with a different color for its icon and label (e.g., text-primary), as per \[DOC\_7\].  
-  * **Main Content Area:** Occupies the full width and height between the Header and the BottomTabBar.
+*   **Layout:** A persistent, two-column layout, the same as desktop.
+    *   **Left Column (CollapsibleSidebar):** The sidebar is **collapsed by default** to a width of 80px to maximize content space. It can be expanded by the user.
+    *   **Right Column (Main Content Area):** Occupies the remaining screen width with an appropriate left margin.
+
+### **2.3 Mobile View (< 768px)**
+
+*   **Layout:** A single-column layout. The two-column desktop structure is completely replaced.
+*   **RULE:** The CollapsibleSidebar component **IS NOT RENDERED** on mobile viewports.
+*   **Components & Behavior:**
+    *   **Header:** A header is fixed to the top of the viewport containing the logotype and notification bell.
+    *   **BottomTabBar:** A bar fixed to the bottom of the viewport serves as the primary navigation.
 
 ## **3.0 Front-End Architecture**
 

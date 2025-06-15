@@ -29,7 +29,7 @@ const CollapsibleSidebar = ({ isCollapsed, onToggle }: CollapsibleSidebarProps) 
   return (
     <aside
       className={cn(
-        'hidden lg:flex flex-col fixed inset-y-0 left-0 z-10 border-r bg-background transition-all duration-300 ease-in-out',
+        'hidden md:flex flex-col fixed inset-y-0 left-0 z-10 border-r bg-background transition-all duration-300 ease-in-out',
         isCollapsed ? 'w-20' : 'w-60'
       )}
     >
