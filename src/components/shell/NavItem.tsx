@@ -19,13 +19,15 @@ const NavItem = ({ href, icon: Icon, label, isCollapsed = false, isMobile = fals
       to={href}
       className={({ isActive }) =>
         cn(
-          'flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary',
+          'flex items-center gap-3 rounded-lg transition-all hover:text-primary',
           isActive
             ? isMobile
               ? 'text-primary'
-              : 'bg-muted text-primary'
+              : 'bg-secondary text-primary' // Use bg-secondary for active desktop item
             : 'text-muted-foreground',
-          { 'justify-center': isCollapsed }
+          { 'justify-center': isCollapsed },
+          // Adjust padding for different states to ensure proper centering
+          isCollapsed && !isMobile ? 'p-3' : 'px-3 py-2'
         )
       }
     >
@@ -34,7 +36,7 @@ const NavItem = ({ href, icon: Icon, label, isCollapsed = false, isMobile = fals
     </NavLink>
   );
 
-  if (isCollapsed) {
+  if (isCollapsed && !isMobile) {
     return (
       <TooltipProvider delayDuration={0}>
         <Tooltip>
