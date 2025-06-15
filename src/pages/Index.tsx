@@ -6,32 +6,33 @@ import { useHomepageFeedQuery } from '../../packages/hooks/useHomepageFeedQuery'
 import FeaturedReview from '../components/homepage/FeaturedReview';
 import ReviewCarousel from '../components/homepage/ReviewCarousel';
 import NextEditionModule from '../components/homepage/NextEditionModule';
+import { Skeleton } from '../components/ui/skeleton';
 
 const Index = () => {
   const { data, isLoading, isError, error } = useHomepageFeedQuery();
 
-  // Loading state
+  // Loading state with skeleton loaders
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background p-6">
-        <div className="max-w-7xl mx-auto space-y-8">
+      <div className="min-h-screen bg-background">
+        <div className="max-w-7xl mx-auto p-6 space-y-8">
           {/* Featured Review Skeleton */}
-          <div className="w-full h-96 bg-muted animate-pulse rounded-md" />
+          <Skeleton className="w-full h-96 rounded-md" />
           
           {/* Carousel Skeletons */}
           {[1, 2, 3].map((i) => (
             <div key={i} className="space-y-4">
-              <div className="h-8 bg-muted animate-pulse rounded-md w-64" />
+              <Skeleton className="h-8 w-64 rounded-md" />
               <div className="flex gap-4">
                 {[1, 2, 3, 4].map((j) => (
-                  <div key={j} className="w-64 h-48 bg-muted animate-pulse rounded-md flex-shrink-0" />
+                  <Skeleton key={j} className="w-64 h-48 rounded-md flex-shrink-0" />
                 ))}
               </div>
             </div>
           ))}
           
           {/* NextEdition Skeleton */}
-          <div className="w-full h-80 bg-muted animate-pulse rounded-md" />
+          <Skeleton className="w-full h-80 rounded-md" />
         </div>
       </div>
     );
@@ -41,8 +42,8 @@ const Index = () => {
   if (isError) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold text-foreground">Erro ao carregar a página</h1>
+        <div className="text-center space-y-4 max-w-md mx-auto p-6">
+          <h1 className="text-2xl font-bold text-foreground font-serif">Erro ao carregar a página</h1>
           <p className="text-muted-foreground">
             {error?.message || 'Ocorreu um erro inesperado. Tente novamente.'}
           </p>
@@ -99,6 +100,7 @@ const Index = () => {
         );
       
       default:
+        console.warn(`Unknown module type: ${moduleType}`);
         return null;
     }
   };

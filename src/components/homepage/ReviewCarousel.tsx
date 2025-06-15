@@ -28,7 +28,7 @@ const ReviewCarousel: React.FC<ReviewCarouselProps> = ({ title, reviews }) => {
   if (!reviews || reviews.length === 0) {
     return (
       <div className="mb-8">
-        <h2 className="text-foreground text-2xl font-bold mb-4">{title}</h2>
+        <h2 className="text-foreground text-2xl font-bold mb-4 font-serif">{title}</h2>
         <div className="bg-muted rounded-md p-8 text-center">
           <p className="text-muted-foreground">Nenhuma edição disponível</p>
         </div>
@@ -39,20 +39,22 @@ const ReviewCarousel: React.FC<ReviewCarouselProps> = ({ title, reviews }) => {
   return (
     <div className="mb-8">
       {/* Section Title */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-foreground text-2xl font-bold">{title}</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-foreground text-2xl font-bold font-serif">{title}</h2>
         
         {/* Desktop Navigation Arrows */}
         <div className="hidden md:flex items-center gap-2">
           <button
             onClick={scrollLeft}
-            className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-accent transition-colors"
+            className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-accent transition-colors border border-border"
+            aria-label="Scroll left"
           >
             <ChevronLeft size={20} />
           </button>
           <button
             onClick={scrollRight}
-            className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-accent transition-colors"
+            className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-accent transition-colors border border-border"
+            aria-label="Scroll right"
           >
             <ChevronRight size={20} />
           </button>
@@ -62,7 +64,7 @@ const ReviewCarousel: React.FC<ReviewCarouselProps> = ({ title, reviews }) => {
       {/* Scrollable Reviews Container */}
       <div 
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto scrollbar-hide pb-2"
+        className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 md:pb-0"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {reviews.map((review) => (

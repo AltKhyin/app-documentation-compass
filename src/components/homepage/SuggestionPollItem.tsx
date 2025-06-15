@@ -41,13 +41,13 @@ const SuggestionPollItem: React.FC<SuggestionPollItemProps> = ({ suggestion }) =
   };
 
   return (
-    <div className="flex items-center justify-between p-3 bg-card rounded-md border border-border">
+    <div className="flex items-start justify-between p-4 bg-card rounded-md border border-border hover:bg-accent/5 transition-colors">
       <div className="flex-1 mr-4">
-        <p className="text-foreground text-sm font-medium mb-1">
+        <p className="text-foreground text-sm font-medium mb-1 leading-tight">
           {suggestion.title}
         </p>
         {suggestion.description && (
-          <p className="text-muted-foreground text-xs mb-2">
+          <p className="text-muted-foreground text-xs mb-2 leading-relaxed">
             {suggestion.description}
           </p>
         )}
@@ -56,19 +56,20 @@ const SuggestionPollItem: React.FC<SuggestionPollItemProps> = ({ suggestion }) =
         </p>
       </div>
       
-      <div className="flex items-center gap-2">
-        <span className="text-muted-foreground text-sm font-medium">
+      <div className="flex items-center gap-3 flex-shrink-0">
+        <span className="text-muted-foreground text-sm font-medium min-w-[2rem] text-right">
           {voteCount}
         </span>
         <button
           onClick={handleVote}
-          className={`p-2 rounded-md transition-colors ${
+          className={`p-2 rounded-md transition-all duration-200 ${
             isVoted 
-              ? 'bg-primary text-primary-foreground' 
-              : 'bg-secondary text-secondary-foreground hover:bg-accent'
+              ? 'bg-primary text-primary-foreground shadow-sm' 
+              : 'bg-secondary text-secondary-foreground hover:bg-accent border border-border'
           }`}
+          aria-label={isVoted ? 'Remove vote' : 'Vote for this suggestion'}
         >
-          <ChevronUp size={16} />
+          <ChevronUp size={16} className={isVoted ? 'text-primary-foreground' : ''} />
         </button>
       </div>
     </div>

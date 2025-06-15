@@ -37,6 +37,9 @@
     --ring: 0 0% 40%;
 
     --radius: 6px;
+
+    --font-sans: 'Inter', sans-serif;
+    --font-serif: 'Source Serif Pro', serif;
   }
 
   .light {
@@ -78,7 +81,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
   }
 }
 
@@ -96,5 +99,12 @@
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+  }
+  
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
   }
 }

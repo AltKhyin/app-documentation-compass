@@ -20,7 +20,7 @@ interface ReviewCardProps {
 const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
   return (
     <div 
-      className="relative bg-card rounded-md overflow-hidden cursor-pointer group"
+      className="relative bg-card rounded-md overflow-hidden cursor-pointer group transition-transform duration-200 hover:scale-105"
       onClick={() => window.location.href = `/reviews/${review.id}`}
     >
       {/* Cover Image Background */}
@@ -32,18 +32,18 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
         }}
       >
         {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 bg-black bg-opacity-50" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
         
         {/* Content overlay */}
         <div className="absolute inset-0 p-4 flex flex-col justify-end">
-          <h3 className="text-white font-semibold text-sm mb-2 line-clamp-2">
+          <h3 className="text-white font-semibold text-sm mb-2 line-clamp-2 leading-tight">
             {review.title}
           </h3>
           
           {/* View count with eye icon */}
-          <div className="flex items-center text-white text-xs opacity-80">
+          <div className="flex items-center text-white/90 text-xs">
             <Eye size={12} className="mr-1" />
-            <span>{review.view_count}</span>
+            <span>{review.view_count.toLocaleString()}</span>
           </div>
         </div>
       </div>
