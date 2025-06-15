@@ -21,11 +21,11 @@ const NavItem = ({ href, icon: Icon, label, isCollapsed = false, isMobile = fals
         cn(
           'flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary',
           isActive
-            ? isMobile || isCollapsed
-              ? 'bg-secondary text-primary'
+            ? isMobile
+              ? 'text-primary'
               : 'bg-muted text-primary'
             : 'text-muted-foreground',
-          { 'justify-center px-2': isCollapsed }
+          { 'justify-center': isCollapsed }
         )
       }
     >
