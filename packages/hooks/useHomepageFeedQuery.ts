@@ -69,22 +69,10 @@ export const useHomepageFeedQuery = () => {
     queryKey: ['homepage-feed'],
     queryFn: fetchHomepageFeed,
     staleTime: 5 * 60 * 1000, // 5 minutes - data is considered fresh for 5 minutes
-    cacheTime: 15 * 60 * 1000, // 15 minutes - keep in cache for 15 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes - keep in cache for 15 minutes (renamed from cacheTime in v5)
     retry: 3, // Retry failed requests up to 3 times
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
     refetchOnWindowFocus: false, // Don't refetch when window regains focus
     refetchOnMount: true, // Always refetch when component mounts
-    onError: (error) => {
-      console.error('Homepage feed query error:', error);
-    },
-    onSuccess: (data) => {
-      console.log('Homepage feed query successful:', {
-        recentCount: data.recent.length,
-        popularCount: data.popular.length,
-        recommendationsCount: data.recommendations.length,
-        suggestionsCount: data.suggestions.length,
-        featured: !!data.featured
-      });
-    }
   });
 };
