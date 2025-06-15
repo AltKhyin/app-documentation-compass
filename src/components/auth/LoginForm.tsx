@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { useLoginMutation, loginSchema } from '@/hooks/mutations/useLoginMutation';
 import { toast } from 'sonner';
 import { useNavigate, Link } from 'react-router-dom';
@@ -34,18 +34,25 @@ const LoginForm = () => {
   };
 
   return (
-    <>
-      <h2 className="text-4xl font-bold mb-8">Sign In</h2>
+    <div className="bg-white/95 backdrop-blur-sm p-8 rounded-xl shadow-lg w-full max-w-[350px]">
+      <div className="flex items-center space-x-2 text-black">
+        <span className="h-1.5 w-1.5 rounded-full bg-black"></span>
+        <h2 className="text-xl font-serif tracking-tight">Sign In</h2>
+      </div>
+      
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-6">
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
+              <FormItem className="space-y-0">
                 <FormControl>
-                  <Input placeholder="name@email.com" {...field} />
+                  <Input
+                    placeholder="Email"
+                    {...field}
+                    className="bg-white border-gray-300 focus:border-black focus:ring-0 text-black placeholder:text-gray-500"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -55,60 +62,71 @@ const LoginForm = () => {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
+              <FormItem className="space-y-0">
                 <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} />
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    {...field}
+                    className="bg-white border-gray-300 focus:border-black focus:ring-0 text-black placeholder:text-gray-500"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Checkbox id="remember-me" />
+              <Checkbox
+                id="remember-me"
+                className="border-black data-[state=checked]:bg-black data-[state=checked]:border-black"
+              />
               <label
                 htmlFor="remember-me"
-                className="font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="text-sm text-gray-700 select-none"
               >
                 Remember me
               </label>
             </div>
-            <Link to="#" className="font-semibold text-primary hover:underline">
+            <button type="button" className="text-sm text-gray-700 hover:text-black">
               Forgot?
-            </Link>
+            </button>
           </div>
           
-          <Button type="submit" className="w-full !mt-8 bg-primary hover:bg-primary/90 text-primary-foreground" disabled={mutation.isPending}>
+          <Button type="submit" className="w-full !mt-8 !bg-black hover:!bg-gray-800 !text-white" disabled={mutation.isPending}>
             {mutation.isPending ? 'Signing In...' : 'Sign In'}
           </Button>
         </form>
       </Form>
 
-      <div className="relative my-8">
+      <div className="relative mt-6">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
+          <span className="w-full border-t border-gray-300" />
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
+        <div className="relative flex justify-center text-sm">
+          <span className="px-2 bg-white text-gray-600">
             or continue with
           </span>
         </div>
       </div>
+      
+      <div className="mt-6">
+        <Button variant="outline" className="w-full bg-white hover:bg-gray-50 border-gray-300 text-gray-700 flex items-center justify-center gap-2">
+            <GoogleIcon />
+            Google
+        </Button>
+      </div>
 
-      <Button variant="outline" className="w-full">
-        <GoogleIcon className="mr-2 h-5 w-5" />
-        Sign in with Google
-      </Button>
-
-      <p className="text-center text-sm text-muted-foreground mt-8">
-        Don't have an account?{' '}
-        <Link to="/signup" className="font-semibold text-primary hover:underline">
-          Register
-        </Link>
-      </p>
-    </>
+      <div className="mt-6 text-center text-sm">
+        <p className="text-gray-700">
+          Don't have an account?{' '}
+          <button type="button" onClick={() => navigate('/signup')} className="text-black font-medium hover:underline">
+            Register
+          </button>
+        </p>
+      </div>
+    </div>
   );
 };
 

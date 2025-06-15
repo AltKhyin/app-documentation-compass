@@ -4,19 +4,21 @@ import React from 'react';
 
 const SplitScreenAuthLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
-      <div className="hidden md:flex flex-col items-center justify-center bg-secondary p-12 text-center">
-        <div className="w-full max-w-sm">
-          <h1 className="text-6xl font-bold font-serif text-primary">
-            Reviews.
-          </h1>
-          <p className="mt-4 text-muted-foreground text-right w-full">
-            - por Igor Eckert
-          </p>
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-white via-white to-gray-100 relative overflow-hidden">
+      <div className="flex flex-col md:flex-row items-center justify-center w-full max-w-6xl px-6">
+        <div className="flex-1 flex justify-center items-center">
+          <div className="w-full max-w-[400px]">
+            <div className="flex flex-col">
+              <h1 className="font-serif font-medium tracking-tight text-8xl text-black flex items-center">
+                Reviews.
+              </h1>
+              <p className="text-sm mt-1 text-black opacity-80">
+                - por Igor Eckert
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="flex flex-col items-center justify-center bg-background p-4 sm:p-8">
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-[350px] mt-8 md:mt-0">
           {children}
         </div>
       </div>
