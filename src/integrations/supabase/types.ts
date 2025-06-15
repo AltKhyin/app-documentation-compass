@@ -9,13 +9,117 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      OnboardingAnswers: {
+        Row: {
+          answer: Json
+          created_at: string
+          id: number
+          practitioner_id: string
+          question_id: number
+        }
+        Insert: {
+          answer: Json
+          created_at?: string
+          id?: number
+          practitioner_id: string
+          question_id: number
+        }
+        Update: {
+          answer?: Json
+          created_at?: string
+          id?: number
+          practitioner_id?: string
+          question_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "OnboardingAnswers_practitioner_id_fkey"
+            columns: ["practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "Practitioners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "OnboardingAnswers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "OnboardingQuestions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      OnboardingQuestions: {
+        Row: {
+          created_at: string
+          id: number
+          options: Json | null
+          order_index: number
+          question_text: string
+          question_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          options?: Json | null
+          order_index: number
+          question_text: string
+          question_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          options?: Json | null
+          order_index?: number
+          question_text?: string
+          question_type?: string
+        }
+        Relationships: []
+      }
+      Practitioners: {
+        Row: {
+          avatar_url: string | null
+          contribution_score: number
+          created_at: string
+          display_hover_card: boolean
+          full_name: string | null
+          id: string
+          profession_flair: string | null
+          role: string
+          subscription_tier: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          contribution_score?: number
+          created_at?: string
+          display_hover_card?: boolean
+          full_name?: string | null
+          id: string
+          profession_flair?: string | null
+          role?: string
+          subscription_tier?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          contribution_score?: number
+          created_at?: string
+          display_hover_card?: boolean
+          full_name?: string | null
+          id?: string
+          profession_flair?: string | null
+          role?: string
+          subscription_tier?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_my_claim: {
+        Args: { claim: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
