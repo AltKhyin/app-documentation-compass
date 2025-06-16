@@ -1,15 +1,9 @@
 
-// ABOUTME: Centralized navigation configuration for consistent routing across desktop and mobile.
-import { Home, Archive, Users, User, Settings } from 'lucide-react';
+// ABOUTME: Centralized navigation configuration with role-based access control for consistent routing.
+import { Home, Archive, Users, User, Settings, Edit } from 'lucide-react';
+import type { NavigationItem } from '@/types';
 
-export type NavigationItem = {
-  icon: React.ElementType;
-  label: string;
-  path: string;
-  mobileLabel?: string; // Optional shorter label for mobile
-};
-
-// Single source of truth for all navigation
+// Main navigation items (accessible to all authenticated users)
 export const navigationItems: NavigationItem[] = [
   { 
     icon: Home, 
@@ -33,7 +27,7 @@ export const navigationItems: NavigationItem[] = [
   },
 ];
 
-// Additional mobile-specific navigation (if different from main nav)
+// Mobile-specific navigation (optimized for bottom tab bar)
 export const mobileNavigationItems: NavigationItem[] = [
   ...navigationItems.slice(0, 3), // Home, Acervo, Comunidade
   { 
@@ -43,3 +37,36 @@ export const mobileNavigationItems: NavigationItem[] = [
     mobileLabel: 'Config'
   },
 ];
+
+// Admin navigation items (only visible to users with appropriate roles)
+export const adminNavigationItems: NavigationItem[] = [
+  { 
+    icon: Edit, 
+    label: 'Editor', 
+    path: '/editor',
+    requiredRole: 'editor'
+  },
+  // Future admin items will be added here
+];
+
+// Utility function to filter navigation items based on user role
+export const getVisibleNavigationItems = (
+  items: NavigationItem[], 
+  userRole: string = 'practitioner'
+): NavigationItem[] => {
+  return items.filter(item => {
+    if (!item.requiredRole) return true;
+    
+    const roleHierarchy: Record<string, number> = {
+      admin: 3,
+      moderator: 2,
+      editor: 2,
+      practitioner: 1,
+    };
+    
+    const userLevel = roleHierarchy[userRole] || 0;
+    const requiredLevel = roleHierarchy[item.requiredRole] || 0;
+    
+    return userLevel >= requiredLevel;
+  });
+};

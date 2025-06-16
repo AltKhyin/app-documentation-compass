@@ -12,6 +12,7 @@ import AcervoPage from "./pages/AcervoPage";
 import ComunidadePage from "./pages/ComunidadePage";
 import PerfilPage from "./pages/PerfilPage";
 import ConfiguracoesPage from "./pages/ConfiguracoesPage";
+import UnauthorizedPage from "./pages/UnauthorizedPage";
 import NotFound from "./pages/NotFound";
 import { AuthSessionProvider } from "./components/auth/AuthSessionProvider";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -39,6 +40,7 @@ const App = () => (
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />
+                <Route path="/unauthorized" element={<UnauthorizedPage />} />
                 <Route path="/*" element={
                   <ProtectedRoute>
                     <AppDataProvider>
@@ -49,6 +51,22 @@ const App = () => (
                           <Route path="/comunidade" element={<ComunidadePage />} />
                           <Route path="/perfil" element={<PerfilPage />} />
                           <Route path="/configuracoes" element={<ConfiguracoesPage />} />
+                          
+                          {/* Future Editor Routes - Protected by role-based access */}
+                          {/* Placeholder routes for documentation purposes */}
+                          {/* 
+                          <Route path="/editor" element={
+                            <ProtectedRoute requiredRole="editor">
+                              <EditorDashboard />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/editor/:reviewId" element={
+                            <ProtectedRoute requiredRole="editor">
+                              <VisualCompositionEngine />
+                            </ProtectedRoute>
+                          } />
+                          */}
+                          
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </AppShell>

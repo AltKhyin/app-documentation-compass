@@ -1,13 +1,36 @@
 
-// ABOUTME: A component to protect routes that require authentication.
+// ABOUTME: Enhanced component to protect routes with authentication and role-based access control.
 import { useAuthStore } from '@/store/auth';
 import { Navigate, useLocation } from 'react-router-dom';
+import type { UserProfile } from '@/types';
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  requiredRole?: UserProfile['role'];
+}
+
+// Role hierarchy: admin > moderator > practitioner
+const roleHierarchy: Record<UserProfile['role'], number> = {
+  admin: 3,
+  moderator: 2,
+  practitioner: 1,
+  editor: 2, // Same level as moderator
+};
+
+const checkRolePermission = (userRole: UserProfile['role'], requiredRole: UserProfile['role']): boolean => {
+  return roleHierarchy[userRole] >= roleHierarchy[requiredRole];
+};
+
+const ProtectedRoute = ({ children, requiredRole = 'practitioner' }: ProtectedRouteProps) => {
   const { session, isLoading } = useAuthStore();
   const location = useLocation();
 
-  console.log('ProtectedRoute state:', { session: !!session, isLoading });
+  console.log('ProtectedRoute state:', { 
+    session: !!session, 
+    isLoading, 
+    requiredRole,
+    userRole: session?.user?.app_metadata?.role 
+  });
 
   if (isLoading) {
     return (
@@ -25,7 +48,16 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  console.log('Session found, rendering protected content');
+  // Check role permissions for protected routes
+  const userRole = (session.user?.app_metadata?.role as UserProfile['role']) || 'practitioner';
+  const hasPermission = checkRolePermission(userRole, requiredRole);
+
+  if (!hasPermission) {
+    console.log('Insufficient permissions, redirecting to unauthorized');
+    return <Navigate to="/unauthorized" state={{ requiredRole, userRole }} replace />;
+  }
+
+  console.log('Session and permissions valid, rendering protected content');
   return <>{children}</>;
 };
 
