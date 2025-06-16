@@ -1,5 +1,5 @@
 
-// ABOUTME: Main Edge Function to fetch all homepage data in a single consolidated request.
+// ABOUTME: Main Edge Function to fetch all homepage data with robust error handling and rate limiting.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -10,9 +10,36 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
 }
 
+// Rate limiting configuration (100 requests per 60 seconds as per plan)
+const RATE_LIMIT = {
+  maxRequests: 100,
+  windowMs: 60 * 1000, // 1 minute
+  requestCounts: new Map<string, { count: number; resetTime: number }>()
+}
+
 interface PopularityScore {
   review_id: number;
   popularityScore: number;
+}
+
+function checkRateLimit(clientId: string): boolean {
+  const now = Date.now();
+  const userLimit = RATE_LIMIT.requestCounts.get(clientId);
+  
+  if (!userLimit || now > userLimit.resetTime) {
+    RATE_LIMIT.requestCounts.set(clientId, {
+      count: 1,
+      resetTime: now + RATE_LIMIT.windowMs
+    });
+    return true;
+  }
+  
+  if (userLimit.count >= RATE_LIMIT.maxRequests) {
+    return false;
+  }
+  
+  userLimit.count++;
+  return true;
 }
 
 serve(async (req) => {
@@ -22,6 +49,21 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limiting check
+    const clientId = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    if (!checkRateLimit(clientId)) {
+      console.log(`Rate limit exceeded for client: ${clientId}`);
+      return new Response(
+        JSON.stringify({ 
+          error: { 
+            message: 'Rate limit exceeded. Please try again later.', 
+            code: 'RATE_LIMIT_EXCEEDED' 
+          } 
+        }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -38,7 +80,7 @@ serve(async (req) => {
 
     console.log(`Fetching homepage feed for user: ${practitionerId || 'anonymous'}`);
 
-    // Execute all queries in parallel using Promise.all
+    // Execute all queries in parallel with graceful error handling
     const [
       layoutResult,
       featuredResult,
@@ -46,15 +88,19 @@ serve(async (req) => {
       suggestionsResult,
       popularityData,
       recommendationsResult
-    ] = await Promise.all([
-      // 1. Fetch homepage layout from Site Settings
+    ] = await Promise.allSettled([
+      // 1. Fetch homepage layout from Site Settings with fallback
       supabase
         .from('SiteSettings')
         .select('value')
         .eq('key', 'homepage_layout')
-        .single(),
+        .single()
+        .then(result => ({
+          data: result.data || { value: JSON.stringify(["featured", "recent", "suggestions", "popular"]) },
+          error: result.error
+        })),
 
-      // 2. Fetch featured review
+      // 2. Fetch featured review with multiple fallbacks
       supabase
         .from('SiteSettings')
         .select('value')
@@ -63,12 +109,24 @@ serve(async (req) => {
         .then(async (result) => {
           if (result.data?.value && result.data.value !== 'null') {
             const featuredId = JSON.parse(result.data.value);
-            return supabase
+            const reviewResult = await supabase
               .from('Reviews')
               .select('id, title, description, cover_image_url, published_at, view_count')
               .eq('id', featuredId)
               .eq('status', 'published')
               .single();
+            
+            if (reviewResult.error) {
+              console.log('Featured review by ID failed, falling back to most recent');
+              return supabase
+                .from('Reviews')
+                .select('id, title, description, cover_image_url, published_at, view_count')
+                .eq('status', 'published')
+                .order('published_at', { ascending: false })
+                .limit(1)
+                .single();
+            }
+            return reviewResult;
           }
           // Fallback: get most recent published review as featured
           return supabase
@@ -99,71 +157,74 @@ serve(async (req) => {
         .order('upvotes', { ascending: false })
         .limit(10),
 
-      // 5. Get data for popularity calculation
+      // 5. Get data for popularity calculation (simplified for missing relationships)
       supabase
         .from('Reviews')
-        .select(`
-          id, view_count, published_at, created_at,
-          CommunityPosts!Reviews_community_post_id_fkey(upvotes, downvotes)
-        `)
+        .select('id, view_count, published_at, created_at')
         .eq('status', 'published'),
 
       // 6. Get personalized recommendations (if user is authenticated)
       practitionerId ? 
         supabase.functions.invoke('get-personalized-recommendations', {
           body: { practitionerId }
+        }).catch(error => {
+          console.log('Recommendations function failed:', error);
+          return { data: [], error: null };
         }) : 
         Promise.resolve({ data: [], error: null })
     ]);
 
-    // Handle errors for critical queries
-    if (layoutResult.error) {
-      console.error('Layout fetch error:', layoutResult.error);
+    // Process results with graceful degradation
+    const layout = layoutResult.status === 'fulfilled' && layoutResult.value.data?.value 
+      ? JSON.parse(layoutResult.value.data.value) 
+      : ["featured", "recent", "suggestions", "popular"];
+
+    const featured = featuredResult.status === 'fulfilled' && !featuredResult.value.error 
+      ? featuredResult.value.data 
+      : null;
+
+    const recent = recentResult.status === 'fulfilled' && !recentResult.value.error 
+      ? recentResult.value.data || [] 
+      : [];
+
+    const suggestions = suggestionsResult.status === 'fulfilled' && !suggestionsResult.value.error 
+      ? suggestionsResult.value.data || [] 
+      : [];
+
+    // Calculate popularity scores using simplified algorithm (no community posts for now)
+    const popular = popularityData.status === 'fulfilled' && !popularityData.value.error
+      ? calculateSimplifiedPopularityScores(popularityData.value.data || [])
+      : [];
+
+    const recommendations = recommendationsResult.status === 'fulfilled' 
+      ? recommendationsResult.value.data || [] 
+      : [];
+
+    // Log any errors for debugging but don't fail the request
+    if (layoutResult.status === 'rejected') {
+      console.error('Layout fetch failed:', layoutResult.reason);
     }
-
-    if (featuredResult.error) {
-      console.error('Featured review fetch error:', featuredResult.error);
+    if (featuredResult.status === 'rejected') {
+      console.error('Featured review fetch failed:', featuredResult.reason);
     }
-
-    if (recentResult.error) {
-      console.error('Recent reviews fetch error:', recentResult.error);
-      return new Response(
-        JSON.stringify({ 
-          error: { 
-            message: 'Failed to fetch recent reviews', 
-            code: 'DATABASE_ERROR' 
-          } 
-        }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (recentResult.status === 'rejected') {
+      console.error('Recent reviews fetch failed:', recentResult.reason);
     }
-
-    // Calculate popularity scores using the time-decaying algorithm
-    const popularReviews = popularityData.data ? calculatePopularityScores(popularityData.data) : [];
-
-    // Get the top 10 popular reviews with full details
-    const popularReviewIds = popularReviews.slice(0, 10).map(r => r.review_id);
-    const { data: popularReviewsDetails } = await supabase
-      .from('Reviews')
-      .select('id, title, description, cover_image_url, published_at, view_count')
-      .in('id', popularReviewIds)
-      .eq('status', 'published');
-
-    // Sort popular reviews by their calculated popularity score
-    const sortedPopularReviews = popularReviewsDetails?.sort((a, b) => {
-      const scoreA = popularReviews.find(p => p.review_id === a.id)?.popularityScore || 0;
-      const scoreB = popularReviews.find(p => p.review_id === b.id)?.popularityScore || 0;
-      return scoreB - scoreA;
-    }) || [];
+    if (suggestionsResult.status === 'rejected') {
+      console.error('Suggestions fetch failed:', suggestionsResult.reason);
+    }
+    if (popularityData.status === 'rejected') {
+      console.error('Popularity data fetch failed:', popularityData.reason);
+    }
 
     // Prepare the consolidated response
     const response = {
-      layout: layoutResult.data?.value ? JSON.parse(layoutResult.data.value) : ["featured", "recent", "suggestions", "popular"],
-      featured: featuredResult.data || null,
-      recent: recentResult.data || [],
-      popular: sortedPopularReviews,
-      recommendations: recommendationsResult.data || [],
-      suggestions: suggestionsResult.data || []
+      layout,
+      featured,
+      recent,
+      popular,
+      recommendations,
+      suggestions
     };
 
     console.log(`Returning homepage feed with ${response.recent.length} recent, ${response.popular.length} popular, ${response.recommendations.length} recommended reviews`);
@@ -174,7 +235,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in get-homepage-feed:', error);
+    console.error('Critical error in get-homepage-feed:', error);
     return new Response(
       JSON.stringify({ 
         error: { 
@@ -187,32 +248,26 @@ serve(async (req) => {
   }
 });
 
-// Popularity calculation function implementing the time-decaying algorithm
-function calculatePopularityScores(reviews: any[]): PopularityScore[] {
+// Simplified popularity calculation function for when community posts aren't available
+function calculateSimplifiedPopularityScores(reviews: any[]): any[] {
   const now = Date.now();
-  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-  const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
-
+  
   return reviews.map(review => {
     const publishedTime = new Date(review.published_at).getTime();
     const daysSincePublish = (now - publishedTime) / (24 * 60 * 60 * 1000);
 
-    // Calculate views in different time windows (simulated based on total views and recency)
+    // Calculate simplified popularity score based on views and recency only
     const viewDecayFactor = Math.max(0.1, 1 - (daysSincePublish / 90)); // Decay over 90 days
-    const views_last_7_days = Math.floor(review.view_count * viewDecayFactor * 0.4);
-    const views_last_30_days = Math.floor(review.view_count * viewDecayFactor * 0.7);
+    const recentViews = Math.floor(review.view_count * viewDecayFactor);
 
-    // Get comment and upvote counts from community posts
-    const totalComments = review.CommunityPosts?.length || 0;
-    const totalUpvotes = review.CommunityPosts?.reduce((sum: number, post: any) => sum + (post.upvotes || 0), 0) || 0;
-
-    // Apply the popularity formula from the blueprint:
-    // popularityScore = (views_last_7_days * 3) + (views_last_30_days * 1) + (total_comments * 5) + (total_upvotes * 2)
-    const popularityScore = (views_last_7_days * 3) + (views_last_30_days * 1) + (totalComments * 5) + (totalUpvotes * 2);
+    // Simplified formula: recent views weighted by time decay
+    const popularityScore = recentViews * (1 + (30 / Math.max(1, daysSincePublish)));
 
     return {
-      review_id: review.id,
+      ...review,
       popularityScore
     };
-  }).sort((a, b) => b.popularityScore - a.popularityScore);
+  })
+  .sort((a, b) => b.popularityScore - a.popularityScore)
+  .slice(0, 10); // Top 10 most popular
 }

@@ -2,15 +2,15 @@
 # EVIDENS - README BÍBLIA 
 *A Living State Document*
 
-**Version:** 1.1  
-**Last Updated:** June 15, 2025  
-**Project Status:** Milestone 3 (Homepage Backend) - COMPLETED
+**Version:** 1.2  
+**Last Updated:** June 16, 2025  
+**Project Status:** Milestone 3 (Homepage Complete) - COMPLETED ✅
 
 ---
 
 ## 🎯 **Current Project State** *(2-minute context for any developer)*
 
-EVIDENS is a medical content platform with a React/Supabase architecture. **The application shell and homepage backend are now complete and functional.**
+EVIDENS is a medical content platform with a React/Supabase architecture. **The homepage is now fully functional with complete backend integration and all UI components implemented.**
 
 ### **✅ What's Implemented & Working**
 
@@ -21,26 +21,37 @@ EVIDENS is a medical content platform with a React/Supabase architecture. **The 
 - ✅ **Notifications System**: Bell icon, notification count queries, basic infrastructure
 
 **2. Database Schema (Milestone 3)**
-- ✅ **Content Tables**: Reviews, Tags, ReviewTags, CommunityPosts, Suggestions, Analytics_Events
+- ✅ **Content Tables**: Reviews, Tags, ReviewTags, CommunityPosts, Suggestions, Analytics_Events, SiteSettings
 - ✅ **Row Level Security**: Comprehensive RLS policies for all tables following DOC_4 specifications
 - ✅ **Site Settings**: Homepage layout configuration, featured review management
 - ✅ **Analytics Infrastructure**: Event tracking and summary tables for reporting
+- ✅ **Mock Data**: Essential sample data for immediate functionality testing
 
-**3. Homepage Backend (Milestone 3 - COMPLETED)**
+**3. Homepage Implementation (Milestone 3 - COMPLETED ✅)**
 - ✅ **Edge Functions**: 
   - `get-personalized-recommendations`: Tag-based similarity algorithm for personalized content
-  - `get-homepage-feed`: Consolidated API returning all homepage data in single request
+  - `get-homepage-feed`: Production-ready API with rate limiting (100 req/60s), error resilience, graceful fallbacks
 - ✅ **Data Access Layer**: `useHomepageFeedQuery` hook implementing TanStack Query patterns
+- ✅ **UI Components**: Complete implementation of all homepage modules:
+  - `FeaturedReview`: Hero section with cover image overlay and CTA
+  - `ReviewCarousel`: Horizontal scrolling lists with desktop/mobile adaptation
+  - `NextEditionModule`: Suggestion submission and voting interface
+  - `SuggestionPollItem`: Interactive voting components with optimistic updates
+  - `ReviewCard`: Consistent card design with view counts and metadata
 - ✅ **Algorithms Implemented**:
-  - Time-decaying popularity scoring: `(views_last_7_days * 3) + (views_last_30_days * 1) + (total_comments * 5) + (total_upvotes * 2)`
+  - Time-decaying popularity scoring: Simplified algorithm for current schema
   - Personalized recommendations based on user's tag interaction history
+- ✅ **Error Handling**: Comprehensive error boundaries, graceful degradation, fallback states
+- ✅ **Performance**: Rate limiting, caching strategies, optimized queries
+- ✅ **CORS Compliance**: Production-ready CORS handling in all Edge Functions
 
 ### **🚧 What's Next (Immediate Priorities)**
 
-**Frontend Implementation Needed:**
-1. **Homepage UI Components**: FeaturedReview, ReviewCarousel, NextEditionModule, ReviewCard, SuggestionPollItem
-2. **Data Integration**: Connect homepage components to `useHomepageFeedQuery` hook
-3. **Mobile Adaptation**: Implement responsive transformations per DOC_8
+**Review Detail Pages & Content Creation:**
+1. **Review Detail Implementation**: Individual review pages with structured content rendering
+2. **Visual Composition Engine**: Admin interface for content creation (per Blueprint 08a)
+3. **Community Features**: Post creation, commenting, voting systems
+4. **User Profile Management**: Profile editing, preferences, subscription management
 
 ---
 
@@ -54,16 +65,22 @@ EVIDENS is a medical content platform with a React/Supabase architecture. **The 
 - **Routing**: React Router DOM v6
 
 ### **Backend Stack** 
-- **Database**: PostgreSQL (Supabase-managed)
+- **Database**: PostgreSQL (Supabase-managed) with complete schema
 - **Authentication**: Supabase Auth with JWT custom claims
-- **API Layer**: Supabase auto-generated REST + custom Edge Functions
-- **File Storage**: Supabase Storage (configured but not yet used)
+- **API Layer**: Supabase auto-generated REST + custom Edge Functions with rate limiting
+- **File Storage**: Supabase Storage (configured, ready for use)
 
 ### **Data Flow Pattern**
 ```
 UI Components → useQuery/useMutation Hooks → Supabase Client → Database/Edge Functions
 ```
 **RULE**: UI components NEVER call supabase client directly (per DOC_6)
+
+### **Performance & Reliability**
+- **Rate Limiting**: 100 requests per 60 seconds on homepage feed
+- **Error Resilience**: Graceful degradation with fallback data
+- **Caching**: 5-minute stale time, 15-minute cache retention
+- **Monitoring**: Comprehensive logging in all Edge Functions
 
 ---
 
@@ -73,23 +90,30 @@ UI Components → useQuery/useMutation Hooks → Supabase Client → Database/Ed
 src/
 ├── components/
 │   ├── auth/          # Login, signup, session management
+│   ├── homepage/      # Complete homepage module system
+│   │   ├── FeaturedReview.tsx     # Hero section component
+│   │   ├── ReviewCarousel.tsx     # Horizontal scrolling lists
+│   │   ├── ReviewCard.tsx         # Individual review cards
+│   │   ├── NextEditionModule.tsx  # Suggestion system
+│   │   └── SuggestionPollItem.tsx # Voting interface
 │   ├── shell/         # AppShell, sidebars, navigation
 │   └── ui/            # Shadcn/UI base components
 ├── hooks/             # Custom React hooks
 ├── integrations/
 │   └── supabase/      # Supabase client and types
 ├── pages/             # Route components
+│   └── Index.tsx      # Complete homepage implementation
 └── store/             # Zustand global state
 
 packages/
 └── hooks/             # Shared TanStack Query hooks
-   └── useHomepageFeedQuery.ts
+   └── useHomepageFeedQuery.ts  # Production-ready data fetching
 
 supabase/
-├── functions/         # Edge Functions
-│   ├── get-homepage-feed/
+├── functions/         # Edge Functions with rate limiting
+│   ├── get-homepage-feed/          # Complete homepage API
 │   └── get-personalized-recommendations/
-└── migrations/        # Database schema and policies
+└── migrations/        # Complete database schema and policies
 ```
 
 ---
@@ -110,6 +134,11 @@ supabase/
 3. JWT includes custom claims: `role`, `subscription_tier`
 4. RLS policies enforce access control using `get_my_claim()` helper
 
+### **Rate Limiting & Security**
+- Homepage feed: 100 requests per 60 seconds per client IP
+- CORS properly configured for production
+- All Edge Functions include comprehensive error handling
+
 ---
 
 ## 🔌 **API Endpoints**
@@ -118,13 +147,14 @@ supabase/
 - `GET /rest/v1/Reviews` - List reviews (RLS-filtered)
 - `GET /rest/v1/Practitioners` - User profiles  
 - `GET /rest/v1/Notifications` - User notifications
+- `GET /rest/v1/Suggestions` - Topic suggestions with voting
 - *All CRUD operations follow this pattern*
 
 ### **Custom Edge Functions**
-- `POST /functions/v1/get-homepage-feed` - Complete homepage data
+- `POST /functions/v1/get-homepage-feed` - Complete homepage data with rate limiting
 - `POST /functions/v1/get-personalized-recommendations` - User-specific content recommendations
 
-**Rate Limiting**: Currently none implemented - needs review for production
+**Rate Limiting**: Production-ready with 100 req/60s on homepage feed
 
 ---
 
@@ -139,7 +169,7 @@ supabase/
 **Mobile Adaptations** (per DOC_8):
 - Navigation: Bottom tab bar on mobile, collapsible sidebar on desktop
 - Carousels: Swipeable with 1.5 cards visible on mobile
-- Progressive disclosure: "Ver todas" links for expanded content
+- Progressive disclosure: Optimistic updates and loading states
 
 ---
 
@@ -182,15 +212,29 @@ npx supabase start
 - RLS policies optimized to avoid sequential scans
 - Analytics events use bulk inserts for performance
 
+### **Rate Limiting**
+- Homepage feed: 100 requests per 60 seconds per client IP
+- Graceful degradation when limits exceeded
+- Monitoring and logging for abuse detection
+
 ---
 
 ## 🐛 **Known Issues & Limitations**
 
 ### **Current Technical Debt**
-- [ ] No rate limiting on Edge Functions
-- [ ] Analytics events not yet being generated by frontend
 - [ ] No file upload/storage integration yet
-- [ ] Mobile UI components not yet implemented
+- [ ] Analytics events not yet being generated by frontend
+- [ ] Suggestion/voting mutations not yet connected to backend
+- [ ] Community posts integration pending (for enhanced popularity scoring)
+
+### **Completed Milestones** ✅
+- [x] Application shell and navigation
+- [x] Authentication system with JWT claims
+- [x] Complete database schema with RLS
+- [x] Homepage backend with rate limiting
+- [x] Homepage frontend with all components
+- [x] Error handling and graceful degradation
+- [x] CORS compliance for production
 
 ### **Missing Features** *(Planned for future milestones)*
 - Content creation interface (Visual Composition Engine)
@@ -219,4 +263,4 @@ npx supabase start
 
 ---
 
-*This document is automatically updated with every significant codebase change. Last verification: Milestone 3 completion.*
+*This document is automatically updated with every significant codebase change. Last verification: Homepage completion - June 16, 2025.*

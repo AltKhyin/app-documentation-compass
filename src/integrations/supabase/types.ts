@@ -146,6 +146,121 @@ export type Database = {
         }
         Relationships: []
       }
+      Reviews: {
+        Row: {
+          access_level: string
+          author_id: string | null
+          community_post_id: number | null
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          id: number
+          published_at: string | null
+          status: string
+          structured_content: Json
+          title: string
+          view_count: number
+        }
+        Insert: {
+          access_level?: string
+          author_id?: string | null
+          community_post_id?: number | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: number
+          published_at?: string | null
+          status?: string
+          structured_content?: Json
+          title: string
+          view_count?: number
+        }
+        Update: {
+          access_level?: string
+          author_id?: string | null
+          community_post_id?: number | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: number
+          published_at?: string | null
+          status?: string
+          structured_content?: Json
+          title?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Reviews_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "Practitioners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      SiteSettings: {
+        Row: {
+          created_at: string
+          id: number
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
+      Suggestions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: number
+          status: string
+          submitted_by: string | null
+          title: string
+          upvotes: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: number
+          status?: string
+          submitted_by?: string | null
+          title: string
+          upvotes?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: number
+          status?: string
+          submitted_by?: string | null
+          title?: string
+          upvotes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Suggestions_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "Practitioners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,23 +1,46 @@
 
-// ABOUTME: Module component for the next edition suggestion form and poll system.
+// ABOUTME: Module component for the next edition suggestion and voting system.
 
 import React, { useState } from 'react';
-import SuggestionPollItem, { Suggestion } from './SuggestionPollItem';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import SuggestionPollItem from './SuggestionPollItem';
+
+export interface Suggestion {
+  id: number;
+  title: string;
+  description: string;
+  upvotes: number;
+  created_at: string;
+  Practitioners: {
+    full_name: string;
+  };
+}
 
 interface NextEditionModuleProps {
   suggestions: Suggestion[];
 }
 
 const NextEditionModule: React.FC<NextEditionModuleProps> = ({ suggestions }) => {
-  const [suggestionText, setSuggestionText] = useState('');
+  const [newSuggestion, setNewSuggestion] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmitSuggestion = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!suggestionText.trim()) return;
-    
-    // TODO: Wire up to useSubmitSuggestionMutation when available
-    console.log('Submitting suggestion:', suggestionText);
-    setSuggestionText('');
+    if (!newSuggestion.trim()) return;
+
+    setIsSubmitting(true);
+    try {
+      // TODO: Implement useSubmitSuggestionMutation hook when ready
+      console.log('Submitting suggestion:', newSuggestion);
+      
+      // Reset form on success
+      setNewSuggestion('');
+    } catch (error) {
+      console.error('Failed to submit suggestion:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -25,50 +48,43 @@ const NextEditionModule: React.FC<NextEditionModuleProps> = ({ suggestions }) =>
       <h2 className="text-foreground text-2xl font-bold mb-6 font-serif">Próxima Edição</h2>
       
       <div className="grid md:grid-cols-2 gap-8">
-        {/* Suggestion Form - Left Side */}
+        {/* Suggestion Form */}
         <div>
-          <h3 className="text-foreground text-lg font-semibold mb-4 font-sans">
-            Sugira um artigo ou tema
-          </h3>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <textarea
-                value={suggestionText}
-                onChange={(e) => setSuggestionText(e.target.value)}
-                placeholder="Descreva sua sugestão para a próxima edição..."
-                className="w-full p-3 bg-background border border-border rounded-md text-foreground placeholder-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
-                rows={4}
-              />
-            </div>
-            
-            <button
-              type="submit"
-              disabled={!suggestionText.trim()}
-              className="bg-primary text-primary-foreground px-6 py-2 rounded-md font-semibold hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm"
+          <h3 className="text-lg font-semibold mb-4">Sugira um tópico</h3>
+          <form onSubmit={handleSubmitSuggestion} className="space-y-4">
+            <Input
+              type="text"
+              placeholder="Digite sua sugestão de tópico..."
+              value={newSuggestion}
+              onChange={(e) => setNewSuggestion(e.target.value)}
+              className="w-full"
+              disabled={isSubmitting}
+            />
+            <Button 
+              type="submit" 
+              disabled={!newSuggestion.trim() || isSubmitting}
+              className="w-full"
             >
-              Enviar Sugestão
-            </button>
+              {isSubmitting ? 'Enviando...' : 'Sugerir'}
+            </Button>
           </form>
         </div>
-        
-        {/* Poll List - Right Side */}
+
+        {/* Poll List */}
         <div>
-          <h3 className="text-foreground text-lg font-semibold mb-4 font-sans">
-            Vote nas sugestões
-          </h3>
-          
-          {suggestions && suggestions.length > 0 ? (
-            <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
-              {suggestions.map((suggestion) => (
+          <h3 className="text-lg font-semibold mb-4">Vote nas sugestões</h3>
+          <div className="space-y-3 max-h-64 overflow-y-auto">
+            {suggestions.length > 0 ? (
+              suggestions.map((suggestion) => (
                 <SuggestionPollItem key={suggestion.id} suggestion={suggestion} />
-              ))}
-            </div>
-          ) : (
-            <div className="bg-muted rounded-md p-6 text-center">
-              <p className="text-muted-foreground text-sm">Nenhuma sugestão disponível</p>
-            </div>
-          )}
+              ))
+            ) : (
+              <div className="text-muted-foreground text-center py-8">
+                <p>Nenhuma sugestão disponível no momento.</p>
+                <p className="text-sm mt-2">Seja o primeiro a sugerir um tópico!</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

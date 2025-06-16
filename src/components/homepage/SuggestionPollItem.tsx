@@ -1,76 +1,83 @@
 
-// ABOUTME: Atomic component for displaying a single suggestion with vote count and upvote button.
+// ABOUTME: Atomic component for displaying and voting on individual suggestions.
 
 import React, { useState } from 'react';
 import { ChevronUp } from 'lucide-react';
-
-export interface Suggestion {
-  id: number;
-  title: string;
-  description: string;
-  total_votes: number;
-  created_at: string;
-  Practitioners: {
-    full_name: string;
-  };
-}
+import { Button } from '../ui/button';
+import { Suggestion } from './NextEditionModule';
 
 interface SuggestionPollItemProps {
   suggestion: Suggestion;
 }
 
 const SuggestionPollItem: React.FC<SuggestionPollItemProps> = ({ suggestion }) => {
-  const [isVoted, setIsVoted] = useState(false);
-  const [voteCount, setVoteCount] = useState(suggestion.total_votes);
+  const [isVoting, setIsVoting] = useState(false);
+  const [hasVoted, setHasVoted] = useState(false);
+  const [voteCount, setVoteCount] = useState(suggestion.upvotes);
 
-  const handleVote = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Optimistic update
-    if (isVoted) {
-      setVoteCount(prev => prev - 1);
-      setIsVoted(false);
-    } else {
-      setVoteCount(prev => prev + 1);
-      setIsVoted(true);
+  const handleVote = async () => {
+    if (isVoting) return;
+
+    setIsVoting(true);
+    try {
+      // TODO: Implement useCastVoteMutation hook when ready
+      console.log('Voting on suggestion:', suggestion.id);
+      
+      // Optimistic update
+      if (hasVoted) {
+        setVoteCount(prev => prev - 1);
+        setHasVoted(false);
+      } else {
+        setVoteCount(prev => prev + 1);
+        setHasVoted(true);
+      }
+    } catch (error) {
+      console.error('Failed to vote:', error);
+      // Revert optimistic update on error
+      if (hasVoted) {
+        setVoteCount(prev => prev + 1);
+        setHasVoted(true);
+      } else {
+        setVoteCount(prev => prev - 1);
+        setHasVoted(false);
+      }
+    } finally {
+      setIsVoting(false);
     }
-    
-    // TODO: Wire up to useCastVoteMutation when available
-    console.log('Vote toggled for suggestion:', suggestion.id);
   };
 
   return (
-    <div className="flex items-start justify-between p-4 bg-card rounded-md border border-border hover:bg-accent/5 transition-colors">
-      <div className="flex-1 mr-4">
-        <p className="text-foreground text-sm font-medium mb-1 leading-tight">
+    <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-md border border-border/50 hover:bg-secondary/70 transition-colors">
+      <div className="flex-1 min-w-0">
+        <h4 className="font-medium text-sm text-foreground line-clamp-1">
           {suggestion.title}
-        </p>
+        </h4>
         {suggestion.description && (
-          <p className="text-muted-foreground text-xs mb-2 leading-relaxed">
+          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
             {suggestion.description}
           </p>
         )}
-        <p className="text-muted-foreground text-xs">
-          por {suggestion.Practitioners.full_name}
+        <p className="text-xs text-muted-foreground mt-1">
+          Por {suggestion.Practitioners?.full_name || 'Anônimo'}
         </p>
       </div>
       
-      <div className="flex items-center gap-3 flex-shrink-0">
-        <span className="text-muted-foreground text-sm font-medium min-w-[2rem] text-right">
+      <div className="flex items-center gap-2 ml-3">
+        <span className="text-sm font-medium text-foreground min-w-[2rem] text-right">
           {voteCount}
         </span>
-        <button
+        <Button
+          variant={hasVoted ? "default" : "outline"}
+          size="sm"
           onClick={handleVote}
-          className={`p-2 rounded-md transition-all duration-200 ${
-            isVoted 
-              ? 'bg-primary text-primary-foreground shadow-sm' 
-              : 'bg-secondary text-secondary-foreground hover:bg-accent border border-border'
-          }`}
-          aria-label={isVoted ? 'Remove vote' : 'Vote for this suggestion'}
+          disabled={isVoting}
+          className="p-2 h-8 w-8"
         >
-          <ChevronUp size={16} className={isVoted ? 'text-primary-foreground' : ''} />
-        </button>
+          <ChevronUp 
+            size={14} 
+            className={hasVoted ? "text-primary-foreground" : "text-muted-foreground"} 
+          />
+        </Button>
       </div>
     </div>
   );
