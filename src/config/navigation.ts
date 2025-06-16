@@ -31,10 +31,10 @@ export const navigationItems: NavigationItem[] = [
 export const mobileNavigationItems: NavigationItem[] = [
   ...navigationItems.slice(0, 3), // Home, Acervo, Comunidade
   { 
-    icon: Settings, 
-    label: 'Config', 
-    path: '/configuracoes',
-    mobileLabel: 'Config'
+    icon: User, 
+    label: 'Perfil', 
+    path: '/perfil',
+    mobileLabel: 'Perfil'
   },
 ];
 
