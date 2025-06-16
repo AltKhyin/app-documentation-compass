@@ -1,7 +1,8 @@
+
 # **\[DOC\_2\] EVIDENS System Architecture**
 
-**Version: 1.1**  
- **Date: June 14, 2025**
+**Version: 1.2**  
+ **Date: June 16, 2025**
 
 **Purpose — This document is the canonical, high‑level technical blueprint for the entire EVIDENS ecosystem.**  
  **It defines the permanent boundaries between the Front‑End applications and the Supabase‑native Back‑End, the communication contracts between those layers, and the mandatory technology choices.**  
@@ -65,7 +66,7 @@
 
   * **`layouts.desktop[]` \+ `layouts.mobile[]` — responsive positional metadata.**
 
-* **The Main App’s `LayoutAwareRenderer` consumes this schema; the Admin App’s VCE produces it.**
+* **The Main App's `LayoutAwareRenderer` consumes this schema; the Admin App's VCE produces it.**
 
 ---
 
@@ -83,7 +84,13 @@
 
 * **JWT is the single source of truth for identity & role (`role`, `subscription_tier`).**
 
-**\#\#\# 2.3 API Layer (Dual Strategy)**
+**\#\#\# 2.3 Cross-Origin Resource Sharing (CORS) Policy**
+
+* **Architectural Requirement: All Supabase Edge Functions MUST manually implement CORS handling logic within their code. This involves responding to `OPTIONS` preflight requests and adding `Access-Control-Allow-Origin` headers to all responses. This is a non-negotiable security and functionality requirement.**
+
+* **Note: As of 2025, Supabase no longer provides dashboard-based CORS configuration. All CORS handling must be implemented at the function level.**
+
+**\#\#\# 2.4 API Layer (Dual Strategy)**
 
 | Layer | When To Use | Transport |
 | ----- | ----- | ----- |
@@ -93,7 +100,7 @@
 *   
   **Detailed contracts live in \[DOC\_5\] API\_CONTRACT.md.**
 
-**\#\#\# 2.4 File Storage**
+**\#\#\# 2.5 File Storage**
 
 * **All binaries (avatars, cover images) → Supabase Storage. Paths are stored in DB; access controlled by Storage RLS.**
 
@@ -154,5 +161,3 @@
 ---
 
 ***End of \[DOC\_2\] EVIDENS System Architecture***
-
-1. 

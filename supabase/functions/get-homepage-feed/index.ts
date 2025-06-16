@@ -7,6 +7,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
 }
 
 interface PopularityScore {
@@ -17,7 +18,7 @@ interface PopularityScore {
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
@@ -91,11 +92,11 @@ serve(async (req) => {
       supabase
         .from('Suggestions')
         .select(`
-          id, title, description, total_votes, created_at,
-          Practitioners(full_name)
+          id, title, description, upvotes, created_at,
+          Practitioners!Suggestions_submitted_by_fkey(full_name)
         `)
-        .eq('status', 'open')
-        .order('total_votes', { ascending: false })
+        .eq('status', 'pending')
+        .order('upvotes', { ascending: false })
         .limit(10),
 
       // 5. Get data for popularity calculation

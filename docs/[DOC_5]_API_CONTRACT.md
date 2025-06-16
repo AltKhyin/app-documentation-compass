@@ -1,16 +1,17 @@
+
 # ***\[DOC\_5\] EVIDENS API Contract***
 
-***Version:** 3.1*  
- ***Date:** June 14, 2025*
+***Version:** 3.2*  
+ ***Date:** June 16, 2025*
 
-***Purpose:** This document defines the canonical contract for all server‑side business logic within the EVIDENS ecosystem. It specifies when to use Supabase’s auto‑generated API and provides the definitive blueprint for all custom Supabase Edge Functions. The AI developer must adhere to this specification to ensure all backend interactions are secure, transactional, and predictable.*
+***Purpose:** This document defines the canonical contract for all server‑side business logic within the EVIDENS ecosystem. It specifies when to use Supabase's auto‑generated API and provides the definitive blueprint for all custom Supabase Edge Functions. The AI developer must adhere to this specification to ensure all backend interactions are secure, transactional, and predictable.*
 
 ---
 
 ## ***1.0 Core Principles & The Dual API Strategy***
 
 ***PRINCIPLE 1 (Default to Auto‑API):***  
- *For all simple Create, Read, Update, and Delete (CRUD) operations, the primary method of data interaction is through Supabase’s auto‑generated REST API, secured by RLS policies in \[DOC\_4\]\_ROW\_LEVEL\_SECURITY.md. Custom Edge Functions **must not** be created for these tasks.*
+ *For all simple Create, Read, Update, and Delete (CRUD) operations, the primary method of data interaction is through Supabase's auto‑generated REST API, secured by RLS policies in \[DOC\_4\]\_ROW\_LEVEL\_SECURITY.md. Custom Edge Functions **must not** be created for these tasks.*
 
 *Use Case: Fetching lists (e.g., reviews, user profiles), updating simple fields (e.g., biography).*  
  *Implementation: Use the `supabase-js` client directly within the data‑fetching hooks defined in \[DOC\_6\]\_DATA\_FETCHING\_STRATEGY.md.*
@@ -25,6 +26,9 @@
 
 ***PRINCIPLE 4 (Schema‑Driven Contract):***  
  *Input and output of every Edge Function **must** be defined by Zod schemas to guarantee type safety and predictable behavior.*
+
+***PRINCIPLE 5 (CORS Handling):***  
+ *Every Edge Function MUST include a boilerplate block at the beginning of its code to handle the `OPTIONS` preflight request, returning the appropriate `Access-Control-Allow-*` headers. All successful responses from the function must also include the `Access-Control-Allow-Origin` header.*
 
 ---
 
@@ -108,13 +112,15 @@
 
 ***Business Logic:***
 
-1. *Validate JWT contains `admin` role; else 403\.*
+1. *Handle CORS preflight request.*
 
-2. *Validate body against `UpsertReview`; else 400\.*
+2. *Validate JWT contains `admin` role; else 403\.*
 
-3. *If `reviewId` exists, verify edit permission; else 403\.*
+3. *Validate body against `UpsertReview`; else 400\.*
 
-4. *Upsert into `Reviews` table via `supabase-js`.*
+4. *If `reviewId` exists, verify edit permission; else 403\.*
+
+5. *Upsert into `Reviews` table via `supabase-js`.*
 
 ***Success Response:** `200 OK` (update) or `201 Created` (create)*
 
@@ -166,11 +172,13 @@
 
 ***Business Logic (Transactional RPC):***
 
-1. *Extract `practitioner_id` from JWT.*
+1. *Handle CORS preflight request.*
 
-2. *Validate input; else 400\.*
+2. *Extract `practitioner_id` from JWT.*
 
-3. *RPC transaction:*  
+3. *Validate input; else 400\.*
+
+4. *RPC transaction:*  
     *a. INSERT into `CommunityPosts` with `upvotes = 1`.*  
     *b. INSERT into `CommunityPost_Votes` for auto‑upvote.*  
     *c. UPDATE `Practitioners.contribution_score` \+1.*  
@@ -204,12 +212,14 @@
 
 ***Business Logic (Transactional RPC):***
 
-1. *Validate input; else 400\.*
+1. *Handle CORS preflight request.*
 
-2. *RPC transaction:*  
+2. *Validate input; else 400\.*
+
+3. *RPC transaction:*  
     *a. UPSERT/DELETE in `CommunityPost_Votes`.*  
     *b. UPDATE `CommunityPosts.upvotes / downvotes`.*  
-    *c. UPDATE author’s `contribution_score` by delta.*
+    *c. UPDATE author's `contribution_score` by delta.*
 
 ***Success Response:** `200 OK`*
 
@@ -233,11 +243,13 @@
 
 ***Business Logic (Transactional):***
 
-1. *Verify `admin` role; else 403\.*
+1. *Handle CORS preflight request.*
 
-2. *Validate input; else 400\.*
+2. *Verify `admin` role; else 403\.*
 
-3. *Transaction:*  
+3. *Validate input; else 400\.*
+
+4. *Transaction:*  
     *a. UPDATE `Reviews.status` to `published`.*  
     *b. FETCH `Review.title`.*  
     *c. INSERT into `CommunityPosts` with title `Discussão: [Review Title]`.*
@@ -266,17 +278,18 @@
 
 ***Business Logic:***
 
-1. *Determine last‑processed timestamp.*
+1. *Handle CORS preflight request.*
 
-2. *SELECT new events since then.*
+2. *Determine last‑processed timestamp.*
 
-3. *Aggregate counts (DAU, page views).*
+3. *SELECT new events since then.*
 
-4. *UPSERT into `Summary_*` tables.*
+4. *Aggregate counts (DAU, page views).*
 
-5. *Record new last‑processed timestamp.*
+5. *UPSERT into `Summary_*` tables.*
+
+6. *Record new last‑processed timestamp.*
 
 ---
 
 *End of \[DOC\_5\] EVIDENS API Contract*
-
