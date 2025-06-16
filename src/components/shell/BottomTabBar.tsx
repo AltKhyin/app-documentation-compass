@@ -1,25 +1,44 @@
 
-// ABOUTME: The primary navigation for mobile viewports, fixed to the bottom.
+// ABOUTME: Mobile bottom navigation with tab icons and labels.
 import React from 'react';
-import { Home, Users, Box, CircleUserRound } from 'lucide-react';
-import NavItem from './NavItem';
-
-const navItems = [
-  { href: '/', label: 'Início', icon: Home },
-  { href: '/acervo', label: 'Acervo', icon: Box },
-  { href: '/comunidade', label: 'Comunidade', icon: Users },
-  { href: '/perfil', label: 'Perfil', icon: CircleUserRound },
-];
+import { Home, Archive, Users, Settings } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const BottomTabBar = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const tabs = [
+    { icon: Home, label: 'Início', path: '/' },
+    { icon: Archive, label: 'Acervo', path: '/acervo' },
+    { icon: Users, label: 'Comunidade', path: '/comunidade' },
+    { icon: Settings, label: 'Config', path: '/configuracoes' },
+  ];
+
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-10 border-t bg-background">
-      <div className="grid h-16 grid-cols-4 items-center justify-items-center">
-        {navItems.map((item) => (
-          <NavItem key={item.href} {...item} isCollapsed={true} isMobile={true} />
-        ))}
+    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border">
+      <div className="flex">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = location.pathname === tab.path;
+          
+          return (
+            <button
+              key={tab.path}
+              onClick={() => navigate(tab.path)}
+              className={`flex-1 flex flex-col items-center py-2 px-1 transition-colors ${
+                isActive 
+                  ? 'text-primary' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Icon size={20} />
+              <span className="text-xs mt-1">{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
-    </nav>
+    </div>
   );
 };
 

@@ -1,59 +1,51 @@
 
-// ABOUTME: This is the main application component, handling routing and global providers.
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Outlet,
-} from 'react-router-dom';
-import { Toaster } from '@/components/ui/sonner';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { AuthSessionProvider } from './components/auth/AuthSessionProvider';
-import { AppDataProvider } from './contexts/AppDataContext';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import IndexPage from './pages/Index';
-import NotFound from './pages/NotFound';
-import ProtectedRoute from './components/auth/ProtectedRoute';
-import AppShell from './components/shell/AppShell';
+// ABOUTME: Main application router and providers configuration.
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
+import Index from "./pages/Index";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import AcervoPage from "./pages/AcervoPage";
+import NotFound from "./pages/NotFound";
+import { AuthSessionProvider } from "./components/auth/AuthSessionProvider";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import AppShell from "./components/shell/AppShell";
+import { AppDataProvider } from "./contexts/AppDataContext";
 
-function App() {
-  return (
-    <Router>
-      <Toaster />
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <TooltipProvider>
-        <AuthSessionProvider>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-
-            {/*
-              Fix: Move AppDataProvider to wrap only the AppShell and its children,
-              ensuring the provider is available when AppShell components render.
-            */}
-            <Route element={<ProtectedRoute />}>
-              <Route
-                element={
+        <Toaster />
+        <BrowserRouter>
+          <AuthSessionProvider>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/*" element={
+                <ProtectedRoute>
                   <AppDataProvider>
                     <AppShell>
-                      <Outlet />
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/acervo" element={<AcervoPage />} />
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
                     </AppShell>
                   </AppDataProvider>
-                }
-              >
-                <Route path="/" element={<IndexPage />} />
-                <Route path="/acervo" element={<div>Acervo Page</div>} />
-                <Route path="/comunidade" element={<div>Comunidade Page</div>} />
-                <Route path="/perfil" element={<div>Perfil Page</div>} />
-              </Route>
-            </Route>
-
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthSessionProvider>
+                </ProtectedRoute>
+              } />
+            </Routes>
+          </AuthSessionProvider>
+        </BrowserRouter>
       </TooltipProvider>
-    </Router>
-  );
-}
+    </ThemeProvider>
+  </QueryClientProvider>
+);
 
 export default App;
