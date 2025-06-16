@@ -1,163 +1,190 @@
 
-# **\[DOC\_2\] EVIDENS System Architecture**
+# **[DOC_2] System Architecture**
 
-**Version: 1.2**  
- **Date: June 16, 2025**
-
-**Purpose — This document is the canonical, high‑level technical blueprint for the entire EVIDENS ecosystem.**  
- **It defines the permanent boundaries between the Front‑End applications and the Supabase‑native Back‑End, the communication contracts between those layers, and the mandatory technology choices.**  
- **Every architectural or implementation decision must be traceable back to the rules in this document.**
+**Version:** 3.0 (Vite-First Update)  
+**Date:** June 16, 2025  
+**Purpose:** This document defines the canonical system architecture for the EVIDENS platform, optimized for the Vite + React development environment.
 
 ---
 
-**\#\# 1.0 Overview · The Decoupled Architecture**
+## **1.0 Architecture Overview**
 
-**graph TD**
+### **1.1 Core Technology Stack**
 
-  **subgraph "Frontend Applications"**
+**Frontend Application:**
+- **Framework:** Vite + React 18 (Single-Page Application)
+- **Language:** TypeScript
+- **Styling:** TailwindCSS + shadcn/ui components
+- **State Management:** TanStack Query v5 + Zustand
+- **Routing:** React Router v6
+- **Build Tool:** Vite
 
-      **A\[Main Application (Next.js)\]**
+**Backend Services:**
+- **Database:** PostgreSQL (via Supabase)
+- **Authentication:** Supabase Auth with JWT custom claims
+- **API Layer:** Supabase auto-generated APIs + Edge Functions
+- **File Storage:** Supabase Storage
+- **Real-time:** Supabase Realtime (WebSocket)
 
-      **B\[Admin Application (Next.js) – hosts the \*\*Visual Composition Engine\*\*\]**
+### **1.2 Application Architecture**
 
-  **end**
+The EVIDENS platform is implemented as a unified, client-side rendered (CSR) application. This single application serves:
 
-  **subgraph "Backend (Supabase Platform)"**
+1. **Public Interface:** Homepage, Acervo (review collection), community features
+2. **Authenticated Experience:** User profiles, personalized feeds, contribution features  
+3. **Administrative Interface:** Content management and moderation (via protected routes)
 
-      **C\[Supabase Auth\]**
+### **1.3 Architectural Trade-offs**
 
-      **D\[Supabase Database (PostgreSQL \+ RLS)\]**
+The selection of a Vite + React Single-Page Application (SPA) architecture prioritizes:
 
-      **E\[Supabase Edge Functions\]**
+**Advantages:**
+- Rapid development iteration
+- Highly interactive user experience
+- Seamless client-side routing
+- Optimized for dynamic, data-driven interfaces
+- Strong development tooling and hot-reload capabilities
 
-      **F\[Supabase Storage\]**
-
-  **end**
-
-  **A \--\>|"supabase‑js SDK"| C**
-
-  **A \--\>|"supabase‑js SDK"| D**
-
-  **A \--\>|"supabase‑js SDK"| E**
-
-  **A \--\>|"supabase‑js SDK"| F**
-
-  **B \--\>|"supabase‑js SDK"| C**
-
-  **B \--\>|"supabase‑js SDK"| D**
-
-  **B \--\>|"supabase‑js SDK"| E**
-
-  **B \--\>|"supabase‑js SDK"| F**
-
-**\#\#\# 1.1 Applications**
-
-* **Main Application (`app.evidens.com.br`) — User‑facing. Optimised for content consumption, discovery and community.**
-
-* **Admin Application (`admin.evidens.com.br`) — Secure, staff‑only. Hosts the Visual Composition Engine (VCE), user & tag managers, analytics, etc.**
-
-**\#\#\# 1.2 Data Contract Between Apps**
-
-* **Both apps read/write the same Postgres cluster via Supabase.**
-
-* **Reviews.structured\_content now stores a page schema (v2.0). It contains:**
-
-  * **`nodes[]` — semantic content blocks.**
-
-  * **`layouts.desktop[]` \+ `layouts.mobile[]` — responsive positional metadata.**
-
-* **The Main App's `LayoutAwareRenderer` consumes this schema; the Admin App's VCE produces it.**
+**Strategic Trade-offs:**
+- **Search Engine Optimization (SEO):** As a Client-Side Rendered application, content is generated in the user's browser. This makes it challenging for search engine crawlers to index public content effectively, limiting organic discovery via search engines like Google. This is a known and accepted constraint of the current architecture.
+- **Initial Load Time:** All application code is loaded on first visit, though this is mitigated by Vite's code-splitting capabilities.
 
 ---
 
-**\#\# 2.0 Backend · Supabase‑Native Stack**
+## **2.0 Frontend Application Structure**
 
-**\#\#\# 2.1 Database (PostgreSQL)**
+### **2.1 Directory Organization**
 
-* **Full DDL is in \[DOC\_3\] DATABASE\_SCHEMA.md.**
+The application follows a feature-first organization pattern within the `src/` directory:
 
-* **Rule — Business logic that spans multiple tables must not be hidden in complex views/triggers; implement it in Edge Functions.**
+```
+/src/
+├── components/
+│   ├── shell/          # App layout (AppShell, Sidebar, Header)
+│   ├── homepage/       # Homepage-specific components
+│   ├── acervo/         # Acervo-specific components
+│   ├── auth/           # Authentication components
+│   └── ui/             # Reusable UI components (buttons, cards, etc.)
+├── config/             # Application configuration (navigation, constants)
+├── contexts/           # React Context providers
+├── hooks/              # Custom hooks and TanStack Query hooks
+├── pages/              # Top-level route components
+├── store/              # Zustand global state stores
+├── lib/                # Utility functions and Supabase client
+└── types/              # Shared TypeScript interfaces
+```
 
-**\#\#\# 2.2 Authentication**
+### **2.2 Component Architecture Principles**
 
-* **Technology — Supabase Auth only. `next-auth` is forbidden.**
+1. **Atomic Design:** UI components are organized from atomic (Button) to complex (ReviewCarousel)
+2. **Feature Isolation:** Feature-specific components are co-located with their logic
+3. **Shared UI Library:** Common components are centralized in `components/ui/`
+4. **Responsive Design:** All components implement mobile-first, adaptive designs
 
-* **JWT is the single source of truth for identity & role (`role`, `subscription_tier`).**
+### **2.3 State Management Strategy**
 
-**\#\#\# 2.3 Cross-Origin Resource Sharing (CORS) Policy**
-
-* **Architectural Requirement: All Supabase Edge Functions MUST manually implement CORS handling logic within their code. This involves responding to `OPTIONS` preflight requests and adding `Access-Control-Allow-Origin` headers to all responses. This is a non-negotiable security and functionality requirement.**
-
-* **Note: As of 2025, Supabase no longer provides dashboard-based CORS configuration. All CORS handling must be implemented at the function level.**
-
-**\#\#\# 2.4 API Layer (Dual Strategy)**
-
-| Layer | When To Use | Transport |
-| ----- | ----- | ----- |
-| **Auto‑generated REST** | **Simple CRUD gated only by RLS** | **HTTPS (supabase-js)** |
-| **Edge Functions** | **Multi‑step, transactional or privileged logic** | **HTTPS (supabase-js → `/functions/v1/...`)** |
-
-*   
-  **Detailed contracts live in \[DOC\_5\] API\_CONTRACT.md.**
-
-**\#\#\# 2.5 File Storage**
-
-* **All binaries (avatars, cover images) → Supabase Storage. Paths are stored in DB; access controlled by Storage RLS.**
-
----
-
-**\#\# 3.0 Frontend · Applications & Data Strategy**
-
-**\#\#\# 3.1 Main Application**
-
-* **Next.js (App Router). Uses SSR/SSG for SEO‑critical pages (Reviews), CSR elsewhere.**
-
-* **Data layer: React Query custom hooks (`useXQuery`). UI components never call `supabase.from()` directly.**
-
-* **Mobile adaptation strictly follows \[DOC\_8\] MOBILE\_ADAPTATION.md.**
-
-**\#\#\# 3.2 Admin Application**
-
-* **SPA (Next.js Pages Router). Auth‑guarded at the layout level.**
-
-* **Hosts the Visual Composition Engine — a React Flow \+ dnd‑kit canvas for free‑form page authoring.**
-
-* **Other admin tools (User manager, Tag tree, Analytics dashboard) live here.**
-
-**\#\#\# 3.3 Data‑Fetching Mandate**
-
-* **All server state in both apps travels through React Query hooks; see \[DOC\_6\] DATA\_FETCHING\_STRATEGY.md for the mandatory pattern.**
-
-* **Query deduplication, cache, background revalidation are handled by React Query.**
+**Local State:** `useState` and `useReducer` for component-specific state
+**Server State:** TanStack Query for all API interactions and caching
+**Global State:** Zustand for authentication state and app-wide configuration
+**Form State:** React Hook Form for complex form interactions
 
 ---
 
-**\#\# 4.0 Server‑Side & Asynchronous Processes**
+## **3.0 Backend Architecture**
 
-**\#\#\# 4.1 Cron Jobs**
+### **3.1 Supabase Services Integration**
 
-* **Implemented as scheduled Edge Functions.**
+**Database Layer:**
+- PostgreSQL with Row Level Security (RLS) policies
+- Auto-generated REST APIs with real-time subscriptions
+- Custom database functions for complex business logic
 
-* **Examples: analytics ETL, "Próxima Edição" scheduler, subscription‑billing sync (future).**
+**Authentication:**
+- JWT-based authentication with custom claims
+- Role-based access control (practitioner, moderator, admin)
+- OAuth providers (Google) + email/password
 
-**\#\#\# 4.2 Analytics Pipeline**
+**Edge Functions:**
+- Server-side business logic for complex operations
+- Rate limiting and input validation
+- Integration with external services
 
-1. **Ingest — `/functions/v1/log-event` (fast write to `Analytics_Events`).**
+### **3.2 Data Fetching Architecture**
 
-2. **Aggregate — `run-analytics-etl` cron populates `Summary_*` tables.**
+All data fetching follows the patterns defined in [DOC_6]_DATA_FETCHING_STRATEGY.md:
 
-3. **Serve — Admin App dashboards read from summaries.**
+**Golden Rules:**
+1. UI components NEVER call Supabase client directly
+2. All data access is encapsulated in custom hooks
+3. Mutations invalidate relevant queries for consistency
+
+**Hook Patterns:**
+```typescript
+// Queries (READ operations)
+useConsolidatedHomepageFeedQuery()
+useAcervoDataQuery()
+useUserProfileQuery()
+
+// Mutations (WRITE operations)  
+useCastVoteMutation()
+useSubmitSuggestionMutation()
+useUpdateProfileMutation()
+```
 
 ---
 
-**\#\# 5.0 Security & Compliance Highlights**
+## **4.0 Security Architecture**
 
-* **RLS first — Every table has `SELECT`/`INSERT`/`UPDATE`/`DELETE` policies.**
+### **4.1 Authentication & Authorization**
 
-* **API keys: public (`anon`) for browsers, `service_role` only in Edge Functions.**
+**JWT Custom Claims:** User roles and subscription tiers are embedded in JWT tokens via database triggers
+**Row Level Security:** All database access is controlled via RLS policies
+**Route Protection:** Sensitive routes use `ProtectedRoute` component with role checking
+**API Rate Limiting:** All Edge Functions implement rate limiting
 
-* **Access levels enforced by RLS & middleware: unauth, free, paying, admin.**
+### **4.2 Data Access Patterns**
+
+**Public Data:** Available to anonymous users (published reviews, public profiles)
+**User Data:** Accessible only to the authenticated user (personal settings, private data)
+**Tier-based Access:** Premium content restricted by subscription tier
+**Admin Data:** Administrative functions restricted to admin role
 
 ---
 
-***End of \[DOC\_2\] EVIDENS System Architecture***
+## **5.0 Performance & Scalability**
+
+### **5.1 Client-Side Optimizations**
+
+**Code Splitting:** Vite automatically splits code by routes and components
+**Query Caching:** TanStack Query provides aggressive caching with 5-minute stale time
+**Optimistic Updates:** User interactions update immediately with server synchronization
+**Image Optimization:** Responsive images with proper sizing and lazy loading
+
+### **5.2 Database Optimizations**
+
+**Indexing:** Critical foreign keys and query patterns are indexed
+**Query Optimization:** Database functions minimize round-trips
+**Connection Pooling:** Managed by Supabase infrastructure
+**Realtime Subscriptions:** Used sparingly for critical real-time features
+
+---
+
+## **6.0 Future Extensibility**
+
+### **6.1 Protected Route Admin Features**
+
+The current architecture supports future admin functionality through:
+- Role-based route protection (`/admin/*` routes)
+- Enhanced `ProtectedRoute` component with role checking
+- Shared component library for consistent admin UI
+
+### **6.2 Migration Considerations**
+
+Should future requirements necessitate:
+- **Server-Side Rendering:** The component architecture is compatible with Next.js migration
+- **Multi-app Structure:** Components can be extracted to shared packages
+- **API Gateway:** Edge Functions can be migrated to dedicated backend services
+
+---
+
+*End of [DOC_2] System Architecture*
