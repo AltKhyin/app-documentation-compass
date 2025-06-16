@@ -2,7 +2,6 @@
 // ABOUTME: Main homepage that uses consolidated data to render all homepage modules efficiently.
 
 import React from 'react';
-import { useAppData } from '@/contexts/AppDataContext';
 import { useConsolidatedHomepageFeedQuery } from '../../packages/hooks/useHomepageFeedQuery';
 import FeaturedReview from '../components/homepage/FeaturedReview';
 import ReviewCarousel from '../components/homepage/ReviewCarousel';
@@ -10,7 +9,7 @@ import NextEditionModule from '../components/homepage/NextEditionModule';
 import { Skeleton } from '../components/ui/skeleton';
 
 const Index = () => {
-  // Use the consolidated query directly for homepage data
+  // Use ONLY the consolidated query - no other API calls allowed
   const { data, isLoading, isError, error } = useConsolidatedHomepageFeedQuery();
 
   console.log('Homepage render state:', { data, isLoading, isError, error });

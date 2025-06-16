@@ -23,6 +23,9 @@ interface AppDataProviderProps {
  * Global provider for consolidated app data.
  * Fetches user profile, notification count, and homepage data in a single request.
  * Follows [DOC_6] data fetching strategy to minimize API calls.
+ * 
+ * CRITICAL: This is the ONLY source of truth for app data. No component should
+ * make individual API calls to fetch user profiles, notifications, or homepage data.
  */
 export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) => {
   const { 
@@ -52,6 +55,8 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
 /**
  * Hook to access consolidated app data including user profile and notifications.
  * Replaces individual useUserProfileQuery and useNotificationCountQuery hooks.
+ * 
+ * RULE: All components must use this hook instead of making direct API calls.
  */
 export const useAppData = (): AppDataContextType => {
   const context = useContext(AppDataContext);

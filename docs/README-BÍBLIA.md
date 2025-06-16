@@ -1,6 +1,6 @@
 
 # README-BÍBLIA.md
-**Version:** 2.1.0  
+**Version:** 2.2.0  
 **Last Updated:** June 16, 2025  
 **Purpose:** Living state document providing complete context of the EVIDENS repository
 
@@ -27,39 +27,42 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 - **Location**: `src/components/shell/`
 
 #### Homepage Feed System
-- **Status**: 100% Complete - **RECENTLY OPTIMIZED**
+- **Status**: 100% Complete - **AGGRESSIVELY OPTIMIZED** (v2.2.0)
 - **Implementation**: 
-  - **NEW**: Consolidated single API call architecture (v2.1.0)
+  - **ENFORCED**: Single consolidated API call architecture - NO EXCEPTIONS
   - Single `get-homepage-feed` Edge Function returns ALL data (homepage + user + notifications)
   - Rate limited (100 req/min), graceful error handling, CORS enabled
-  - **API Calls Reduced**: From 14+ calls to 2-3 calls per page load
+  - **API Calls**: Reduced from 14+ to 1-2 calls per page load (TARGET ACHIEVED)
+  - **POLICY**: All individual API calls to Reviews, Practitioners, Notifications ELIMINATED
 - **Components**: FeaturedReview, ReviewCarousel, NextEditionModule, SuggestionPollItem
 - **Data Flow**: `useConsolidatedHomepageFeedQuery` → `AppDataContext` → Shell components
-- **Edge Function**: `supabase/functions/get-homepage-feed/index.ts` (290 lines - needs refactoring)
+- **Edge Function**: `supabase/functions/get-homepage-feed/index.ts` (351 lines - needs refactoring)
 - **Location**: `src/pages/Index.tsx`, `src/components/homepage/`, `packages/hooks/useHomepageFeedQuery.ts`
 
-#### Data Architecture (OPTIMIZED v2.1.0)
-- **Status**: 100% Complete - **RECENTLY OPTIMIZED**
-- **Pattern**: Consolidated data fetching following [DOC_6] guidelines
+#### Data Architecture (ENFORCED v2.2.0)
+- **Status**: 100% Complete - **AGGRESSIVELY ENFORCED**
+- **Pattern**: SINGLE consolidated data fetching following [DOC_6] guidelines
 - **Implementation**: 
-  - Single `AppDataContext` provides user profile + notification data
-  - `useConsolidatedHomepageFeedQuery` replaces multiple individual queries
-  - Legacy hooks maintained for backward compatibility
+  - Single `AppDataContext` provides ALL app data (user profile + notifications + homepage)
+  - `useConsolidatedHomepageFeedQuery` is the ONLY data fetching hook allowed
+  - Legacy hooks exist only as deprecated wrappers pointing to consolidated data
+  - **ELIMINATED**: All direct API calls to individual endpoints
 - **Benefits**: Eliminated redundant API calls, improved performance, better caching
 - **Location**: `src/contexts/AppDataContext.tsx`, `packages/hooks/`
 
 ### 🔄 CURRENT ARCHITECTURE DECISIONS
 
-#### API Strategy (Updated v2.1.0)
+#### API Strategy (ENFORCED v2.2.0)
 - **Edge Functions**: Complex business logic, consolidated data fetching
-- **Auto-generated API**: Simple CRUD with RLS policies
+- **Auto-generated API**: Simple CRUD with RLS policies (NOT used for homepage/user data)
 - **Rate Limiting**: Implemented on all Edge Functions (100 req/min)
-- **Data Consolidation**: Single source for related data to minimize API calls
+- **Data Consolidation**: MANDATORY single source for all related data
+- **STRICT POLICY**: No individual API calls allowed for homepage, user, or notification data
 
 #### State Management
-- **Global Auth**: Zustand store (`src/store/auth.ts`)
-- **Server State**: TanStack Query with consolidated hooks
-- **App Data**: React Context for user profile + notifications
+- **Global Auth**: Zustand store (`src/store/auth.ts`) - auth state ONLY
+- **Server State**: TanStack Query with SINGLE consolidated hook
+- **App Data**: React Context for ALL app data (user profile + notifications + homepage)
 - **UI State**: Local useState/useReducer
 
 #### Database Schema
@@ -76,12 +79,12 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 │   │   ├── shell/             # App shell navigation
 │   │   ├── homepage/          # Homepage modules
 │   │   └── ui/                # shadcn/ui components
-│   ├── contexts/              # React contexts (NEW: AppDataContext)
-│   ├── hooks/                 # Custom React hooks
+│   ├── contexts/              # React contexts (CRITICAL: AppDataContext)
+│   ├── hooks/                 # Custom React hooks (mostly deprecated wrappers)
 │   ├── pages/                 # Route components
-│   └── store/                 # Zustand stores
+│   └── store/                 # Zustand stores (auth only)
 ├── packages/
-│   └── hooks/                 # Shared data-fetching hooks (UPDATED)
+│   └── hooks/                 # Shared data-fetching hooks (SINGLE consolidated hook)
 ├── supabase/
 │   └── functions/            # Edge Functions
 └── docs/                     # Documentation & blueprints
@@ -89,11 +92,12 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 
 ### 🔧 TECHNICAL IMPLEMENTATION NOTES
 
-#### Performance Optimizations (NEW v2.1.0)
-- **API Call Reduction**: From 14+ to 2-3 calls per page load
-- **Consolidated Queries**: Single Edge Function for related data
+#### Performance Optimizations (ENFORCED v2.2.0)
+- **API Call Reduction**: From 14+ to 1-2 calls per page load (TARGET ACHIEVED)
+- **Consolidated Queries**: SINGLE Edge Function for ALL related data
 - **Smart Caching**: TanStack Query with 5min staleTime, 15min gcTime
 - **Rate Limiting**: 100 requests/minute on Edge Functions
+- **POLICY ENFORCEMENT**: Zero tolerance for individual API calls
 
 #### Error Handling
 - **Graceful Degradation**: Homepage works with partial data failures
@@ -109,7 +113,7 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 ### 🚧 NEXT DEVELOPMENT PRIORITIES
 
 1. **Refactor Large Files**: 
-   - `get-homepage-feed` Edge Function (290 lines - needs splitting)
+   - `get-homepage-feed` Edge Function (351 lines - needs splitting)
    - Consider breaking into smaller focused functions
 
 2. **Missing Core Features**:
@@ -128,11 +132,11 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 
 #### Common Issues
 - **Auth Limbo**: Cleared via auth state cleanup on login/logout
-- **API Overload**: Resolved via consolidated data fetching (v2.1.0)
+- **API Overload**: RESOLVED via aggressive consolidated data fetching (v2.2.0)
 - **Cache Invalidation**: Handled by TanStack Query patterns
 
 #### Edge Function Status
-- `get-homepage-feed`: ✅ Active, Rate Limited, Needs Refactoring
+- `get-homepage-feed`: ✅ Active, Rate Limited, Handles ALL app data, Needs Refactoring
 - `get-personalized-recommendations`: ⚠️ Has schema errors (ReviewTags missing)
 
 #### Database Health
@@ -140,14 +144,24 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 - Analytics_Events table missing (affects recommendations)
 - Foreign key relationships need validation
 
+### 🚨 CRITICAL API CALL POLICY (v2.2.0)
+
+**ZERO TOLERANCE POLICY**: No individual API calls allowed for:
+- User profile data (`/rest/v1/Practitioners`)
+- Notification counts (`/rest/v1/Notifications`)
+- Homepage content (`/rest/v1/Reviews`, `/rest/v1/Suggestions`, `/rest/v1/SiteSettings`)
+
+**ENFORCEMENT**: All components MUST use `AppDataContext` and `useConsolidatedHomepageFeedQuery`
+
+**MONITORING**: Any individual API calls detected are considered bugs and must be eliminated immediately
+
 ---
 
-**Recent Changes (v2.1.0):**
-- Implemented consolidated data fetching architecture
-- Reduced API calls from 14+ to 2-3 per page load
-- Added AppDataContext for global app data
-- Maintained backward compatibility with legacy hooks
-- Added comprehensive rate limiting
-- Improved error handling and logging
+**Recent Changes (v2.2.0):**
+- AGGRESSIVELY enforced single consolidated API call policy
+- Eliminated all individual API calls to Reviews, Practitioners, Notifications
+- Updated auth store to not fetch practitioner data
+- Enhanced caching and error handling in consolidated hook
+- Added strict policy documentation and monitoring guidelines
 
-This document reflects the current state as of June 16, 2025, post API optimization.
+This document reflects the current state as of June 16, 2025, post aggressive API consolidation enforcement.

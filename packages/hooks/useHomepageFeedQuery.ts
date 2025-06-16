@@ -50,10 +50,13 @@ export interface ConsolidatedHomepageData {
 
 /**
  * Fetches the complete consolidated homepage feed data from the get-homepage-feed Edge Function.
- * This single function replaces multiple separate API calls and follows [DOC_6] guidelines.
+ * This single function replaces ALL separate API calls and follows [DOC_6] guidelines.
+ * 
+ * CRITICAL: This is the ONLY function that should fetch app data. All other direct API calls
+ * to Reviews, Practitioners, Notifications, etc. must be removed from the codebase.
  */
 const fetchConsolidatedHomepageFeed = async (): Promise<ConsolidatedHomepageData> => {
-  console.log('Fetching consolidated homepage feed data...');
+  console.log('🚀 Fetching consolidated homepage feed data (SINGLE API CALL)...');
   
   try {
     const { data, error } = await supabase.functions.invoke('get-homepage-feed', {
@@ -62,27 +65,39 @@ const fetchConsolidatedHomepageFeed = async (): Promise<ConsolidatedHomepageData
     });
 
     if (error) {
-      console.error('Error fetching consolidated homepage feed:', error);
+      console.error('❌ Error fetching consolidated homepage feed:', error);
       throw new Error(error.message || 'Failed to fetch consolidated homepage feed');
     }
 
     if (!data) {
-      console.error('No data returned from consolidated homepage feed');
+      console.error('❌ No data returned from consolidated homepage feed');
       throw new Error('No data returned from consolidated homepage feed');
     }
 
-    console.log('Consolidated homepage feed data fetched successfully:', data);
+    console.log('✅ Consolidated homepage feed data fetched successfully:', {
+      layout: data.layout?.length || 0,
+      featured: !!data.featured,
+      recent: data.recent?.length || 0,
+      popular: data.popular?.length || 0,
+      recommendations: data.recommendations?.length || 0,
+      suggestions: data.suggestions?.length || 0,
+      userProfile: !!data.userProfile,
+      notificationCount: data.notificationCount || 0
+    });
+    
     return data as ConsolidatedHomepageData;
   } catch (error) {
-    console.error('Critical error in fetchConsolidatedHomepageFeed:', error);
+    console.error('❌ Critical error in fetchConsolidatedHomepageFeed:', error);
     throw error;
   }
 };
 
 /**
  * Custom hook for fetching consolidated homepage feed data.
- * Implements caching, retry logic, and follows the patterns from [DOC_6].
- * This single hook replaces useHomepageFeedQuery, useUserProfileQuery, and useNotificationCountQuery.
+ * Implements aggressive caching, retry logic, and follows the patterns from [DOC_6].
+ * This single hook replaces ALL individual data fetching hooks.
+ * 
+ * RULE: This is the ONLY way to fetch app data. No other hooks should make API calls.
  * 
  * @returns TanStack Query result with consolidated homepage feed data
  */
@@ -96,6 +111,7 @@ export const useConsolidatedHomepageFeedQuery = () => {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
     refetchOnWindowFocus: false, // Don't refetch when window regains focus
     refetchOnMount: true, // Always refetch when component mounts
+    refetchOnReconnect: true, // Refetch when reconnecting to internet
   });
 };
 
