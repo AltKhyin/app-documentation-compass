@@ -1,3 +1,4 @@
+
 // ABOUTME: This is the main application component, handling routing and global providers.
 import {
   BrowserRouter as Router,
@@ -27,26 +28,17 @@ function App() {
             <Route path="/signup" element={<SignupPage />} />
 
             {/*
-              ACTION: Wrap the entire protected route structure with AppDataProvider.
-              This ensures the data provider is mounted only once and is not
-              affected by the ProtectedRoute's loading state.
+              Fix: Move AppDataProvider to wrap only the AppShell and its children,
+              ensuring the provider is available when AppShell components render.
             */}
-            <Route
-              element={
-                <AppDataProvider>
-                  <ProtectedRoute />
-                </AppDataProvider>
-              }
-            >
-              {/*
-                Now, the child routes will render inside the AppShell,
-                which can safely consume data from the parent AppDataProvider.
-              */}
+            <Route element={<ProtectedRoute />}>
               <Route
                 element={
-                  <AppShell>
-                    <Outlet />
-                  </AppShell>
+                  <AppDataProvider>
+                    <AppShell>
+                      <Outlet />
+                    </AppShell>
+                  </AppDataProvider>
                 }
               >
                 <Route path="/" element={<IndexPage />} />
