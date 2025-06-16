@@ -163,6 +163,12 @@ verify_jwt = true
 [functions.get-personalized-recommendations]
 verify_jwt = true
 
+[functions.submit-suggestion]
+verify_jwt = true
+
+[functions.cast-vote]
+verify_jwt = true
+
 [analytics]
 enabled = false
 port = 54327
