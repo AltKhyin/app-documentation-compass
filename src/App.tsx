@@ -1,3 +1,4 @@
+
 // ABOUTME: This is the main application component, handling routing and global providers.
 import {
   BrowserRouter as Router,
@@ -8,6 +9,7 @@ import {
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthSessionProvider } from './components/auth/AuthSessionProvider';
+import { AppDataProvider } from './contexts/AppDataContext';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import IndexPage from './pages/Index';
@@ -16,9 +18,11 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import AppShell from './components/shell/AppShell';
 
 const AppShellLayout = () => (
-  <AppShell>
-    <Outlet />
-  </AppShell>
+  <AppDataProvider>
+    <AppShell>
+      <Outlet />
+    </AppShell>
+  </AppDataProvider>
 );
 
 function App() {

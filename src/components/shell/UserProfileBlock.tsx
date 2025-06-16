@@ -1,8 +1,8 @@
 
-// ABOUTME: Displays user avatar/name, with loading state and logout action.
+// ABOUTME: Displays user avatar/name, with loading state and logout action using consolidated data.
 import React from 'react';
 import { LogOut } from 'lucide-react';
-import { useUserProfileQuery } from '@/hooks/queries/useUserProfileQuery';
+import { useAppData } from '@/contexts/AppDataContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ type UserProfileBlockProps = {
 };
 
 const UserProfileBlock = ({ isCollapsed = false }: UserProfileBlockProps) => {
-  const { data: practitioner, isLoading } = useUserProfileQuery();
+  const { userProfile, isLoading } = useAppData();
   const queryClient = useQueryClient();
 
   const handleLogout = async () => {
@@ -53,18 +53,18 @@ const UserProfileBlock = ({ isCollapsed = false }: UserProfileBlockProps) => {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="w-full justify-start gap-3 p-2 h-auto">
              <Avatar className="h-9 w-9">
-              <AvatarImage src={practitioner?.avatar_url ?? undefined} alt={practitioner?.full_name ?? 'User'} />
+              <AvatarImage src={userProfile?.avatar_url ?? undefined} alt={userProfile?.full_name ?? 'User'} />
               <AvatarFallback>
-                {practitioner?.full_name ? getInitials(practitioner.full_name) : 'U'}
+                {userProfile?.full_name ? getInitials(userProfile.full_name) : 'U'}
               </AvatarFallback>
             </Avatar>
             {!isCollapsed && (
               <div className="flex flex-col items-start">
                 <span className="text-sm font-semibold truncate">
-                  {practitioner?.full_name ?? 'Usuário'}
+                  {userProfile?.full_name ?? 'Usuário'}
                 </span>
                  <span className="text-xs text-muted-foreground -mt-1">
-                  {practitioner?.role ?? 'practitioner'}
+                  {userProfile?.role ?? 'practitioner'}
                 </span>
               </div>
             )}
@@ -73,9 +73,9 @@ const UserProfileBlock = ({ isCollapsed = false }: UserProfileBlockProps) => {
         <DropdownMenuContent className="w-56" align="end" forceMount>
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">{practitioner?.full_name}</p>
+              <p className="text-sm font-medium leading-none">{userProfile?.full_name}</p>
               <p className="text-xs leading-none text-muted-foreground">
-                {practitioner?.subscription_tier} tier
+                {userProfile?.subscription_tier} tier
               </p>
             </div>
           </DropdownMenuLabel>

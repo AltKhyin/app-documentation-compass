@@ -1,15 +1,17 @@
 
-// ABOUTME: Main homepage that fetches data and renders all homepage modules.
+// ABOUTME: Main homepage that uses consolidated data to render all homepage modules efficiently.
 
 import React from 'react';
-import { useHomepageFeedQuery } from '../../packages/hooks/useHomepageFeedQuery';
+import { useAppData } from '@/contexts/AppDataContext';
+import { useConsolidatedHomepageFeedQuery } from '../../packages/hooks/useHomepageFeedQuery';
 import FeaturedReview from '../components/homepage/FeaturedReview';
 import ReviewCarousel from '../components/homepage/ReviewCarousel';
 import NextEditionModule from '../components/homepage/NextEditionModule';
 import { Skeleton } from '../components/ui/skeleton';
 
 const Index = () => {
-  const { data, isLoading, isError, error } = useHomepageFeedQuery();
+  // Use the consolidated query directly for homepage data
+  const { data, isLoading, isError, error } = useConsolidatedHomepageFeedQuery();
 
   console.log('Homepage render state:', { data, isLoading, isError, error });
 
@@ -75,7 +77,7 @@ const Index = () => {
     );
   }
 
-  console.log('Rendering homepage with data:', data);
+  console.log('Rendering homepage with consolidated data:', data);
 
   // Render modules based on layout order from API
   const renderModule = (moduleType: string) => {

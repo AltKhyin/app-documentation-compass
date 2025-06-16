@@ -22,6 +22,18 @@ interface PopularityScore {
   popularityScore: number;
 }
 
+// Consolidated response interface that includes all homepage data
+interface ConsolidatedHomepageData {
+  layout: string[];
+  featured: any | null;
+  recent: any[];
+  popular: any[];
+  recommendations: any[];
+  suggestions: any[];
+  userProfile: any | null;
+  notificationCount: number;
+}
+
 function checkRateLimit(clientId: string): boolean {
   const now = Date.now();
   const userLimit = RATE_LIMIT.requestCounts.get(clientId);
@@ -72,27 +84,21 @@ serve(async (req) => {
     // Get the authenticated user ID from the request
     const authHeader = req.headers.get('Authorization');
     let practitionerId = null;
+    let userProfile = null;
+    let notificationCount = 0;
     
     if (authHeader) {
       try {
         const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
         practitionerId = user?.id;
+        console.log(`Fetching consolidated homepage feed for user: ${practitionerId || 'anonymous'}`);
       } catch (authError) {
         console.log('Auth error (continuing as anonymous):', authError);
       }
     }
 
-    console.log(`Fetching homepage feed for user: ${practitionerId || 'anonymous'}`);
-
     // Execute all queries in parallel with graceful error handling
-    const [
-      layoutResult,
-      featuredResult,
-      recentResult,
-      suggestionsResult,
-      popularityData,
-      recommendationsResult
-    ] = await Promise.allSettled([
+    const promises = [
       // 1. Fetch homepage layout from Site Settings with fallback
       supabase
         .from('SiteSettings')
@@ -180,8 +186,46 @@ serve(async (req) => {
           console.log('Recommendations function failed:', error);
           return { data: [], error: null };
         }) : 
-        Promise.resolve({ data: [], error: null })
-    ]);
+        Promise.resolve({ data: [], error: null }),
+
+      // 7. Fetch user profile (if authenticated)
+      practitionerId ?
+        supabase
+          .from('Practitioners')
+          .select('*')
+          .eq('id', practitionerId)
+          .single()
+          .catch(error => {
+            console.log('User profile fetch failed:', error);
+            return { data: null, error: null };
+          }) :
+        Promise.resolve({ data: null, error: null }),
+
+      // 8. Fetch notification count (if authenticated)
+      practitionerId ?
+        supabase
+          .from('Notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('practitioner_id', practitionerId)
+          .eq('is_read', false)
+          .then(result => ({ count: result.count ?? 0, error: result.error }))
+          .catch(error => {
+            console.log('Notification count fetch failed:', error);
+            return { count: 0, error: null };
+          }) :
+        Promise.resolve({ count: 0, error: null })
+    ];
+
+    const [
+      layoutResult,
+      featuredResult,
+      recentResult,
+      suggestionsResult,
+      popularityData,
+      recommendationsResult,
+      userProfileResult,
+      notificationCountResult
+    ] = await Promise.allSettled(promises);
 
     // Process results with graceful degradation
     let layout = ["featured", "recent", "suggestions", "popular"]; // Default layout
@@ -216,6 +260,15 @@ serve(async (req) => {
       ? recommendationsResult.value.data || [] 
       : [];
 
+    // Extract user profile and notification count
+    if (userProfileResult.status === 'fulfilled' && !userProfileResult.value.error) {
+      userProfile = userProfileResult.value.data;
+    }
+
+    if (notificationCountResult.status === 'fulfilled') {
+      notificationCount = notificationCountResult.value.count || 0;
+    }
+
     // Log any errors for debugging but don't fail the request
     if (layoutResult.status === 'rejected') {
       console.error('Layout fetch failed:', layoutResult.reason);
@@ -232,18 +285,26 @@ serve(async (req) => {
     if (popularityData.status === 'rejected') {
       console.error('Popularity data fetch failed:', popularityData.reason);
     }
+    if (userProfileResult.status === 'rejected') {
+      console.error('User profile fetch failed:', userProfileResult.reason);
+    }
+    if (notificationCountResult.status === 'rejected') {
+      console.error('Notification count fetch failed:', notificationCountResult.reason);
+    }
 
     // Prepare the consolidated response
-    const response = {
+    const response: ConsolidatedHomepageData = {
       layout,
       featured,
       recent,
       popular,
       recommendations,
-      suggestions
+      suggestions,
+      userProfile,
+      notificationCount
     };
 
-    console.log(`Returning homepage feed with ${response.recent.length} recent, ${response.popular.length} popular, ${response.recommendations.length} recommended reviews, ${response.suggestions.length} suggestions`);
+    console.log(`Returning consolidated homepage feed with ${response.recent.length} recent, ${response.popular.length} popular, ${response.recommendations.length} recommended reviews, ${response.suggestions.length} suggestions, user profile: ${!!response.userProfile}, notifications: ${response.notificationCount}`);
 
     return new Response(
       JSON.stringify(response),

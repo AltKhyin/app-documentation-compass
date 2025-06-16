@@ -1,35 +1,18 @@
 
-// ABOUTME: Fetches the count of unread notifications for the current user.
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuthStore } from '@/store/auth';
+// ABOUTME: Legacy wrapper for notification count data - now uses consolidated data context.
+import { useAppData } from '@/contexts/AppDataContext';
 
-const fetchNotificationCount = async (userId: string) => {
-  const { count, error } = await supabase
-    .from('Notifications')
-    .select('*', { count: 'exact', head: true })
-    .eq('practitioner_id', userId)
-    .eq('is_read', false);
-
-  if (error) {
-    throw error;
-  }
-
-  return count ?? 0;
-};
-
+/**
+ * @deprecated Use useAppData() from AppDataContext instead.
+ * This hook is kept for backward compatibility only.
+ */
 export const useNotificationCountQuery = () => {
-  const { user } = useAuthStore();
-  const userId = user?.id;
+  const { notificationCount, isLoading, isError, error } = useAppData();
 
-  return useQuery({
-    queryKey: ['notificationCount', userId],
-    queryFn: () => {
-        if (!userId) {
-            return 0;
-        }
-        return fetchNotificationCount(userId);
-    },
-    enabled: !!userId,
-  });
+  return {
+    data: notificationCount,
+    isLoading,
+    isError,
+    error,
+  };
 };

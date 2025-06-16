@@ -1,35 +1,18 @@
 
-// ABOUTME: Fetches the public profile of the currently authenticated user.
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuthStore } from '@/store/auth';
+// ABOUTME: Legacy wrapper for user profile data - now uses consolidated data context.
+import { useAppData } from '@/contexts/AppDataContext';
 
-const fetchPractitioner = async (userId: string) => {
-  const { data, error } = await supabase
-    .from('Practitioners')
-    .select('*')
-    .eq('id', userId)
-    .single();
-
-  if (error) {
-    // Let react-query handle the error
-    throw error;
-  }
-  return data;
-};
-
+/**
+ * @deprecated Use useAppData() from AppDataContext instead.
+ * This hook is kept for backward compatibility only.
+ */
 export const useUserProfileQuery = () => {
-  const { user } = useAuthStore();
-  const userId = user?.id;
+  const { userProfile, isLoading, isError, error } = useAppData();
 
-  return useQuery({
-    queryKey: ['userProfile', userId],
-    queryFn: () => {
-      if (!userId) {
-        throw new Error('User not authenticated');
-      }
-      return fetchPractitioner(userId);
-    },
-    enabled: !!userId,
-  });
+  return {
+    data: userProfile,
+    isLoading,
+    isError,
+    error,
+  };
 };
