@@ -32,7 +32,7 @@ const queryClient = new QueryClient({
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
-      <CustomThemeProvider defaultTheme="dark" enableSystem>
+      <CustomThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
           <BrowserRouter>
