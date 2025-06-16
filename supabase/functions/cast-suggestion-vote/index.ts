@@ -1,252 +1,100 @@
+// supabase/functions/cast-suggestion-vote/index.ts
 
-// ABOUTME: Edge Function for casting votes on suggestions with rate limiting and security.
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
+// Define standard CORS headers for all responses
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
+};
 
+// Define the expected request structure for type safety
 interface CastVoteRequest {
   suggestion_id: number;
   action: 'upvote' | 'remove_vote';
 }
 
-interface CastVoteResponse {
-  message: string;
-  suggestion_id: number;
-  action: string;
-  new_vote_count: number;
-  user_has_voted: boolean;
-}
-
-// Simple in-memory rate limiting (for production, use Redis or similar)
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const MAX_REQUESTS_PER_WINDOW = 10; // Max 10 votes per minute per user
-
-function checkRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const userLimit = rateLimitMap.get(userId);
-  
-  if (!userLimit || now > userLimit.resetTime) {
-    rateLimitMap.set(userId, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
-    return true;
-  }
-  
-  if (userLimit.count >= MAX_REQUESTS_PER_WINDOW) {
-    return false;
-  }
-  
-  userLimit.count++;
-  return true;
-}
-
-serve(async (req) => {
+serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // Initialize Supabase client
-    const supabase = createClient(
+    // Correctly initialize the Supabase client using the Service Role Key for elevated privileges
+    // This allows the function to perform necessary database operations.
+    const supabase: SupabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get the authorization header
+    // Securely get the user object from the Authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: { message: 'No authorization header' } }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+      throw new Error('Missing Authorization header');
     }
-
-    // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+
     if (userError || !user) {
       console.error('Authentication error:', userError);
-      return new Response(
-        JSON.stringify({ error: { message: 'Unauthorized' } }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+      return new Response(JSON.stringify({ error: { message: 'Unauthorized' } }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Check rate limiting
-    if (!checkRateLimit(user.id)) {
-      console.warn(`Rate limit exceeded for user ${user.id}`);
-      return new Response(
-        JSON.stringify({ error: { message: 'Rate limit exceeded. Please try again later.' } }),
-        { 
-          status: 429, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // Parse request body
     const { suggestion_id, action }: CastVoteRequest = await req.json();
 
-    console.log(`User ${user.id} attempting to ${action} on suggestion ${suggestion_id}`);
-
-    // Validate input
-    if (!suggestion_id || !action || !['upvote', 'remove_vote'].includes(action)) {
-      return new Response(
-        JSON.stringify({ error: { message: 'Invalid request parameters' } }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+    // Validate the incoming payload
+    if (!suggestion_id || !['upvote', 'remove_vote'].includes(action)) {
+      return new Response(JSON.stringify({ error: { message: 'Invalid request parameters' } }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Check if suggestion exists
-    const { data: suggestion, error: suggestionError } = await supabase
+    // --- Core Voting Logic ---
+    if (action === 'upvote') {
+      // Use upsert for resilience. It will insert a vote if none exists
+      // and do nothing if a vote already exists, preventing errors from double-clicks.
+      const { error } = await supabase.from('Suggestion_Votes').upsert({
+        suggestion_id: suggestion_id,
+        practitioner_id: user.id,
+      });
+      if (error) throw error;
+    } else if (action === 'remove_vote') {
+      // Delete the specific vote belonging to the user for the given suggestion.
+      const { error } = await supabase.from('Suggestion_Votes').delete()
+        .match({ suggestion_id: suggestion_id, practitioner_id: user.id });
+      if (error) throw error;
+    }
+
+    // --- Authoritative Re-fetch ---
+    // After the mutation and the database trigger have run, re-fetch the suggestion
+    // to get the true, authoritative upvotes count.
+    const { data: updatedSuggestion, error: fetchError } = await supabase
       .from('Suggestions')
-      .select('id, upvotes')
+      .select('upvotes')
       .eq('id', suggestion_id)
       .single();
 
-    if (suggestionError || !suggestion) {
-      console.error('Suggestion lookup error:', suggestionError);
-      return new Response(
-        JSON.stringify({ error: { message: 'Suggestion not found' } }),
-        { 
-          status: 404, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
+    if (fetchError) throw fetchError;
 
-    // Check if user has already voted
-    const { data: existingVote, error: voteCheckError } = await supabase
-      .from('Suggestion_Votes')
-      .select('id')
-      .eq('suggestion_id', suggestion_id)
-      .eq('practitioner_id', user.id)
-      .maybeSingle();
+    // --- Construct Final Response ---
+    // The response now contains the REAL data from the database.
+    const responsePayload = {
+      message: 'Vote action processed successfully.',
+      suggestion_id: suggestion_id,
+      action: action === 'upvote' ? 'voted' : 'removed',
+      new_vote_count: updatedSuggestion.upvotes,
+      user_has_voted: action === 'upvote',
+    };
 
-    if (voteCheckError) {
-      console.error('Error checking existing vote:', voteCheckError);
-      return new Response(
-        JSON.stringify({ error: { message: 'Database error' } }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    let result: Partial<CastVoteResponse>;
-    let new_vote_count: number;
-    let user_has_voted: boolean;
-
-    if (action === 'upvote') {
-      if (existingVote) {
-        return new Response(
-          JSON.stringify({ error: { message: 'You have already voted on this suggestion' } }),
-          { 
-            status: 409, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
-      }
-
-      // Insert new vote
-      const { error: insertError } = await supabase
-        .from('Suggestion_Votes')
-        .insert({
-          suggestion_id,
-          practitioner_id: user.id
-        });
-
-      if (insertError) {
-        console.error('Error inserting vote:', insertError);
-        return new Response(
-          JSON.stringify({ error: { message: 'Failed to cast vote' } }),
-          { 
-            status: 500, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
-      }
-
-      new_vote_count = suggestion.upvotes + 1;
-      user_has_voted = true;
-      result = { message: 'Vote cast successfully', suggestion_id, action: 'upvote' };
-
-    } else if (action === 'remove_vote') {
-      if (!existingVote) {
-        return new Response(
-          JSON.stringify({ error: { message: 'You have not voted on this suggestion' } }),
-          { 
-            status: 409, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
-      }
-
-      // Remove existing vote
-      const { error: deleteError } = await supabase
-        .from('Suggestion_Votes')
-        .delete()
-        .eq('id', existingVote.id);
-
-      if (deleteError) {
-        console.error('Error removing vote:', deleteError);
-        return new Response(
-          JSON.stringify({ error: { message: 'Failed to remove vote' } }),
-          { 
-            status: 500, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
-      }
-
-      new_vote_count = suggestion.upvotes - 1;
-      user_has_voted = false;
-      result = { message: 'Vote removed successfully', suggestion_id, action: 'remove_vote' };
-    }
-
-    console.log(`Vote ${action} successful for user ${user.id} on suggestion ${suggestion_id}. New count: ${new_vote_count}`);
-
-    return new Response(
-      JSON.stringify({
-        ...result,
-        new_vote_count,
-        user_has_voted
-      } as CastVoteResponse),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    return new Response(JSON.stringify(responsePayload), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
   } catch (error) {
-    console.error('Unexpected error in cast-suggestion-vote:', error);
-    return new Response(
-      JSON.stringify({ error: { message: 'Internal server error' } }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
+    console.error(`Critical error in cast-suggestion-vote: ${error.message}`);
+    return new Response(JSON.stringify({ error: { message: error.message || 'Internal server error' } }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
