@@ -30,9 +30,9 @@ const SuggestionPollItem: React.FC<SuggestionPollItemProps> = ({ suggestion }) =
   };
 
   return (
-    <div className="flex items-center justify-between p-3 bg-surface rounded-md border border-border hover:bg-surface-muted transition-colors">
-      <div className="flex items-center gap-3 flex-1 min-w-0">
-        <Avatar className="h-8 w-8 flex-shrink-0">
+    <div className="flex items-start justify-between p-3 bg-surface rounded-md border border-border hover:bg-surface-muted transition-colors">
+      <div className="flex items-start gap-3 flex-1 min-w-0">
+        <Avatar className="h-8 w-8 flex-shrink-0 mt-0.5">
           <AvatarImage src={suggestion.Practitioners?.avatar_url} />
           <AvatarFallback className="text-xs">
             {suggestion.Practitioners?.full_name?.charAt(0) || 'A'}
@@ -40,18 +40,16 @@ const SuggestionPollItem: React.FC<SuggestionPollItemProps> = ({ suggestion }) =
         </Avatar>
         
         <div className="flex-1 min-w-0">
-          <h4 className="font-medium text-sm text-foreground line-clamp-1">
+          <h4 className="font-medium text-sm text-foreground line-clamp-3 leading-relaxed">
             {suggestion.title}
           </h4>
-          {suggestion.description && (
-            <p className="text-xs text-secondary mt-1 line-clamp-2">
-              {suggestion.description}
-            </p>
-          )}
+          <p className="text-xs text-secondary mt-1">
+            {suggestion.Practitioners?.full_name || 'Anônimo'}
+          </p>
         </div>
       </div>
       
-      <div className="flex items-center gap-2 ml-3">
+      <div className="flex items-center gap-2 ml-3 mt-0.5">
         <span className="text-sm font-medium text-foreground min-w-[2rem] text-right">
           {suggestion.upvotes}
         </span>

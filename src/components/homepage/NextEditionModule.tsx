@@ -54,17 +54,20 @@ const NextEditionModule: React.FC<NextEditionModuleProps> = ({ suggestions }) =>
     <div className="bg-background rounded-md p-6 border border-border shadow-md">
       <div className="grid md:grid-cols-2 gap-8">
         {/* Left Column - Suggestion Form */}
-        <div className="space-y-6">
+        <div className="flex flex-col justify-center space-y-6">
           <div>
-            <h2 className="text-xl font-bold text-foreground mb-3 font-serif">Próxima Edição</h2>
-            
-            {/* Progress Bar and Countdown */}
-            <div className="space-y-3 mb-6">
-              <Progress value={mockProgress} className="w-full h-2" />
+            {/* Header with title and timer */}
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-foreground font-serif">Próxima Edição</h2>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock size={16} />
                 <span>{mockCountdown}</span>
               </div>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="mb-6">
+              <Progress value={mockProgress} className="w-full h-2" />
             </div>
           </div>
 
