@@ -303,13 +303,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_suggestions_submitted_by"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "Practitioners"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "Suggestions_submitted_by_fkey"
             columns: ["submitted_by"]
             isOneToOne: false

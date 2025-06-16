@@ -7,11 +7,42 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 interface CastVoteRequest {
   suggestion_id: number;
   action: 'upvote' | 'remove_vote';
+}
+
+interface CastVoteResponse {
+  message: string;
+  suggestion_id: number;
+  action: string;
+  new_vote_count: number;
+  user_has_voted: boolean;
+}
+
+// Simple in-memory rate limiting (for production, use Redis or similar)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 10; // Max 10 votes per minute per user
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const userLimit = rateLimitMap.get(userId);
+  
+  if (!userLimit || now > userLimit.resetTime) {
+    rateLimitMap.set(userId, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+  
+  if (userLimit.count >= MAX_REQUESTS_PER_WINDOW) {
+    return false;
+  }
+  
+  userLimit.count++;
+  return true;
 }
 
 serve(async (req) => {
@@ -45,16 +76,26 @@ serve(async (req) => {
       );
     }
 
-    // Set the authorization header for the supabase client
-    supabase.auth.setAuth(authHeader.replace('Bearer ', ''));
-
     // Get the current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
     if (userError || !user) {
+      console.error('Authentication error:', userError);
       return new Response(
         JSON.stringify({ error: { message: 'Unauthorized' } }),
         { 
           status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Check rate limiting
+    if (!checkRateLimit(user.id)) {
+      console.warn(`Rate limit exceeded for user ${user.id}`);
+      return new Response(
+        JSON.stringify({ error: { message: 'Rate limit exceeded. Please try again later.' } }),
+        { 
+          status: 429, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
@@ -84,6 +125,7 @@ serve(async (req) => {
       .single();
 
     if (suggestionError || !suggestion) {
+      console.error('Suggestion lookup error:', suggestionError);
       return new Response(
         JSON.stringify({ error: { message: 'Suggestion not found' } }),
         { 
@@ -112,9 +154,9 @@ serve(async (req) => {
       );
     }
 
-    let result;
-    let new_vote_count;
-    let user_has_voted;
+    let result: Partial<CastVoteResponse>;
+    let new_vote_count: number;
+    let user_has_voted: boolean;
 
     if (action === 'upvote') {
       if (existingVote) {
@@ -132,7 +174,7 @@ serve(async (req) => {
         .from('Suggestion_Votes')
         .insert({
           suggestion_id,
-          submitted_by: user.id
+          practitioner_id: user.id
         });
 
       if (insertError) {
@@ -183,14 +225,14 @@ serve(async (req) => {
       result = { message: 'Vote removed successfully', suggestion_id, action: 'remove_vote' };
     }
 
-    console.log(`Vote ${action} successful for user ${user.id} on suggestion ${suggestion_id}`);
+    console.log(`Vote ${action} successful for user ${user.id} on suggestion ${suggestion_id}. New count: ${new_vote_count}`);
 
     return new Response(
       JSON.stringify({
         ...result,
         new_vote_count,
         user_has_voted
-      }),
+      } as CastVoteResponse),
       {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

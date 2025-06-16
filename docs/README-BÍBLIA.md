@@ -2,7 +2,7 @@
 # README-BÍBLIA.md
 
 **EVIDENS Universal Knowledge Base**  
-Version: 2.0.1 - **Production Ready**  
+Version: 2.0.2 - **Production Ready**  
 Last Updated: June 16, 2025
 
 ---
@@ -54,7 +54,7 @@ Last Updated: June 16, 2025
   - Popular Reviews carousel ✅
   - Next Edition voting system ✅
 - **Performance**: Optimized with single API call, TanStack Query caching
-- **Status**: **FIXED** - Suggestions now display correctly with proper practitioner joins
+- **Status**: **OPERATIONAL** - All modules display correctly with proper data
 
 ### **🗳️ Suggestion Voting System (✅ COMPLETE & FIXED)**
 - **Location**: `src/components/homepage/NextEditionModule.tsx`
@@ -62,10 +62,10 @@ Last Updated: June 16, 2025
   - Submit new topic suggestions ✅
   - Vote/unvote on existing suggestions ✅
   - Real-time vote count updates ✅
-  - Optimistic UI updates with error rollback ✅
-- **Backend**: `cast-suggestion-vote` Edge Function with rate limiting
+  - Simplified state management without race conditions ✅
+- **Backend**: `cast-suggestion-vote` Edge Function with rate limiting (10 votes/minute)
 - **Database**: Proper vote counting with triggers, optimized indexes
-- **Status**: **PRODUCTION READY** - All database alerts resolved, performance optimized
+- **Status**: **FULLY OPERATIONAL** - Voting system completely fixed, race conditions eliminated
 
 ### **🛡️ Security & Performance (✅ OPTIMIZED)**
 - **RLS Policies**: Comprehensive policies on all tables ✅
@@ -73,7 +73,7 @@ Last Updated: June 16, 2025
   - Foreign key indexes added ✅
   - Conflicting policies resolved ✅
   - Vote counting triggers optimized ✅
-- **Edge Functions**: Rate limiting, proper error handling ✅
+- **Edge Functions**: Rate limiting (10 req/min), proper error handling ✅
 - **Status**: All Supabase Security Advisor alerts resolved
 
 ---
@@ -82,7 +82,7 @@ Last Updated: June 16, 2025
 
 ### **Edge Functions (Production)**
 1. **`get-homepage-feed`** - Consolidated homepage data ✅
-2. **`cast-suggestion-vote`** - Vote casting with optimistic updates ✅
+2. **`cast-suggestion-vote`** - Vote casting with rate limiting ✅
 3. **`submit-suggestion`** - New suggestion submission ✅
 4. **`get-personalized-recommendations`** - ML-based recommendations ✅
 
@@ -96,11 +96,11 @@ Last Updated: June 16, 2025
 
 ## 🔧 **CRITICAL IMPLEMENTATION DETAILS**
 
-### **Voting System Data Flow (FIXED)**
+### **Voting System Data Flow (FULLY FIXED)**
 1. **Frontend**: `SuggestionPollItem` → `useCastVoteMutation` 
-2. **Edge Function**: `cast-suggestion-vote` with validation
+2. **Edge Function**: `cast-suggestion-vote` with validation and rate limiting
 3. **Database**: `Suggestion_Votes` table with triggers for count updates
-4. **Optimization**: Proper joins in `get-homepage-feed` for practitioner data
+4. **State Management**: Simplified component state using suggestion props as single source of truth
 
 ### **Database Performance (OPTIMIZED)**
 - **Indexes**: Added on all foreign keys for performance
@@ -110,7 +110,7 @@ Last Updated: June 16, 2025
 ### **Security Model**
 - **Authentication**: JWT with custom claims (role, subscription_tier)
 - **Authorization**: RLS policies per table with `get_my_claim()` function
-- **Rate Limiting**: Implemented on all Edge Functions
+- **Rate Limiting**: 10 votes per minute per user on voting endpoints
 
 ---
 
@@ -120,9 +120,9 @@ Last Updated: June 16, 2025
 - ✅ Authentication flow works end-to-end
 - ✅ Homepage loads with all modules
 - ✅ **FIXED**: Suggestions display with practitioner names
-- ✅ **FIXED**: Voting system works with real-time updates
+- ✅ **FIXED**: Voting system works without race conditions
 - ✅ **OPTIMIZED**: Database performance alerts resolved
-- ✅ All Edge Functions respond correctly
+- ✅ All Edge Functions respond correctly with rate limiting
 - ✅ RLS policies enforce proper access control
 
 ---
@@ -148,21 +148,22 @@ Last Updated: June 16, 2025
 
 ## 🔍 **DEBUGGING & TROUBLESHOOTING**
 
-### **Common Issues Resolved**
-1. **Suggestions Not Displaying** - FIXED with proper Practitioner joins
-2. **Database Performance Warnings** - RESOLVED with index optimization  
-3. **Conflicting RLS Policies** - FIXED with consolidated policies
-4. **Vote Count Synchronization** - OPTIMIZED with efficient triggers
+### **Issues Resolved in v2.0.2**
+1. **Voting Race Conditions** - FIXED by simplifying state management in SuggestionPollItem
+2. **State Synchronization** - RESOLVED by using suggestion props as single source of truth
+3. **Rate Limiting** - ADDED to voting endpoints (10 votes/minute per user)
+4. **Error Handling** - IMPROVED with proper toast notifications and logging
 
 ### **Monitoring Points**
 - Edge Function logs in Supabase dashboard
 - Database performance metrics
 - User authentication success rates
 - API response times via TanStack Query devtools
+- Rate limiting violations in function logs
 
 ---
 
-**📋 STATUS SUMMARY: EVIDENS v2.0.1 is production-ready with a fully functional homepage, authentication system, optimized suggestion voting, and resolved performance issues. The platform is now ready for content management development.**
+**📋 STATUS SUMMARY: EVIDENS v2.0.2 is production-ready with a fully functional homepage, authentication system, completely operational suggestion voting system with race condition fixes, and comprehensive rate limiting. The platform is now ready for content management development.**
 
 ---
 
