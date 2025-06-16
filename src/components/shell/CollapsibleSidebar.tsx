@@ -24,21 +24,21 @@ const CollapsibleSidebar = ({ isCollapsed, onToggle }: CollapsibleSidebarProps) 
 
   return (
     <aside className={`fixed left-0 top-0 z-40 h-screen bg-background border-r border-border transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-60'} hidden md:flex flex-col`}>
-      {/* Header with logo */}
-      <div className="flex items-center p-4 border-b border-border min-h-[65px]">
+      {/* Header with logo - matching notification header height of 64px */}
+      <div className={`flex items-center border-b border-border h-16 ${isCollapsed ? 'justify-center px-2' : 'justify-center px-4'}`}>
         {!isCollapsed ? (
-          <h1 className="font-serif font-medium tracking-tight text-2xl text-foreground">
+          <h1 className="font-serif font-medium tracking-tight text-3xl text-foreground">
             Reviews.
           </h1>
         ) : (
-          <h1 className="font-serif font-medium tracking-tight text-2xl text-foreground">
+          <h1 className="font-serif font-medium tracking-tight text-3xl text-foreground">
             R.
           </h1>
         )}
       </div>
 
       {/* Navigation items */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className={`flex-1 space-y-2 ${isCollapsed ? 'px-2 py-4' : 'px-4 py-4'}`}>
         {navigationItems.map((item) => (
           <NavItem
             key={item.path}
@@ -51,19 +51,19 @@ const CollapsibleSidebar = ({ isCollapsed, onToggle }: CollapsibleSidebarProps) 
       </nav>
 
       {/* Collapse button */}
-      <div className="px-4 pb-2">
+      <div className={`pb-2 ${isCollapsed ? 'px-2' : 'px-4'}`}>
         <Button
           variant="ghost"
           size="sm"
           onClick={onToggle}
-          className="w-full justify-center"
+          className={`w-full ${isCollapsed ? 'justify-center' : 'justify-end'}`}
         >
           {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </Button>
       </div>
 
       {/* User profile block at bottom */}
-      <div className="p-4 border-t border-border">
+      <div className={`border-t border-border ${isCollapsed ? 'p-2' : 'p-4'}`}>
         <UserProfileBlock isCollapsed={isCollapsed} />
       </div>
     </aside>

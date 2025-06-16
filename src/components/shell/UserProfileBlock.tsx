@@ -32,7 +32,7 @@ const UserProfileBlock = ({ isCollapsed = false }: UserProfileBlockProps) => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-3 p-3">
+      <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center p-2' : 'p-3'}`}>
         <Skeleton className="h-9 w-9 rounded-full" />
         {!isCollapsed && <Skeleton className="h-4 w-24" />}
       </div>
@@ -48,10 +48,13 @@ const UserProfileBlock = ({ isCollapsed = false }: UserProfileBlockProps) => {
   };
 
   return (
-    <div className="mt-auto p-2">
+    <div className="mt-auto">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="w-full justify-start gap-3 p-2 h-auto">
+          <Button 
+            variant="ghost" 
+            className={`w-full h-auto ${isCollapsed ? 'justify-center p-2' : 'justify-start gap-3 p-2'}`}
+          >
              <Avatar className="h-9 w-9">
               <AvatarImage src={userProfile?.avatar_url ?? undefined} alt={userProfile?.full_name ?? 'User'} />
               <AvatarFallback>
