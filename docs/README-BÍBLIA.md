@@ -52,15 +52,6 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 - **Edge Functions**: `supabase/functions/submit-suggestion/`, `supabase/functions/cast-vote/`
 - **Hooks**: `packages/hooks/useSuggestionMutations.ts`
 
-#### 🆕 Visual System Enhancement
-- **Status**: 100% Complete - **UPDATED IN v2.3.0**
-- **Changes**:
-  - **Typography Scale**: Increased all text sizes by 20% for better readability
-  - **Color Tokens**: Lightened dark theme backgrounds (background: 10%, card: 13%)
-  - **Consistency**: Maintained design system integrity across all components
-- **Impact**: Improved accessibility and visual comfort without breaking existing design
-- **Location**: `src/index.css` with updated CSS custom properties
-
 #### Data Architecture (ENFORCED v2.3.0)
 - **Status**: 100% Complete - **ENHANCED**
 - **Pattern**: SINGLE consolidated data fetching following [DOC_6] guidelines
@@ -195,31 +186,14 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 
 **MONITORING**: Any individual API calls detected are considered bugs and must be eliminated immediately
 
-### 🎨 VISUAL SYSTEM UPDATES (v2.3.0)
-
-#### Typography Improvements
-- **Scale Increase**: All text sizes increased by 20% for improved readability
-- **Base Font Size**: 19.2px (was 16px)
-- **Headings**: Proportionally scaled maintaining hierarchy
-- **Responsive**: All text classes updated consistently
-
-#### Color Token Updates
-- **Dark Theme Lightening**: 
-  - Background: `hsl(240 10% 10%)` (was 3.9%)
-  - Card: `hsl(240 10% 13%)` (was 3.9%)
-  - Improved contrast and reduced eye strain
-- **Light Theme**: Maintained for consistency
-- **Impact**: Better accessibility without compromising design integrity
-
 ---
 
 **Recent Changes (v2.3.0):**
 - IMPLEMENTED complete voting system for "Próxima Edição" with backend and frontend
-- ENHANCED visual system with improved typography and lighter dark theme
 - ADDED comprehensive rate limiting across all Edge Functions
 - CREATED mutation hooks following established data fetching patterns
 - IMPLEMENTED optimistic updates with proper error handling and rollbacks
 - MAINTAINED strict API consolidation policy while adding new functionality
 - UPDATED database schema with voting tables, RLS policies, and triggers
 
-This document reflects the current state as of June 16, 2025, with complete voting system implementation and visual enhancements while maintaining the aggressive API consolidation architecture.
+This document reflects the current state as of June 16, 2025, with complete voting system implementation while maintaining the aggressive API consolidation architecture.
