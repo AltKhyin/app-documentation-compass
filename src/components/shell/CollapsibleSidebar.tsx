@@ -1,7 +1,7 @@
 
 // ABOUTME: The main sidebar navigation for desktop views with collapsible functionality.
 import React from 'react';
-import { ChevronLeft, ChevronRight, Home, Archive, Users, Settings } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Home, Archive, Users, User } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { Button } from '../ui/button';
 import NavItem from './NavItem';
@@ -19,26 +19,22 @@ const CollapsibleSidebar = ({ isCollapsed, onToggle }: CollapsibleSidebarProps) 
     { icon: Home, label: 'Início', path: '/' },
     { icon: Archive, label: 'Acervo', path: '/acervo' },
     { icon: Users, label: 'Comunidade', path: '/comunidade' },
-    { icon: Settings, label: 'Configurações', path: '/configuracoes' },
+    { icon: User, label: 'Perfil', path: '/perfil' },
   ];
 
   return (
-    <aside className={`hidden md:flex flex-col h-screen bg-background border-r border-border transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-60'}`}>
-      {/* Header with logo and collapse button */}
-      <div className="flex items-center justify-between p-4 border-b border-border min-h-[65px]">
-        {!isCollapsed && (
+    <aside className={`fixed left-0 top-0 z-40 h-screen bg-background border-r border-border transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-60'} hidden md:flex flex-col`}>
+      {/* Header with logo */}
+      <div className="flex items-center p-4 border-b border-border min-h-[65px]">
+        {!isCollapsed ? (
           <h1 className="font-serif font-medium tracking-tight text-2xl text-foreground">
             Reviews.
           </h1>
+        ) : (
+          <h1 className="font-serif font-medium tracking-tight text-2xl text-foreground">
+            R.
+          </h1>
         )}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggle}
-          className="ml-auto"
-        >
-          {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </Button>
       </div>
 
       {/* Navigation items */}
@@ -54,8 +50,20 @@ const CollapsibleSidebar = ({ isCollapsed, onToggle }: CollapsibleSidebarProps) 
         ))}
       </nav>
 
+      {/* Collapse button */}
+      <div className="px-4 pb-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToggle}
+          className="w-full justify-center"
+        >
+          {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        </Button>
+      </div>
+
       {/* User profile block at bottom */}
-      <div className="mt-auto p-4 border-t border-border">
+      <div className="p-4 border-t border-border">
         <UserProfileBlock isCollapsed={isCollapsed} />
       </div>
     </aside>

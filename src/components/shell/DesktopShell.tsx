@@ -19,19 +19,22 @@ const DesktopShell = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="min-h-screen w-full">
       {/* Fixed Sidebar */}
       <CollapsibleSidebar isCollapsed={isCollapsed} onToggle={toggleSidebar} />
       
-      {/* Main Content Area */}
-      <div className="flex flex-1 flex-col">
+      {/* Main Content Area with left margin for sidebar */}
+      <div className={cn(
+        'min-h-screen transition-all duration-300',
+        isCollapsed ? 'ml-20' : 'ml-60'
+      )}>
         {/* Header */}
-        <header className="hidden md:flex sticky top-0 z-10 h-16 items-center justify-end gap-4 border-b bg-background px-6">
+        <header className="sticky top-0 z-10 h-16 flex items-center justify-end gap-4 border-b bg-background px-6">
           <NotificationBell />
         </header>
         
         {/* Main Content */}
-        <main className="flex-1 p-6">{children}</main>
+        <main className="p-6">{children}</main>
       </div>
     </div>
   );
