@@ -23,9 +23,9 @@ const CollapsibleSidebar = ({ isCollapsed, onToggle }: CollapsibleSidebarProps) 
   ];
 
   return (
-    <div className={`flex flex-col h-full bg-background border-r border-border transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-60'}`}>
+    <aside className={`hidden md:flex flex-col h-screen bg-background border-r border-border transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-60'}`}>
       {/* Header with logo and collapse button */}
-      <div className="flex items-center justify-between p-4 border-b border-border">
+      <div className="flex items-center justify-between p-4 border-b border-border min-h-[65px]">
         {!isCollapsed && (
           <h1 className="font-serif font-medium tracking-tight text-2xl text-foreground">
             Reviews.
@@ -58,7 +58,7 @@ const CollapsibleSidebar = ({ isCollapsed, onToggle }: CollapsibleSidebarProps) 
       <div className="mt-auto p-4 border-t border-border">
         <UserProfileBlock isCollapsed={isCollapsed} />
       </div>
-    </div>
+    </aside>
   );
 };
 
