@@ -3,10 +3,47 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// Define standard CORS headers for all responses
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// --- Define TypeScript interfaces for our data shapes for type safety ---
+interface Review {
+  id: number;
+  title: string;
+  description: string;
+  cover_image_url: string;
+  published_at: string;
+  view_count: number;
+}
+interface Suggestion {
+  id: number;
+  title: string;
+  description: string | null;
+  upvotes: number;
+  created_at: string;
+  Practitioners: { full_name: string } | null;
+  user_has_voted?: boolean;
+}
+interface UserProfile {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  role: string;
+  subscription_tier: string;
+}
+interface ConsolidatedHomepageData {
+  layout: string[];
+  featured: Review | null;
+  recent: Review[];
+  popular: Review[];
+  recommendations: Review[];
+  suggestions: Suggestion[];
+  userProfile: UserProfile | null;
+  notificationCount: number;
+}
 
 // Helper to safely extract data from settled promises
 const getResultData = (result: PromiseSettledResult<any>, fallback: any = null) => {
@@ -19,6 +56,7 @@ const getResultData = (result: PromiseSettledResult<any>, fallback: any = null) 
   return fallback;
 };
 
+// --- Main server logic ---
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -45,7 +83,7 @@ serve(async (req: Request) => {
       supabase.from('SiteSettings').select('value').eq('key', 'homepage_layout').single(),
       supabase.from('Reviews').select('id, title, description, cover_image_url, published_at, view_count').eq('status', 'published').order('published_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('Reviews').select('id, title, description, cover_image_url, published_at, view_count').eq('status', 'published').order('published_at', { ascending: false }).limit(10),
-      // CORRECT: Call the robust RPC function to get suggestions
+      // Use the robust RPC function to get suggestions with user vote status and recency boost
       supabase.rpc('get_homepage_suggestions', { p_user_id: practitionerId }),
       supabase.from('Reviews').select('id, title, description, cover_image_url, published_at, view_count').eq('status', 'published').order('view_count', { ascending: false }).limit(10),
       practitionerId ? supabase.functions.invoke('get-personalized-recommendations', { body: { practitionerId } }) : Promise.resolve({ data: [] }),
@@ -65,9 +103,10 @@ serve(async (req: Request) => {
       notificationCountResult
     ] = results;
 
-    // --- Assemble the final response object ---
-    const responseData = {
-      layout: getResultData(layoutResult)?.value ? JSON.parse(getResultData(layoutResult).value) : ["featured", "recent"],
+    // --- CORRECTLY Assemble the final response object ---
+    const responseData: ConsolidatedHomepageData = {
+      // THE FIX: Directly access the 'value' property. It's already an array.
+      layout: getResultData(layoutResult)?.value || ["featured", "recent", "suggestions", "popular"],
       featured: getResultData(featuredResult, null),
       recent: getResultData(recentResult, []),
       popular: getResultData(popularResult, []),
@@ -80,7 +119,10 @@ serve(async (req: Request) => {
     return new Response(JSON.stringify(responseData), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
-    console.error('Critical error in get-homepage-feed:', error);
-    return new Response(JSON.stringify({ error: { message: 'Internal server error' } }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    console.error('Critical error in get-homepage-feed:', error.message);
+    return new Response(
+      JSON.stringify({ error: { message: 'Internal server error', code: 'INTERNAL_ERROR' } }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
 });
