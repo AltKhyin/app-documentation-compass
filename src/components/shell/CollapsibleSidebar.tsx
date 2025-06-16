@@ -5,7 +5,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../ui/button';
 import NavItem from './NavItem';
 import UserProfileBlock from './UserProfileBlock';
-import { navigationItems } from '@/config/navigation';
+import { navigationItems, adminNavigationItems, getVisibleNavigationItems } from '@/config/navigation';
+import { useAuthStore } from '@/store/auth';
 
 interface CollapsibleSidebarProps {
   isCollapsed: boolean;
@@ -13,6 +14,13 @@ interface CollapsibleSidebarProps {
 }
 
 const CollapsibleSidebar = ({ isCollapsed, onToggle }: CollapsibleSidebarProps) => {
+  const { session } = useAuthStore();
+  
+  // Filter navigation items based on user role
+  const userRole = session?.user?.app_metadata?.role || 'practitioner';
+  const visibleMainItems = getVisibleNavigationItems(navigationItems, userRole);
+  const visibleAdminItems = getVisibleNavigationItems(adminNavigationItems, userRole);
+
   return (
     <aside className={`fixed left-0 top-0 z-40 h-screen bg-background border-r border-border transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-60'} hidden md:flex flex-col`}>
       {/* Header with logo - matching notification header height of 64px */}
@@ -30,7 +38,8 @@ const CollapsibleSidebar = ({ isCollapsed, onToggle }: CollapsibleSidebarProps) 
 
       {/* Navigation items */}
       <nav className={`flex-1 space-y-2 ${isCollapsed ? 'px-2 py-4' : 'px-4 py-4'}`}>
-        {navigationItems.map((item) => (
+        {/* Main navigation */}
+        {visibleMainItems.map((item) => (
           <NavItem
             key={item.path}
             href={item.path}
@@ -39,6 +48,22 @@ const CollapsibleSidebar = ({ isCollapsed, onToggle }: CollapsibleSidebarProps) 
             isCollapsed={isCollapsed}
           />
         ))}
+        
+        {/* Admin navigation - show separator if items exist */}
+        {visibleAdminItems.length > 0 && (
+          <>
+            <div className="border-t border-border my-4" />
+            {visibleAdminItems.map((item) => (
+              <NavItem
+                key={item.path}
+                href={item.path}
+                icon={item.icon}
+                label={item.label}
+                isCollapsed={isCollapsed}
+              />
+            ))}
+          </>
+        )}
       </nav>
 
       {/* Collapse button */}

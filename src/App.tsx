@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "next-themes";
+import { CustomThemeProvider } from "@/components/theme/CustomThemeProvider";
 import Index from "./pages/Index";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
@@ -32,7 +32,7 @@ const queryClient = new QueryClient({
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <CustomThemeProvider defaultTheme="dark" enableSystem>
         <TooltipProvider>
           <Toaster />
           <BrowserRouter>
@@ -77,7 +77,7 @@ const App = () => (
             </AuthSessionProvider>
           </BrowserRouter>
         </TooltipProvider>
-      </ThemeProvider>
+      </CustomThemeProvider>
     </QueryClientProvider>
   </ErrorBoundary>
 );

@@ -1,10 +1,16 @@
 
 # ***\[DOC\_5\] EVIDENS API Contract***
 
-***Version:** 3.2*  
+***Version:** 3.3*  
  ***Date:** June 16, 2025*
 
 ***Purpose:** This document defines the canonical contract for all server‑side business logic within the EVIDENS ecosystem. It specifies when to use Supabase's auto‑generated API and provides the definitive blueprint for all custom Supabase Edge Functions. The AI developer must adhere to this specification to ensure all backend interactions are secure, transactional, and predictable.*
+
+***CHANGELOG (v3.3):***
+- Added comprehensive rate limiting implementation across all Edge Functions
+- Standardized rate limiting utility in `supabase/functions/_shared/rate-limit.ts`
+- Created `rate_limit_log` table with automatic cleanup
+- Defined rate limits for all existing functions
 
 ---
 
@@ -30,9 +36,51 @@
 ***PRINCIPLE 5 (CORS Handling):***  
  *Every Edge Function MUST include a boilerplate block at the beginning of its code to handle the `OPTIONS` preflight request, returning the appropriate `Access-Control-Allow-*` headers. All successful responses from the function must also include the `Access-Control-Allow-Origin` header.*
 
+***PRINCIPLE 6 (Rate Limiting):***  
+ *Every Edge Function MUST implement rate limiting using the centralized utility in `supabase/functions/_shared/rate-limit.ts`. Rate limits are configured per function and enforced per user.*
+
 ---
 
-## ***2.0 Standardized Error Response***
+## ***2.0 Rate Limiting Architecture***
+
+***IMPLEMENTATION STATUS:*** *Comprehensive rate limiting infrastructure has been implemented and is ready for deployment. The following rate limits are configured:*
+
+| Function | Rate Limit | Window | Purpose |
+|----------|------------|--------|---------|
+| `get-homepage-feed` | 60 requests | 60 seconds | Prevent homepage abuse |
+| `get-acervo-data` | 30 requests | 60 seconds | Protect search/filter endpoints |
+| `submit-suggestion` | 5 requests | 300 seconds | Prevent suggestion spam |
+| `cast-suggestion-vote` | 10 requests | 60 seconds | Limit voting frequency |
+| `cast-vote` | 20 requests | 60 seconds | Community voting protection |
+| `get-personalized-recommendations` | 10 requests | 60 seconds | Expensive computation protection |
+
+***Rate Limiting Implementation:***
+
+*All Edge Functions must use the centralized rate limiting utility:*
+
+```typescript
+import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
+
+// In each Edge Function:
+const rateLimitResult = await checkRateLimit(supabase, 'function-name', userId);
+if (!rateLimitResult.allowed) {
+  return new Response(JSON.stringify({
+    error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }
+  }), {
+    status: 429,
+    headers: {
+      'Content-Type': 'application/json',
+      ...rateLimitHeaders(rateLimitResult)
+    }
+  });
+}
+```
+
+***Database Table:*** *The `rate_limit_log` table tracks API usage with automatic cleanup of entries older than 1 hour.*
+
+---
+
+## ***3.0 Standardized Error Response***
 
 *All Edge Functions must return errors in the following JSON format:*
 
@@ -42,7 +90,7 @@
 
     *"message": "A human‑readable error message.",*
 
-    *"code": "ERROR\_CODE\_ENUM" // e.g., "VALIDATION\_FAILED", "UNAUTHORIZED"*
+    *"code": "ERROR\_CODE\_ENUM" // e.g., "VALIDATION\_FAILED", "UNAUTHORIZED", "RATE\_LIMIT\_EXCEEDED"*
 
   *}*
 
@@ -52,15 +100,17 @@
 
 ---
 
-## ***3.0 Edge Function Specifications***
+## ***4.0 Edge Function Specifications***
 
-### ***3.1 Function: `upsert-review`***
+### ***4.1 Function: `upsert-review`***
 
 * ***Trigger:** `POST /functions/v1/upsert-review`*
 
 * ***Purpose:** Create or update a Review, validating the `structured_content` v2.0 payload.*
 
 * ***Auth:** Required (`admin` role).*
+
+* ***Rate Limit:** Not applicable (admin-only function)*
 
 ***Request Body Schema (Zod):***
 
@@ -136,13 +186,15 @@
 
 ---
 
-### ***3.2 Function: `create-community-post`***
+### ***4.2 Function: `create-community-post`***
 
 * ***Trigger:** `POST /functions/v1/create-community-post`*
 
 * ***Purpose:** Create a community post/comment, auto‑upvote, update `contribution_score`, optionally create a poll.*
 
 * ***Auth:** Required (authenticated).*
+
+* ***Rate Limit:** 5 requests per 5 minutes per user*
 
 ***Request Body Schema (Zod):***
 
@@ -174,11 +226,13 @@
 
 1. *Handle CORS preflight request.*
 
-2. *Extract `practitioner_id` from JWT.*
+2. *Check rate limit; return 429 if exceeded.*
 
-3. *Validate input; else 400\.*
+3. *Extract `practitioner_id` from JWT.*
 
-4. *RPC transaction:*  
+4. *Validate input; else 400\.*
+
+5. *RPC transaction:*  
     *a. INSERT into `CommunityPosts` with `upvotes = 1`.*  
     *b. INSERT into `CommunityPost_Votes` for auto‑upvote.*  
     *c. UPDATE `Practitioners.contribution_score` \+1.*  
@@ -190,13 +244,15 @@
 
 ---
 
-### ***3.3 Function: `cast-post-vote`***
+### ***4.3 Function: `cast-post-vote`***
 
 * ***Trigger:** `POST /functions/v1/cast-post-vote`*
 
 * ***Purpose:** Cast, change, or retract a vote; update post counters and contributor score.*
 
 * ***Auth:** Required (authenticated).*
+
+* ***Rate Limit:** 20 requests per minute per user*
 
 ***Request Body Schema (Zod):***
 
@@ -214,9 +270,11 @@
 
 1. *Handle CORS preflight request.*
 
-2. *Validate input; else 400\.*
+2. *Check rate limit; return 429 if exceeded.*
 
-3. *RPC transaction:*  
+3. *Validate input; else 400\.*
+
+4. *RPC transaction:*  
     *a. UPSERT/DELETE in `CommunityPost_Votes`.*  
     *b. UPDATE `CommunityPosts.upvotes / downvotes`.*  
     *c. UPDATE author's `contribution_score` by delta.*
@@ -227,13 +285,15 @@
 
 ---
 
-### ***3.4 Function: `publish-review`***
+### ***4.4 Function: `publish-review`***
 
 * ***Trigger:** `POST /functions/v1/publish-review`*
 
 * ***Purpose:** Mark Review as `published` and auto‑create discussion post.*
 
 * ***Auth:** Required (`admin` role).*
+
+* ***Rate Limit:** Not applicable (admin-only function)*
 
 ***Request Body Schema (Zod):***
 
@@ -268,13 +328,15 @@
 
 ---
 
-### ***3.5 Cron Function: `run-analytics-etl`***
+### ***4.5 Cron Function: `run-analytics-etl`***
 
 * ***Trigger:** Scheduled (e.g., hourly) via Supabase Cron.*
 
 * ***Purpose:** Process `Analytics_Events` into `Summary_*` tables.*
 
 * ***Auth:** Runs with `service_role`.*
+
+* ***Rate Limit:** Not applicable (internal cron function)*
 
 ***Business Logic:***
 

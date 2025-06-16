@@ -2,16 +2,22 @@
 // ABOUTME: Mobile bottom navigation with tab icons and labels.
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { mobileNavigationItems } from '@/config/navigation';
+import { mobileNavigationItems, getVisibleNavigationItems } from '@/config/navigation';
+import { useAuthStore } from '@/store/auth';
 
 const BottomTabBar = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { session } = useAuthStore();
+  
+  // Filter navigation items based on user role
+  const userRole = session?.user?.app_metadata?.role || 'practitioner';
+  const visibleItems = getVisibleNavigationItems(mobileNavigationItems, userRole);
 
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border">
       <div className="flex">
-        {mobileNavigationItems.map((tab) => {
+        {visibleItems.map((tab) => {
           const Icon = tab.icon;
           const isActive = location.pathname === tab.path;
           
