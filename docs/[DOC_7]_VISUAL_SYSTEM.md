@@ -11,7 +11,7 @@ Purpose: This document defines the canonical and complete visual design system f
 *   PRINCIPLE 1 (Typography is Structure): The primary tool for creating hierarchy and communicating importance is a disciplined typographic scale, not color or ornamentation. A sophisticated serif font is used for display headings, while a clean sans-serif is used for all UI and body text.
 *   PRINCIPLE 2 (Nuanced Neutrality): The color palette is built on a foundation of off-whites and layered grays. Color is used with extreme prejudice. The strongest visual accent is achieved through high-contrast black and white.
 *   PRINCIPLE 3 (Space as a Tool): The layout is clean and uncluttered. Generous and consistent use of negative space is non-negotiable. It is used to guide the eye, group related items, and create a calm, focused reading environment.
-*   PRINCIPLE 4 (Refined Dark Experience): The dark theme provides a sophisticated, almost black experience with subtle gray surfaces that maintain hierarchy and readability.
+*   PRINCIPLE 4 (Refined Dark Experience): The dark theme provides a sophisticated, almost black experience with subtle gray surfaces that maintain hierarchy and readability using precise reference colors.
 
 ================================================================================
 2.0. Color System (v3.1 - Light & Enhanced Dark Themes)
@@ -41,19 +41,19 @@ RULE: The following CSS variables must be defined in the global stylesheet. The 
 }
 
 .dark {
-  /* Enhanced Dark Theme Tokens (v3.1 - Reference Image Inspired) */
-  --background: 220 15% 4%;       /* Very dark, almost black main background */
+  /* Enhanced Dark Theme Tokens (v3.1 - Reference Colors) */
+  --background: 300 2% 13%;       /* #212122 - Main background */
   --foreground: 210 40% 95%;      /* Soft off-white text */
 
-  --surface: 220 15% 8%;          /* Dark gray surface for sidebar/cards */
-  --surface-muted: 220 15% 12%;   /* Slightly lighter gray for inputs */
+  --surface: 270 2% 15%;          /* #272728 - Sidebar/card surfaces */
+  --surface-muted: 300 2% 21%;    /* #363537 - Input fields, muted surfaces */
 
-  --border: 220 20% 15%;          /* Subtle dark border */
-  --border-hover: 220 20% 20%;    /* Brighter border on hover */
+  --border: 270 2% 22%;           /* #383739 - Subtle borders */
+  --border-hover: 0 0% 30%;       /* Slightly brighter border on hover */
 
   /* Primary action color is high-contrast white */
   --primary: 210 40% 98%;
-  --primary-foreground: 220 15% 4%;
+  --primary-foreground: 300 2% 13%;
 
   --text-primary: 210 40% 95%;
   --text-secondary: 210 15% 70%;
@@ -69,7 +69,15 @@ RULE: The following CSS variables must be defined in the global stylesheet. The 
   --radius: 8px; /* Updated to 8px for a softer feel */
 }
 
-2.2. Tailwind CSS Integration (v3.1)
+2.2. Reference Color Mapping (v3.1)
+RULE: The dark theme uses exact reference colors for consistency:
+
+*   **#212122** → `--background` (300 2% 13%) - Main application background
+*   **#272728** → `--surface` (270 2% 15%) - Sidebar, cards, secondary surfaces  
+*   **#363537** → `--surface-muted` (300 2% 21%) - Input fields, disabled states
+*   **#383739** → `--border` (270 2% 22%) - Subtle borders and separators
+
+2.3. Tailwind CSS Integration (v3.1)
 RULE: The `tailwind.config.ts` file must be updated to reflect this enhanced token system with refined dark theme support.
 
 // tailwind.config.ts
@@ -113,17 +121,18 @@ RULE: The `tailwind.config.ts` file must be updated to reflect this enhanced tok
 
 RULE: To achieve the desired refined aesthetic with enhanced dark theme support, the AI developer must apply the new tokens as follows:
 
-*   **Page Background:** Use `bg-background` (very dark in dark theme, off-white in light).
-*   **Sidebar/Navigation Surfaces:** Use `bg-surface` (dark gray in dark theme, light gray in light).
+*   **Page Background:** Use `bg-background` (#212122 in dark theme, off-white in light).
+*   **Sidebar/Navigation Surfaces:** Use `bg-surface` (#272728 in dark theme, light gray in light).
 *   **Cards & Content Areas:** Use `bg-background` with `border border-border` and soft `shadow-md`.
-*   **Input Fields:** Use `bg-surface-muted` (slightly lighter gray in dark theme).
+*   **Input Fields:** Use `bg-surface-muted` (#363537 in dark theme).
 *   **Primary Buttons:** MUST use `bg-primary text-primary-foreground` (white on dark in dark theme, black on light in light theme).
 *   **Secondary/Navigation Items:** Use `text-foreground` for primary text, `text-secondary` for muted text.
 
 3.1. Dark Theme Specific Guidelines
-*   **Sidebar:** Should use `bg-surface` to create the refined gray appearance from the reference
-*   **Main Content:** Should use `bg-background` for the deep dark background
-*   **Borders:** Use `border-border` for subtle separation without harsh lines
+*   **Sidebar:** Should use `bg-surface` (#272728) to create the refined gray appearance
+*   **Main Content:** Should use `bg-background` (#212122) for the deep dark background
+*   **Input Fields:** Should use `bg-surface-muted` (#363537) for proper contrast
+*   **Borders:** Use `border-border` (#383739) for subtle separation without harsh lines
 *   **Text Hierarchy:** `text-foreground` for primary text, `text-secondary` for secondary information
 
 ================================================================================
@@ -149,10 +158,11 @@ RULE: Login and signup pages are explicitly excluded from v3.1 visual system upd
 ================================================================================
 
 5.1. Reference Design Compliance
-The v3.1 dark theme is specifically designed to match the sophisticated dark aesthetic shown in the reference image, featuring:
-*   Very dark main background (almost black)
-*   Refined dark gray sidebar surfaces
-*   Subtle borders that don't create harsh contrasts
+The v3.1 dark theme uses exact reference colors (#212122, #272728, #363537, #383739) to match the sophisticated dark aesthetic, featuring:
+*   Very dark main background (#212122)
+*   Refined dark gray sidebar surfaces (#272728)
+*   Proper input field contrast (#363537)
+*   Subtle borders (#383739) that don't create harsh contrasts
 *   High-contrast white text on dark backgrounds
 *   Maintained typography hierarchy in both themes
 

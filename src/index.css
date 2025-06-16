@@ -40,37 +40,37 @@
   }
 
   .dark {
-    /* Dark Theme Tokens (Updated to match reference image) */
-    --background: 220 15% 4%;       /* Very dark, almost black main background */
+    /* Dark Theme Tokens (v3.1 - Using Reference Colors) */
+    --background: 300 2% 13%;       /* #212122 - Main background */
     --foreground: 210 40% 95%;      /* Soft off-white text */
 
-    --surface: 220 15% 8%;          /* Dark gray surface for sidebar/cards */
-    --surface-muted: 220 15% 12%;   /* Slightly lighter gray for inputs */
+    --surface: 270 2% 15%;          /* #272728 - Sidebar/card surfaces */
+    --surface-muted: 300 2% 21%;    /* #363537 - Input fields, muted surfaces */
 
-    --border: 220 20% 15%;          /* Subtle dark border */
-    --border-hover: 220 20% 20%;    /* Brighter border on hover */
+    --border: 270 2% 22%;           /* #383739 - Subtle borders */
+    --border-hover: 0 0% 30%;       /* Slightly brighter border on hover */
 
     /* Primary action color is high-contrast white */
     --primary: 210 40% 98%;
-    --primary-foreground: 220 15% 4%;
+    --primary-foreground: 300 2% 13%;
 
     --text-primary: 210 40% 95%;
     --text-secondary: 210 15% 70%;
 
-    /* Legacy tokens for compatibility */
-    --card: 220 15% 8%;
+    /* Legacy tokens for compatibility - updated to match new scheme */
+    --card: 270 2% 15%;             /* #272728 */
     --card-foreground: 210 40% 95%;
-    --popover: 220 15% 8%;
+    --popover: 270 2% 15%;          /* #272728 */
     --popover-foreground: 210 40% 95%;
-    --secondary: 220 15% 12%;
+    --secondary: 300 2% 21%;        /* #363537 */
     --secondary-foreground: 210 40% 95%;
-    --muted: 220 15% 12%;
+    --muted: 300 2% 21%;            /* #363537 */
     --muted-foreground: 210 15% 65%;
-    --accent: 220 15% 12%;
+    --accent: 300 2% 21%;           /* #363537 */
     --accent-foreground: 210 40% 95%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --input: 220 15% 12%;
+    --input: 300 2% 21%;            /* #363537 */
     --ring: 240 4.9% 83.9%;
   }
 
