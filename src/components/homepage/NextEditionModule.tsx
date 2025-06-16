@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import SuggestionPollItem from './SuggestionPollItem';
+import { useSubmitSuggestionMutation } from '../../../packages/hooks/useSubmitSuggestionMutation';
 
 export interface Suggestion {
   id: number;
@@ -23,23 +24,23 @@ interface NextEditionModuleProps {
 
 const NextEditionModule: React.FC<NextEditionModuleProps> = ({ suggestions }) => {
   const [newSuggestion, setNewSuggestion] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitSuggestionMutation = useSubmitSuggestionMutation();
 
   const handleSubmitSuggestion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSuggestion.trim()) return;
 
-    setIsSubmitting(true);
     try {
-      // TODO: Implement useSubmitSuggestionMutation hook when ready
-      console.log('Submitting suggestion:', newSuggestion);
+      await submitSuggestionMutation.mutateAsync({
+        title: newSuggestion.trim(),
+        description: ''
+      });
       
       // Reset form on success
       setNewSuggestion('');
     } catch (error) {
       console.error('Failed to submit suggestion:', error);
-    } finally {
-      setIsSubmitting(false);
+      // Error is already handled by the mutation's onError callback
     }
   };
 
@@ -58,14 +59,14 @@ const NextEditionModule: React.FC<NextEditionModuleProps> = ({ suggestions }) =>
               value={newSuggestion}
               onChange={(e) => setNewSuggestion(e.target.value)}
               className="w-full bg-surface-muted"
-              disabled={isSubmitting}
+              disabled={submitSuggestionMutation.isPending}
             />
             <Button 
               type="submit" 
-              disabled={!newSuggestion.trim() || isSubmitting}
+              disabled={!newSuggestion.trim() || submitSuggestionMutation.isPending}
               className="w-full bg-primary text-primary-foreground"
             >
-              {isSubmitting ? 'Enviando...' : 'Sugerir'}
+              {submitSuggestionMutation.isPending ? 'Enviando...' : 'Sugerir'}
             </Button>
           </form>
         </div>

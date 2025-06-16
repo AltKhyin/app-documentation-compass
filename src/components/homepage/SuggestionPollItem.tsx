@@ -5,44 +5,42 @@ import React, { useState } from 'react';
 import { ChevronUp } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Suggestion } from './NextEditionModule';
+import { useCastVoteMutation } from '../../../packages/hooks/useCastVoteMutation';
 
 interface SuggestionPollItemProps {
   suggestion: Suggestion;
 }
 
 const SuggestionPollItem: React.FC<SuggestionPollItemProps> = ({ suggestion }) => {
-  const [isVoting, setIsVoting] = useState(false);
   const [hasVoted, setHasVoted] = useState(false);
-  const [voteCount, setVoteCount] = useState(suggestion.upvotes);
+  const [optimisticVoteCount, setOptimisticVoteCount] = useState(suggestion.upvotes);
+  const castVoteMutation = useCastVoteMutation();
 
   const handleVote = async () => {
-    if (isVoting) return;
+    if (castVoteMutation.isPending) return;
 
-    setIsVoting(true);
+    const action = hasVoted ? 'remove_vote' : 'upvote';
+    
+    // Optimistic update
+    const newVoteCount = hasVoted ? optimisticVoteCount - 1 : optimisticVoteCount + 1;
+    const newHasVoted = !hasVoted;
+    
+    setOptimisticVoteCount(newVoteCount);
+    setHasVoted(newHasVoted);
+
     try {
-      // TODO: Implement useCastVoteMutation hook when ready
-      console.log('Voting on suggestion:', suggestion.id);
+      const result = await castVoteMutation.mutateAsync({
+        suggestion_id: suggestion.id,
+        action
+      });
       
-      // Optimistic update
-      if (hasVoted) {
-        setVoteCount(prev => prev - 1);
-        setHasVoted(false);
-      } else {
-        setVoteCount(prev => prev + 1);
-        setHasVoted(true);
-      }
+      // Update with actual count from server
+      setOptimisticVoteCount(result.new_vote_count);
     } catch (error) {
       console.error('Failed to vote:', error);
       // Revert optimistic update on error
-      if (hasVoted) {
-        setVoteCount(prev => prev + 1);
-        setHasVoted(true);
-      } else {
-        setVoteCount(prev => prev - 1);
-        setHasVoted(false);
-      }
-    } finally {
-      setIsVoting(false);
+      setOptimisticVoteCount(suggestion.upvotes);
+      setHasVoted(!newHasVoted);
     }
   };
 
@@ -64,13 +62,13 @@ const SuggestionPollItem: React.FC<SuggestionPollItemProps> = ({ suggestion }) =
       
       <div className="flex items-center gap-2 ml-3">
         <span className="text-sm font-medium text-foreground min-w-[2rem] text-right">
-          {voteCount}
+          {optimisticVoteCount}
         </span>
         <Button
           variant={hasVoted ? "default" : "outline"}
           size="sm"
           onClick={handleVote}
-          disabled={isVoting}
+          disabled={castVoteMutation.isPending}
           className="p-2 h-8 w-8"
         >
           <ChevronUp 

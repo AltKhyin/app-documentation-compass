@@ -1,6 +1,6 @@
 
 # README-BÍBLIA.md
-**Version:** 2.2.1  
+**Version:** 2.3.0  
 **Last Updated:** June 16, 2025  
 **Purpose:** Living state document providing complete context of the EVIDENS repository
 
@@ -39,6 +39,20 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 - **Edge Function**: `supabase/functions/get-homepage-feed/index.ts` (351 lines - needs refactoring)
 - **Location**: `src/pages/Index.tsx`, `src/components/homepage/`, `packages/hooks/useHomepageFeedQuery.ts`
 
+#### Suggestion Voting System
+- **Status**: 100% Complete - **NEWLY IMPLEMENTED** (v2.3.0)
+- **Implementation**:
+  - Complete suggestion submission and voting functionality
+  - Secure RLS policies on `Suggestion_Votes` table
+  - Rate-limited Edge Functions (100 req/min)
+  - TanStack Query mutations with optimistic updates
+  - Real-time vote count updates via database triggers
+- **Components**: NextEditionModule (functional), SuggestionPollItem (functional)
+- **API**: `cast-suggestion-vote` Edge Function, enhanced `submit-suggestion` validation
+- **Data Hooks**: `useSubmitSuggestionMutation`, `useCastVoteMutation`
+- **Security**: Full RLS implementation, user authentication required
+- **Location**: `supabase/functions/cast-suggestion-vote/`, `packages/hooks/`
+
 #### Data Architecture (ENFORCED v2.2.1)
 - **Status**: 100% Complete - **AGGRESSIVELY ENFORCED**
 - **Pattern**: SINGLE consolidated data fetching following [DOC_6] guidelines
@@ -49,6 +63,14 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
   - **SHELL COMPONENTS**: Now directly consume AppDataContext (no individual hooks)
 - **Benefits**: Eliminated redundant API calls, improved performance, better caching
 - **Location**: `src/contexts/AppDataContext.tsx`, `packages/hooks/`
+
+#### Visual System (REFINED v3.1)
+- **Status**: 100% Complete - **REFINED COLOR PALETTE** (v2.3.0)
+- **Implementation**: Updated dark theme with precise reference colors
+- **Color Tokens**: #121212, #1a1a1a, #212121, #2a2a2a, #2d2d2d, #484848
+- **Documentation**: Fully updated [DOC_7]_VISUAL_SYSTEM.md v3.1
+- **Components**: All components use refined token system
+- **Location**: `src/index.css`, `docs/[DOC_7]_VISUAL_SYSTEM.md`
 
 ### 🔄 CURRENT ARCHITECTURE DECISIONS
 
@@ -66,9 +88,10 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 - **UI State**: Local useState/useReducer
 
 #### Database Schema
-- **Tables**: Practitioners, Reviews, Suggestions, Notifications, SiteSettings, OnboardingQuestions/Answers
-- **Security**: RLS policies on all tables
-- **Functions**: `get_my_claim()`, `handle_new_user()` trigger
+- **Tables**: Practitioners, Reviews, Suggestions, Notifications, SiteSettings, OnboardingQuestions/Answers, Suggestion_Votes
+- **Security**: RLS policies on all tables (COMPLETE)
+- **Functions**: `get_my_claim()`, `handle_new_user()` trigger, `update_suggestion_vote_count()`
+- **Triggers**: Automatic vote count updates on Suggestion_Votes table
 - **Status**: Schema complete for current features
 
 ### 📁 KEY DIRECTORY STRUCTURE
@@ -77,16 +100,16 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 │   ├── components/
 │   │   ├── auth/              # Authentication components
 │   │   ├── shell/             # App shell navigation (USES AppDataContext DIRECTLY)
-│   │   ├── homepage/          # Homepage modules
+│   │   ├── homepage/          # Homepage modules (FUNCTIONAL voting system)
 │   │   └── ui/                # shadcn/ui components
 │   ├── contexts/              # React contexts (CRITICAL: AppDataContext)
 │   ├── hooks/                 # Custom React hooks (NO data fetching hooks)
 │   ├── pages/                 # Route components
 │   └── store/                 # Zustand stores (auth only)
 ├── packages/
-│   └── hooks/                 # Shared data-fetching hooks (SINGLE consolidated hook)
+│   └── hooks/                 # Shared data-fetching hooks (CONSOLIDATED + voting hooks)
 ├── supabase/
-│   └── functions/            # Edge Functions
+│   └── functions/            # Edge Functions (INCLUDING cast-suggestion-vote)
 └── docs/                     # Documentation & blueprints
 ```
 
@@ -98,10 +121,12 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 - **Smart Caching**: TanStack Query with 5min staleTime, 15min gcTime
 - **Rate Limiting**: 100 requests/minute on Edge Functions
 - **POLICY ENFORCEMENT**: Zero tolerance for individual API calls
+- **Optimistic Updates**: Immediate UI feedback for voting actions
 
 #### Error Handling
 - **Graceful Degradation**: Homepage works with partial data failures
 - **User Feedback**: Clear error states with retry mechanisms
+- **Optimistic Rollback**: Vote actions revert on error
 - **Logging**: Comprehensive console logging for debugging
 
 #### Security
@@ -109,6 +134,7 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 - **JWT Claims**: Custom role and subscription_tier in tokens
 - **Rate Limiting**: Protection against API abuse
 - **CORS**: Proper handling in all Edge Functions
+- **Vote Security**: Users can only vote once per suggestion
 
 ### 🚧 NEXT DEVELOPMENT PRIORITIES
 
@@ -134,15 +160,20 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 - **Auth Limbo**: Cleared via auth state cleanup on login/logout
 - **API Overload**: RESOLVED via aggressive consolidated data fetching (v2.2.1)
 - **Cache Invalidation**: Handled by TanStack Query patterns
+- **Vote Conflicts**: Prevented by optimistic updates with error rollback
 
 #### Edge Function Status
 - `get-homepage-feed`: ✅ Active, Rate Limited, Handles ALL app data, Needs Refactoring
+- `cast-suggestion-vote`: ✅ Active, Rate Limited, Full voting functionality
+- `submit-suggestion`: ✅ Active, Rate Limited, Enhanced validation
 - `get-personalized-recommendations`: ⚠️ Has schema errors (ReviewTags missing)
 
 #### Database Health
 - All required tables exist and have proper RLS policies
+- Suggestion_Votes table fully secured with RLS
+- Vote count triggers functioning correctly
 - Analytics_Events table missing (affects recommendations)
-- Foreign key relationships need validation
+- Foreign key relationships validated
 
 ### 🚨 CRITICAL API CALL POLICY (v2.2.1)
 
@@ -157,13 +188,16 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 
 **MONITORING**: Any individual API calls detected are considered bugs and must be eliminated immediately
 
+**EXCEPTION**: Voting system uses dedicated TanStack Query mutations for POST operations only
+
 ---
 
-**Recent Changes (v2.2.1):**
-- ELIMINATED all legacy wrapper hooks (useUserProfileQuery, useNotificationCountQuery)
-- Updated shell components to directly consume AppDataContext
-- Achieved single API call per page load (1 call vs previous 14+)
-- Enforced strict zero-tolerance policy for individual API calls
-- Shell components no longer use any data-fetching hooks
+**Recent Changes (v2.3.0):**
+- IMPLEMENTED complete suggestion voting system with secure RLS policies
+- CREATED cast-suggestion-vote Edge Function with rate limiting and proper error handling
+- ADDED TanStack Query mutations (useSubmitSuggestionMutation, useCastVoteMutation)
+- UPDATED homepage components to use functional voting system instead of TODO placeholders
+- REFINED color token system in visual documentation with exact hex references
+- ADDED optimistic updates for immediate user feedback in voting interactions
 
-This document reflects the current state as of June 16, 2025, post aggressive API consolidation enforcement with complete elimination of individual API calls.
+This document reflects the current state as of June 16, 2025, with fully functional suggestion voting system and refined visual design tokens.

@@ -244,10 +244,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "suggestion_votes_practitioner_id_fkey"
+            columns: ["practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "Practitioners"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "Suggestion_Votes_practitioner_id_fkey"
             columns: ["practitioner_id"]
             isOneToOne: false
             referencedRelation: "Practitioners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suggestion_votes_suggestion_id_fkey"
+            columns: ["suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "Suggestions"
             referencedColumns: ["id"]
           },
           {

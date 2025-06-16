@@ -57,19 +57,37 @@ RULE: The following CSS variables must be defined in the global stylesheet. The 
 
   --text-primary: 210 40% 95%;
   --text-secondary: 0 0% 28%;     /* #484848 - Secondary text */
+
+  /* Legacy tokens for compatibility - updated to match new scheme */
+  --card: 0 0% 10%;               /* #1a1a1a */
+  --card-foreground: 210 40% 95%;
+  --popover: 0 0% 10%;            /* #1a1a1a */
+  --popover-foreground: 210 40% 95%;
+  --secondary: 0 0% 13%;          /* #212121 */
+  --secondary-foreground: 210 40% 95%;
+  --muted: 0 0% 13%;              /* #212121 */
+  --muted-foreground: 0 0% 28%;   /* #484848 */
+  --accent: 0 0% 13%;             /* #212121 */
+  --accent-foreground: 210 40% 95%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --input: 0 0% 13%;              /* #212121 */
+  --ring: 240 4.9% 83.9%;
 }
 
 /* Universal Semantic & Utility Tokens */
 :root {
   --font-sans: 'Inter', sans-serif;
-  --font-serif: 'Source Serif 4', serif; /* Or similar high-quality serif */
-
-  --destructive: 0 84% 60%;
-  --ring: 210 10% 40%;
-  --radius: 8px; /* Updated to 8px for a softer feel */
+  --font-serif: 'Source Serif 4', serif;
+  --radius: 8px; /* Updated to 8px per v3.0 spec */
+  --chart-1: 12 76% 61%;
+  --chart-2: 173 58% 39%;
+  --chart-3: 197 37% 24%;
+  --chart-4: 43 74% 66%;
+  --chart-5: 27 87% 67%;
 }
 
-2.2. Reference Color Mapping (v3.1)
+2.2. Reference Color Mapping (v3.1 - UPDATED)
 RULE: The dark theme uses exact reference colors for consistency:
 
 *   **#121212** → `--background` (0 0% 7%) - Deepest application background
