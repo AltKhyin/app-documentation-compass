@@ -1,6 +1,6 @@
 
 # README-BÍBLIA.md
-**Version:** 2.3.0  
+**Version:** 2.3.1  
 **Last Updated:** June 16, 2025  
 **Purpose:** Living state document providing complete context of the EVIDENS repository
 
@@ -40,18 +40,21 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 - **Location**: `src/pages/Index.tsx`, `src/components/homepage/`, `packages/hooks/useHomepageFeedQuery.ts`
 
 #### Suggestion Voting System
-- **Status**: 100% Complete - **NEWLY IMPLEMENTED** (v2.3.0)
+- **Status**: 100% Complete - **FULLY FUNCTIONAL & OPTIMIZED** (v2.3.1)
 - **Implementation**:
-  - Complete suggestion submission and voting functionality
-  - Secure RLS policies on `Suggestion_Votes` table
-  - Rate-limited Edge Functions (100 req/min)
-  - TanStack Query mutations with optimistic updates
-  - Real-time vote count updates via database triggers
-- **Components**: NextEditionModule (functional), SuggestionPollItem (functional)
-- **API**: `cast-suggestion-vote` Edge Function, enhanced `submit-suggestion` validation
-- **Data Hooks**: `useSubmitSuggestionMutation`, `useCastVoteMutation`
-- **Security**: Full RLS implementation, user authentication required
-- **Location**: `supabase/functions/cast-suggestion-vote/`, `packages/hooks/`
+  - Complete suggestion submission and voting functionality with user state tracking
+  - **OPTIMIZED**: Single comprehensive RLS policy replacing multiple conflicting policies
+  - **PERFORMANCE**: Added database indexes on all foreign keys per Supabase Security Advisor
+  - Rate-limited Edge Functions (100 req/min) with enhanced error handling
+  - TanStack Query mutations with optimistic updates and proper rollback
+  - Real-time vote count updates via optimized database triggers
+  - **USER EXPERIENCE**: Tracks individual user vote status for immediate feedback
+- **Components**: NextEditionModule (functional), SuggestionPollItem (functional with state sync)
+- **API**: `cast-suggestion-vote` Edge Function with user vote status, enhanced `submit-suggestion` validation
+- **Data Hooks**: `useSubmitSuggestionMutation`, `useCastVoteMutation` (fixed import paths)
+- **Security**: Consolidated RLS policy, user authentication required, vote conflict prevention
+- **Performance**: Database function marked `SECURITY DEFINER`, comprehensive indexing
+- **Location**: `supabase/functions/cast-suggestion-vote/`, `packages/hooks/`, `src/components/homepage/`
 
 #### Data Architecture (ENFORCED v2.2.1)
 - **Status**: 100% Complete - **AGGRESSIVELY ENFORCED**
@@ -72,6 +75,17 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 - **Components**: All components use refined token system
 - **Location**: `src/index.css`, `docs/[DOC_7]_VISUAL_SYSTEM.md`
 
+#### Database Performance & Security (NEW v2.3.1)
+- **Status**: 100% Complete - **SUPABASE SECURITY ADVISOR COMPLIANT**
+- **Implementation**:
+  - **RESOLVED**: Multiple permissive policies issue on Suggestion_Votes table
+  - **OPTIMIZED**: Added performance indexes on all foreign key columns
+  - **ENHANCED**: Security definer functions for better RLS performance
+  - **ELIMINATED**: Supabase Security Advisor warnings and performance alerts
+- **Tables**: Comprehensive indexing on Notifications, Reviews, Suggestions, Suggestion_Votes
+- **Functions**: Optimized `update_suggestion_vote_count()` with security definer
+- **Location**: Database migration `20250616091754`, all affected tables
+
 ### 🔄 CURRENT ARCHITECTURE DECISIONS
 
 #### API Strategy (ENFORCED v2.2.1)
@@ -85,14 +99,15 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 - **Global Auth**: Zustand store (`src/store/auth.ts`) - auth state ONLY
 - **Server State**: TanStack Query with SINGLE consolidated hook
 - **App Data**: React Context for ALL app data (user profile + notifications + homepage)
-- **UI State**: Local useState/useReducer
+- **UI State**: Local useState/useReducer with optimistic updates
 
-#### Database Schema
+#### Database Schema & Performance (OPTIMIZED v2.3.1)
 - **Tables**: Practitioners, Reviews, Suggestions, Notifications, SiteSettings, OnboardingQuestions/Answers, Suggestion_Votes
-- **Security**: RLS policies on all tables (COMPLETE)
-- **Functions**: `get_my_claim()`, `handle_new_user()` trigger, `update_suggestion_vote_count()`
-- **Triggers**: Automatic vote count updates on Suggestion_Votes table
-- **Status**: Schema complete for current features
+- **Security**: Single comprehensive RLS policies (COMPLETE & OPTIMIZED)
+- **Performance**: Comprehensive foreign key indexing per Supabase Security Advisor
+- **Functions**: `get_my_claim()`, `handle_new_user()` trigger, optimized `update_suggestion_vote_count()` (security definer)
+- **Triggers**: Automatic vote count updates on Suggestion_Votes table (optimized)
+- **Status**: Schema complete and performance-optimized for current features
 
 ### 📁 KEY DIRECTORY STRUCTURE
 ```
@@ -100,41 +115,45 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 │   ├── components/
 │   │   ├── auth/              # Authentication components
 │   │   ├── shell/             # App shell navigation (USES AppDataContext DIRECTLY)
-│   │   ├── homepage/          # Homepage modules (FUNCTIONAL voting system)
+│   │   ├── homepage/          # Homepage modules (FULLY FUNCTIONAL voting system)
 │   │   └── ui/                # shadcn/ui components
 │   ├── contexts/              # React contexts (CRITICAL: AppDataContext)
 │   ├── hooks/                 # Custom React hooks (NO data fetching hooks)
 │   ├── pages/                 # Route components
 │   └── store/                 # Zustand stores (auth only)
 ├── packages/
-│   └── hooks/                 # Shared data-fetching hooks (CONSOLIDATED + voting hooks)
+│   └── hooks/                 # Shared data-fetching hooks (CONSOLIDATED + optimized voting hooks)
 ├── supabase/
-│   └── functions/            # Edge Functions (INCLUDING cast-suggestion-vote)
+│   └── functions/            # Edge Functions (INCLUDING optimized cast-suggestion-vote)
 └── docs/                     # Documentation & blueprints
 ```
 
 ### 🔧 TECHNICAL IMPLEMENTATION NOTES
 
-#### Performance Optimizations (ENFORCED v2.2.1)
+#### Performance Optimizations (ENHANCED v2.3.1)
 - **API Call Reduction**: From 14+ to 1 call per page load (TARGET ACHIEVED)
 - **Consolidated Queries**: SINGLE Edge Function for ALL related data
 - **Smart Caching**: TanStack Query with 5min staleTime, 15min gcTime
 - **Rate Limiting**: 100 requests/minute on Edge Functions
 - **POLICY ENFORCEMENT**: Zero tolerance for individual API calls
-- **Optimistic Updates**: Immediate UI feedback for voting actions
+- **Optimistic Updates**: Immediate UI feedback for voting actions with proper rollback
+- **DATABASE PERFORMANCE**: Comprehensive indexing eliminates Supabase Security Advisor warnings
+- **RLS OPTIMIZATION**: Single comprehensive policies replace multiple conflicting ones
 
-#### Error Handling
+#### Error Handling (ENHANCED v2.3.1)
 - **Graceful Degradation**: Homepage works with partial data failures
 - **User Feedback**: Clear error states with retry mechanisms
-- **Optimistic Rollback**: Vote actions revert on error
+- **Optimistic Rollback**: Vote actions revert on error with original state restoration
 - **Logging**: Comprehensive console logging for debugging
+- **Vote Conflict Prevention**: Proper handling of duplicate/invalid vote attempts
 
-#### Security
-- **RLS First**: All data access through Row Level Security
+#### Security (ENHANCED v2.3.1)
+- **RLS First**: All data access through Row Level Security (optimized single policies)
 - **JWT Claims**: Custom role and subscription_tier in tokens
 - **Rate Limiting**: Protection against API abuse
 - **CORS**: Proper handling in all Edge Functions
-- **Vote Security**: Users can only vote once per suggestion
+- **Vote Security**: Users can only vote once per suggestion with conflict detection
+- **Security Definer**: Database functions optimized for performance and security
 
 ### 🚧 NEXT DEVELOPMENT PRIORITIES
 
@@ -156,24 +175,27 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 
 ### 🔍 DEBUGGING INFORMATION
 
-#### Common Issues
+#### Common Issues (RESOLVED v2.3.1)
 - **Auth Limbo**: Cleared via auth state cleanup on login/logout
 - **API Overload**: RESOLVED via aggressive consolidated data fetching (v2.2.1)
 - **Cache Invalidation**: Handled by TanStack Query patterns
-- **Vote Conflicts**: Prevented by optimistic updates with error rollback
+- **Vote Conflicts**: RESOLVED - Prevented by optimistic updates with error rollback
+- **Database Performance**: RESOLVED - Comprehensive indexing per Supabase Security Advisor
+- **RLS Policy Conflicts**: RESOLVED - Single comprehensive policies replace multiple ones
 
 #### Edge Function Status
 - `get-homepage-feed`: ✅ Active, Rate Limited, Handles ALL app data, Needs Refactoring
-- `cast-suggestion-vote`: ✅ Active, Rate Limited, Full voting functionality
+- `cast-suggestion-vote`: ✅ Active, Rate Limited, FULLY FUNCTIONAL with user state tracking
 - `submit-suggestion`: ✅ Active, Rate Limited, Enhanced validation
 - `get-personalized-recommendations`: ⚠️ Has schema errors (ReviewTags missing)
 
-#### Database Health
-- All required tables exist and have proper RLS policies
-- Suggestion_Votes table fully secured with RLS
-- Vote count triggers functioning correctly
-- Analytics_Events table missing (affects recommendations)
-- Foreign key relationships validated
+#### Database Health (OPTIMIZED v2.3.1)
+- All required tables exist and have optimized RLS policies (single comprehensive policies)
+- Suggestion_Votes table FULLY SECURED and PERFORMANCE OPTIMIZED
+- Vote count triggers functioning correctly with security definer optimization
+- **NEW**: Comprehensive foreign key indexing eliminates performance warnings
+- **RESOLVED**: All Supabase Security Advisor alerts addressed
+- Foreign key relationships validated and properly indexed
 
 ### 🚨 CRITICAL API CALL POLICY (v2.2.1)
 
@@ -192,12 +214,13 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 
 ---
 
-**Recent Changes (v2.3.0):**
-- IMPLEMENTED complete suggestion voting system with secure RLS policies
-- CREATED cast-suggestion-vote Edge Function with rate limiting and proper error handling
-- ADDED TanStack Query mutations (useSubmitSuggestionMutation, useCastVoteMutation)
-- UPDATED homepage components to use functional voting system instead of TODO placeholders
-- REFINED color token system in visual documentation with exact hex references
-- ADDED optimistic updates for immediate user feedback in voting interactions
+**Recent Changes (v2.3.1):**
+- RESOLVED all Supabase Security Advisor alerts and performance warnings
+- OPTIMIZED Suggestion_Votes table with single comprehensive RLS policy
+- ADDED comprehensive foreign key indexing across all database tables
+- ENHANCED vote casting Edge Function with user state tracking and conflict prevention
+- FIXED import paths in voting mutation hooks for proper module resolution
+- IMPROVED optimistic updates with proper state synchronization and error rollback
+- MARKED database functions as SECURITY DEFINER for optimal RLS performance
 
-This document reflects the current state as of June 16, 2025, with fully functional suggestion voting system and refined visual design tokens.
+This document reflects the current state as of June 16, 2025, with fully functional and optimized suggestion voting system that addresses all Supabase Security Advisor recommendations.

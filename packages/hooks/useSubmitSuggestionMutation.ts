@@ -2,7 +2,7 @@
 // ABOUTME: TanStack Query mutation hook for submitting suggestions to the next edition poll.
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '../../src/integrations/supabase/client';
 
 interface SubmitSuggestionPayload {
   title: string;

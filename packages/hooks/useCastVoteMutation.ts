@@ -2,7 +2,7 @@
 // ABOUTME: TanStack Query mutation hook for casting votes on suggestions.
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '../../src/integrations/supabase/client';
 
 interface CastVotePayload {
   suggestion_id: number;
@@ -14,6 +14,7 @@ interface CastVoteResponse {
   suggestion_id: number;
   action: string;
   new_vote_count: number;
+  user_has_voted: boolean;
 }
 
 export const useCastVoteMutation = () => {

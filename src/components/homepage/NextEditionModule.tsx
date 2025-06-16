@@ -13,6 +13,7 @@ export interface Suggestion {
   description: string;
   upvotes: number;
   created_at: string;
+  user_has_voted?: boolean; // New field to track if current user has voted
   Practitioners: {
     full_name: string;
   };

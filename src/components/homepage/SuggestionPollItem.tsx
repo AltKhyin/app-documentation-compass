@@ -1,7 +1,7 @@
 
 // ABOUTME: Atomic component for displaying and voting on individual suggestions.
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronUp } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Suggestion } from './NextEditionModule';
@@ -12,14 +12,25 @@ interface SuggestionPollItemProps {
 }
 
 const SuggestionPollItem: React.FC<SuggestionPollItemProps> = ({ suggestion }) => {
-  const [hasVoted, setHasVoted] = useState(false);
+  // Initialize state from suggestion data if available
+  const [hasVoted, setHasVoted] = useState(suggestion.user_has_voted || false);
   const [optimisticVoteCount, setOptimisticVoteCount] = useState(suggestion.upvotes);
   const castVoteMutation = useCastVoteMutation();
+
+  // Update local state when suggestion prop changes (from server updates)
+  useEffect(() => {
+    setHasVoted(suggestion.user_has_voted || false);
+    setOptimisticVoteCount(suggestion.upvotes);
+  }, [suggestion.user_has_voted, suggestion.upvotes]);
 
   const handleVote = async () => {
     if (castVoteMutation.isPending) return;
 
     const action = hasVoted ? 'remove_vote' : 'upvote';
+    
+    // Store original state for rollback
+    const originalHasVoted = hasVoted;
+    const originalVoteCount = optimisticVoteCount;
     
     // Optimistic update
     const newVoteCount = hasVoted ? optimisticVoteCount - 1 : optimisticVoteCount + 1;
@@ -36,11 +47,12 @@ const SuggestionPollItem: React.FC<SuggestionPollItemProps> = ({ suggestion }) =
       
       // Update with actual count from server
       setOptimisticVoteCount(result.new_vote_count);
+      setHasVoted(result.user_has_voted);
     } catch (error) {
       console.error('Failed to vote:', error);
       // Revert optimistic update on error
-      setOptimisticVoteCount(suggestion.upvotes);
-      setHasVoted(!newHasVoted);
+      setOptimisticVoteCount(originalVoteCount);
+      setHasVoted(originalHasVoted);
     }
   };
 
