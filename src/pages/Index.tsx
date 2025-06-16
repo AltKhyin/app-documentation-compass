@@ -11,6 +11,8 @@ import { Skeleton } from '../components/ui/skeleton';
 const Index = () => {
   const { data, isLoading, isError, error } = useHomepageFeedQuery();
 
+  console.log('Homepage render state:', { data, isLoading, isError, error });
+
   // Loading state with skeleton loaders
   if (isLoading) {
     return (
@@ -40,6 +42,7 @@ const Index = () => {
 
   // Error state
   if (isError) {
+    console.error('Homepage error details:', error);
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4 max-w-md mx-auto p-6">
@@ -57,6 +60,22 @@ const Index = () => {
       </div>
     );
   }
+
+  // If no data, show empty state
+  if (!data) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md mx-auto p-6">
+          <h1 className="text-2xl font-bold text-foreground font-serif">Nenhum conteúdo disponível</h1>
+          <p className="text-muted-foreground">
+            Não há conteúdo para exibir no momento.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  console.log('Rendering homepage with data:', data);
 
   // Render modules based on layout order from API
   const renderModule = (moduleType: string) => {

@@ -17,7 +17,7 @@ export interface Suggestion {
   id: number;
   title: string;
   description: string;
-  total_votes: number;
+  upvotes: number;
   created_at: string;
   Practitioners: {
     full_name: string;
@@ -40,22 +40,28 @@ export interface HomepageFeedData {
 const fetchHomepageFeed = async (): Promise<HomepageFeedData> => {
   console.log('Fetching homepage feed data...');
   
-  const { data, error } = await supabase.functions.invoke('get-homepage-feed', {
-    method: 'POST',
-    body: {}
-  });
+  try {
+    const { data, error } = await supabase.functions.invoke('get-homepage-feed', {
+      method: 'POST',
+      body: {}
+    });
 
-  if (error) {
-    console.error('Error fetching homepage feed:', error);
-    throw new Error(error.message || 'Failed to fetch homepage feed');
+    if (error) {
+      console.error('Error fetching homepage feed:', error);
+      throw new Error(error.message || 'Failed to fetch homepage feed');
+    }
+
+    if (!data) {
+      console.error('No data returned from homepage feed');
+      throw new Error('No data returned from homepage feed');
+    }
+
+    console.log('Homepage feed data fetched successfully:', data);
+    return data as HomepageFeedData;
+  } catch (error) {
+    console.error('Critical error in fetchHomepageFeed:', error);
+    throw error;
   }
-
-  if (!data) {
-    throw new Error('No data returned from homepage feed');
-  }
-
-  console.log('Homepage feed data fetched successfully');
-  return data as HomepageFeedData;
 };
 
 /**

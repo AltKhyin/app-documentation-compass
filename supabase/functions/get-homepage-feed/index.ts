@@ -74,8 +74,12 @@ serve(async (req) => {
     let practitionerId = null;
     
     if (authHeader) {
-      const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-      practitionerId = user?.id;
+      try {
+        const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+        practitionerId = user?.id;
+      } catch (authError) {
+        console.log('Auth error (continuing as anonymous):', authError);
+      }
     }
 
     console.log(`Fetching homepage feed for user: ${practitionerId || 'anonymous'}`);
@@ -95,10 +99,13 @@ serve(async (req) => {
         .select('value')
         .eq('key', 'homepage_layout')
         .single()
-        .then(result => ({
-          data: result.data || { value: JSON.stringify(["featured", "recent", "suggestions", "popular"]) },
-          error: result.error
-        })),
+        .then(result => {
+          if (result.error) {
+            console.log('No homepage layout setting found, using default');
+            return { data: { value: '["featured", "recent", "suggestions", "popular"]' }, error: null };
+          }
+          return result;
+        }),
 
       // 2. Fetch featured review with multiple fallbacks
       supabase
@@ -107,27 +114,29 @@ serve(async (req) => {
         .eq('key', 'featured_review_id')
         .single()
         .then(async (result) => {
-          if (result.data?.value && result.data.value !== 'null') {
-            const featuredId = JSON.parse(result.data.value);
-            const reviewResult = await supabase
-              .from('Reviews')
-              .select('id, title, description, cover_image_url, published_at, view_count')
-              .eq('id', featuredId)
-              .eq('status', 'published')
-              .single();
-            
-            if (reviewResult.error) {
-              console.log('Featured review by ID failed, falling back to most recent');
-              return supabase
-                .from('Reviews')
-                .select('id, title, description, cover_image_url, published_at, view_count')
-                .eq('status', 'published')
-                .order('published_at', { ascending: false })
-                .limit(1)
-                .single();
+          if (result.data?.value && result.data.value !== 'null' && result.data.value !== '""') {
+            try {
+              const featuredId = typeof result.data.value === 'string' 
+                ? JSON.parse(result.data.value) 
+                : result.data.value;
+              
+              if (featuredId && typeof featuredId === 'number') {
+                const reviewResult = await supabase
+                  .from('Reviews')
+                  .select('id, title, description, cover_image_url, published_at, view_count')
+                  .eq('id', featuredId)
+                  .eq('status', 'published')
+                  .single();
+                
+                if (!reviewResult.error) {
+                  return reviewResult;
+                }
+              }
+            } catch (parseError) {
+              console.log('Error parsing featured review ID, falling back to most recent');
             }
-            return reviewResult;
           }
+          
           // Fallback: get most recent published review as featured
           return supabase
             .from('Reviews')
@@ -135,7 +144,7 @@ serve(async (req) => {
             .eq('status', 'published')
             .order('published_at', { ascending: false })
             .limit(1)
-            .single();
+            .maybeSingle();
         }),
 
       // 3. Fetch 10 most recent published reviews
@@ -160,7 +169,7 @@ serve(async (req) => {
       // 5. Get data for popularity calculation (simplified for missing relationships)
       supabase
         .from('Reviews')
-        .select('id, view_count, published_at, created_at')
+        .select('id, title, description, cover_image_url, published_at, view_count, created_at')
         .eq('status', 'published'),
 
       // 6. Get personalized recommendations (if user is authenticated)
@@ -175,9 +184,16 @@ serve(async (req) => {
     ]);
 
     // Process results with graceful degradation
-    const layout = layoutResult.status === 'fulfilled' && layoutResult.value.data?.value 
-      ? JSON.parse(layoutResult.value.data.value) 
-      : ["featured", "recent", "suggestions", "popular"];
+    let layout = ["featured", "recent", "suggestions", "popular"]; // Default layout
+    
+    if (layoutResult.status === 'fulfilled' && layoutResult.value.data?.value) {
+      try {
+        const layoutValue = layoutResult.value.data.value;
+        layout = typeof layoutValue === 'string' ? JSON.parse(layoutValue) : layoutValue;
+      } catch (parseError) {
+        console.log('Error parsing layout, using default:', parseError);
+      }
+    }
 
     const featured = featuredResult.status === 'fulfilled' && !featuredResult.value.error 
       ? featuredResult.value.data 
@@ -227,7 +243,7 @@ serve(async (req) => {
       suggestions
     };
 
-    console.log(`Returning homepage feed with ${response.recent.length} recent, ${response.popular.length} popular, ${response.recommendations.length} recommended reviews`);
+    console.log(`Returning homepage feed with ${response.recent.length} recent, ${response.popular.length} popular, ${response.recommendations.length} recommended reviews, ${response.suggestions.length} suggestions`);
 
     return new Response(
       JSON.stringify(response),
