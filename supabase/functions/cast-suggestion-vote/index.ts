@@ -132,7 +132,7 @@ serve(async (req) => {
         .from('Suggestion_Votes')
         .insert({
           suggestion_id,
-          practitioner_id: user.id
+          submitted_by: user.id
         });
 
       if (insertError) {
