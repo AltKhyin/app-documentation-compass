@@ -1,3 +1,4 @@
+
 // ABOUTME: Main Edge Function to fetch all homepage data with robust error handling and rate limiting.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
@@ -93,7 +94,23 @@ serve(async (req: Request) => {
       supabase.from('SiteSettings').select('value').eq('key', 'homepage_layout').single(),
       supabase.from('Reviews').select('id, title, description, cover_image_url, published_at, view_count').eq('status', 'published').order('published_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('Reviews').select('id, title, description, cover_image_url, published_at, view_count').eq('status', 'published').order('published_at', { ascending: false }).limit(10),
-      supabase.from('Suggestions').select('id, title, description, upvotes, created_at, Practitioners(full_name)').eq('status', 'pending').order('upvotes', { ascending: false }).limit(10),
+      // FIXED: Proper suggestions query with explicit join and better error handling
+      supabase
+        .from('Suggestions')
+        .select(`
+          id, 
+          title, 
+          description, 
+          upvotes, 
+          created_at,
+          submitted_by,
+          Practitioners!submitted_by (
+            full_name
+          )
+        `)
+        .eq('status', 'pending')
+        .order('upvotes', { ascending: false })
+        .limit(10),
       supabase.from('Reviews').select('id, title, description, cover_image_url, published_at, view_count').eq('status', 'published').order('view_count', { ascending: false }).limit(10),
       practitionerId ? supabase.functions.invoke('get-personalized-recommendations', { body: { practitionerId } }).catch(e => { console.error("Recs failed:", e); return { data: [], error: e }; }) : Promise.resolve({ data: [], error: null }),
       practitionerId ? supabase.from('Practitioners').select('*').eq('id', practitionerId).single() : Promise.resolve({ data: null, error: null }),
@@ -113,19 +130,42 @@ serve(async (req: Request) => {
       notificationCountResult
     ] = results;
 
+    // --- Enhanced debugging for suggestions ---
+    console.log('Raw suggestions result:', suggestionsResult);
+    if (suggestionsResult.status === 'fulfilled') {
+      console.log('Suggestions data:', suggestionsResult.value.data);
+      console.log('Suggestions error:', suggestionsResult.value.error);
+    } else {
+      console.error('Suggestions promise rejected:', suggestionsResult.reason);
+    }
+
+    // --- Process suggestions data to handle missing practitioner data ---
+    let processedSuggestions = [];
+    if (suggestionsResult.status === 'fulfilled' && suggestionsResult.value.data) {
+      processedSuggestions = suggestionsResult.value.data.map((suggestion: any) => ({
+        id: suggestion.id,
+        title: suggestion.title,
+        description: suggestion.description,
+        upvotes: suggestion.upvotes,
+        created_at: suggestion.created_at,
+        Practitioners: suggestion.Practitioners || { full_name: 'Anônimo' }
+      }));
+    }
+    console.log('Processed suggestions:', processedSuggestions);
+
     // --- Assemble the final response object ---
     const responseData: ConsolidatedHomepageData = {
-      layout: getResultData(layoutResult, { value: '["featured", "recent", "suggestions", "popular"]' })?.value || [],
+      layout: getResultData(layoutResult, { value: '["featured", "recent", "suggestions", "popular"]' })?.value ? JSON.parse(getResultData(layoutResult, { value: '["featured", "recent", "suggestions", "popular"]' }).value) : ["featured", "recent", "suggestions", "popular"],
       featured: getResultData(featuredResult, null),
       recent: getResultData(recentResult, []),
       popular: getResultData(popularResult, []),
-      suggestions: getResultData(suggestionsResult, []),
+      suggestions: processedSuggestions,
       recommendations: getResultData(recommendationsResult, []),
       userProfile: getResultData(userProfileResult, null),
       notificationCount: notificationCountResult.status === 'fulfilled' && notificationCountResult.value ? (notificationCountResult.value.count ?? 0) : 0,
     };
 
-    console.log(`✅ Successfully assembled consolidated feed.`);
+    console.log(`✅ Successfully assembled consolidated feed with ${responseData.suggestions.length} suggestions.`);
 
     // --- Return the single, consolidated JSON payload ---
     return new Response(

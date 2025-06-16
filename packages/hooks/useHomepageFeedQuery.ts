@@ -1,3 +1,4 @@
+
 // ABOUTME: TanStack Query hook for fetching all homepage data in a single consolidated request.
 
 import { useQuery } from '@tanstack/react-query';
@@ -18,6 +19,7 @@ export interface Suggestion {
   description: string;
   upvotes: number;
   created_at: string;
+  user_has_voted?: boolean; // Track if current user has voted
   Practitioners: {
     full_name: string;
   };
@@ -84,6 +86,31 @@ const fetchConsolidatedHomepageFeed = async (): Promise<ConsolidatedHomepageData
       userProfile: !!data.userProfile,
       notificationCount: data.notificationCount || 0
     });
+
+    // Post-process suggestions to include user vote status
+    if (data.suggestions && data.userProfile) {
+      console.log('🔍 Fetching user vote status for suggestions...');
+      
+      // Fetch user votes for all displayed suggestions
+      const suggestionIds = data.suggestions.map((s: any) => s.id);
+      if (suggestionIds.length > 0) {
+        const { data: userVotes } = await supabase
+          .from('Suggestion_Votes')
+          .select('suggestion_id')
+          .eq('practitioner_id', data.userProfile.id)
+          .in('suggestion_id', suggestionIds);
+
+        const votedSuggestionIds = new Set(userVotes?.map(v => v.suggestion_id) || []);
+        
+        // Add user_has_voted flag to each suggestion
+        data.suggestions = data.suggestions.map((suggestion: any) => ({
+          ...suggestion,
+          user_has_voted: votedSuggestionIds.has(suggestion.id)
+        }));
+
+        console.log(`✅ Added vote status for ${data.suggestions.length} suggestions`);
+      }
+    }
     
     return data as ConsolidatedHomepageData;
   } catch (error) {
