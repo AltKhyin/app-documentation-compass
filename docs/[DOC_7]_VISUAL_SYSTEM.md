@@ -1,23 +1,24 @@
 
 [DOC_7] EVIDENS Visual System
-Version: 3.0
-Date: June 14, 2025
-Purpose: This document defines the canonical and complete visual design system for the EVIDENS platform. This version (3.0) establishes a new, clean, and professional "editorial" aesthetic inspired by the `manus.mn` visual language. It prioritizes typographic hierarchy, generous whitespace, and a nuanced neutral color palette. This system will govern both the default Light Theme and the new Dark Theme.
+Version: 3.1
+Date: June 16, 2025
+Purpose: This document defines the canonical and complete visual design system for the EVIDENS platform. This version (3.1) establishes a refined dark theme based on reference design, maintaining the clean, professional "editorial" aesthetic. It prioritizes typographic hierarchy, generous whitespace, and a sophisticated neutral color palette. This system governs both the Light Theme and the enhanced Dark Theme.
 
 ================================================================================
-1.0. Core Philosophy (v3.0 - "Editorial Clarity")
+1.0. Core Philosophy (v3.1 - "Editorial Clarity with Refined Dark Theme")
 ================================================================================
 
 *   PRINCIPLE 1 (Typography is Structure): The primary tool for creating hierarchy and communicating importance is a disciplined typographic scale, not color or ornamentation. A sophisticated serif font is used for display headings, while a clean sans-serif is used for all UI and body text.
 *   PRINCIPLE 2 (Nuanced Neutrality): The color palette is built on a foundation of off-whites and layered grays. Color is used with extreme prejudice. The strongest visual accent is achieved through high-contrast black and white.
 *   PRINCIPLE 3 (Space as a Tool): The layout is clean and uncluttered. Generous and consistent use of negative space is non-negotiable. It is used to guide the eye, group related items, and create a calm, focused reading environment.
+*   PRINCIPLE 4 (Refined Dark Experience): The dark theme provides a sophisticated, almost black experience with subtle gray surfaces that maintain hierarchy and readability.
 
 ================================================================================
-2.0. Color System (v3.0 - Light & Dark Themes)
+2.0. Color System (v3.1 - Light & Enhanced Dark Themes)
 ================================================================================
 
 2.1. Color Tokens (CSS Variables)
-RULE: The following CSS variables must be defined in the global stylesheet. The `.light` class defines the default theme. A `.dark` class will be added to the `<html>` or `<body>` tag to activate the dark theme.
+RULE: The following CSS variables must be defined in the global stylesheet. The `.light` class defines the default theme. A `.dark` class will be added to the `<html>` or `<body>` tag to activate the enhanced dark theme.
 
 /* /styles/globals.css */
 .light {
@@ -40,22 +41,22 @@ RULE: The following CSS variables must be defined in the global stylesheet. The 
 }
 
 .dark {
-  /* Dark Theme Tokens (The "Manus-Dark" Equivalent) */
-  --background: 220 10% 7%;      /* Very dark charcoal */
-  --foreground: 210 40% 96%;      /* Soft off-white */
+  /* Enhanced Dark Theme Tokens (v3.1 - Reference Image Inspired) */
+  --background: 220 15% 4%;       /* Very dark, almost black main background */
+  --foreground: 210 40% 95%;      /* Soft off-white text */
 
-  --surface: 220 10% 11%;     /* Lighter gray surface for cards */
-  --surface-muted: 220 10% 15%; /* Darker gray for inputs */
+  --surface: 220 15% 8%;          /* Dark gray surface for sidebar/cards */
+  --surface-muted: 220 15% 12%;   /* Slightly lighter gray for inputs */
 
-  --border: 210 10% 20%;      /* Soft dark border */
-  --border-hover: 210 10% 30%; /* Brighter border on hover */
+  --border: 220 20% 15%;          /* Subtle dark border */
+  --border-hover: 220 20% 20%;    /* Brighter border on hover */
 
   /* Primary action color is high-contrast white */
   --primary: 210 40% 98%;
-  --primary-foreground: 220 10% 10%;
+  --primary-foreground: 220 15% 4%;
 
-  --text-primary: 210 40% 96%;
-  --text-secondary: 210 15% 65%;
+  --text-primary: 210 40% 95%;
+  --text-secondary: 210 15% 70%;
 }
 
 /* Universal Semantic & Utility Tokens */
@@ -68,9 +69,8 @@ RULE: The following CSS variables must be defined in the global stylesheet. The 
   --radius: 8px; /* Updated to 8px for a softer feel */
 }
 
-
-2.2. Tailwind CSS Integration (v3.0)
-RULE: The `tailwind.config.ts` file must be updated to reflect this new, more nuanced token system.
+2.2. Tailwind CSS Integration (v3.1)
+RULE: The `tailwind.config.ts` file must be updated to reflect this enhanced token system with refined dark theme support.
 
 // tailwind.config.ts
 // ...
@@ -88,7 +88,7 @@ RULE: The `tailwind.config.ts` file must be updated to reflect this new, more nu
         secondary: { // Secondary is now for text, not backgrounds
           DEFAULT: 'hsl(var(--text-secondary))',
         },
-        surface: { // New surface colors
+        surface: { // Enhanced surface colors for dark theme
           DEFAULT: 'hsl(var(--surface))',
           muted: 'hsl(var(--surface-muted))',
         },
@@ -108,17 +108,23 @@ RULE: The `tailwind.config.ts` file must be updated to reflect this new, more nu
 // ...
 
 ================================================================================
-3.0. Component Styling Rules (v3.0)
+3.0. Component Styling Rules (v3.1)
 ================================================================================
 
-RULE: To achieve the desired "Manus" style, the AI developer must apply the new tokens as follows:
+RULE: To achieve the desired refined aesthetic with enhanced dark theme support, the AI developer must apply the new tokens as follows:
 
-*   **Page Background:** Use `bg-background`.
-*   **Main Surfaces (e.g., footers, large content sections):** Use `bg-surface`.
-*   **Cards & Testimonials:** Use `bg-background` but with a `border border-border` and a soft `shadow-md`.
-*   **Inputs:** Use `bg-surface-muted`.
-*   **Primary Buttons (`Get Started`, `Explore`):** MUST use `bg-primary text-primary-foreground`.
-*   **Secondary/Tag Buttons:** Use `bg-surface text-foreground`. The active state for these buttons becomes `bg-primary text-primary-foreground`.
+*   **Page Background:** Use `bg-background` (very dark in dark theme, off-white in light).
+*   **Sidebar/Navigation Surfaces:** Use `bg-surface` (dark gray in dark theme, light gray in light).
+*   **Cards & Content Areas:** Use `bg-background` with `border border-border` and soft `shadow-md`.
+*   **Input Fields:** Use `bg-surface-muted` (slightly lighter gray in dark theme).
+*   **Primary Buttons:** MUST use `bg-primary text-primary-foreground` (white on dark in dark theme, black on light in light theme).
+*   **Secondary/Navigation Items:** Use `text-foreground` for primary text, `text-secondary` for muted text.
+
+3.1. Dark Theme Specific Guidelines
+*   **Sidebar:** Should use `bg-surface` to create the refined gray appearance from the reference
+*   **Main Content:** Should use `bg-background` for the deep dark background
+*   **Borders:** Use `border-border` for subtle separation without harsh lines
+*   **Text Hierarchy:** `text-foreground` for primary text, `text-secondary` for secondary information
 
 ================================================================================
 4.0. Logo & Brand Identity (PRESERVED)
@@ -129,11 +135,26 @@ RULE: The current "Reviews." logo MUST be preserved exactly as implemented. The 
 
 *   **Logo Text:** "Reviews." (with period)
 *   **Typography:** Current font weight and family as implemented in the application
-*   **Color:** Inherits from current text color tokens
+*   **Color:** Inherits from current text color tokens (adapts to theme)
 *   **Placement:** Header/navigation as currently positioned
 *   **Interactive States:** Current hover/focus states preserved
 
 CRITICAL: This logo specification MUST NOT be altered during visual system updates. Any changes to the overall visual system must preserve the existing logo implementation exactly.
 
 4.2. Authentication Pages Exception
-RULE: Login and signup pages are explicitly excluded from v3.0 visual system updates. These pages must maintain their current styling and visual treatment to preserve existing user experience and branding consistency.
+RULE: Login and signup pages are explicitly excluded from v3.1 visual system updates. These pages must maintain their current styling and visual treatment to preserve existing user experience and branding consistency.
+
+================================================================================
+5.0. Implementation Notes (v3.1)
+================================================================================
+
+5.1. Reference Design Compliance
+The v3.1 dark theme is specifically designed to match the sophisticated dark aesthetic shown in the reference image, featuring:
+*   Very dark main background (almost black)
+*   Refined dark gray sidebar surfaces
+*   Subtle borders that don't create harsh contrasts
+*   High-contrast white text on dark backgrounds
+*   Maintained typography hierarchy in both themes
+
+5.2. Backward Compatibility
+All existing components will continue to work with the enhanced token system. The light theme remains unchanged to preserve the established aesthetic for users who prefer it.

@@ -40,37 +40,37 @@
   }
 
   .dark {
-    /* Dark Theme Tokens (The "Manus-Dark" Equivalent) */
-    --background: 220 10% 7%;      /* Very dark charcoal */
-    --foreground: 210 40% 96%;      /* Soft off-white */
+    /* Dark Theme Tokens (Updated to match reference image) */
+    --background: 220 15% 4%;       /* Very dark, almost black main background */
+    --foreground: 210 40% 95%;      /* Soft off-white text */
 
-    --surface: 220 10% 11%;     /* Lighter gray surface for cards */
-    --surface-muted: 220 10% 15%; /* Darker gray for inputs */
+    --surface: 220 15% 8%;          /* Dark gray surface for sidebar/cards */
+    --surface-muted: 220 15% 12%;   /* Slightly lighter gray for inputs */
 
-    --border: 210 10% 20%;      /* Soft dark border */
-    --border-hover: 210 10% 30%; /* Brighter border on hover */
+    --border: 220 20% 15%;          /* Subtle dark border */
+    --border-hover: 220 20% 20%;    /* Brighter border on hover */
 
     /* Primary action color is high-contrast white */
     --primary: 210 40% 98%;
-    --primary-foreground: 220 10% 10%;
+    --primary-foreground: 220 15% 4%;
 
-    --text-primary: 210 40% 96%;
-    --text-secondary: 210 15% 65%;
+    --text-primary: 210 40% 95%;
+    --text-secondary: 210 15% 70%;
 
     /* Legacy tokens for compatibility */
-    --card: 220 10% 7%;
-    --card-foreground: 210 40% 96%;
-    --popover: 220 10% 7%;
-    --popover-foreground: 210 40% 96%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
+    --card: 220 15% 8%;
+    --card-foreground: 210 40% 95%;
+    --popover: 220 15% 8%;
+    --popover-foreground: 210 40% 95%;
+    --secondary: 220 15% 12%;
+    --secondary-foreground: 210 40% 95%;
+    --muted: 220 15% 12%;
+    --muted-foreground: 210 15% 65%;
+    --accent: 220 15% 12%;
+    --accent-foreground: 210 40% 95%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --input: 240 3.7% 15.9%;
+    --input: 220 15% 12%;
     --ring: 240 4.9% 83.9%;
   }
 
