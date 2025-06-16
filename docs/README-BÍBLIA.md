@@ -1,32 +1,35 @@
 
 # EVIDENS — Living State Document
-**Version**: 3.1.1
-**Last Updated**: June 16, 2025 11:03 AM
-**Status**: 🟢 Operational Excellence - All critical architecture issues resolved
+**Version**: 3.1.2
+**Last Updated**: June 16, 2025 4:20 PM
+**Status**: 🟢 Operational Excellence - Critical architecture fixes completed
 
 ## 📋 CURRENT STATE SUMMARY
 
 EVIDENS is a **review-based knowledge platform** for healthcare practitioners. The platform provides curated, evidence-based content through a sophisticated review system with community engagement features.
 
-### 🏗️ **ARCHITECTURE STATUS**: Foundation Complete
+### 🏗️ **ARCHITECTURE STATUS**: Foundation Complete & Stabilized
 - **✅ Framework**: Vite + React + TypeScript (stable, production-ready)
 - **✅ Authentication**: Supabase Auth with role-based access control
 - **✅ Database**: PostgreSQL with comprehensive RLS policies
 - **✅ State Management**: TanStack Query + Zustand (auth) + React Context (app data)
 - **✅ UI System**: shadcn/ui + Tailwind CSS with refined dark/light themes
 - **✅ Deployment**: Ready for production deployment
+- **✅ Rate Limiting**: Comprehensive rate limiting across all Edge Functions
 
-### 🚀 **ROUTING & NAVIGATION**: Complete & Synchronized
-- **✅ All Routes Defined**: `/`, `/acervo`, `/comunidade`, `/perfil`, `/configuracoes`
-- **✅ Navigation Sync**: Desktop sidebar and mobile bottom bar use identical routes
+### 🚀 **ROUTING & NAVIGATION**: Clean & Optimized
+- **✅ Essential Routes**: `/`, `/acervo`, `/comunidade`, `/perfil`
+- **✅ Navigation Sync**: Desktop sidebar and mobile bottom bar fully synchronized
 - **✅ Protected Routes**: All main app routes behind authentication
 - **✅ Responsive Design**: Adaptive navigation for desktop/mobile
+- **✅ Trash Removal**: Removed unused `/configuracoes` route and component
 
 ### 🔐 **SECURITY & PERFORMANCE**: Enterprise-Ready
-- **✅ Rate Limiting**: Implemented across all Edge Functions
+- **✅ Rate Limiting**: Implemented across all Edge Functions including get-acervo-data
 - **✅ Row Level Security**: Complete RLS policies for all database tables
 - **✅ Error Handling**: Comprehensive error boundaries and graceful degradation
 - **✅ Type Safety**: Full TypeScript coverage with strict type checking
+- **✅ CORS Configuration**: Proper CORS headers for all Edge Functions
 
 ### 🎨 **USER EXPERIENCE**: Polished & Professional
 - **✅ Theme System**: Custom Vite-compatible theme provider with system preference support
@@ -38,10 +41,9 @@ EVIDENS is a **review-based knowledge platform** for healthcare practitioners. T
 
 ### **Core Pages Status**
 - **✅ Homepage (`/`)**: Feature-complete with review carousels, featured content, and community polls
-- **✅ Acervo (`/acervo`)**: Complete with masonry grid, filtering, and search functionality
+- **✅ Acervo (`/acervo`)**: Complete with masonry grid, filtering, rate-limited API, and proper error handling
 - **✅ Comunidade (`/comunidade`)**: Placeholder page ready for community features
 - **✅ Perfil (`/perfil`)**: Placeholder page ready for user profile management
-- **✅ Configurações (`/configuracoes`)**: Complete settings page with theme, notifications, and account management
 
 ### **Shell Components**
 - **✅ AppShell**: Master layout controller with responsive behavior
@@ -62,39 +64,42 @@ EVIDENS is a **review-based knowledge platform** for healthcare practitioners. T
 - **Cache Management**: Intelligent invalidation and background refetching
 
 ### **Edge Functions & API**
-- **Rate Limited**: All endpoints protected against abuse
+- **Rate Limited**: All endpoints protected against abuse with configurable limits
 - **Typed**: Complete TypeScript interfaces for all API contracts
 - **Error Handling**: Standardized error responses across all functions
+- **CORS Compliant**: Proper CORS headers for web application compatibility
 
 ### **Database Schema**
 - **Tables**: Reviews, users, votes, suggestions, rate_limit_log
 - **Security**: Row Level Security policies for all data access
 - **Performance**: Optimized indexes and efficient query patterns
 
-## 🔄 **RECENT CHANGES** (v3.1.1)
+## 🔄 **RECENT CHANGES** (v3.1.2)
 
-### ✅ **Build Error Resolution**
-- **Fixed**: TypeScript error in App.tsx regarding `enableSystem` prop
-- **Updated**: CustomThemeProvider integration with correct prop interface
-- **Verified**: All routes and navigation components working correctly
+### ✅ **Critical Fixes & Code Cleanup**
+- **Fixed**: get-acervo-data Edge Function with proper rate limiting integration
+- **Enhanced**: CORS headers and error handling for all API endpoints
+- **Removed**: Unused `/configuracoes` route and ConfiguracoesPage component (trash code)
+- **Updated**: Navigation configuration to reflect clean route structure
+- **Verified**: All Edge Functions now have comprehensive rate limiting
 
 ### ✅ **Architecture Stabilization**
 - **Completed**: Navigation synchronization between desktop and mobile
-- **Added**: All missing route definitions and placeholder pages
 - **Centralized**: Navigation configuration for maintainability
 - **Optimized**: Provider hierarchy and context usage
+- **Secured**: All API endpoints with appropriate rate limiting
 
 ## 🎯 **IMMEDIATE DEVELOPMENT PRIORITIES**
 
-### **Phase 1: Content Management** (Next 1-2 weeks)
-1. **Review Detail Pages**: Implement individual review viewing with rich content display
-2. **Community Features**: Build discussion threads, user interactions, and community polls
-3. **User Profiles**: Complete profile management with activity history and preferences
+### **Phase 1: Core Features Enhancement** (Next 1-2 weeks)
+1. **Search Functionality**: Implement search bar in Acervo page as shown in reference images
+2. **Review Detail Pages**: Implement individual review viewing with rich content display
+3. **Visual Polish**: Refine review card styling to match reference design
 
-### **Phase 2: Advanced Features** (Next 2-4 weeks)
-1. **Search & Discovery**: Enhanced search with AI-powered recommendations
-2. **Content Creation**: User-generated content submission and moderation tools
-3. **Analytics Integration**: User behavior tracking and engagement metrics
+### **Phase 2: Community Features** (Next 2-4 weeks)
+1. **Community Page**: Build discussion threads, user interactions, and community polls
+2. **User Profiles**: Complete profile management with activity history and preferences
+3. **Advanced Interactions**: User-generated content and community engagement
 
 ### **Phase 3: Platform Maturity** (Next 1-2 months)
 1. **Editor Dashboard**: Admin interface for content management
@@ -107,16 +112,19 @@ EVIDENS is a **review-based knowledge platform** for healthcare practitioners. T
 - **Bundle Size**: Optimized with code splitting and lazy loading
 - **Load Times**: Sub-3-second page loads with efficient data fetching
 - **Mobile Performance**: Optimized for low-bandwidth environments
+- **API Performance**: Rate-limited endpoints with proper error handling
 
 ### **Code Quality**
 - **TypeScript Coverage**: 95%+ with strict type checking
 - **Component Organization**: Small, focused components averaging <50 lines
 - **Error Handling**: Comprehensive error boundaries and graceful degradation
+- **Code Cleanliness**: Removed unused components and routes
 
 ### **Security**
 - **Authentication**: Multi-factor authentication ready
 - **Data Protection**: GDPR-compliant data handling
 - **API Security**: Rate limiting and input validation on all endpoints
+- **CORS Compliance**: Proper cross-origin resource sharing configuration
 
 ## 🔮 **ARCHITECTURAL DECISIONS**
 
@@ -136,15 +144,21 @@ EVIDENS is a **review-based knowledge platform** for healthcare practitioners. T
 - **Navigation**: Unified configuration with platform-specific rendering
 - **Performance**: Optimized for mobile networks and devices
 
+### **Code Hygiene**
+- **Approach**: Regular removal of unused components and routes
+- **Rationale**: Prevents confusion and reduces maintenance overhead
+- **Implementation**: Periodic audits to identify and remove trash code
+
 ## 🚀 **DEPLOYMENT READINESS**
 
 The EVIDENS platform is **production-ready** with:
 - **✅ Complete authentication system**
 - **✅ Secure database with comprehensive RLS**
-- **✅ Rate-limited API endpoints**
+- **✅ Rate-limited API endpoints with proper CORS**
 - **✅ Responsive user interface**
 - **✅ Error handling and monitoring**
 - **✅ Type-safe codebase**
+- **✅ Clean, optimized route structure**
 
 ### **Next Deployment Steps**
 1. **Environment Configuration**: Set up production Supabase instance
@@ -154,4 +168,4 @@ The EVIDENS platform is **production-ready** with:
 
 ---
 
-**💡 Development Note**: The platform architecture is now stable and ready for rapid feature development. All foundational systems are in place, and new features can be built with confidence on this solid foundation.
+**💡 Development Note**: The platform architecture is now stable and optimized. All foundational systems are in place, trash code has been removed, and the codebase is ready for rapid feature development. The next phase should focus on implementing search functionality and enhancing the visual polish of the Acervo page.

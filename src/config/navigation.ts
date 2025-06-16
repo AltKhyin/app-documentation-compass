@@ -1,6 +1,6 @@
 
 // ABOUTME: Centralized navigation configuration with role-based access control for consistent routing.
-import { Home, Archive, Users, User, Settings, Edit } from 'lucide-react';
+import { Home, Archive, Users, User, Edit } from 'lucide-react';
 import type { NavigationItem } from '@/types';
 
 // Main navigation items (accessible to all authenticated users)

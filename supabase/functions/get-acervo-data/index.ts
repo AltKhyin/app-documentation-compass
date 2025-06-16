@@ -1,6 +1,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,6 +23,40 @@ serve(async (req) => {
         },
       }
     )
+
+    // Get user ID from JWT for rate limiting
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+    
+    if (userError || !user) {
+      console.error('Authentication error:', userError)
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        },
+      )
+    }
+
+    // Check rate limit
+    const rateLimitResult = await checkRateLimit(supabaseClient, 'get-acervo-data', user.id)
+    
+    if (!rateLimitResult.allowed) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Rate limit exceeded',
+          resetTime: rateLimitResult.resetTime 
+        }),
+        {
+          headers: { 
+            ...corsHeaders, 
+            ...rateLimitHeaders(rateLimitResult),
+            'Content-Type': 'application/json' 
+          },
+          status: 429,
+        },
+      )
+    }
 
     console.log('Fetching acervo data...')
 
@@ -113,7 +148,11 @@ serve(async (req) => {
     return new Response(
       JSON.stringify(response),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders, 
+          ...rateLimitHeaders(rateLimitResult),
+          'Content-Type': 'application/json' 
+        },
         status: 200,
       },
     )
