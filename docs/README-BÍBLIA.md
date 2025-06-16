@@ -1,6 +1,6 @@
 
 # README-BÍBLIA.md
-**Version:** 2.2.0  
+**Version:** 2.2.1  
 **Last Updated:** June 16, 2025  
 **Purpose:** Living state document providing complete context of the EVIDENS repository
 
@@ -27,32 +27,32 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 - **Location**: `src/components/shell/`
 
 #### Homepage Feed System
-- **Status**: 100% Complete - **AGGRESSIVELY OPTIMIZED** (v2.2.0)
+- **Status**: 100% Complete - **AGGRESSIVELY OPTIMIZED** (v2.2.1)
 - **Implementation**: 
   - **ENFORCED**: Single consolidated API call architecture - NO EXCEPTIONS
   - Single `get-homepage-feed` Edge Function returns ALL data (homepage + user + notifications)
   - Rate limited (100 req/min), graceful error handling, CORS enabled
-  - **API Calls**: Reduced from 14+ to 1-2 calls per page load (TARGET ACHIEVED)
+  - **API Calls**: Reduced from 14+ to 1 call per page load (TARGET ACHIEVED)
   - **POLICY**: All individual API calls to Reviews, Practitioners, Notifications ELIMINATED
 - **Components**: FeaturedReview, ReviewCarousel, NextEditionModule, SuggestionPollItem
-- **Data Flow**: `useConsolidatedHomepageFeedQuery` → `AppDataContext` → Shell components
+- **Data Flow**: `useConsolidatedHomepageFeedQuery` → `AppDataContext` → ALL components
 - **Edge Function**: `supabase/functions/get-homepage-feed/index.ts` (351 lines - needs refactoring)
 - **Location**: `src/pages/Index.tsx`, `src/components/homepage/`, `packages/hooks/useHomepageFeedQuery.ts`
 
-#### Data Architecture (ENFORCED v2.2.0)
+#### Data Architecture (ENFORCED v2.2.1)
 - **Status**: 100% Complete - **AGGRESSIVELY ENFORCED**
 - **Pattern**: SINGLE consolidated data fetching following [DOC_6] guidelines
 - **Implementation**: 
   - Single `AppDataContext` provides ALL app data (user profile + notifications + homepage)
   - `useConsolidatedHomepageFeedQuery` is the ONLY data fetching hook allowed
-  - Legacy hooks exist only as deprecated wrappers pointing to consolidated data
-  - **ELIMINATED**: All direct API calls to individual endpoints
+  - **ELIMINATED**: All legacy wrapper hooks and direct API calls
+  - **SHELL COMPONENTS**: Now directly consume AppDataContext (no individual hooks)
 - **Benefits**: Eliminated redundant API calls, improved performance, better caching
 - **Location**: `src/contexts/AppDataContext.tsx`, `packages/hooks/`
 
 ### 🔄 CURRENT ARCHITECTURE DECISIONS
 
-#### API Strategy (ENFORCED v2.2.0)
+#### API Strategy (ENFORCED v2.2.1)
 - **Edge Functions**: Complex business logic, consolidated data fetching
 - **Auto-generated API**: Simple CRUD with RLS policies (NOT used for homepage/user data)
 - **Rate Limiting**: Implemented on all Edge Functions (100 req/min)
@@ -76,11 +76,11 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 ├── src/
 │   ├── components/
 │   │   ├── auth/              # Authentication components
-│   │   ├── shell/             # App shell navigation
+│   │   ├── shell/             # App shell navigation (USES AppDataContext DIRECTLY)
 │   │   ├── homepage/          # Homepage modules
 │   │   └── ui/                # shadcn/ui components
 │   ├── contexts/              # React contexts (CRITICAL: AppDataContext)
-│   ├── hooks/                 # Custom React hooks (mostly deprecated wrappers)
+│   ├── hooks/                 # Custom React hooks (NO data fetching hooks)
 │   ├── pages/                 # Route components
 │   └── store/                 # Zustand stores (auth only)
 ├── packages/
@@ -92,8 +92,8 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 
 ### 🔧 TECHNICAL IMPLEMENTATION NOTES
 
-#### Performance Optimizations (ENFORCED v2.2.0)
-- **API Call Reduction**: From 14+ to 1-2 calls per page load (TARGET ACHIEVED)
+#### Performance Optimizations (ENFORCED v2.2.1)
+- **API Call Reduction**: From 14+ to 1 call per page load (TARGET ACHIEVED)
 - **Consolidated Queries**: SINGLE Edge Function for ALL related data
 - **Smart Caching**: TanStack Query with 5min staleTime, 15min gcTime
 - **Rate Limiting**: 100 requests/minute on Edge Functions
@@ -132,7 +132,7 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 
 #### Common Issues
 - **Auth Limbo**: Cleared via auth state cleanup on login/logout
-- **API Overload**: RESOLVED via aggressive consolidated data fetching (v2.2.0)
+- **API Overload**: RESOLVED via aggressive consolidated data fetching (v2.2.1)
 - **Cache Invalidation**: Handled by TanStack Query patterns
 
 #### Edge Function Status
@@ -144,24 +144,26 @@ EVIDENS is a medical evidence review platform with Main (user-facing) and Admin 
 - Analytics_Events table missing (affects recommendations)
 - Foreign key relationships need validation
 
-### 🚨 CRITICAL API CALL POLICY (v2.2.0)
+### 🚨 CRITICAL API CALL POLICY (v2.2.1)
 
 **ZERO TOLERANCE POLICY**: No individual API calls allowed for:
 - User profile data (`/rest/v1/Practitioners`)
 - Notification counts (`/rest/v1/Notifications`)
 - Homepage content (`/rest/v1/Reviews`, `/rest/v1/Suggestions`, `/rest/v1/SiteSettings`)
 
-**ENFORCEMENT**: All components MUST use `AppDataContext` and `useConsolidatedHomepageFeedQuery`
+**ENFORCEMENT**: All components MUST use `AppDataContext` directly - NO wrapper hooks allowed
+
+**SHELL COMPONENTS**: UserProfileBlock and NotificationBell now directly consume AppDataContext
 
 **MONITORING**: Any individual API calls detected are considered bugs and must be eliminated immediately
 
 ---
 
-**Recent Changes (v2.2.0):**
-- AGGRESSIVELY enforced single consolidated API call policy
-- Eliminated all individual API calls to Reviews, Practitioners, Notifications
-- Updated auth store to not fetch practitioner data
-- Enhanced caching and error handling in consolidated hook
-- Added strict policy documentation and monitoring guidelines
+**Recent Changes (v2.2.1):**
+- ELIMINATED all legacy wrapper hooks (useUserProfileQuery, useNotificationCountQuery)
+- Updated shell components to directly consume AppDataContext
+- Achieved single API call per page load (1 call vs previous 14+)
+- Enforced strict zero-tolerance policy for individual API calls
+- Shell components no longer use any data-fetching hooks
 
-This document reflects the current state as of June 16, 2025, post aggressive API consolidation enforcement.
+This document reflects the current state as of June 16, 2025, post aggressive API consolidation enforcement with complete elimination of individual API calls.
