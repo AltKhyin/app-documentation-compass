@@ -20,7 +20,7 @@ interface ReviewCardProps {
 const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
   return (
     <div 
-      className="relative bg-card rounded-md overflow-hidden cursor-pointer group transition-transform duration-200 hover:scale-105"
+      className="relative bg-background rounded-md overflow-hidden cursor-pointer group transition-transform duration-200 hover:scale-105 border border-border shadow-md"
       onClick={() => window.location.href = `/reviews/${review.id}`}
     >
       {/* Cover Image Background */}
@@ -28,7 +28,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
         className="w-full h-48 bg-cover bg-center"
         style={{ 
           backgroundImage: review.cover_image_url ? `url(${review.cover_image_url})` : 'none',
-          backgroundColor: review.cover_image_url ? 'transparent' : 'hsl(var(--muted))'
+          backgroundColor: review.cover_image_url ? 'transparent' : 'hsl(var(--surface))'
         }}
       >
         {/* Dark overlay for text readability */}

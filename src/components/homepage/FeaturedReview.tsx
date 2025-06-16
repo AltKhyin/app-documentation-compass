@@ -11,8 +11,8 @@ interface FeaturedReviewProps {
 const FeaturedReview: React.FC<FeaturedReviewProps> = ({ review }) => {
   if (!review) {
     return (
-      <div className="w-full h-96 bg-muted rounded-md flex items-center justify-center">
-        <p className="text-muted-foreground">Nenhuma edição em destaque</p>
+      <div className="w-full h-96 bg-surface rounded-md flex items-center justify-center">
+        <p className="text-secondary">Nenhuma edição em destaque</p>
       </div>
     );
   }
@@ -22,7 +22,7 @@ const FeaturedReview: React.FC<FeaturedReviewProps> = ({ review }) => {
       className="relative w-full h-96 bg-cover bg-center rounded-md overflow-hidden cursor-pointer group"
       style={{ 
         backgroundImage: review.cover_image_url ? `url(${review.cover_image_url})` : 'none',
-        backgroundColor: review.cover_image_url ? 'transparent' : 'hsl(var(--muted))'
+        backgroundColor: review.cover_image_url ? 'transparent' : 'hsl(var(--surface))'
       }}
       onClick={() => window.location.href = `/reviews/${review.id}`}
     >

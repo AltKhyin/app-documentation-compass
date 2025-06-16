@@ -47,17 +47,17 @@ const SuggestionPollItem: React.FC<SuggestionPollItemProps> = ({ suggestion }) =
   };
 
   return (
-    <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-md border border-border/50 hover:bg-secondary/70 transition-colors">
+    <div className="flex items-center justify-between p-3 bg-surface rounded-md border border-border hover:bg-surface-muted transition-colors">
       <div className="flex-1 min-w-0">
         <h4 className="font-medium text-sm text-foreground line-clamp-1">
           {suggestion.title}
         </h4>
         {suggestion.description && (
-          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+          <p className="text-xs text-secondary mt-1 line-clamp-2">
             {suggestion.description}
           </p>
         )}
-        <p className="text-xs text-muted-foreground mt-1">
+        <p className="text-xs text-secondary mt-1">
           Por {suggestion.Practitioners?.full_name || 'Anônimo'}
         </p>
       </div>
@@ -75,7 +75,7 @@ const SuggestionPollItem: React.FC<SuggestionPollItemProps> = ({ suggestion }) =
         >
           <ChevronUp 
             size={14} 
-            className={hasVoted ? "text-primary-foreground" : "text-muted-foreground"} 
+            className={hasVoted ? "text-primary-foreground" : "text-secondary"} 
           />
         </Button>
       </div>

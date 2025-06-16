@@ -29,8 +29,8 @@ const ReviewCarousel: React.FC<ReviewCarouselProps> = ({ title, reviews }) => {
     return (
       <div className="mb-8">
         <h2 className="text-foreground text-2xl font-bold mb-4 font-serif">{title}</h2>
-        <div className="bg-muted rounded-md p-8 text-center">
-          <p className="text-muted-foreground">Nenhuma edição disponível</p>
+        <div className="bg-surface rounded-md p-8 text-center">
+          <p className="text-secondary">Nenhuma edição disponível</p>
         </div>
       </div>
     );
@@ -46,14 +46,14 @@ const ReviewCarousel: React.FC<ReviewCarouselProps> = ({ title, reviews }) => {
         <div className="hidden md:flex items-center gap-2">
           <button
             onClick={scrollLeft}
-            className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-accent transition-colors border border-border"
+            className="p-2 bg-surface text-foreground rounded-md hover:bg-surface-muted transition-colors border border-border"
             aria-label="Scroll left"
           >
             <ChevronLeft size={20} />
           </button>
           <button
             onClick={scrollRight}
-            className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-accent transition-colors border border-border"
+            className="p-2 bg-surface text-foreground rounded-md hover:bg-surface-muted transition-colors border border-border"
             aria-label="Scroll right"
           >
             <ChevronRight size={20} />

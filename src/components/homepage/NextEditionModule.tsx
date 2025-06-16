@@ -44,7 +44,7 @@ const NextEditionModule: React.FC<NextEditionModuleProps> = ({ suggestions }) =>
   };
 
   return (
-    <div className="bg-card rounded-md p-6 border border-border">
+    <div className="bg-background rounded-md p-6 border border-border shadow-md">
       <h2 className="text-foreground text-2xl font-bold mb-6 font-serif">Próxima Edição</h2>
       
       <div className="grid md:grid-cols-2 gap-8">
@@ -57,13 +57,13 @@ const NextEditionModule: React.FC<NextEditionModuleProps> = ({ suggestions }) =>
               placeholder="Digite sua sugestão de tópico..."
               value={newSuggestion}
               onChange={(e) => setNewSuggestion(e.target.value)}
-              className="w-full"
+              className="w-full bg-surface-muted"
               disabled={isSubmitting}
             />
             <Button 
               type="submit" 
               disabled={!newSuggestion.trim() || isSubmitting}
-              className="w-full"
+              className="w-full bg-primary text-primary-foreground"
             >
               {isSubmitting ? 'Enviando...' : 'Sugerir'}
             </Button>
@@ -79,7 +79,7 @@ const NextEditionModule: React.FC<NextEditionModuleProps> = ({ suggestions }) =>
                 <SuggestionPollItem key={suggestion.id} suggestion={suggestion} />
               ))
             ) : (
-              <div className="text-muted-foreground text-center py-8">
+              <div className="text-secondary text-center py-8">
                 <p>Nenhuma sugestão disponível no momento.</p>
                 <p className="text-sm mt-2">Seja o primeiro a sugerir um tópico!</p>
               </div>

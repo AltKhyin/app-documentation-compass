@@ -1,7 +1,8 @@
+
 [DOC_7] EVIDENS Visual System
 Version: 3.0
 Date: June 14, 2025
-Purpose: This document defines the canonical and complete visual design system for the EVIDENS platform. This version (3.0) establishes a new, clean, and professional "editorial" aesthetic inspired by the `manus.mn` visual language. It prioritizes typographic hierarchy, generous whitespace, and a nuanced neutral color palette. This system will govern both the default Dark Theme and the new Light Theme.
+Purpose: This document defines the canonical and complete visual design system for the EVIDENS platform. This version (3.0) establishes a new, clean, and professional "editorial" aesthetic inspired by the `manus.mn` visual language. It prioritizes typographic hierarchy, generous whitespace, and a nuanced neutral color palette. This system will govern both the default Light Theme and the new Dark Theme.
 
 ================================================================================
 1.0. Core Philosophy (v3.0 - "Editorial Clarity")
@@ -64,7 +65,7 @@ RULE: The following CSS variables must be defined in the global stylesheet. The 
 
   --destructive: 0 84% 60%;
   --ring: 210 10% 40%;
-  --radius: 8px; /* Slightly larger radius for a softer feel */
+  --radius: 8px; /* Updated to 8px for a softer feel */
 }
 
 
@@ -79,7 +80,7 @@ RULE: The `tailwind.config.ts` file must be updated to reflect this new, more nu
         'border-hover': 'hsl(var(--border-hover))', // New token
         ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--text-primary))',
+        foreground: 'hsl(var(--text-primary))', // Updated mapping
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
@@ -118,3 +119,21 @@ RULE: To achieve the desired "Manus" style, the AI developer must apply the new 
 *   **Inputs:** Use `bg-surface-muted`.
 *   **Primary Buttons (`Get Started`, `Explore`):** MUST use `bg-primary text-primary-foreground`.
 *   **Secondary/Tag Buttons:** Use `bg-surface text-foreground`. The active state for these buttons becomes `bg-primary text-primary-foreground`.
+
+================================================================================
+4.0. Logo & Brand Identity (PRESERVED)
+================================================================================
+
+4.1. Current Logo Specification
+RULE: The current "Reviews." logo MUST be preserved exactly as implemented. The following specifications document the existing implementation:
+
+*   **Logo Text:** "Reviews." (with period)
+*   **Typography:** Current font weight and family as implemented in the application
+*   **Color:** Inherits from current text color tokens
+*   **Placement:** Header/navigation as currently positioned
+*   **Interactive States:** Current hover/focus states preserved
+
+CRITICAL: This logo specification MUST NOT be altered during visual system updates. Any changes to the overall visual system must preserve the existing logo implementation exactly.
+
+4.2. Authentication Pages Exception
+RULE: Login and signup pages are explicitly excluded from v3.0 visual system updates. These pages must maintain their current styling and visual treatment to preserve existing user experience and branding consistency.

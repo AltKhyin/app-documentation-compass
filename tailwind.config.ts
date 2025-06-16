@@ -21,28 +21,26 @@ export default {
 		extend: {
 			colors: {
 				border: 'hsl(var(--border))',
+				'border-hover': 'hsl(var(--border-hover))', // New token per v3.0
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
-				foreground: 'hsl(var(--foreground))',
+				foreground: 'hsl(var(--text-primary))', // Updated per v3.0
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
 				},
 				secondary: {
-					DEFAULT: 'hsl(var(--secondary))',
-					foreground: 'hsl(var(--secondary-foreground))'
+					DEFAULT: 'hsl(var(--text-secondary))', // Updated per v3.0
+				},
+				surface: { // New surface colors per v3.0
+					DEFAULT: 'hsl(var(--surface))',
+					muted: 'hsl(var(--surface-muted))',
 				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
 					foreground: 'hsl(var(--destructive-foreground))'
 				},
-        success: {
-          DEFAULT: 'hsl(var(--success))',
-        },
-        warning: {
-          DEFAULT: 'hsl(var(--warning))',
-        },
 				muted: {
 					DEFAULT: 'hsl(var(--muted))',
 					foreground: 'hsl(var(--muted-foreground))'
@@ -61,14 +59,14 @@ export default {
 				},
 			},
 			borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+				lg: 'var(--radius)',
+				md: 'calc(var(--radius) - 2px)',
+				sm: 'calc(var(--radius) - 4px)',
 			},
-      fontFamily: {
-        sans: ['var(--font-sans)'],
-        serif: ['var(--font-serif)'],
-      },
+			fontFamily: {
+				sans: ['var(--font-sans)'],
+				serif: ['var(--font-serif)'],
+			},
 			keyframes: {
 				'accordion-down': {
 					from: {
