@@ -23,6 +23,9 @@ export interface HomepageSuggestion {
   user_has_voted?: boolean;
 }
 
+// Export alias for backward compatibility
+export type Suggestion = HomepageSuggestion;
+
 export interface UserProfile {
   id: string;
   full_name: string | null;

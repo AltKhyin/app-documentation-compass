@@ -1,16 +1,19 @@
 
 // ABOUTME: The main sidebar navigation for desktop views with collapsible functionality.
-import React, { useState } from 'react';
+import React from 'react';
 import { ChevronLeft, ChevronRight, Home, Archive, Users, Settings } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Button } from '../ui/button';
 import NavItem from './NavItem';
 import UserProfileBlock from './UserProfileBlock';
 
-const CollapsibleSidebar = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+interface CollapsibleSidebarProps {
+  isCollapsed: boolean;
+  onToggle: () => void;
+}
+
+const CollapsibleSidebar = ({ isCollapsed, onToggle }: CollapsibleSidebarProps) => {
   const location = useLocation();
-  const navigate = useNavigate();
 
   const navigationItems = [
     { icon: Home, label: 'Início', path: '/' },
@@ -31,7 +34,7 @@ const CollapsibleSidebar = () => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={onToggle}
           className="ml-auto"
         >
           {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
@@ -43,11 +46,10 @@ const CollapsibleSidebar = () => {
         {navigationItems.map((item) => (
           <NavItem
             key={item.path}
+            href={item.path}
             icon={item.icon}
             label={item.label}
-            isActive={location.pathname === item.path}
             isCollapsed={isCollapsed}
-            onClick={() => navigate(item.path)}
           />
         ))}
       </nav>
