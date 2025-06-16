@@ -19,12 +19,12 @@ const NavItem = ({ href, icon: Icon, label, isCollapsed = false, isMobile = fals
       to={href}
       className={({ isActive }) =>
         cn(
-          'flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary',
+          'flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-muted',
           isActive
             ? isMobile
               ? 'text-primary'
-              : 'bg-muted text-primary'
-            : 'text-muted-foreground',
+              : 'bg-muted text-foreground'
+            : 'text-foreground hover:text-foreground',
           { 'justify-center': isCollapsed }
         )
       }
@@ -34,19 +34,12 @@ const NavItem = ({ href, icon: Icon, label, isCollapsed = false, isMobile = fals
     </NavLink>
   );
 
+  // Don't use tooltips when collapsed - just return the link directly
   if (isCollapsed) {
-    return (
-      <TooltipProvider delayDuration={0}>
-        <Tooltip>
-          <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-          <TooltipContent side="right">
-            <p>{label}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
+    return linkContent;
   }
 
+  // Only show tooltips when expanded (which is redundant, so we'll skip it entirely)
   return linkContent;
 };
 
