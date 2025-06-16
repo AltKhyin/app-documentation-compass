@@ -17,14 +17,6 @@ import NotFound from './pages/NotFound';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AppShell from './components/shell/AppShell';
 
-const AppShellLayout = () => (
-  <AppDataProvider>
-    <AppShell>
-      <Outlet />
-    </AppShell>
-  </AppDataProvider>
-);
-
 function App() {
   return (
     <Router>
@@ -35,10 +27,30 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
 
-            <Route element={<ProtectedRoute />}>
-              <Route element={<AppShellLayout />}>
+            {/*
+              CRITICAL FIX: Wrap the entire protected route structure with AppDataProvider.
+              This ensures the data provider is mounted only once and is not
+              affected by the ProtectedRoute's loading state changes.
+            */}
+            <Route
+              element={
+                <AppDataProvider>
+                  <ProtectedRoute />
+                </AppDataProvider>
+              }
+            >
+              {/*
+                Now, the child routes will render inside the AppShell,
+                which can safely consume data from the parent AppDataProvider.
+              */}
+              <Route
+                element={
+                  <AppShell>
+                    <Outlet />
+                  </AppShell>
+                }
+              >
                 <Route path="/" element={<IndexPage />} />
-                {/* Add other protected routes here inside the AppShellLayout */}
                 <Route path="/acervo" element={<div>Acervo Page</div>} />
                 <Route path="/comunidade" element={<div>Comunidade Page</div>} />
                 <Route path="/perfil" element={<div>Perfil Page</div>} />
