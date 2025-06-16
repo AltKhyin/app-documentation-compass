@@ -1,147 +1,173 @@
-EVIDENS: Final Implementation Roadmap
+EVIDENS: Canonical Development Roadmap v2.0
+Status: Active | Date: June 16, 2025
+Purpose: This document supersedes the previous ROADMAP.md. It provides the complete, granular, and sequenced checklist of development tasks required to build the EVIDENS platform from its current hardened state. It is designed for atomic, verifiable progress and parallel development of administrative features.
+Phase I: Foundational Hardening & Quality Assurance (Completed)
 
-Version: 2.0
+Rationale: This phase officially documents the work completed during our recent diagnostic sessions. It establishes a stable, secure, and performant baseline for all future development.
 
-Purpose: This document provides the complete, granular, and sequenced checklist of development tasks required to build the EVIDENS platform. It is the master project plan, and each task is designed to be a discrete unit of work for the AI developer.
+  Milestone 11: System-Wide Hardening (Completed)
+* Task 11.1: Resolved critical CORS and database errors preventing the /acervo page from functioning.
+* Task 11.2: Created and applied all missing database migrations for Tags, ReviewTags, and rate_limit_log.
+* Task 11.3: Applied all performance and security optimizations recommended by the Supabase Linter, including adding indexes and cleaning up policies.
+* Task 11.4: Confirmed all user-facing Edge Functions are properly rate-limited.
+* Verification: ✅ The application is fully functional in its current state. The /acervo page now loads correctly.
 
-\================================================================================
-
-Part I: Foundational Setup
-
-\================================================================================
-
-Milestone 0: Project Initialization & Monorepo Setup
-
-[ ] Task 0.1: [Human] Initialize a new Supabase project and a local Git repository.
-[ ] Task 0.2: [AI] Set up the pnpm monorepo with Turborepo and all required directories as per [DOC_9].
-[ ] Task 0.3: [AI] Create all root configuration files (package.json, turbo.json, etc.).
-[ ] Task 0.4: [AI] Create the /docs directory and populate it with all final [DOC_X] and [Blueprint] documents.
-[ ] Task 0.5: [AI] Create the initial skeleton for /docs/README-BÍBLIA.md.
-
-\================================================================================
-
-Part II: Building the Main Application
-
-\================================================================================
-
-Milestone 1: Core Identity & Authentication
   
-[ ] Task 1.1 (Backend): Create DB migrations for Practitioners and Onboarding tables.
-[ ] Task 1.2 (Backend): Create the handle_new_user trigger with JWT custom claims logic.
-[ ] Task 1.3 (Backend): Implement all RLS policies for Practitioners.
-[ ] Task 1.4 (Frontend - Structure): Configure the Supabase Auth client in the Main App.
-[ ] Task 1.5 (Frontend - Structure): Build the functional, unstyled logic for the /login and /signup pages and their data mutations.
-[ ] Task 1.6 (Frontend - Structure): Build the functional, multi-step logic for the OnboardingWizard.js and its data hooks.
-[📸 VISUAL CHECKPOINT 1]
-What to Check: The complete authentication flow. Can you sign up? Can you log in? Does the onboarding wizard appear correctly on the first login?
-Goal: Verify that the core user identity system is functional before applying pixel-perfect styling.
-[ ] Task 1.7 (Frontend - Polish): Apply all final styling from [DOC_7] to the /login page, /signup page, and the OnboardingWizard.js modal to achieve a 1:1 match with the visual design.
-M
+Phase II: Core Content & Community Implementation
 
-Milestone 2: Application Shell & Homepage
+Rationale: With a stable foundation, this phase focuses on building the core user experience. We will transform the existing placeholder pages into fully functional, data-driven features, starting with the most critical aspect of the platform: viewing content.
+Milestone 12: The Review Detail Page (The Reading Experience)
+Objective: To enable users to view the rich, custom-layout content of a Review, fulfilling the core promise of the platform.
+* Task 12.1: Implement Backend Data Fetching
+   * Action: Create the useReviewQuery custom hook. This hook will use TanStack Query's useQuery to fetch a single review from the Reviews table by its slug or ID, joining the author's information from the Practitioners table.
+   * Rationale: As per [DOC_6], all data fetching must be encapsulated in a dedicated hook. This ensures caching and a clean separation of concerns.
+   * Blueprint Compliance: [Blueprint] 05, Section 4.0.
+   * Verification: The hook can be called with a review ID and successfully returns the correct review object, including the structured_content JSON.
+
+  * Task 12.2: Build the Core Rendering Engine
+   * Action: Create the LayoutAwareRenderer.js and BlockRenderer.js components. Implement the initial block types: TextBlock.js and HeadingBlock.js. Wire this up to a new /reviews/[slug] page.
+   * Rationale: This is the heart of the platform's content display. Building the renderer allows us to translate the abstract JSON from the database into the visually rich, custom layouts that define the EVIDENS brand.
+   * Blueprint Compliance: [Blueprint] 05, Section 3.0.
+   * Technical Implementation Details:
+      1. The LayoutAwareRenderer will use the useIsMobile() hook to select either the desktop or mobile layout array from the structured_content prop.
+      2. It will render a CSS Grid container and iterate over the nodes, passing each node and its corresponding layout object to the BlockRenderer.
+      3. The BlockRenderer will use a switch statement on node.type to render the correct component (e.g., TextBlock) and apply the grid positioning styles from the layout prop.
+   * Verification (Visual Checkpoint): You can navigate to a URL like /reviews/1. A simple review with only text and headings renders on the page, with elements positioned correctly according to the layout defined in the database for both desktop and mobile views. The layout should be unstyled but structurally correct.
+
+  * Task 12.3: Implement Advanced Blocks & Interactivity
+   * Action: Build out the remaining block components (ImageBlock.js, DiagramBlock.js). Implement the state and logic for collapsible sections within the HeadingBlock.js component.
+   * Rationale: This completes the content rendering engine, making it capable of displaying all content types from the editor.
+   * Blueprint Compliance: [Blueprint] 05, Sections 2.3 & 4.1.
+   * Verification (Visual Checkpoint): A complex review page containing images, diagrams, and collapsible headings renders perfectly. The collapsible sections expand and collapse correctly on click.
+
+  * Task 12.4: Implement Lazy-Loaded Comments & Recommendations
+   * Action: Create the useCommunityThreadQuery hook (using useInfiniteQuery) and the useRecommendationsQuery hook. Use an intersection observer to trigger the fetching of the community thread only when the user scrolls it into view.
+   * Rationale: As per the blueprint, the comments section must be lazy-loaded to ensure the initial page load for the review itself is as fast as possible.
+   * Blueprint Compliance: [Blueprint] 05, Section 4.0.
+   * Verification (Visual Checkpoint): The Review Detail Page loads instantly. The comments section initially shows a skeleton loader. When you scroll down, a network request is fired, and the comments are then rendered. The "Leituras recomendadas" section also populates correctly.
+
+
+  Milestone 13: The Community Platform
+Objective: To activate the "scientific Reddit" functionality, allowing users to create and interact with discussion posts.
+
+  * Task 13.1: Implement Backend for Community
+   * Action: Create the get-community-feed and get-community-sidebar-data Edge Functions. Define and implement a clear rate limit for each.
+   * Rationale: These consolidated endpoints are essential for providing a performant experience on the community pages, as they prevent "chatty" API behavior.
+   * Blueprint Compliance: [Blueprint] 06, Section 4.0.
+   * Verification: The Edge Functions can be called with appropriate parameters (e.g., pagination cursor) and return the correctly shaped JSON data. The endpoints are protected by rate limiting.
+
+  * Task 13.2: Build the Community Page UI
+   * Action: Build the CommunityPage.js, CommunityFeed.js, and CommunitySidebar.js components. Implement the two-column desktop layout and the single-column mobile layout with pinned cards.
+   * Rationale: This builds the main user interface for community interaction, fulfilling a core part of the platform's vision.
+   * Blueprint Compliance: [Blueprint] 06, Section 3.0.
+   * Verification (Visual Checkpoint): Navigating to /comunidade displays the correct layout on both desktop and mobile. The feed infinitely scrolls, and the sidebar (on desktop) or pinned cards (on mobile) are populated with data from the backend. The page is read-only at this stage.
+
+  * Task 13.3: Implement Community Post & Vote Mutations
+   * Action: Create the useCreatePostMutation and useCastVoteMutation hooks. Wire them up to the UI to enable posting new discussions and upvoting/downvoting comments.
+   * Rationale: This task makes the community interactive, transforming it from a read-only feed into a dynamic platform for engagement.
+   * Blueprint Compliance: [Blueprint] 06, [DOC_5], [DOC_6].
+   * Technical Implementation Details: The useCastVoteMutation should implement an optimistic update on the UI, as seen in the existing useCastVoteMutation for suggestions, to make voting feel instantaneous.
+   * Verification (Visual Checkpoint): A logged-in user can create a new post, and it appears in the feed. Users can upvote and downvote posts and comments, and the scores update correctly.
+
+                                                  
+                                                  
+Phase III: Administrative Tooling & Governance
+
+Rationale: Following the "Parallel, Feature-Centric" development strategy, now that we have core content and community features, we will build the administrative tools required to manage and govern them. This phase is executed within the main application via protected routes.
+Milestone 14: Content Management (The Visual Editor)
+Objective: To empower administrators to create and edit Reviews using the "Figma-like" Visual Composition Engine.
+
+  * Task 14.1: Implement Editor Foundation
+   * Action: Create the protected routes for /editor and /editor/:reviewId. Build the main EditorShell.js component and the useEditorStore Zustand store.
+   * Rationale: This sets up the foundational plumbing for the entire content editing experience.
+   * Blueprint Compliance: [Blueprint] 08a_EDITOR_BLUEPRINT_VITE.md.
+   * Verification: Navigating to /editor as a non-admin redirects to /unauthorized. Navigating as an admin displays a blank shell, and the Zustand store is visible in React DevTools.
+
+  * Task 14.2: Build the Core Editor Canvas & Tools
+   * Action: Build the three-panel editor layout: BlockPalette.js, EditorCanvas.js (using React Flow), and InspectorPanel.js. Implement the drag-and-drop functionality for adding new blocks from the palette to the canvas.
+   * Rationale: This is the most complex single task in the project and creates the core interactive editing experience.
+   * Blueprint Compliance: [Blueprint] 08a.
+   * Verification (Visual Checkpoint): As an admin, you can drag blocks from the left panel onto the canvas. You can select, move, and resize these blocks. Selecting a block shows its properties in the right-hand inspector panel. The state is not yet saved.
+
+  * Task 14.3: Implement Content Editing and Persistence
+   * Action: Integrate Tiptap for rich text editing within the TextBlockNode. Build the upsert-review Edge Function and the useAutoSave hook to periodically save the editor's state to the database.
+   * Rationale: This makes the editor fully functional, allowing for the actual modification of content and ensuring that work is not lost.
+   * Blueprint Compliance: [Blueprint] 08a.
+   * Verification (Visual Checkpoint): You can edit the text within a text block. After a short delay, a "Saving..." indicator appears, and a network request is sent to the upsert-review function. Reloading the page shows the saved content.
+
+  Milestone 15: Community Management (Moderation)
+Objective: To provide admins with the tools to handle user-generated reports and maintain community health.
+
+  * Task 15.1: Implement Backend for Moderation
+   * Action: Create the Reports table via a new migration. Implement the submit-report, get-reports, and action-report Edge Functions, each with appropriate rate limits and security.
+   * Rationale: Builds the secure backend infrastructure required for the entire moderation workflow.
+   * Blueprint Compliance: [Blueprint] 08c_MODERATION_BLUEPRINT.md.
+   * Verification: The Edge Functions are created and testable.
+
+  * Task 15.2: Build User-Facing Reporting UI
+   * Action: Build the ReportModal.js component and wire it up to the "more options" menu on community posts and comments. Implement the useSubmitReportMutation hook.
+   * Rationale: This empowers the community to flag inappropriate content, which is the first step in any moderation system.
+   * Verification (Visual Checkpoint): A user can click the three-dot menu on a post, select "Denunciar," fill out the modal, and submit a report. A success toast appears.
+
+  * Task 15.3: Build the Admin Moderation Dashboard
+   * Action: Build the /admin/moderation page. This includes the two-column layout with the ReportQueue.js on the left and the ReportDetailPanel.js on the right. Implement the useReportsQuery and useActionReportMutation hooks.
+   * Rationale: This completes the moderation loop, giving admins the power to view and act upon user reports.
+   * Blueprint Compliance: [Blueprint] 08c.
+   * Verification (Visual Checkpoint): As an admin, navigating to /admin/moderation shows a list of pending reports. Clicking a report displays its full details. Clicking "Dismiss Report" or "Delete Content" correctly actions the report and removes it from the pending queue.
+
   
-[ ] Task 2.1 (Frontend - Structure): Build the core AppShell components (DesktopShell, MobileShell, CollapsibleSidebar, BottomTabBar) with their responsive logic.
-[ ] Task 2.2 (Frontend - Structure): Build the UserProfileBlock and NotificationBell components and their data hooks (useUserProfileQuery, useNotificationCountQuery).
-[📸 VISUAL CHECKPOINT 2]
-What to Check: The main application shell on both desktop and mobile. Does the layout switch correctly at the breakpoint? Do the user's name and avatar appear? Does the sidebar collapse?
-Goal: Ensure the application's "chrome" is structurally sound before adding detailed styling.
-[ ] Task 2.3 (Frontend - Polish): Apply all final styling to the entire AppShell, including the sidebar, header, and bottom tab bar. Implement the smooth collapse/expand animation for the desktop sidebar.
-
-Milestone 3: The Acervo (Archive)
-
-[ ] Task 3.1 (Backend): Create the get-personalized-recommendations and consolidated get-homepage-feed Edge Functions.
-[ ] Task 3.2 (Frontend - Structure): Implement the useHomepageFeedQuery hook.
-[ ] Task 3.3 (Frontend - Structure): Build the structural components for the homepage modules (FeaturedReview, ReviewCarousel, NextEditionModule). Wire them up to the data hook.
-[📸 VISUAL CHECKPOINT 3]
-What to Check: The homepage with unstyled but functional modules. Does the featured review appear? Do the carousels receive the correct data? Does the poll work?
-Goal: Verify all homepage data is flowing correctly before visual refinement.
-[ ] Task 3.4 (Frontend - Polish): Apply final styling to all homepage modules. Implement the horizontal swipe/scroll for the carousels. Ensure all typography and spacing matches the blueprint.
-
-
-Milestone 4: The Review Reading Experience
-
-[ ] Task 4.1 (Backend): Create the get-acervo-data Edge Function.
-[ ] Task 4.2 (Frontend - Structure): Build the TagsPanel, the mobile "Bottom Sheet" adaptation, and the MasonryGrid component.
-[ ] Task 4.3 (Frontend - Structure): Implement the client-side sorting logic based on tag selection.
-[📸 VISUAL CHECKPOINT 4]
-What to Check: The Acervo page functionality. Does the grid render? Does clicking a tag reorder the items correctly (check the developer console network tab to ensure no new API calls are made)?
-Goal: Confirm the complex, client-side reordering logic works before polishing the animation.
-[ ] Task 4.4 (Frontend - Polish): Implement the smooth, animated reordering of the MasonryGrid using a library like Framer Motion to prevent a jarring experience. Apply final styling to all cards and tags.
   
-Milestone 5: The Community Platform
+  Phase IV: Advanced Systems & Platform Maturity
 
-[ ] Task 5.1 (Frontend - Structure): Build the LayoutAwareRenderer and BlockRenderer components. Implement the core recursive logic to render the structured_content.
-[ ] Task 5.2 (Frontend - Structure): Implement the logic for collapsible sections and the lazy-loading of the community thread.
-[ ] Task 5.3 (Frontend - Structure): Build the RecommendedSection and its data hook.
-[📸 VISUAL CHECKPOINT 5]
-What to Check: A single Review page. Does the custom layout from the JSON render correctly on both desktop and mobile? Do collapsible sections work? Do the comments lazy-load upon scrolling?
-Goal: Ensure the most complex renderer in the application is functionally perfect before styling.
+Rationale: With the core content and community loops established and manageable, this phase focuses on building out the systems that create a richer, more engaging, and data-informed platform.
+Milestone 16: Profile & Notification Systems
+Objective: To complete the user-centric features, making the platform feel more personalized and responsive.
 
+  * Task 16.1: Complete the User Profile Page
+   * Action: Fully implement the features on the /perfil page, including the SavedList and Contribution tabs. This requires creating the Saved_Items table and the v_contribution_summary SQL view.
+   * Rationale: This enriches the user profile from a placeholder into a functional hub for personal activity.
+   * Blueprint Compliance: [Blueprint] 07_PROFILE_BLUEPRINT.md.
+   * Verification (Visual Checkpoint): A user's profile page correctly displays their activity, saved items, and contribution stats.
 
-Milestone 6: Practitioner Profiles & Social Features
+  * Task 16.2: Implement the Full Notification System
+   * Action: Update all relevant Edge Functions (create-community-post, etc.) to insert records into the Notifications table. Build the NotificationPopover and the full /notifications page. Implement the "mark all as read" mutation.
+   * Rationale: This activates the platform's re-engagement engine, bringing users back to the site for relevant events.
+   * Blueprint Compliance: [Blueprint] 10_NOTIFICATIONS_BLUEPRINT.md.
+   * Verification (Visual Checkpoint): Performing actions like commenting triggers a notification badge on the bell icon. The popover shows recent notifications, and the /notifications page shows a full history.
+Milestone 17: Admin Management Dashboards
+Objective: To provide admins with comprehensive control over the platform's users, taxonomy, and layouts.
 
-[ ] Task 6.1 (Backend): Create migrations and RLS policies for all community-related tables.
-[ ] Task 6.2 (Backend): Implement the create-community-post, cast-post-vote, and get-community-sidebar-data Edge Functions.
-[ ] Task 6.3 (Frontend - Structure): Build the structural components: CommunityFeed, PostCard (with Edit/Delete menu logic), CommunitySidebar, and all its sub-modules.
-[ ] Task 6.4 (Frontend - Structure): Implement the hierarchical, on-demand comment fetching logic.
-[ ] Task 6.5 (Frontend - Structure): Assemble the /community and /community/[postId] pages.
-[📸 VISUAL CHECKPOINT 6]
-What to Check: The Community page on desktop. Is the two-column layout correct? Does the sidebar fetch and display its data? Does the feed load? Can you vote and post?
-Goal: Verify the most complex user-facing page is functionally complete.
-[ ] Task 6.6 (Frontend - Polish): Apply final styling to match the screenshot with extreme fidelity. Ensure proper alignment, spacing, and mobile adaptation (e.g., pinned cards for sidebar modules).
+  * Task 17.1: Build User and Tag Management Dashboards
+   * Action: Create the /admin/users and /admin/tags pages. Implement the user table with role-changing functionality and the drag-and-drop tag hierarchy editor.
+   * Rationale: Gives admins crucial control over user permissions and the platform's core content taxonomy.
+   * Blueprint Compliance: [Blueprint] 08b_MANAGEMENT_BLUEPRINTS.md.
+   * Verification (Visual Checkpoint): Admins can view and search for users, change their roles, and visually reorganize the entire tag structure.
+
+  * Task 17.2: Build Layout Management Dashboard
+   * Action: Create the /admin/layout page with its tabbed interface for managing the Homepage and Community Sidebar layouts. Implement the update-site-settings Edge Function.
+   * Rationale: Decouples the visual layout of key pages from the codebase, allowing for dynamic changes without a new deployment.
+   * Blueprint Compliance: [Blueprint] 08b.
+   * Verification (Visual Checkpoint): An admin can drag and drop to reorder modules on the homepage, save the changes, and see the live homepage update immediately.
+
   
-\================================================================================
+  
+Phase V: Finalization & Launch Readiness
+Rationale: The final phase focuses on implementing the analytics pipeline and conducting the final QA necessary for a confident launch.
+Milestone 18: Analytics & Final Polish
 
-Part III: Building the Admin Application
+  * Task 18.1: Implement the Analytics Pipeline
+   * Action: Create the Analytics_Events and Summary_* tables. Implement the log-event ingestion function and the run-analytics-etl scheduled cron job. Instrument the main application to call log-event on all key user actions.
+   * Rationale: Builds the data foundation for all platform metrics. This is a background task with no immediate UI impact but is critical for long-term business intelligence.
+   * Blueprint Compliance: [Blueprint] 09_ANALYTICS_BLUEPRINT.md.
+   * Verification: User actions in the main app create corresponding entries in the Analytics_Events table. The cron job runs successfully and populates the Summary_* tables.
 
-\================================================================================
+  * Task 18.2: Build the Analytics Dashboard
+   * Action: Build the /admin/analytics page, including the KPI cards, charts, and the custom query "Playground."
+   * Rationale: Provides the administrative team with the tools to monitor platform health and user engagement.
+   * Blueprint Compliance: [Blueprint] 09.
+   * Verification (Visual Checkpoint): The analytics dashboard loads and displays charts and metrics based on the data in the summary tables.
 
-Milestone 7: Admin App Foundation & The Editor
-
-[ ] Task 7.1 (Backend): Create the get-user-activity Edge Function and the v_contribution_summary SQL view.
-[ ] Task 7.2 (Frontend - Structure): Build the /profile/[id] page and its tabbed layout.
-[ ] Task 7.3 (Frontend - Structure): Implement the ProfileHoverCard (desktop) and its long-press mobile equivalent.
-[📸 VISUAL CHECKPOINT 7]
-What to Check: A user's profile page. Do the activity tabs work? Does the hover/long-press card appear with the correct data?
-Goal: Confirm all social features are in place.
-[ ] Task 7.4 (Frontend - Polish): Apply final styling to the profile page and the hover card to match the visual design and flair specifications.
-
-Milestone 8: Admin Management Dashboards
-
-[ ] Task 8.1 (Admin Frontend - Structure): Build the core layout for the Admin App (shell, sidebar).
-[ ] Task 8.2 (Backend): Implement the upsert-review Edge Function for saving editor content.
-[ ] Task 8.3 (Admin Frontend - Structure): [CRITICAL] Implement the full functional logic of the Visual Composition Engine as per [Blueprint] 08a, including the canvas, block palette, inspector panel, and state management.
-[📸 VISUAL CHECKPOINT 8]
-What to Check: The Admin Editor. Can you create, move, resize, and edit different content blocks? Can you switch between desktop and mobile layouts? Does the "Save" button successfully send the correct JSON payload to the backend?
-Goal: This is the most critical checkpoint. The editor must be fully functional before it is styled.
-[ ] Task 8.4 (Admin Frontend - Polish): Apply final styling to the entire editor interface to make it a polished and user-friendly tool for the administrative team.
-
-
-Milestone 9: Moderation & Notification Systems
-
-[ ] Task 10.1 (Backend): Implement the full backend for the Denúncias system and the Notification system as per their blueprints.
-[ ] Task 10.2 (Admin Frontend - Structure): Build the Moderation Dashboard UI.
-[ ] Task 10.3 (Frontend - Structure): Build the user-facing ReportModal and the /notifications page in the Main App.
-[📸 VISUAL CHECKPOINT 10]
-What to Check: The end-to-end moderation and notification flow. Can a user submit a report? Does it appear in the admin dashboard? Can an admin action it? Do notifications appear correctly in the main app?
-Goal: Verify the complete feedback and safety loops of the platform.
-[ ] Task 10.4 (Frontend/Admin - Polish): Apply final styling to the moderation dashboard and the notifications UI.
-
-\================================================================================
-
-Part IV: Finalization
-
-\================================================================================
-
-Milestone 10: Analytics & Deployment
-
-[ ] Task 11.1 (Backend): Implement the full analytics data pipeline (log-event function, Summary_* tables, run-analytics-etl cron job).
-[ ] Task 11.2 (Main App): Instrument the front-end with all required logEvent calls.
-[ ] Task 11.3 (Admin Frontend - Structure): Build the complete, functional Analytics Dashboard UI, including all charts and the "Playground."
-[📸 VISUAL CHECKPOINT 11]
-What to Check: The Analytics Dashboard in the Admin App. Is it populated with data? Do the charts render correctly?
-Goal: Final verification of the analytics system.
-[ ] Task 11.4 (Admin Frontend - Polish): Apply final styling to the Analytics Dashboard.
-[ ] Task 11.5 (Ops): Configure production environments and deployment pipelines for both applications.
-[ ] Task 11.6 (QA): Conduct final end-to-end testing across the entire platform.
-
+  * Task 18.3: Final Quality Assurance & Documentation Review
+   * Action: Conduct a full, end-to-end regression test of the entire platform on all target devices. Perform a final review of all documentation and update README-BÍBLIA.md to reflect the "Launch Ready" state.
+   * Rationale: Ensures the platform is stable, polished, and ready for public launch.
+   * Verification: The platform is declared launch-ready.
