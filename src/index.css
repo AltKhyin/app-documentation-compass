@@ -40,37 +40,37 @@
   }
 
   .dark {
-    /* Dark Theme Tokens (v3.1 - Using Reference Colors) */
-    --background: 300 2% 13%;       /* #212122 - Main background */
+    /* Dark Theme Tokens (v3.1 - Refined Dark Palette) */
+    --background: 0 0% 7%;          /* #121212 - Deepest background */
     --foreground: 210 40% 95%;      /* Soft off-white text */
 
-    --surface: 270 2% 15%;          /* #272728 - Sidebar/card surfaces */
-    --surface-muted: 300 2% 21%;    /* #363537 - Input fields, muted surfaces */
+    --surface: 0 0% 10%;            /* #1a1a1a - Primary surfaces (sidebar, cards) */
+    --surface-muted: 0 0% 13%;      /* #212121 - Input fields, secondary surfaces */
 
-    --border: 270 2% 22%;           /* #383739 - Subtle borders */
-    --border-hover: 0 0% 30%;       /* Slightly brighter border on hover */
+    --border: 0 0% 16%;             /* #2a2a2a - Subtle borders */
+    --border-hover: 0 0% 18%;       /* #2d2d2d - Slightly brighter border on hover */
 
     /* Primary action color is high-contrast white */
     --primary: 210 40% 98%;
-    --primary-foreground: 300 2% 13%;
+    --primary-foreground: 0 0% 7%;
 
     --text-primary: 210 40% 95%;
-    --text-secondary: 210 15% 70%;
+    --text-secondary: 0 0% 28%;     /* #484848 - Secondary text */
 
     /* Legacy tokens for compatibility - updated to match new scheme */
-    --card: 270 2% 15%;             /* #272728 */
+    --card: 0 0% 10%;               /* #1a1a1a */
     --card-foreground: 210 40% 95%;
-    --popover: 270 2% 15%;          /* #272728 */
+    --popover: 0 0% 10%;            /* #1a1a1a */
     --popover-foreground: 210 40% 95%;
-    --secondary: 300 2% 21%;        /* #363537 */
+    --secondary: 0 0% 13%;          /* #212121 */
     --secondary-foreground: 210 40% 95%;
-    --muted: 300 2% 21%;            /* #363537 */
-    --muted-foreground: 210 15% 65%;
-    --accent: 300 2% 21%;           /* #363537 */
+    --muted: 0 0% 13%;              /* #212121 */
+    --muted-foreground: 0 0% 28%;   /* #484848 */
+    --accent: 0 0% 13%;             /* #212121 */
     --accent-foreground: 210 40% 95%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --input: 300 2% 21%;            /* #363537 */
+    --input: 0 0% 13%;              /* #212121 */
     --ring: 240 4.9% 83.9%;
   }
 
