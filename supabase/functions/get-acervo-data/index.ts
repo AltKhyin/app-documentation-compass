@@ -1,14 +1,19 @@
-
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts'
 
+// FIX: Added 'Access-Control-Allow-Methods' to the CORS headers.
+// This is critical to allow the browser's preflight 'OPTIONS' request to succeed
+// before it sends the actual 'POST' request from the frontend client.
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 serve(async (req) => {
+  // This OPTIONS preflight request handler is now fully functional
+  // because the corsHeaders object above contains the necessary 'Allow-Methods' header.
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
