@@ -1,7 +1,7 @@
 
 # **README-BÍBLIA.md** — Documento de Estado Vivo do Repositório EVIDENS
 
-**Versão:** 2.1.0  
+**Versão:** 2.2.0  
 **Data:** 16 de junho de 2025  
 **Propósito:** Fornece um resumo completo de 2 minutos do estado atual implementado do repositório para qualquer desenvolvedor AI ou humano.
 
@@ -22,6 +22,13 @@
 ## **2. ESTADO ATUAL DA IMPLEMENTAÇÃO**
 
 ### **✅ Funcionalidades Completamente Implementadas**
+
+#### **🆕 Foundation Architecture (NEW)**
+- ✅ **Unified Navigation System:** Configuração centralizada em `src/config/navigation.ts`
+- ✅ **Complete Route Coverage:** Todas as rotas de navegação implementadas
+- ✅ **Mobile/Desktop Navigation Consistency:** NavItem unificado para ambas plataformas
+- ✅ **Placeholder Pages:** ComunidadePage, PerfilPage, ConfiguracoesPage implementadas
+- ✅ **Navigation State Management:** Consistent active state handling
 
 #### **Sistema de Autenticação**
 - ✅ Login/Signup com email e senha
@@ -56,7 +63,7 @@
 - ✅ **Notification Bell:** Contador em tempo real
 - ✅ **Context Providers:** Auth + AppData integration
 
-#### **🆕 Sistema Acervo (NEW)**
+#### **Sistema Acervo**
 - ✅ **Database Schema:** Tables `Tags`, `ReviewTags` com hierarquia categoria/subtag
 - ✅ **Edge Function:** `get-acervo-data` - API consolidada para reviews + tags
 - ✅ **Hook:** `useAcervoDataQuery` - TanStack Query com cache agressivo
@@ -88,8 +95,8 @@
 
 ### **❌ Não Implementado (Prioridades Futuras)**
 
-- ❌ **Community Module:** Posts, comentários, interações sociais
-- ❌ **Profile Pages:** Páginas detalhadas de perfil de usuário
+- ❌ **Community Module:** Posts, comentários, interações sociais (placeholder criado)
+- ❌ **Profile Pages:** Páginas detalhadas de perfil de usuário (placeholder criado)
 - ❌ **Advanced Search:** Busca inteligente por conteúdo
 - ❌ **Analytics Dashboard:** Métricas de engajamento e performance
 - ❌ **Admin Panel:** Interface de moderação e gestão
@@ -103,8 +110,8 @@
 Principais Tabelas:
 ├── Practitioners (usuários) ✅
 ├── Reviews (conteúdo principal) ✅ 
-├── Tags (hierarquia categoria/subtag) ✅ NEW
-├── ReviewTags (junction table) ✅ NEW
+├── Tags (hierarquia categoria/subtag) ✅
+├── ReviewTags (junction table) ✅
 ├── Suggestions (sugestões da comunidade) ✅
 ├── Suggestion_Votes (sistema de votação) ✅
 ├── Notifications (notificações) ✅
@@ -126,6 +133,9 @@ Database Functions (RPCs):
 - ✅ **Client-side Sorting:** Acervo reordenação sem server round-trips
 
 ### **Fixes Críticos Implementados**
+- ✅ **Navigation Unification:** Configuração centralizada elimina inconsistências
+- ✅ **Route Coverage:** Todos os links de navegação agora funcionais
+- ✅ **Component Architecture:** NavItem unificado para desktop e mobile
 - ✅ **Duplicate Foreign Key:** Removido `fk_suggestions_submitted_by` 
 - ✅ **RPC Permissions:** `GRANT EXECUTE` para `get_homepage_suggestions`
 - ✅ **Typo Fix:** `Practioners` → `Practitioners` em get-homepage-feed
@@ -147,7 +157,7 @@ Database Functions (RPCs):
 ```typescript
 // Queries (READ)
 useConsolidatedHomepageFeedQuery() ✅
-useAcervoDataQuery() ✅ NEW
+useAcervoDataQuery() ✅
 
 // Mutations (WRITE)
 useCastVoteMutation() ✅ 
@@ -158,7 +168,35 @@ useSignupMutation() ✅
 
 ---
 
-## **5. DEBUGGING E TROUBLESHOOTING**
+## **5. CURRENT ARCHITECTURE (VITE + REACT)**
+
+### **Directory Structure**
+```
+/src/
+├── components/
+│   ├── shell/           # App layout components
+│   ├── homepage/        # Homepage-specific components
+│   ├── acervo/          # Acervo-specific components
+│   ├── auth/            # Authentication components
+│   └── ui/              # Reusable UI components
+├── config/              # 🆕 Centralized configuration
+│   └── navigation.ts    # 🆕 Navigation routes definition
+├── contexts/            # React Context providers
+├── hooks/               # Custom hooks and mutations
+├── pages/               # Top-level route components
+├── store/               # Zustand global state
+└── lib/                 # Utilities and Supabase client
+```
+
+### **Navigation Architecture**
+- ✅ **Centralized Config:** Single source of truth em `src/config/navigation.ts`
+- ✅ **Unified Components:** NavItem funciona para desktop e mobile
+- ✅ **Consistent State:** Active route handling padronizado
+- ✅ **Complete Coverage:** Todas as rotas implementadas com placeholders
+
+---
+
+## **6. DEBUGGING E TROUBLESHOOTING**
 
 ### **Edge Functions Logs**
 - **cast-suggestion-vote:** Monitorar rate limiting e vote validation
@@ -167,39 +205,40 @@ useSignupMutation() ✅
 - **get-acervo-data:** Monitorar queries parallel e tag processing
 
 ### **Common Issues Resolved**
-1. **"useAppData must be used within AppDataProvider"** → Fixed App.tsx structure
-2. **"You have not voted on this suggestion"** → Fixed optimistic update race condition
-3. **Suggestions não aparecem na homepage** → Fixed RPC join query
-4. **300 status em embedded joins** → Fixed duplicate foreign key
-5. **Foreign key violation em ReviewTags** → Fixed sample data insertion order
+1. **Navigation 404 errors** → Fixed with centralized navigation config
+2. **Mobile/Desktop nav inconsistency** → Fixed with unified NavItem component
+3. **"useAppData must be used within AppDataProvider"** → Fixed App.tsx structure
+4. **"You have not voted on this suggestion"** → Fixed optimistic update race condition
+5. **Suggestions não aparecem na homepage** → Fixed RPC join query
+6. **300 status em embedded joins** → Fixed duplicate foreign key
+7. **Foreign key violation em ReviewTags** → Fixed sample data insertion order
 
 ### **Known Issues**
-- **Mobile Bottom Navigation:** Pode precisar de refinamento UX
-- **Recommendation Algorithm:** Stub implementation apenas
 - **Review Detail Navigation:** Placeholder onClick handlers
+- **Recommendation Algorithm:** Stub implementation apenas
 
 ---
 
-## **6. PRÓXIMOS PASSOS RECOMENDADOS**
+## **7. PRÓXIMOS PASSOS RECOMENDADOS**
 
 ### **Prioridade Alta**
 1. **Review Detail Page:** Implementar visualização completa de articles (Blueprint 05)
-2. **Navigation Integration:** Links funcionais entre Homepage → Acervo → Review Detail
-3. **Real-time Updates:** Implementar para votes e notifications
+2. **Community Module:** Implementar sistema de posts e comentários (Blueprint 06)
+3. **Profile Enhancement:** Expandir páginas de perfil (Blueprint 07)
 
 ### **Prioridade Média**
-1. **Timer Backend:** Implementar countdown real para "Próxima Edição"
+1. **Real-time Updates:** Implementar para votes e notifications
 2. **Search Interface:** Busca básica por Reviews
-3. **User Profiles:** Páginas de perfil expandidas
+3. **Timer Backend:** Implementar countdown real para "Próxima Edição"
 
 ### **Prioridade Baixa**
-1. **Community Module:** Sistema social completo
-2. **Advanced Analytics:** Dashboard de métricas
-3. **AI Integration:** Chat assistente para recommendations
+1. **Advanced Analytics:** Dashboard de métricas
+2. **AI Integration:** Chat assistente para recommendations
+3. **Editor Implementation:** Visual Composition Engine (Blueprint 08a)
 
 ---
 
-## **7. COMANDOS DE DESENVOLVIMENTO ESSENCIAIS**
+## **8. COMANDOS DE DESENVOLVIMENTO ESSENCIAIS**
 
 ```bash
 # Desenvolvimento local
@@ -218,16 +257,15 @@ supabase functions logs --follow
 
 ---
 
-**CHANGELOG v2.1.0:**
-- ➕ **MILESTONE 4 COMPLETE:** Acervo page fully implemented
-- ➕ Added complete database schema for Tags and ReviewTags
-- ➕ Implemented get-acervo-data Edge Function with parallel queries
-- ➕ Created full responsive Acervo UI with masonry grid
-- ➕ Implemented client-side sorting (reorder, not filter) per Blueprint
-- ➕ Added mobile adaptation with bottom sheet modal
-- ➕ Proper RLS policies for Reviews table tier-based access
-- ➕ Sample data for immediate testing and demonstration
-- 🔧 Fixed foreign key constraints in sample data insertion
-- 📝 Updated navigation with Acervo integration
+**CHANGELOG v2.2.0:**
+- ➕ **PHASE 1 COMPLETE:** Foundation Stabilization implemented
+- ➕ Created centralized navigation configuration system
+- ➕ Added complete placeholder pages for all navigation routes
+- ➕ Unified NavItem component for desktop and mobile consistency
+- ➕ Eliminated all navigation 404 errors
+- ➕ Enhanced App.tsx with complete route definitions
+- ➕ Improved navigation state management consistency
+- 🔧 Fixed mobile/desktop navigation inconsistencies
+- 📝 Updated documentation to reflect current Vite + React architecture
 
 **NOTA:** Este documento é atualizado automaticamente a cada mudança significativa no codebase.

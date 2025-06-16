@@ -1,11 +1,11 @@
 
 // ABOUTME: The main sidebar navigation for desktop views with collapsible functionality.
 import React from 'react';
-import { ChevronLeft, ChevronRight, Home, Archive, Users, User } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../ui/button';
 import NavItem from './NavItem';
 import UserProfileBlock from './UserProfileBlock';
+import { navigationItems } from '@/config/navigation';
 
 interface CollapsibleSidebarProps {
   isCollapsed: boolean;
@@ -13,15 +13,6 @@ interface CollapsibleSidebarProps {
 }
 
 const CollapsibleSidebar = ({ isCollapsed, onToggle }: CollapsibleSidebarProps) => {
-  const location = useLocation();
-
-  const navigationItems = [
-    { icon: Home, label: 'Início', path: '/' },
-    { icon: Archive, label: 'Acervo', path: '/acervo' },
-    { icon: Users, label: 'Comunidade', path: '/comunidade' },
-    { icon: User, label: 'Perfil', path: '/perfil' },
-  ];
-
   return (
     <aside className={`fixed left-0 top-0 z-40 h-screen bg-background border-r border-border transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-60'} hidden md:flex flex-col`}>
       {/* Header with logo - matching notification header height of 64px */}

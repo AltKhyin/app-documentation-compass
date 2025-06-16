@@ -9,6 +9,9 @@ import Index from "./pages/Index";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import AcervoPage from "./pages/AcervoPage";
+import ComunidadePage from "./pages/ComunidadePage";
+import PerfilPage from "./pages/PerfilPage";
+import ConfiguracoesPage from "./pages/ConfiguracoesPage";
 import NotFound from "./pages/NotFound";
 import { AuthSessionProvider } from "./components/auth/AuthSessionProvider";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -43,6 +46,9 @@ const App = () => (
                         <Routes>
                           <Route path="/" element={<Index />} />
                           <Route path="/acervo" element={<AcervoPage />} />
+                          <Route path="/comunidade" element={<ComunidadePage />} />
+                          <Route path="/perfil" element={<PerfilPage />} />
+                          <Route path="/configuracoes" element={<ConfiguracoesPage />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </AppShell>

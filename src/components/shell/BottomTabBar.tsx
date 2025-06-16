@@ -1,24 +1,17 @@
 
 // ABOUTME: Mobile bottom navigation with tab icons and labels.
 import React from 'react';
-import { Home, Archive, Users, Settings } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { mobileNavigationItems } from '@/config/navigation';
 
 const BottomTabBar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const tabs = [
-    { icon: Home, label: 'Início', path: '/' },
-    { icon: Archive, label: 'Acervo', path: '/acervo' },
-    { icon: Users, label: 'Comunidade', path: '/comunidade' },
-    { icon: Settings, label: 'Config', path: '/configuracoes' },
-  ];
-
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border">
       <div className="flex">
-        {tabs.map((tab) => {
+        {mobileNavigationItems.map((tab) => {
           const Icon = tab.icon;
           const isActive = location.pathname === tab.path;
           
@@ -33,7 +26,7 @@ const BottomTabBar = () => {
               }`}
             >
               <Icon size={20} />
-              <span className="text-xs mt-1">{tab.label}</span>
+              <span className="text-xs mt-1">{tab.mobileLabel ?? tab.label}</span>
             </button>
           );
         })}
