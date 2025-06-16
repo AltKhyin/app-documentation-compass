@@ -16,11 +16,16 @@ interface CastVoteResponse {
   user_has_voted: boolean;
 }
 
+// Define the context type for the mutation
+interface MutationContext {
+  previousData?: ConsolidatedHomepageData;
+}
+
 export const useCastVoteMutation = () => {
   const queryClient = useQueryClient();
   const queryKey = ['consolidated-homepage-feed'];
 
-  return useMutation<CastVoteResponse, Error, CastVotePayload>({
+  return useMutation<CastVoteResponse, Error, CastVotePayload, MutationContext>({
     mutationFn: async (payload) => {
       console.log('Casting vote via Edge Function:', payload);
       
