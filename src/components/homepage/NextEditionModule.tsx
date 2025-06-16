@@ -1,11 +1,9 @@
 
-// ABOUTME: Module component for the next edition suggestion and voting system with full backend integration.
+// ABOUTME: Module component for the next edition suggestion and voting system.
 
 import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { useToast } from '@/hooks/use-toast';
-import { useSubmitSuggestionMutation } from '../../../packages/hooks/useSuggestionMutations';
 import SuggestionPollItem from './SuggestionPollItem';
 
 export interface Suggestion {
@@ -25,55 +23,23 @@ interface NextEditionModuleProps {
 
 const NextEditionModule: React.FC<NextEditionModuleProps> = ({ suggestions }) => {
   const [newSuggestion, setNewSuggestion] = useState('');
-  const { toast } = useToast();
-  
-  const submitSuggestionMutation = useSubmitSuggestionMutation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmitSuggestion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSuggestion.trim()) return;
 
+    setIsSubmitting(true);
     try {
-      await submitSuggestionMutation.mutateAsync({
-        title: newSuggestion.trim()
-      });
+      // TODO: Implement useSubmitSuggestionMutation hook when ready
+      console.log('Submitting suggestion:', newSuggestion);
       
       // Reset form on success
       setNewSuggestion('');
-      
-      toast({
-        title: "Sugestão enviada!",
-        description: "Sua sugestão foi enviada com sucesso e está aguardando votação.",
-      });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to submit suggestion:', error);
-      
-      // Handle specific error types
-      if (error.message?.includes('Rate limit')) {
-        toast({
-          title: "Muitas sugestões",
-          description: "Você atingiu o limite de 5 sugestões por hora. Tente novamente mais tarde.",
-          variant: "destructive",
-        });
-      } else if (error.message?.includes('Authentication')) {
-        toast({
-          title: "Erro de autenticação",
-          description: "Você precisa estar logado para sugerir tópicos.",
-          variant: "destructive",
-        });
-      } else if (error.message?.includes('characters')) {
-        toast({
-          title: "Erro de validação",
-          description: "O título deve ter entre 5 e 200 caracteres.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Erro ao enviar",
-          description: "Ocorreu um erro ao enviar sua sugestão. Tente novamente.",
-          variant: "destructive",
-        });
-      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -92,16 +58,14 @@ const NextEditionModule: React.FC<NextEditionModuleProps> = ({ suggestions }) =>
               value={newSuggestion}
               onChange={(e) => setNewSuggestion(e.target.value)}
               className="w-full"
-              disabled={submitSuggestionMutation.isPending}
-              minLength={5}
-              maxLength={200}
+              disabled={isSubmitting}
             />
             <Button 
               type="submit" 
-              disabled={!newSuggestion.trim() || submitSuggestionMutation.isPending}
+              disabled={!newSuggestion.trim() || isSubmitting}
               className="w-full"
             >
-              {submitSuggestionMutation.isPending ? 'Enviando...' : 'Sugerir'}
+              {isSubmitting ? 'Enviando...' : 'Sugerir'}
             </Button>
           </form>
         </div>

@@ -223,42 +223,6 @@ export type Database = {
         }
         Relationships: []
       }
-      Suggestion_Votes: {
-        Row: {
-          created_at: string
-          id: string
-          practitioner_id: string
-          suggestion_id: number
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          practitioner_id: string
-          suggestion_id: number
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          practitioner_id?: string
-          suggestion_id?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "Suggestion_Votes_practitioner_id_fkey"
-            columns: ["practitioner_id"]
-            isOneToOne: false
-            referencedRelation: "Practitioners"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "Suggestion_Votes_suggestion_id_fkey"
-            columns: ["suggestion_id"]
-            isOneToOne: false
-            referencedRelation: "Suggestions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       Suggestions: {
         Row: {
           created_at: string
@@ -288,13 +252,6 @@ export type Database = {
           upvotes?: number
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_suggestions_submitted_by"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "Practitioners"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "Suggestions_submitted_by_fkey"
             columns: ["submitted_by"]
