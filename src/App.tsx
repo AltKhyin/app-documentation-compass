@@ -14,38 +14,48 @@ import { AuthSessionProvider } from "./components/auth/AuthSessionProvider";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AppShell from "./components/shell/AppShell";
 import { AppDataProvider } from "./contexts/AppDataContext";
+import ErrorBoundary from "./components/ErrorBoundary";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <TooltipProvider>
-        <Toaster />
-        <BrowserRouter>
-          <AuthSessionProvider>
-            <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
-              <Route path="/*" element={
-                <ProtectedRoute>
-                  <AppDataProvider>
-                    <AppShell>
-                      <Routes>
-                        <Route path="/" element={<Index />} />
-                        <Route path="/acervo" element={<AcervoPage />} />
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </AppShell>
-                  </AppDataProvider>
-                </ProtectedRoute>
-              } />
-            </Routes>
-          </AuthSessionProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        <TooltipProvider>
+          <Toaster />
+          <BrowserRouter>
+            <AuthSessionProvider>
+              <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignupPage />} />
+                <Route path="/*" element={
+                  <ProtectedRoute>
+                    <AppDataProvider>
+                      <AppShell>
+                        <Routes>
+                          <Route path="/" element={<Index />} />
+                          <Route path="/acervo" element={<AcervoPage />} />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </AppShell>
+                    </AppDataProvider>
+                  </ProtectedRoute>
+                } />
+              </Routes>
+            </AuthSessionProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

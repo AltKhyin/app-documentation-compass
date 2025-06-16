@@ -1,3 +1,4 @@
+
 // ABOUTME: The main application shell controller.
 import React from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -8,17 +9,41 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const AppShell = ({ children }: { children: React.ReactNode }) => {
   const isMobile = useIsMobile();
-  const { isLoading: isAppDataLoading } = useAppData();
+  const { isLoading: isAppDataLoading, isError, error } = useAppData();
 
-  // --- Data-Ready Guard ---
-  // This is the critical fix. We will show a full-page skeleton
-  // loader while the initial consolidated data from AppDataContext is being fetched.
-  // This prevents any child components from rendering prematurely and attempting
-  // to access data that isn't ready, which was causing the race condition and
-  // triggering the old, multiple API calls as a fallback.
-  if (isAppDataLoading) {
+  console.log('AppShell render state:', { 
+    isMobile, 
+    isAppDataLoading, 
+    isError, 
+    error: error?.message 
+  });
+
+  // Show error state if data fetching failed
+  if (isError) {
+    console.error('AppShell: App data error:', error);
     return (
-        <div className="flex h-screen w-full">
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="text-center space-y-4 max-w-md mx-auto p-6">
+          <h1 className="text-2xl font-bold text-foreground">Erro ao carregar aplicativo</h1>
+          <p className="text-muted-foreground">
+            {error?.message || 'Ocorreu um erro inesperado. Tente novamente.'}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-primary text-primary-foreground px-6 py-2 rounded-md font-semibold hover:bg-primary/90 transition-colors"
+          >
+            Tentar Novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Data-Ready Guard - show skeleton while loading
+  if (isAppDataLoading) {
+    console.log('AppShell: Showing loading skeleton');
+    return (
+        <div className="flex h-screen w-full bg-background">
             {/* Sidebar Skeleton for Desktop */}
             <div className="hidden md:flex flex-col w-60 border-r p-4 space-y-4">
                 <Skeleton className="h-8 w-32" />
@@ -45,6 +70,8 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
         </div>
     );
   }
+
+  console.log('AppShell: Rendering shell with data ready');
 
   // Once the data is ready, render the appropriate shell.
   if (isMobile) {

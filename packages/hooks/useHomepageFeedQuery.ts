@@ -1,28 +1,26 @@
 
-// ABOUTME: TanStack Query hook for fetching all homepage data in a single consolidated request.
+// ABOUTME: TanStack Query hook for fetching consolidated homepage feed data.
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '../../src/integrations/supabase/client';
 
-export interface Review {
+export interface HomepageReview {
   id: number;
   title: string;
   description: string;
-  cover_image_url: string;
+  cover_image_url: string | null;
   published_at: string;
   view_count: number;
 }
 
-export interface Suggestion {
+export interface HomepageSuggestion {
   id: number;
   title: string;
-  description: string;
+  description: string | null;
   upvotes: number;
   created_at: string;
-  user_has_voted?: boolean; // Track if current user has voted
-  Practitioners: {
-    full_name: string;
-  };
+  Practitioners: { full_name: string } | null;
+  user_has_voted?: boolean;
 }
 
 export interface UserProfile {
@@ -31,127 +29,48 @@ export interface UserProfile {
   avatar_url: string | null;
   role: string;
   subscription_tier: string;
-  contribution_score: number;
-  profession_flair: string | null;
-  display_hover_card: boolean;
-  created_at: string;
 }
 
-// Consolidated interface that includes ALL homepage data
 export interface ConsolidatedHomepageData {
   layout: string[];
-  featured: Review | null;
-  recent: Review[];
-  popular: Review[];
-  recommendations: Review[];
-  suggestions: Suggestion[];
+  featured: HomepageReview | null;
+  recent: HomepageReview[];
+  popular: HomepageReview[];
+  recommendations: HomepageReview[];
+  suggestions: HomepageSuggestion[];
   userProfile: UserProfile | null;
   notificationCount: number;
 }
 
-/**
- * Fetches the complete consolidated homepage feed data from the get-homepage-feed Edge Function.
- * This single function replaces ALL separate API calls and follows [DOC_6] guidelines.
- *
- * CRITICAL: This is the ONLY function that should fetch app data. All other direct API calls
- * to Reviews, Practitioners, Notifications, etc. must be removed from the codebase.
- */
-const fetchConsolidatedHomepageFeed = async (): Promise<ConsolidatedHomepageData> => {
-  console.log('🚀 Fetching consolidated homepage feed data (SINGLE API CALL)...');
-  
-  try {
-    // CORRECT IMPLEMENTATION: Invoke the single Edge Function.
-    const { data, error } = await supabase.functions.invoke('get-homepage-feed', {
-      method: 'POST', // Method can be POST to send a body, even if empty.
-      body: {}
-    });
-
-    if (error) {
-      console.error('❌ Error fetching consolidated homepage feed:', error);
-      throw new Error(error.message || 'Failed to fetch consolidated homepage feed');
-    }
-
-    if (!data) {
-      console.error('❌ No data returned from consolidated homepage feed');
-      throw new Error('No data returned from consolidated homepage feed');
-    }
-
-    console.log('✅ Consolidated homepage feed data fetched successfully:', {
-      layout: data.layout?.length || 0,
-      featured: !!data.featured,
-      recent: data.recent?.length || 0,
-      popular: data.popular?.length || 0,
-      recommendations: data.recommendations?.length || 0,
-      suggestions: data.suggestions?.length || 0,
-      userProfile: !!data.userProfile,
-      notificationCount: data.notificationCount || 0
-    });
-
-    // Post-process suggestions to include user vote status
-    if (data.suggestions && data.userProfile) {
-      console.log('🔍 Fetching user vote status for suggestions...');
-      
-      // Fetch user votes for all displayed suggestions
-      const suggestionIds = data.suggestions.map((s: any) => s.id);
-      if (suggestionIds.length > 0) {
-        const { data: userVotes } = await supabase
-          .from('Suggestion_Votes')
-          .select('suggestion_id')
-          .eq('practitioner_id', data.userProfile.id)
-          .in('suggestion_id', suggestionIds);
-
-        const votedSuggestionIds = new Set(userVotes?.map(v => v.suggestion_id) || []);
-        
-        // Add user_has_voted flag to each suggestion
-        data.suggestions = data.suggestions.map((suggestion: any) => ({
-          ...suggestion,
-          user_has_voted: votedSuggestionIds.has(suggestion.id)
-        }));
-
-        console.log(`✅ Added vote status for ${data.suggestions.length} suggestions`);
-      }
-    }
-    
-    return data as ConsolidatedHomepageData;
-  } catch (error) {
-    console.error('❌ Critical error in fetchConsolidatedHomepageFeed:', error);
-    throw error;
-  }
-};
-
-
-/**
- * Custom hook for fetching consolidated homepage feed data.
- * Implements aggressive caching, retry logic, and follows the patterns from [DOC_6].
- * This single hook replaces ALL individual data fetching hooks.
- *
- * RULE: This is the ONLY way to fetch app data. No other hooks should make API calls.
- *
- * @returns TanStack Query result with consolidated homepage feed data
- */
 export const useConsolidatedHomepageFeedQuery = () => {
-  return useQuery({
+  return useQuery<ConsolidatedHomepageData>({
     queryKey: ['consolidated-homepage-feed'],
-    queryFn: fetchConsolidatedHomepageFeed,
-    staleTime: 5 * 60 * 1000, // 5 minutes - data is considered fresh for 5 minutes
-    gcTime: 15 * 60 * 1000, // 15 minutes - keep in cache for 15 minutes
-    retry: 3, // Retry failed requests up to 3 times
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-    refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    refetchOnMount: true, // Always refetch when component mounts
-    refetchOnReconnect: true, // Refetch when reconnecting to internet
+    queryFn: async () => {
+      console.log('Fetching consolidated homepage data...');
+      
+      const { data, error } = await supabase.functions.invoke('get-homepage-feed', {
+        body: {}
+      });
+
+      if (error) {
+        console.error('Homepage feed error:', error);
+        throw new Error(error.message || 'Failed to fetch homepage data');
+      }
+
+      if (data?.error) {
+        console.error('Homepage feed API error:', data.error);
+        throw new Error(data.error.details || data.error || 'Failed to fetch homepage data');
+      }
+
+      console.log('Homepage data fetched successfully:', data);
+      return data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    retry: (failureCount, error) => {
+      console.log(`Homepage query retry ${failureCount}:`, error);
+      return failureCount < 2;
+    },
   });
 };
-
-// Backward compatibility export - deprecated, use useConsolidatedHomepageFeedQuery
-export const useHomepageFeedQuery = useConsolidatedHomepageFeedQuery;
-
-// Legacy interface for backward compatibility
-export interface HomepageFeedData {
-  layout: string[];
-  featured: Review | null;
-  recent: Review[];
-  popular: Review[];
-  recommendations: Review[];
-  suggestions: Suggestion[];
-}

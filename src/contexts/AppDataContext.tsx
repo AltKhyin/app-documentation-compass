@@ -1,12 +1,10 @@
 
-// ABOUTME: Global context for consolidated app data including user profile and homepage data.
-
-import React, { createContext, useContext, ReactNode } from 'react';
-import { useConsolidatedHomepageFeedQuery, UserProfile } from '../../packages/hooks/useHomepageFeedQuery';
+// ABOUTME: Global app data context provider for consolidated homepage data.
+import React, { createContext, useContext } from 'react';
+import { useConsolidatedHomepageFeedQuery, type ConsolidatedHomepageData } from '../../packages/hooks/useHomepageFeedQuery';
 
 interface AppDataContextType {
-  userProfile: UserProfile | null;
-  notificationCount: number;
+  data: ConsolidatedHomepageData | undefined;
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
@@ -15,34 +13,22 @@ interface AppDataContextType {
 
 const AppDataContext = createContext<AppDataContextType | undefined>(undefined);
 
-interface AppDataProviderProps {
-  children: ReactNode;
-}
-
-/**
- * Global provider for consolidated app data.
- * Fetches user profile, notification count, and homepage data in a single request.
- * Follows [DOC_6] data fetching strategy to minimize API calls.
- * 
- * CRITICAL: This is the ONLY source of truth for app data. No component should
- * make individual API calls to fetch user profiles, notifications, or homepage data.
- */
-export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) => {
-  const { 
-    data, 
-    isLoading, 
-    isError, 
-    error,
-    refetch 
-  } = useConsolidatedHomepageFeedQuery();
+export const AppDataProvider = ({ children }: { children: React.ReactNode }) => {
+  const queryResult = useConsolidatedHomepageFeedQuery();
+  
+  console.log('AppDataProvider state:', {
+    isLoading: queryResult.isLoading,
+    isError: queryResult.isError,
+    hasData: !!queryResult.data,
+    error: queryResult.error
+  });
 
   const contextValue: AppDataContextType = {
-    userProfile: data?.userProfile || null,
-    notificationCount: data?.notificationCount || 0,
-    isLoading,
-    isError,
-    error: error as Error | null,
-    refetch,
+    data: queryResult.data,
+    isLoading: queryResult.isLoading,
+    isError: queryResult.isError,
+    error: queryResult.error,
+    refetch: queryResult.refetch,
   };
 
   return (
@@ -52,13 +38,7 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
   );
 };
 
-/**
- * Hook to access consolidated app data including user profile and notifications.
- * Replaces individual useUserProfileQuery and useNotificationCountQuery hooks.
- * 
- * RULE: All components must use this hook instead of making direct API calls.
- */
-export const useAppData = (): AppDataContextType => {
+export const useAppData = () => {
   const context = useContext(AppDataContext);
   if (context === undefined) {
     throw new Error('useAppData must be used within an AppDataProvider');
