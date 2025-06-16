@@ -146,6 +146,27 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_log: {
+        Row: {
+          created_at: string | null
+          id: number
+          key: string
+          timestamp: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          key: string
+          timestamp: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          key?: string
+          timestamp?: number
+        }
+        Relationships: []
+      }
       Reviews: {
         Row: {
           access_level: string
@@ -195,6 +216,42 @@ export type Database = {
             columns: ["author_id"]
             isOneToOne: false
             referencedRelation: "Practitioners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ReviewTags: {
+        Row: {
+          created_at: string
+          id: number
+          review_id: number
+          tag_id: number
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          review_id: number
+          tag_id: number
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          review_id?: number
+          tag_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ReviewTags_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "Reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ReviewTags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "Tags"
             referencedColumns: ["id"]
           },
         ]
@@ -307,6 +364,35 @@ export type Database = {
             columns: ["submitted_by"]
             isOneToOne: false
             referencedRelation: "Practitioners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Tags: {
+        Row: {
+          created_at: string
+          id: number
+          parent_id: number | null
+          tag_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          parent_id?: number | null
+          tag_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          parent_id?: number | null
+          tag_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Tags_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "Tags"
             referencedColumns: ["id"]
           },
         ]
