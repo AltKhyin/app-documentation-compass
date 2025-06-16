@@ -115,7 +115,7 @@ serve(async (req) => {
 
     // --- Process results with graceful degradation ---
     const getResultData = (result: PromiseSettledResult<any>, fallback: any = []) => {
-      if (result.status === 'fulfilled' && result.value.data) {
+      if (result.status === 'fulfilled' && result.value && 'data' in result.value) {
         return result.value.data;
       }
       if (result.status === 'rejected') {
@@ -133,7 +133,7 @@ serve(async (req) => {
       suggestions: getResultData(suggestionsResult, []),
       recommendations: getResultData(recommendationsResult, []),
       userProfile: getResultData(userProfileResult, null),
-      notificationCount: notificationCountResult.status === 'fulfilled' ? (notificationCountResult.value.count ?? 0) : 0,
+      notificationCount: notificationCountResult.status === 'fulfilled' && notificationCountResult.value ? (notificationCountResult.value.count ?? 0) : 0,
     };
 
     console.log(`✅ Successfully assembled consolidated feed.`);
