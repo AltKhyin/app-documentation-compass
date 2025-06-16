@@ -1,4 +1,3 @@
-
 // ABOUTME: This is the main application component, handling routing and global providers.
 import {
   BrowserRouter as Router,
@@ -28,9 +27,9 @@ function App() {
             <Route path="/signup" element={<SignupPage />} />
 
             {/*
-              CRITICAL FIX: Wrap the entire protected route structure with AppDataProvider.
+              ACTION: Wrap the entire protected route structure with AppDataProvider.
               This ensures the data provider is mounted only once and is not
-              affected by the ProtectedRoute's loading state changes.
+              affected by the ProtectedRoute's loading state.
             */}
             <Route
               element={

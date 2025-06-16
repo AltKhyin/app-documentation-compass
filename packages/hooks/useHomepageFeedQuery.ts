@@ -1,4 +1,3 @@
-
 // ABOUTME: TanStack Query hook for fetching all homepage data in a single consolidated request.
 
 import { useQuery } from '@tanstack/react-query';
@@ -51,7 +50,7 @@ export interface ConsolidatedHomepageData {
 /**
  * Fetches the complete consolidated homepage feed data from the get-homepage-feed Edge Function.
  * This single function replaces ALL separate API calls and follows [DOC_6] guidelines.
- * 
+ *
  * CRITICAL: This is the ONLY function that should fetch app data. All other direct API calls
  * to Reviews, Practitioners, Notifications, etc. must be removed from the codebase.
  */
@@ -59,8 +58,9 @@ const fetchConsolidatedHomepageFeed = async (): Promise<ConsolidatedHomepageData
   console.log('🚀 Fetching consolidated homepage feed data (SINGLE API CALL)...');
   
   try {
+    // CORRECT IMPLEMENTATION: Invoke the single Edge Function.
     const { data, error } = await supabase.functions.invoke('get-homepage-feed', {
-      method: 'POST',
+      method: 'POST', // Method can be POST to send a body, even if empty.
       body: {}
     });
 
@@ -92,13 +92,14 @@ const fetchConsolidatedHomepageFeed = async (): Promise<ConsolidatedHomepageData
   }
 };
 
+
 /**
  * Custom hook for fetching consolidated homepage feed data.
  * Implements aggressive caching, retry logic, and follows the patterns from [DOC_6].
  * This single hook replaces ALL individual data fetching hooks.
- * 
+ *
  * RULE: This is the ONLY way to fetch app data. No other hooks should make API calls.
- * 
+ *
  * @returns TanStack Query result with consolidated homepage feed data
  */
 export const useConsolidatedHomepageFeedQuery = () => {
