@@ -1,170 +1,206 @@
 
-# README-BÍBLIA.md
+# **README-BÍBLIA.md** — Documento de Estado Vivo do Repositório EVIDENS
 
-**EVIDENS Universal Knowledge Base**  
-Version: 2.0.2 - **Production Ready**  
-Last Updated: June 16, 2025
-
----
-
-## 🎯 **EVIDENS PROJECT OVERVIEW**
-
-**EVIDENS** is a comprehensive, evidence-based medical knowledge platform that enables healthcare practitioners to access curated scientific reviews, participate in community discussions, and contribute to the next generation of medical evidence synthesis.
-
-### **Current Implementation Status: ✅ COMPLETE & OPERATIONAL**
+**Versão:** 2.0.3  
+**Data:** 16 de junho de 2025  
+**Propósito:** Fornece um resumo completo de 2 minutos do estado atual implementado do repositório para qualquer desenvolvedor AI ou humano.
 
 ---
 
-## 🏗️ **SYSTEM ARCHITECTURE**
+## **1. VISÃO GERAL DO PROJETO**
 
-### **Technology Stack**
-- **Frontend**: React 18 + TypeScript + Vite
-- **Backend**: Supabase (PostgreSQL + Edge Functions)
-- **UI Framework**: shadcn/ui + Tailwind CSS
-- **State Management**: TanStack Query + Zustand
-- **Authentication**: Supabase Auth with JWT + RLS
+**EVIDENS** é uma plataforma de conhecimento médico baseada em evidências que permite aos profissionais de saúde acessar, contribuir e colaborar com conteúdo científico de alta qualidade.
 
-### **Database Schema (Production Ready)**
+### **Arquitetura Tecnológica**
+- **Frontend:** React 18 + TypeScript + Vite + TailwindCSS + shadcn/ui
+- **Backend:** Supabase (PostgreSQL + Edge Functions + RLS + Auth)
+- **Estado do Cliente:** TanStack Query v5 + Zustand (global state)
+- **Deploy:** Lovable (staging) com possibilidade de domínio customizado
+
+---
+
+## **2. ESTADO ATUAL DA IMPLEMENTAÇÃO**
+
+### **✅ Funcionalidades Completamente Implementadas**
+
+#### **Sistema de Autenticação**
+- ✅ Login/Signup com email e senha
+- ✅ Autenticação via Google (OAuth)
+- ✅ Session management via Supabase Auth
+- ✅ RLS policies para controle de acesso
+- ✅ Custom claims (role, subscription_tier) via trigger `handle_new_user`
+
+#### **Homepage Feed System**
+- ✅ **Edge Function:** `get-homepage-feed` - API única consolidada
+- ✅ **Database RPC:** `get_homepage_suggestions()` - busca sugestões com status de voto
+- ✅ **Hook:** `useConsolidatedHomepageFeedQuery` - TanStack Query com cache agressivo
+- ✅ **Componentes:** FeaturedReview, ReviewCarousel, NextEditionModule
+- ✅ **Layout dinâmico:** Configurável via `SiteSettings.homepage_layout`
+
+#### **Sistema de Votação em Sugestões**
+- ✅ **Edge Function:** `cast-suggestion-vote` - Rate limited (10 votos/min por usuário)
+- ✅ **Hook:** `useCastVoteMutation` - Optimistic updates com TanStack Query
+- ✅ **Componente:** `SuggestionPollItem` - Interface de votação simplificada
+- ✅ **Trigger:** `update_suggestion_vote_count()` - Atualização automática de contadores
+- ✅ **RLS:** Políticas completas para `Suggestion_Votes`
+
+#### **Sistema de Submissão de Sugestões**
+- ✅ **Edge Function:** `submit-suggestion`
+- ✅ **Hook:** `useSubmitSuggestionMutation`
+- ✅ **Interface:** Formulário integrado no NextEditionModule
+
+#### **App Shell**
+- ✅ **Responsive Design:** Mobile-first com adaptações para desktop
+- ✅ **Navigation:** Header + Sidebar colapsível + Bottom tabs (mobile)
+- ✅ **User Profile Block:** Avatar, nome, role, contribution score
+- ✅ **Notification Bell:** Contador em tempo real
+- ✅ **Context Providers:** Auth + AppData integration
+
+---
+
+### **🔄 Em Desenvolvimento Ativo**
+
+#### **Sistema de Reviews**
+- 🔄 **Database:** Schema completo, mas RLS policies incompletas
+- 🔄 **Editor:** Blueprint completo, implementação pendente
+- 🔄 **Visualização:** Componentes básicos existem, falta integração
+
+#### **Sistema de Recomendações**
+- 🔄 **Edge Function:** `get-personalized-recommendations` (stub)
+- 🔄 **Algoritmo:** Lógica de ML/AI pendente
+
+---
+
+### **❌ Não Implementado (Prioridades Futuras)**
+
+- ❌ **Community Module:** Posts, comentários, interações sociais
+- ❌ **Profile Pages:** Páginas detalhadas de perfil de usuário
+- ❌ **Advanced Search:** Busca inteligente por conteúdo
+- ❌ **Analytics Dashboard:** Métricas de engajamento e performance
+- ❌ **Admin Panel:** Interface de moderação e gestão
+
+---
+
+## **3. ARQUITETURA DE DADOS E PERFORMANCE**
+
+### **Database Schema (PostgreSQL)**
 ```
-├── Practitioners (Users/Profiles) ✅
-├── Reviews (Medical Content) ✅
-├── Suggestions (Next Edition Voting) ✅
-├── Suggestion_Votes (Voting System) ✅
-├── Notifications (User Alerts) ✅
-├── OnboardingQuestions/Answers ✅
-└── SiteSettings (Configuration) ✅
+Principais Tabelas:
+├── Practitioners (usuários) ✅
+├── Reviews (conteúdo principal) ✅ 
+├── Suggestions (sugestões da comunidade) ✅
+├── Suggestion_Votes (sistema de votação) ✅
+├── Notifications (notificações) ✅
+├── SiteSettings (configurações) ✅
+└── OnboardingQuestions/Answers ✅
+
+Database Functions (RPCs):
+├── get_homepage_suggestions(p_user_id) ✅
+├── update_suggestion_vote_count() ✅
+└── handle_new_user() ✅
+```
+
+### **Performance Optimizations**
+- ✅ **Indexes:** Foreign keys otimizados
+- ✅ **Query Caching:** TanStack Query com 5min stale time
+- ✅ **Data Consolidation:** Single API call para homepage
+- ✅ **Optimistic Updates:** Votação instantânea sem lag
+- ✅ **Rate Limiting:** Edge Functions protegidas
+
+### **Fixes Críticos Implementados**
+- ✅ **Duplicate Foreign Key:** Removido `fk_suggestions_submitted_by` 
+- ✅ **RPC Permissions:** `GRANT EXECUTE` para `get_homepage_suggestions`
+- ✅ **Typo Fix:** `Practioners` → `Practitioners` em get-homepage-feed
+- ✅ **State Management:** Optimistic updates sem race conditions
+- ✅ **Column Name:** `submitted_by` correction em submit-suggestion
+
+---
+
+## **4. ESTRATÉGIA DE DATA FETCHING**
+
+### **Golden Rule Compliance**
+✅ **RULE D1:** UI components NÃO chamam supabase-js diretamente
+✅ **RULE D2:** Toda busca de dados é encapsulada em custom hooks
+✅ **RULE D3:** Mutations invalidam queries relevantes via onSuccess
+
+### **Hooks Pattern (TanStack Query)**
+```typescript
+// Queries (READ)
+useConsolidatedHomepageFeedQuery() ✅
+
+// Mutations (WRITE)
+useCastVoteMutation() ✅ 
+useSubmitSuggestionMutation() ✅
+useLoginMutation() ✅
+useSignupMutation() ✅
 ```
 
 ---
 
-## 🚀 **IMPLEMENTED FEATURES**
+## **5. DEBUGGING E TROUBLESHOOTING**
 
-### **🔐 Authentication System (✅ COMPLETE)**
-- **Location**: `src/pages/LoginPage.tsx`, `src/pages/SignupPage.tsx`
-- **Features**: Email/password auth, JWT tokens, RLS security
-- **Security**: Row-level security policies for all tables
-- **Status**: Production ready with proper error handling
+### **Edge Functions Logs**
+- **cast-suggestion-vote:** Monitorar rate limiting e vote validation
+- **get-homepage-feed:** Verificar performance e data completeness
+- **submit-suggestion:** Validar input sanitization
 
-### **🏠 Homepage (✅ COMPLETE)**
-- **Location**: `src/pages/Index.tsx`
-- **Architecture**: Single consolidated API call via `get-homepage-feed` Edge Function
-- **Modules**:
-  - Featured Review display ✅
-  - Recent Reviews carousel ✅
-  - Popular Reviews carousel ✅
-  - Next Edition voting system ✅
-- **Performance**: Optimized with single API call, TanStack Query caching
-- **Status**: **OPERATIONAL** - All modules display correctly with proper data
+### **Common Issues Resolved**
+1. **"useAppData must be used within AppDataProvider"** → Fixed App.tsx structure
+2. **"You have not voted on this suggestion"** → Fixed optimistic update race condition
+3. **Suggestions não aparecem na homepage** → Fixed RPC join query
+4. **300 status em embedded joins** → Fixed duplicate foreign key
 
-### **🗳️ Suggestion Voting System (✅ COMPLETE & FIXED)**
-- **Location**: `src/components/homepage/NextEditionModule.tsx`
-- **Features**: 
-  - Submit new topic suggestions ✅
-  - Vote/unvote on existing suggestions ✅
-  - Real-time vote count updates ✅
-  - Simplified state management without race conditions ✅
-- **Backend**: `cast-suggestion-vote` Edge Function with rate limiting (10 votes/minute)
-- **Database**: Proper vote counting with triggers, optimized indexes
-- **Status**: **FULLY OPERATIONAL** - Voting system completely fixed, race conditions eliminated
-
-### **🛡️ Security & Performance (✅ OPTIMIZED)**
-- **RLS Policies**: Comprehensive policies on all tables ✅
-- **Database Optimization**: 
-  - Foreign key indexes added ✅
-  - Conflicting policies resolved ✅
-  - Vote counting triggers optimized ✅
-- **Edge Functions**: Rate limiting (10 req/min), proper error handling ✅
-- **Status**: All Supabase Security Advisor alerts resolved
+### **Known Issues**
+- **Reviews RLS Policy:** Não implementa corretamente acesso tier-based
+- **Mobile Bottom Navigation:** Pode precisar de refinamento UX
+- **Recommendation Algorithm:** Stub implementation apenas
 
 ---
 
-## 📊 **API ARCHITECTURE**
+## **6. PRÓXIMOS PASSOS RECOMENDADOS**
 
-### **Edge Functions (Production)**
-1. **`get-homepage-feed`** - Consolidated homepage data ✅
-2. **`cast-suggestion-vote`** - Vote casting with rate limiting ✅
-3. **`submit-suggestion`** - New suggestion submission ✅
-4. **`get-personalized-recommendations`** - ML-based recommendations ✅
+### **Prioridade Alta**
+1. **Review Detail Page:** Implementar visualização completa de articles
+2. **Reviews RLS:** Corrigir políticas de acesso baseadas em subscription_tier
+3. **Real-time Updates:** Implementar para votes e notifications
 
-### **Data Fetching Strategy**
-- **Single Source of Truth**: `useConsolidatedHomepageFeedQuery` hook
-- **Caching**: TanStack Query with 5-minute stale time
-- **Error Handling**: Retry logic with exponential backoff
-- **Performance**: Parallel server-side queries in Edge Functions
+### **Prioridade Média**
+1. **Timer Backend:** Implementar countdown real para "Próxima Edição"
+2. **Search Interface:** Busca básica por Reviews
+3. **User Profiles:** Páginas de perfil expandidas
 
----
-
-## 🔧 **CRITICAL IMPLEMENTATION DETAILS**
-
-### **Voting System Data Flow (FULLY FIXED)**
-1. **Frontend**: `SuggestionPollItem` → `useCastVoteMutation` 
-2. **Edge Function**: `cast-suggestion-vote` with validation and rate limiting
-3. **Database**: `Suggestion_Votes` table with triggers for count updates
-4. **State Management**: Simplified component state using suggestion props as single source of truth
-
-### **Database Performance (OPTIMIZED)**
-- **Indexes**: Added on all foreign keys for performance
-- **Policies**: Consolidated RLS policies to eliminate conflicts
-- **Triggers**: Optimized vote counting with `SECURITY DEFINER`
-
-### **Security Model**
-- **Authentication**: JWT with custom claims (role, subscription_tier)
-- **Authorization**: RLS policies per table with `get_my_claim()` function
-- **Rate Limiting**: 10 votes per minute per user on voting endpoints
+### **Prioridade Baixa**
+1. **Community Module:** Sistema social completo
+2. **Advanced Analytics:** Dashboard de métricas
+3. **AI Integration:** Chat assistente para recommendations
 
 ---
 
-## 🧪 **TESTING & VALIDATION**
+## **7. COMANDOS DE DESENVOLVIMENTO ESSENCIAIS**
 
-### **Production Verification Checklist**
-- ✅ Authentication flow works end-to-end
-- ✅ Homepage loads with all modules
-- ✅ **FIXED**: Suggestions display with practitioner names
-- ✅ **FIXED**: Voting system works without race conditions
-- ✅ **OPTIMIZED**: Database performance alerts resolved
-- ✅ All Edge Functions respond correctly with rate limiting
-- ✅ RLS policies enforce proper access control
+```bash
+# Desenvolvimento local
+npm run dev
 
----
+# Supabase local
+supabase start
+supabase db reset
 
-## 🎯 **NEXT DEVELOPMENT PHASES**
+# Deploy de Edge Functions
+supabase functions deploy
 
-### **Phase 1: Content Management (READY TO START)**
-- Review creation/editing interface
-- Content moderation tools
-- Publishing workflow
-
-### **Phase 2: Community Features (PLANNED)**
-- Discussion forums
-- User profiles with contribution tracking
-- Advanced recommendation engine
-
-### **Phase 3: Analytics & Insights (PLANNED)**
-- Usage analytics dashboard
-- Content performance metrics
-- User engagement tracking
+# Logs em tempo real
+supabase functions logs --follow
+```
 
 ---
 
-## 🔍 **DEBUGGING & TROUBLESHOOTING**
+**CHANGELOG v2.0.3:**
+- ➕ Implemented optimistic updates for voting system
+- ➕ Restructured NextEditionModule layout with timer/countdown UI
+- ➕ Added avatar display in suggestion items
+- ➕ Standardized typography across module
+- 🔧 Fixed voting lag with instant UI feedback
+- 📝 Updated documentation to reflect optimistic update patterns
 
-### **Issues Resolved in v2.0.2**
-1. **Voting Race Conditions** - FIXED by simplifying state management in SuggestionPollItem
-2. **State Synchronization** - RESOLVED by using suggestion props as single source of truth
-3. **Rate Limiting** - ADDED to voting endpoints (10 votes/minute per user)
-4. **Error Handling** - IMPROVED with proper toast notifications and logging
-
-### **Monitoring Points**
-- Edge Function logs in Supabase dashboard
-- Database performance metrics
-- User authentication success rates
-- API response times via TanStack Query devtools
-- Rate limiting violations in function logs
-
----
-
-**📋 STATUS SUMMARY: EVIDENS v2.0.2 is production-ready with a fully functional homepage, authentication system, completely operational suggestion voting system with race condition fixes, and comprehensive rate limiting. The platform is now ready for content management development.**
-
----
-
-*This document serves as the definitive source of truth for the current state of the EVIDENS platform. All developers must reference this document before making any architectural decisions.*
+**NOTA:** Este documento é atualizado automaticamente a cada mudança significativa no codebase.

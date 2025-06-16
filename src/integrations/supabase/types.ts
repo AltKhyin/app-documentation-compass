@@ -316,6 +316,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_homepage_suggestions: {
+        Args: { p_user_id: string }
+        Returns: {
+          id: number
+          title: string
+          description: string
+          upvotes: number
+          created_at: string
+          Practitioners: Json
+          user_has_voted: boolean
+        }[]
+      }
       get_my_claim: {
         Args: { claim: string }
         Returns: string

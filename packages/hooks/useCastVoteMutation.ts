@@ -1,8 +1,9 @@
 
-// ABOUTME: TanStack Query mutation hook for casting votes on suggestions.
+// ABOUTME: TanStack Query mutation hook for casting votes with optimistic updates.
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../src/integrations/supabase/client';
+import { ConsolidatedHomepageData, Suggestion } from './useHomepageFeedQuery';
 
 interface CastVotePayload {
   suggestion_id: number;
@@ -11,14 +12,13 @@ interface CastVotePayload {
 
 interface CastVoteResponse {
   message: string;
-  suggestion_id: number;
-  action: string;
   new_vote_count: number;
   user_has_voted: boolean;
 }
 
 export const useCastVoteMutation = () => {
   const queryClient = useQueryClient();
+  const queryKey = ['consolidated-homepage-feed'];
 
   return useMutation<CastVoteResponse, Error, CastVotePayload>({
     mutationFn: async (payload) => {
@@ -41,15 +41,49 @@ export const useCastVoteMutation = () => {
       console.log('Vote cast successfully:', data);
       return data;
     },
-    onSuccess: (data) => {
-      console.log('Vote casting successful, invalidating queries');
-      // Invalidate consolidated homepage feed to refetch suggestions with updated counts
-      queryClient.invalidateQueries({ 
-        queryKey: ['consolidated-homepage-feed'] 
-      });
+
+    // Optimistic update: immediately update the UI
+    onMutate: async (newVote) => {
+      // Cancel any outgoing refetches so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey });
+
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData<ConsolidatedHomepageData>(queryKey);
+
+      // Optimistically update to the new value
+      if (previousData) {
+        const newData = {
+          ...previousData,
+          suggestions: previousData.suggestions.map((suggestion: Suggestion) => {
+            if (suggestion.id === newVote.suggestion_id) {
+              return {
+                ...suggestion,
+                upvotes: suggestion.upvotes + (newVote.action === 'upvote' ? 1 : -1),
+                user_has_voted: newVote.action === 'upvote',
+              };
+            }
+            return suggestion;
+          }),
+        };
+        queryClient.setQueryData(queryKey, newData);
+      }
+      
+      // Return a context object with the snapshotted value
+      return { previousData };
     },
-    onError: (error) => {
-      console.error('Vote casting failed:', error);
-    }
+
+    // If the mutation fails, use the context to roll back
+    onError: (err, newVote, context) => {
+      console.error('Vote casting failed, rolling back:', err);
+      if (context?.previousData) {
+        queryClient.setQueryData(queryKey, context.previousData);
+      }
+    },
+
+    // Always refetch after error or success to ensure authoritative state
+    onSettled: () => {
+      console.log('Vote casting settled, invalidating queries');
+      queryClient.invalidateQueries({ queryKey });
+    },
   });
 };

@@ -1,9 +1,11 @@
 
-// ABOUTME: Module component for the next edition suggestion and voting system.
+// ABOUTME: Module component for the next edition suggestion and voting system with standardized layout.
 
 import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { Progress } from '../ui/progress';
+import { Clock } from 'lucide-react';
 import SuggestionPollItem from './SuggestionPollItem';
 import { useSubmitSuggestionMutation } from '../../../packages/hooks/useSubmitSuggestionMutation';
 
@@ -13,9 +15,10 @@ export interface Suggestion {
   description: string;
   upvotes: number;
   created_at: string;
-  user_has_voted?: boolean; // New field to track if current user has voted
+  user_has_voted?: boolean;
   Practitioners: {
     full_name: string;
+    avatar_url?: string;
   };
 }
 
@@ -27,6 +30,10 @@ const NextEditionModule: React.FC<NextEditionModuleProps> = ({ suggestions }) =>
   const [newSuggestion, setNewSuggestion] = useState('');
   const submitSuggestionMutation = useSubmitSuggestionMutation();
 
+  // Mock countdown data (we'll implement backend later)
+  const mockCountdown = "5d 34min";
+  const mockProgress = 65; // Progress percentage
+
   const handleSubmitSuggestion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSuggestion.trim()) return;
@@ -37,26 +44,34 @@ const NextEditionModule: React.FC<NextEditionModuleProps> = ({ suggestions }) =>
         description: ''
       });
       
-      // Reset form on success
       setNewSuggestion('');
     } catch (error) {
       console.error('Failed to submit suggestion:', error);
-      // Error is already handled by the mutation's onError callback
     }
   };
 
   return (
     <div className="bg-background rounded-md p-6 border border-border shadow-md">
-      <h2 className="text-foreground text-2xl font-bold mb-6 font-serif">Próxima Edição</h2>
-      
       <div className="grid md:grid-cols-2 gap-8">
-        {/* Suggestion Form */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Sugira um tópico</h3>
+        {/* Left Column - Suggestion Form */}
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-xl font-bold text-foreground mb-3 font-serif">Próxima Edição</h2>
+            
+            {/* Progress Bar and Countdown */}
+            <div className="space-y-3 mb-6">
+              <Progress value={mockProgress} className="w-full h-2" />
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock size={16} />
+                <span>{mockCountdown}</span>
+              </div>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmitSuggestion} className="space-y-4">
             <Input
               type="text"
-              placeholder="Digite sua sugestão de tópico..."
+              placeholder="Sugira um artigo ou tema para a próxima edição"
               value={newSuggestion}
               onChange={(e) => setNewSuggestion(e.target.value)}
               className="w-full bg-surface-muted"
@@ -67,23 +82,23 @@ const NextEditionModule: React.FC<NextEditionModuleProps> = ({ suggestions }) =>
               disabled={!newSuggestion.trim() || submitSuggestionMutation.isPending}
               className="w-full bg-primary text-primary-foreground"
             >
-              {submitSuggestionMutation.isPending ? 'Enviando...' : 'Sugerir'}
+              {submitSuggestionMutation.isPending ? 'Enviando...' : 'Enviar Sugestão'}
             </Button>
           </form>
         </div>
 
-        {/* Poll List */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Vote nas sugestões</h3>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
+        {/* Right Column - Voting List */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-foreground">Vote nas sugestões</h3>
+          <div className="space-y-3 max-h-80 overflow-y-auto">
             {suggestions.length > 0 ? (
               suggestions.map((suggestion) => (
                 <SuggestionPollItem key={suggestion.id} suggestion={suggestion} />
               ))
             ) : (
               <div className="text-secondary text-center py-8">
-                <p>Nenhuma sugestão disponível no momento.</p>
-                <p className="text-sm mt-2">Seja o primeiro a sugerir um tópico!</p>
+                <p className="text-sm">Nenhuma sugestão disponível no momento.</p>
+                <p className="text-xs mt-2">Seja o primeiro a sugerir um tópico!</p>
               </div>
             )}
           </div>
