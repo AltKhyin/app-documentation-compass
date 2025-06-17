@@ -9,6 +9,7 @@ import PWAProvider from "@/components/pwa/PWAProvider";
 import Index from "./pages/Index";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
+import DebugSignupPage from "./pages/DebugSignupPage";
 import AcervoPage from "./pages/AcervoPage";
 import ComunidadePage from "./pages/ComunidadePage";
 import PerfilPage from "./pages/PerfilPage";
@@ -41,6 +42,7 @@ const App = () => (
                 <Routes>
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/signup" element={<SignupPage />} />
+                  <Route path="/debug-signup" element={<DebugSignupPage />} />
                   <Route path="/unauthorized" element={<UnauthorizedPage />} />
                   <Route path="/*" element={
                     <ProtectedRoute>
