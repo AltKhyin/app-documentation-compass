@@ -1,41 +1,21 @@
 
 // ABOUTME: Displays a bell icon for notifications with PWA install notification and red dot indicator.
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Bell, Download, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { usePWA } from '@/hooks/usePWA';
 import { usePWAContext } from '../pwa/PWAProvider';
 
 const NotificationBell = () => {
-  const { isInstallable, isStandalone, showInstallPrompt } = usePWA();
-  const { setShowInstallPrompt } = usePWAContext();
+  const { isInstallable, isStandalone, triggerInstall } = usePWAContext();
   const [dismissed, setDismissed] = useState(false);
 
-  // Debug logging to understand the state
-  useEffect(() => {
-    console.log('PWA State:', {
-      isInstallable,
-      isStandalone,
-      dismissed,
-      hasNotification: isInstallable && !isStandalone && !dismissed
-    });
-  }, [isInstallable, isStandalone, dismissed]);
-
-  // Show notification if PWA is installable, not standalone, and not dismissed
   const hasNotification = isInstallable && !isStandalone && !dismissed;
 
-  const handleInstallClick = async (e: React.MouseEvent) => {
+  const handleInstallClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    try {
-      await showInstallPrompt();
-      setDismissed(true);
-    } catch (error) {
-      console.log('Native install prompt failed, showing custom prompt');
-      // Fallback to showing our custom prompt
-      setShowInstallPrompt(true);
-      setDismissed(true);
-    }
+    triggerInstall();
+    setDismissed(true);
   };
 
   const handleDismiss = (e: React.MouseEvent) => {
@@ -49,7 +29,7 @@ const NotificationBell = () => {
         <Button variant="ghost" size="icon" className="relative rounded-full">
           <Bell className="h-5 w-5" />
           {hasNotification && (
-            <div className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full" />
+            <div className="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full border-2 border-background" />
           )}
         </Button>
       </PopoverTrigger>
@@ -73,9 +53,9 @@ const NotificationBell = () => {
                   <Download className="h-4 w-4 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium mb-1">Instalar Reviews</p>
+                  <p className="text-sm font-medium mb-1">Instalar o App Reviews</p>
                   <p className="text-xs text-muted-foreground mb-3">
-                    Instale o app para acesso rápido e notificações
+                    Acesso rápido, offline e notificações.
                   </p>
                   <Button 
                     size="sm" 

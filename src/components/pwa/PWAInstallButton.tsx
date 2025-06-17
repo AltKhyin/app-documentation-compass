@@ -4,30 +4,20 @@
 import React from 'react';
 import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { usePWA } from '@/hooks/usePWA';
+import { usePWAContext } from './PWAProvider';
 
 const PWAInstallButton: React.FC = () => {
-  const { isInstallable, isStandalone, showInstallPrompt } = usePWA();
+  const { isInstallable, isStandalone, triggerInstall } = usePWAContext();
 
-  // Don't show if already installed or not installable
   if (isStandalone || !isInstallable) {
     return null;
   }
-
-  const handleClick = async () => {
-    try {
-      await showInstallPrompt();
-    } catch (error) {
-      console.log('Native install prompt not available, showing custom instructions');
-      // Could show a toast or custom modal here as fallback
-    }
-  };
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={handleClick}
+      onClick={triggerInstall}
       className="relative rounded-full"
       title="Instalar App"
     >
