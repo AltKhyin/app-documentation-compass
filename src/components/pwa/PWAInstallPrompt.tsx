@@ -36,17 +36,18 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ onDismiss }) => {
             size="icon"
             onClick={handleDismiss}
             className="h-8 w-8"
+            aria-label="Dispensar prompt de instalação"
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <CardDescription className="text-foreground">
+        <CardDescription className="text-muted-foreground">
           Instale o Reviews no seu dispositivo para uma experiência melhor!
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="space-y-3">
-          <p className="text-sm text-foreground">
+          <p className="text-sm text-muted-foreground">
             Tenha acesso rápido e funcionalidades offline.
           </p>
           <div className="flex gap-2">

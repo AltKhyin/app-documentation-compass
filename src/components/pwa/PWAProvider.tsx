@@ -48,11 +48,12 @@ const PWAProvider: React.FC<PWAProviderProps> = ({ children }) => {
   const triggerInstall = useCallback(async () => {
     console.log('PWAProvider: `triggerInstall` called.');
     
+    setShowInstallBanner(false);
+
     if (canPrompt) {
       const outcome = await showInstallPrompt();
       if (outcome === 'accepted') {
         console.log('PWAProvider: Native prompt accepted by user.');
-        setShowInstallBanner(false);
       } else {
         console.log('PWAProvider: Native prompt dismissed by user.');
       }
@@ -78,7 +79,7 @@ const PWAProvider: React.FC<PWAProviderProps> = ({ children }) => {
   return (
     <PWAContext.Provider value={contextValue}>
       {children}
-      {showInstallBanner && (
+      {showInstallBanner && !isStandalone && (
         <PWAInstallPrompt 
           onDismiss={() => setShowInstallBanner(false)} 
         />

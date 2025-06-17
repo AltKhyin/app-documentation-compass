@@ -8,6 +8,7 @@ import { usePWAContext } from '../pwa/PWAProvider';
 
 const NotificationBell = () => {
   const { isInstallable, isStandalone, triggerInstall } = usePWAContext();
+  const [popoverOpen, setPopoverOpen] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
   const hasNotification = isInstallable && !isStandalone && !dismissed;
@@ -15,7 +16,7 @@ const NotificationBell = () => {
   const handleInstallClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     triggerInstall();
-    setDismissed(true);
+    setPopoverOpen(false);
   };
 
   const handleDismiss = (e: React.MouseEvent) => {
@@ -24,7 +25,7 @@ const NotificationBell = () => {
   };
 
   return (
-    <Popover>
+    <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative rounded-full">
           <Bell className="h-5 w-5" />
@@ -44,6 +45,7 @@ const NotificationBell = () => {
                 size="icon"
                 className="absolute top-1 right-1 h-6 w-6"
                 onClick={handleDismiss}
+                aria-label="Dispensar notificação"
               >
                 <X className="h-3 w-3" />
               </Button>
