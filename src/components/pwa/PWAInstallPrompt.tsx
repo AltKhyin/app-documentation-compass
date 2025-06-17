@@ -13,7 +13,7 @@ interface PWAInstallPromptProps {
 }
 
 const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ onDismiss }) => {
-  const { isInstallable, isIOS, isStandalone, showInstallPrompt, dismissInstallPrompt } = usePWA();
+  const { isInstallable, isIOS, isStandalone, showInstallPrompt } = usePWA();
   const isMobile = useIsMobile();
 
   // Don't show if already installed or not installable
@@ -32,7 +32,6 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ onDismiss }) => {
   };
 
   const handleDismiss = () => {
-    dismissInstallPrompt();
     onDismiss?.();
   };
 
