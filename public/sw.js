@@ -7,7 +7,7 @@ const urlsToCache = [
   '/perfil',
   '/static/js/bundle.js',
   '/static/css/main.css',
-  '/lovable-uploads/2e2838c7-ceb2-4e89-a431-a4062d997fa4.png',
+  '/lovable-uploads/b0ed69aa-a257-4fd2-8875-d9ee19e68e13.png',
   '/manifest.json'
 ];
 
@@ -77,8 +77,8 @@ function doBackgroundSync() {
 self.addEventListener('push', (event) => {
   const options = {
     body: event.data ? event.data.text() : 'Nova atualização disponível!',
-    icon: '/lovable-uploads/2e2838c7-ceb2-4e89-a431-a4062d997fa4.png',
-    badge: '/lovable-uploads/2e2838c7-ceb2-4e89-a431-a4062d997fa4.png',
+    icon: '/lovable-uploads/b0ed69aa-a257-4fd2-8875-d9ee19e68e13.png',
+    badge: '/lovable-uploads/b0ed69aa-a257-4fd2-8875-d9ee19e68e13.png',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
@@ -88,12 +88,12 @@ self.addEventListener('push', (event) => {
       {
         action: 'explore',
         title: 'Ver agora',
-        icon: '/lovable-uploads/2e2838c7-ceb2-4e89-a431-a4062d997fa4.png'
+        icon: '/lovable-uploads/b0ed69aa-a257-4fd2-8875-d9ee19e68e13.png'
       },
       {
         action: 'close',
         title: 'Fechar',
-        icon: '/lovable-uploads/2e2838c7-ceb2-4e89-a431-a4062d997fa4.png'
+        icon: '/lovable-uploads/b0ed69aa-a257-4fd2-8875-d9ee19e68e13.png'
       }
     ]
   };

@@ -11,11 +11,7 @@ const Header = () => {
       
       {/* Centered Logo */}
       <div className="flex items-center">
-        <img 
-          src="/lovable-uploads/2e2838c7-ceb2-4e89-a431-a4062d997fa4.png" 
-          alt="Reviews" 
-          className="h-8 w-auto"
-        />
+        <h1 className="text-xl font-bold text-foreground">Reviews</h1>
       </div>
       
       {/* Right side actions */}
