@@ -30,18 +30,20 @@ export const usePWA = (): PWAHook => {
                       (window.navigator as any).standalone || 
                       document.referrer.includes('android-app://');
 
-  // Check if PWA is installable
-  const isInstallable = installPrompt !== null || (isIOS && !isStandalone);
+  // More aggressive installability detection
+  const isInstallable = installPrompt !== null || (isIOS && !isStandalone) || (!isStandalone && !isInstalled);
 
   useEffect(() => {
     // Listen for beforeinstallprompt event (Chrome/Edge)
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
+      console.log('beforeinstallprompt event fired');
       setInstallPrompt(e as BeforeInstallPromptEvent);
     };
 
     // Listen for app installed event
     const handleAppInstalled = () => {
+      console.log('PWA installed');
       setIsInstalled(true);
       setInstallPrompt(null);
     };
@@ -54,14 +56,23 @@ export const usePWA = (): PWAHook => {
       setIsInstalled(true);
     }
 
+    // Debug logging
+    console.log('PWA Hook initialized:', {
+      isIOS,
+      isStandalone,
+      userAgent: navigator.userAgent
+    });
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
-  }, [isStandalone]);
+  }, [isStandalone, isIOS]);
 
   const showInstallPrompt = async () => {
-    if (!installPrompt) return;
+    if (!installPrompt) {
+      throw new Error('No install prompt available');
+    }
 
     try {
       await installPrompt.prompt();
@@ -74,6 +85,7 @@ export const usePWA = (): PWAHook => {
       setInstallPrompt(null);
     } catch (error) {
       console.error('Error showing install prompt:', error);
+      throw error;
     }
   };
 

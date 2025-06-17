@@ -1,6 +1,6 @@
 
 // ABOUTME: Displays a bell icon for notifications with PWA install notification and red dot indicator.
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, Download, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -12,10 +12,22 @@ const NotificationBell = () => {
   const { setShowInstallPrompt } = usePWAContext();
   const [dismissed, setDismissed] = useState(false);
 
-  // Show notification if PWA is installable and not dismissed
-  const hasNotification = isInstallable && !isStandalone && !dismissed;
+  // Debug logging to understand the state
+  useEffect(() => {
+    console.log('PWA State:', {
+      isInstallable,
+      isStandalone,
+      dismissed,
+      hasNotification: isInstallable && !isStandalone && !dismissed
+    });
+  }, [isInstallable, isStandalone, dismissed]);
 
-  const handleInstallClick = async () => {
+  // Show notification if PWA is installable and not dismissed
+  // Remove the !isStandalone check initially to test if the notification appears
+  const hasNotification = isInstallable && !dismissed;
+
+  const handleInstallClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     try {
       await showInstallPrompt();
       setDismissed(true);
