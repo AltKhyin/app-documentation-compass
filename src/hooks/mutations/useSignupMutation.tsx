@@ -15,17 +15,6 @@ export type SignupPayload = z.infer<typeof signupSchema>;
 const signUpUser = async (payload: SignupPayload) => {
   console.log('Starting signup process for:', payload.email);
   
-  try {
-    // First, check if user already exists
-    const { data: existingUser } = await supabase.auth.admin.getUserByEmail(payload.email);
-    if (existingUser.user) {
-      throw new Error('Este email já está em uso.');
-    }
-  } catch (adminError) {
-    // Admin check failed, continue with normal signup (RLS might prevent admin access)
-    console.log('Admin check failed, continuing with signup:', adminError);
-  }
-
   const { data, error } = await supabase.auth.signUp({
     email: payload.email,
     password: payload.password,
