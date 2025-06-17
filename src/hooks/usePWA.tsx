@@ -9,30 +9,33 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export interface PWAHook {
-  isInstallable: boolean;
   isInstalled: boolean;
-  isIOS: boolean;
   isStandalone: boolean;
+  isIOS: boolean;
   canPrompt: boolean;
   showInstallPrompt: () => Promise<'accepted' | 'dismissed' | 'failed'>;
 }
+
+// A more robust check for whether the app is running in a browser context
+const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
 
 export const usePWA = (): PWAHook => {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
 
-  const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isIOS = isBrowser && /iPad|iPhone|iPod/.test(navigator.userAgent);
   
-  const isStandalone = typeof window !== 'undefined' && (
+  const isStandalone = isBrowser && (
     window.matchMedia('(display-mode: standalone)').matches || 
     (window.navigator as any).standalone === true ||
     document.referrer.includes('android-app://')
   );
 
   const canPrompt = installPrompt !== null;
-  const isInstallable = canPrompt || (isIOS && !isStandalone);
 
   useEffect(() => {
+    if (!isBrowser) return;
+
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       console.log('PWA: `beforeinstallprompt` event captured.');
@@ -52,7 +55,7 @@ export const usePWA = (): PWAHook => {
       setIsInstalled(true);
     }
 
-    console.log('PWA Hook Initial State:', { isIOS, isStandalone, isInstallable, canPrompt: !!installPrompt });
+    console.log('PWA Hook Initial State:', { isIOS, isStandalone, canPrompt: !!installPrompt });
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -86,10 +89,9 @@ export const usePWA = (): PWAHook => {
   }, [installPrompt]);
 
   return {
-    isInstallable,
     isInstalled,
-    isIOS,
     isStandalone,
+    isIOS,
     canPrompt,
     showInstallPrompt,
   };

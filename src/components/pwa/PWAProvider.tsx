@@ -30,20 +30,25 @@ interface PWAProviderProps {
 }
 
 const PWAProvider: React.FC<PWAProviderProps> = ({ children }) => {
-  const { isInstalled, isInstallable, isStandalone, isIOS, canPrompt, showInstallPrompt } = usePWA();
+  const { isInstalled, isStandalone, isIOS, canPrompt, showInstallPrompt } = usePWA();
   const [showInstallBanner, setShowInstallBanner] = useState(false);
   const [showInstructionsModal, setShowInstructionsModal] = useState(false);
 
+  // NEW LOGIC: Determine installability proactively.
+  // We assume the app is installable if it's not already in standalone mode.
+  // The 'canPrompt' and 'isIOS' checks will handle the specific user action.
+  const isInstallable = !isStandalone;
+
   useEffect(() => {
-    if (isInstallable && !isStandalone) {
+    if (isInstallable) {
       const timer = setTimeout(() => {
-        console.log('PWAProvider: Showing install banner.');
+        console.log('PWAProvider: Showing install banner due to installability.');
         setShowInstallBanner(true);
       }, 10000);
 
       return () => clearTimeout(timer);
     }
-  }, [isInstallable, isStandalone]);
+  }, [isInstallable]);
   
   const triggerInstall = useCallback(async () => {
     console.log('PWAProvider: `triggerInstall` called.');
