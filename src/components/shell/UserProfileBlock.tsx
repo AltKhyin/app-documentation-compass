@@ -1,9 +1,11 @@
 
 // ABOUTME: Displays user avatar/name, with loading state and logout action using consolidated data.
 import React from 'react';
-import { LogOut, Sun, Moon, Monitor } from 'lucide-react';
+import { LogOut, Sun, Moon, Monitor, Download } from 'lucide-react';
 import { useAppData } from '@/contexts/AppDataContext';
 import { useTheme } from '@/components/theme/CustomThemeProvider';
+import { usePWA } from '@/hooks/usePWA';
+import { usePWAContext } from '@/components/pwa/PWAProvider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -28,11 +30,22 @@ type UserProfileBlockProps = {
 const UserProfileBlock = ({ isCollapsed = false }: UserProfileBlockProps) => {
   const { userProfile, isLoading } = useAppData();
   const { theme, setTheme } = useTheme();
+  const { isInstallable, isStandalone, showInstallPrompt } = usePWA();
+  const { setShowInstallPrompt } = usePWAContext();
   const queryClient = useQueryClient();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     queryClient.clear(); // Clears all query cache on logout
+  };
+
+  const handleInstallApp = async () => {
+    try {
+      await showInstallPrompt();
+    } catch (error) {
+      // Fallback to showing our custom prompt
+      setShowInstallPrompt(true);
+    }
   };
 
   if (isLoading) {
@@ -101,6 +114,17 @@ const UserProfileBlock = ({ isCollapsed = false }: UserProfileBlockProps) => {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          
+          {/* PWA Install Option - only show if installable and not standalone */}
+          {isInstallable && !isStandalone && (
+            <>
+              <DropdownMenuItem onClick={handleInstallApp}>
+                <Download className="mr-2 h-4 w-4" />
+                <span>Instalar App</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
           
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>

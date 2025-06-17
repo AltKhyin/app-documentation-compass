@@ -7,13 +7,19 @@ import PWAInstallButton from '../pwa/PWAInstallButton';
 const Header = () => {
   return (
     <header className="flex items-center justify-between p-4 border-b border-border bg-background">
-      {/* Left-aligned Logo with same styling as desktop sidebar */}
+      <div className="flex-1" />
+      
+      {/* Centered Logo */}
       <div className="flex items-center">
-        <h1 className="text-2xl font-serif font-bold tracking-tight text-foreground">Reviews</h1>
+        <img 
+          src="/lovable-uploads/2e2838c7-ceb2-4e89-a431-a4062d997fa4.png" 
+          alt="Reviews" 
+          className="h-8 w-auto"
+        />
       </div>
       
       {/* Right side actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-1 justify-end">
         <PWAInstallButton />
         <NotificationBell />
       </div>
