@@ -1,8 +1,9 @@
 
 // ABOUTME: Displays user avatar/name, with loading state and logout action using consolidated data.
 import React from 'react';
-import { LogOut } from 'lucide-react';
+import { LogOut, Sun, Moon, Monitor } from 'lucide-react';
 import { useAppData } from '@/contexts/AppDataContext';
+import { useTheme } from '@/components/theme/CustomThemeProvider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,9 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
@@ -23,6 +27,7 @@ type UserProfileBlockProps = {
 
 const UserProfileBlock = ({ isCollapsed = false }: UserProfileBlockProps) => {
   const { userProfile, isLoading } = useAppData();
+  const { theme, setTheme } = useTheme();
   const queryClient = useQueryClient();
 
   const handleLogout = async () => {
@@ -45,6 +50,19 @@ const UserProfileBlock = ({ isCollapsed = false }: UserProfileBlockProps) => {
       .map((n) => n[0])
       .slice(0, 2)
       .join('');
+  };
+
+  const getThemeIcon = () => {
+    switch (theme) {
+      case 'light':
+        return <Sun className="mr-2 h-4 w-4" />;
+      case 'dark':
+        return <Moon className="mr-2 h-4 w-4" />;
+      case 'system':
+        return <Monitor className="mr-2 h-4 w-4" />;
+      default:
+        return <Monitor className="mr-2 h-4 w-4" />;
+    }
   };
 
   return (
@@ -83,9 +101,32 @@ const UserProfileBlock = ({ isCollapsed = false }: UserProfileBlockProps) => {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              {getThemeIcon()}
+              <span>Tema</span>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuItem onClick={() => setTheme('light')}>
+                <Sun className="mr-2 h-4 w-4" />
+                <span>Claro</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme('dark')}>
+                <Moon className="mr-2 h-4 w-4" />
+                <span>Escuro</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme('system')}>
+                <Monitor className="mr-2 h-4 w-4" />
+                <span>Sistema</span>
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
-            <span>Log out</span>
+            <span>Sair</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
