@@ -1,9 +1,10 @@
 
-// ABOUTME: Module component for displaying a horizontal carousel of review cards.
+// ABOUTME: Module component for displaying a horizontal carousel of review cards with mobile optimization.
 
 import React, { useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ReviewCard, { Review } from './ReviewCard';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ReviewCarouselProps {
   title: string;
@@ -12,6 +13,7 @@ interface ReviewCarouselProps {
 
 const ReviewCarousel: React.FC<ReviewCarouselProps> = ({ title, reviews }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   const scrollLeft = () => {
     if (scrollRef.current) {
@@ -42,33 +44,38 @@ const ReviewCarousel: React.FC<ReviewCarouselProps> = ({ title, reviews }) => {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-foreground text-2xl font-bold font-serif">{title}</h2>
         
-        {/* Desktop Navigation Arrows */}
-        <div className="hidden md:flex items-center gap-2">
-          <button
-            onClick={scrollLeft}
-            className="p-2 bg-surface text-foreground rounded-md hover:bg-surface-muted transition-colors border border-border"
-            aria-label="Scroll left"
-          >
-            <ChevronLeft size={20} />
-          </button>
-          <button
-            onClick={scrollRight}
-            className="p-2 bg-surface text-foreground rounded-md hover:bg-surface-muted transition-colors border border-border"
-            aria-label="Scroll right"
-          >
-            <ChevronRight size={20} />
-          </button>
-        </div>
+        {/* Desktop Navigation Arrows - Hidden on mobile per DOC_8 */}
+        {!isMobile && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={scrollLeft}
+              className="p-2 bg-surface text-foreground rounded-md hover:bg-surface-muted transition-colors border border-border"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              onClick={scrollRight}
+              className="p-2 bg-surface text-foreground rounded-md hover:bg-surface-muted transition-colors border border-border"
+              aria-label="Scroll right"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        )}
       </div>
       
-      {/* Scrollable Reviews Container */}
+      {/* Scrollable Reviews Container - Mobile shows ~1.5 cards per DOC_8 RULE 4 */}
       <div 
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 md:pb-0"
+        className={`flex gap-4 overflow-x-auto scrollbar-hide pb-2 ${isMobile ? 'mobile-carousel-hint' : ''}`}
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {reviews.map((review) => (
-          <div key={review.id} className="flex-shrink-0 w-64">
+          <div 
+            key={review.id} 
+            className={`flex-shrink-0 ${isMobile ? 'w-72' : 'w-64'}`}
+          >
             <ReviewCard review={review} />
           </div>
         ))}
