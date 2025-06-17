@@ -4,16 +4,7 @@
 import React from 'react';
 import ReviewCard from './ReviewCard';
 import { useIsMobile } from '@/hooks/use-mobile';
-
-export interface AcervoReview {
-  id: number;
-  title: string;
-  description: string;
-  cover_image_url: string | null;
-  published_at: string;
-  view_count: number;
-  tags: string[];
-}
+import { AcervoReview } from '../../../packages/hooks/useAcervoDataQuery';
 
 interface MasonryGridProps {
   reviews: AcervoReview[];
@@ -30,7 +21,7 @@ const MasonryGrid: React.FC<MasonryGridProps> = ({ reviews }) => {
     }`}>
       {reviews.map((review) => (
         <div 
-          key={review.id} 
+          key={review.review_id} 
           className={`${
             isMobile 
               ? 'w-full' // Mobile: use full width of grid column
