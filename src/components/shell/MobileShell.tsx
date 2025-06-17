@@ -8,7 +8,7 @@ const MobileShell = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex min-h-screen w-full flex-col">
       <Header />
-      <main className="flex-1 p-4 pb-20">{children}</main>
+      <main className="flex-1 mobile-content py-4 pb-20">{children}</main>
       <BottomTabBar />
     </div>
   );

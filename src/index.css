@@ -94,6 +94,49 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Discrete, theme-aware scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--border-hover));
+  }
+
+  /* Firefox scrollbar styling */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+}
+
+/* Mobile typography and spacing optimizations */
+@media (max-width: 767px) {
+  body {
+    font-size: 16px;
+    line-height: 1.7;
+  }
+  
+  .mobile-content {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  /* Ensure mobile content has proper spacing */
+  main {
+    padding-bottom: 80px; /* Account for bottom navigation */
+  }
 }
 
 /* Custom utilities for homepage components */
@@ -119,5 +162,21 @@
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+  }
+
+  /* Mobile-specific touch targets */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Mobile carousel hint styling */
+  .mobile-carousel-hint {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-carousel-hint > * {
+    scroll-snap-align: start;
   }
 }
