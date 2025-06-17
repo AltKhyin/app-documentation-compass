@@ -4,19 +4,26 @@ import React, { useState } from 'react';
 import { Bell, Download, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { usePWA } from '@/hooks/usePWA';
 import { usePWAContext } from '../pwa/PWAProvider';
 
 const NotificationBell = () => {
-  const { isInstallable, isStandalone, triggerInstall } = usePWAContext();
-  const [popoverOpen, setPopoverOpen] = useState(false);
+  const { isInstallable, isStandalone, showInstallPrompt } = usePWA();
+  const { setShowInstallPrompt } = usePWAContext();
   const [dismissed, setDismissed] = useState(false);
 
+  // Show notification if PWA is installable and not dismissed
   const hasNotification = isInstallable && !isStandalone && !dismissed;
 
-  const handleInstallClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    triggerInstall();
-    setPopoverOpen(false);
+  const handleInstallClick = async () => {
+    try {
+      await showInstallPrompt();
+      setDismissed(true);
+    } catch (error) {
+      // Fallback to showing our custom prompt
+      setShowInstallPrompt(true);
+      setDismissed(true);
+    }
   };
 
   const handleDismiss = (e: React.MouseEvent) => {
@@ -25,12 +32,12 @@ const NotificationBell = () => {
   };
 
   return (
-    <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+    <Popover>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative rounded-full">
           <Bell className="h-5 w-5" />
           {hasNotification && (
-            <div className="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full border-2 border-background" />
+            <div className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full" />
           )}
         </Button>
       </PopoverTrigger>
@@ -45,7 +52,6 @@ const NotificationBell = () => {
                 size="icon"
                 className="absolute top-1 right-1 h-6 w-6"
                 onClick={handleDismiss}
-                aria-label="Dispensar notificação"
               >
                 <X className="h-3 w-3" />
               </Button>
@@ -55,9 +61,9 @@ const NotificationBell = () => {
                   <Download className="h-4 w-4 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium mb-1">Instalar o App Reviews</p>
+                  <p className="text-sm font-medium mb-1">Instalar Reviews</p>
                   <p className="text-xs text-muted-foreground mb-3">
-                    Acesso rápido, offline e notificações.
+                    Instale o app para acesso rápido e notificações
                   </p>
                   <Button 
                     size="sm" 

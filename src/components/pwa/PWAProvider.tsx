@@ -1,18 +1,15 @@
 
-// ABOUTME: PWA provider for managing installation state, lifecycle, and centralized installation logic.
+// ABOUTME: PWA provider for managing installation state and lifecycle.
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { usePWA } from '@/hooks/usePWA';
 import PWAInstallPrompt from './PWAInstallPrompt';
-import PWAInstructionsModal from './PWAInstructionsModal';
 
 interface PWAContextType {
-  isInstallable: boolean;
+  showInstallPrompt: boolean;
+  setShowInstallPrompt: (show: boolean) => void;
   isInstalled: boolean;
-  isStandalone: boolean;
-  isIOS: boolean;
-  canPrompt: boolean;
-  triggerInstall: () => void;
+  isInstallable: boolean;
 }
 
 const PWAContext = createContext<PWAContextType | undefined>(undefined);
@@ -30,69 +27,48 @@ interface PWAProviderProps {
 }
 
 const PWAProvider: React.FC<PWAProviderProps> = ({ children }) => {
-  const { isInstalled, isStandalone, isIOS, canPrompt, showInstallPrompt } = usePWA();
-  const [showInstallBanner, setShowInstallBanner] = useState(false);
-  const [showInstructionsModal, setShowInstructionsModal] = useState(false);
-
-  // NEW LOGIC: Determine installability proactively.
-  // We assume the app is installable if it's not already in standalone mode.
-  // The 'canPrompt' and 'isIOS' checks will handle the specific user action.
-  const isInstallable = !isStandalone;
+  const { isInstalled, isInstallable, isStandalone } = usePWA();
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
   useEffect(() => {
-    if (isInstallable) {
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((registration) => {
+            console.log('SW registered: ', registration);
+          })
+          .catch((registrationError) => {
+            console.log('SW registration failed: ', registrationError);
+          });
+      });
+    }
+
+    // Show install prompt after a delay if not installed and installable
+    if (!isInstalled && !isStandalone && isInstallable) {
       const timer = setTimeout(() => {
-        console.log('PWAProvider: Showing install banner due to installability.');
-        setShowInstallBanner(true);
-      }, 10000);
+        setShowInstallPrompt(true);
+      }, 10000); // Show after 10 seconds
 
       return () => clearTimeout(timer);
     }
-  }, [isInstallable]);
-  
-  const triggerInstall = useCallback(async () => {
-    console.log('PWAProvider: `triggerInstall` called.');
-    
-    setShowInstallBanner(false);
-
-    if (canPrompt) {
-      const outcome = await showInstallPrompt();
-      if (outcome === 'accepted') {
-        console.log('PWAProvider: Native prompt accepted by user.');
-      } else {
-        console.log('PWAProvider: Native prompt dismissed by user.');
-      }
-    } 
-    else if (isInstallable) { 
-      console.log('PWAProvider: Native prompt not available. Showing instructions modal as fallback.');
-      setShowInstructionsModal(true);
-    } 
-    else {
-      console.log('PWAProvider: App is not installable, doing nothing.');
-    }
-  }, [canPrompt, isInstallable, showInstallPrompt]);
+  }, [isInstalled, isStandalone, isInstallable]);
 
   const contextValue: PWAContextType = {
-    isInstallable,
+    showInstallPrompt,
+    setShowInstallPrompt,
     isInstalled,
-    isStandalone,
-    isIOS,
-    canPrompt,
-    triggerInstall,
+    isInstallable,
   };
 
   return (
     <PWAContext.Provider value={contextValue}>
       {children}
-      {showInstallBanner && !isStandalone && (
+      {showInstallPrompt && (
         <PWAInstallPrompt 
-          onDismiss={() => setShowInstallBanner(false)} 
+          onDismiss={() => setShowInstallPrompt(false)} 
         />
       )}
-      <PWAInstructionsModal
-        open={showInstructionsModal}
-        onOpenChange={setShowInstructionsModal}
-      />
     </PWAContext.Provider>
   );
 };
