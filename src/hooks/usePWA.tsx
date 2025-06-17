@@ -1,45 +1,47 @@
 
 // ABOUTME: Hook for PWA capabilities detection and management.
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
-export interface PWAHook {
+interface PWAHook {
   isInstallable: boolean;
   isInstalled: boolean;
   isIOS: boolean;
   isStandalone: boolean;
-  showInstallPrompt: () => Promise<'accepted' | 'dismissed' | 'failed'>;
+  installPrompt: BeforeInstallPromptEvent | null;
+  showInstallPrompt: () => Promise<void>;
+  dismissInstallPrompt: () => void;
 }
 
 export const usePWA = (): PWAHook => {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
 
-  const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
+  // Detect if device is iOS
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   
-  const isStandalone = typeof window !== 'undefined' && (
-    window.matchMedia('(display-mode: standalone)').matches || 
-    (window.navigator as any).standalone === true ||
-    document.referrer.includes('android-app://')
-  );
+  // Detect if app is running in standalone mode
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                      (window.navigator as any).standalone || 
+                      document.referrer.includes('android-app://');
 
-  // PWA is installable if we have a prompt event OR if it's iOS and not standalone
-  const isInstallable = installPrompt !== null || (isIOS && !isStandalone) || (!isStandalone && 'serviceWorker' in navigator);
+  // Check if PWA is installable
+  const isInstallable = installPrompt !== null || (isIOS && !isStandalone);
 
   useEffect(() => {
+    // Listen for beforeinstallprompt event (Chrome/Edge)
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      console.log('PWA: beforeinstallprompt event captured');
       setInstallPrompt(e as BeforeInstallPromptEvent);
     };
 
+    // Listen for app installed event
     const handleAppInstalled = () => {
-      console.log('PWA: App installed');
       setIsInstalled(true);
       setInstallPrompt(null);
     };
@@ -47,6 +49,7 @@ export const usePWA = (): PWAHook => {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
+    // Check if app is already installed
     if (isStandalone) {
       setIsInstalled(true);
     }
@@ -57,35 +60,34 @@ export const usePWA = (): PWAHook => {
     };
   }, [isStandalone]);
 
-  const showInstallPrompt = useCallback(async (): Promise<'accepted' | 'dismissed' | 'failed'> => {
-    if (!installPrompt) {
-      console.log('PWA: No install prompt available');
-      return 'failed';
-    }
+  const showInstallPrompt = async () => {
+    if (!installPrompt) return;
 
     try {
       await installPrompt.prompt();
       const { outcome } = await installPrompt.userChoice;
-      console.log(`PWA: User choice: ${outcome}`);
       
       if (outcome === 'accepted') {
         setIsInstalled(true);
       }
       
       setInstallPrompt(null);
-      return outcome;
     } catch (error) {
-      console.error('PWA: Error showing install prompt:', error);
-      setInstallPrompt(null);
-      return 'failed';
+      console.error('Error showing install prompt:', error);
     }
-  }, [installPrompt]);
+  };
+
+  const dismissInstallPrompt = () => {
+    setInstallPrompt(null);
+  };
 
   return {
     isInstallable,
     isInstalled,
     isIOS,
     isStandalone,
+    installPrompt,
     showInstallPrompt,
+    dismissInstallPrompt,
   };
 };
