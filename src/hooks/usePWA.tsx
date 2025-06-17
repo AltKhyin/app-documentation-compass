@@ -30,8 +30,8 @@ export const usePWA = (): PWAHook => {
                       (window.navigator as any).standalone || 
                       document.referrer.includes('android-app://');
 
-  // More aggressive installability detection
-  const isInstallable = installPrompt !== null || (isIOS && !isStandalone) || (!isStandalone && !isInstalled);
+  // More reliable installability detection
+  const isInstallable = installPrompt !== null || (isIOS && !isStandalone);
 
   useEffect(() => {
     // Listen for beforeinstallprompt event (Chrome/Edge)
@@ -60,23 +60,29 @@ export const usePWA = (): PWAHook => {
     console.log('PWA Hook initialized:', {
       isIOS,
       isStandalone,
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
+      hasInstallPrompt: installPrompt !== null,
+      isInstallable
     });
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
-  }, [isStandalone, isIOS]);
+  }, [isStandalone, isIOS, installPrompt, isInstallable]);
 
   const showInstallPrompt = async () => {
     if (!installPrompt) {
+      console.log('No native install prompt available');
       throw new Error('No install prompt available');
     }
 
     try {
+      console.log('Showing native install prompt');
       await installPrompt.prompt();
       const { outcome } = await installPrompt.userChoice;
+      
+      console.log('Install prompt result:', outcome);
       
       if (outcome === 'accepted') {
         setIsInstalled(true);

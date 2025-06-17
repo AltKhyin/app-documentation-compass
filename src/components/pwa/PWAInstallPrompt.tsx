@@ -1,4 +1,3 @@
-
 // ABOUTME: PWA installation prompt component with iOS and Android support.
 
 import React from 'react';
@@ -27,7 +26,13 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ onDismiss }) => {
       return;
     } else {
       // For Android/Chrome, trigger the native prompt
-      await showInstallPrompt();
+      try {
+        await showInstallPrompt();
+        onDismiss?.();
+      } catch (error) {
+        console.log('Native install prompt not available');
+        // Keep the popup open to show instructions
+      }
     }
   };
 
@@ -53,7 +58,7 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ onDismiss }) => {
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <CardDescription>
+        <CardDescription className="text-foreground/80">
           Instale o Reviews no seu dispositivo para uma experiência melhor!
         </CardDescription>
       </CardHeader>
@@ -61,36 +66,39 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ onDismiss }) => {
         {isIOS ? (
           // iOS Installation Instructions
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-foreground/80">
               Para instalar no iOS:
+            </p>
+            <p className="text-sm text-foreground/70">
+              Tenha acesso rápido e funcionalidades offline.
             </p>
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                   1
                 </span>
-                <span>Toque no ícone de compartilhar</span>
+                <span className="text-foreground/80">Toque no ícone de compartilhar</span>
                 <Share className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="flex items-center gap-2">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                   2
                 </span>
-                <span>Selecione "Adicionar à Tela de Início"</span>
+                <span className="text-foreground/80">Selecione "Adicionar à Tela de Início"</span>
                 <Plus className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="flex items-center gap-2">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                   3
                 </span>
-                <span>Confirme tocando em "Adicionar"</span>
+                <span className="text-foreground/80">Confirme tocando em "Adicionar"</span>
               </div>
             </div>
           </div>
         ) : (
           // Android/Chrome Installation
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-foreground/70">
               Tenha acesso rápido e funcionalidades offline.
             </p>
             <div className="flex gap-2">

@@ -22,9 +22,8 @@ const NotificationBell = () => {
     });
   }, [isInstallable, isStandalone, dismissed]);
 
-  // Show notification if PWA is installable and not dismissed
-  // Remove the !isStandalone check initially to test if the notification appears
-  const hasNotification = isInstallable && !dismissed;
+  // Show notification if PWA is installable, not standalone, and not dismissed
+  const hasNotification = isInstallable && !isStandalone && !dismissed;
 
   const handleInstallClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -32,6 +31,7 @@ const NotificationBell = () => {
       await showInstallPrompt();
       setDismissed(true);
     } catch (error) {
+      console.log('Native install prompt failed, showing custom prompt');
       // Fallback to showing our custom prompt
       setShowInstallPrompt(true);
       setDismissed(true);
