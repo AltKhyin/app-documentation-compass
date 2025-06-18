@@ -25,7 +25,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
   const slug = encodeURIComponent(review.title);
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-200 h-full min-w-[280px] flex-shrink-0">
+    <Card className="group hover:shadow-lg transition-all duration-200 h-full flex-shrink-0">
       <Link to={`/reviews/${slug}`} className="block h-full">
         <CardContent className="p-0 h-full flex flex-col">
           {/* Cover Image */}

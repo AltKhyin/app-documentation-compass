@@ -77,8 +77,7 @@ const ReviewCarousel: React.FC<ReviewCarouselProps> = ({ title, reviews }) => {
         {reviews.map((review) => (
           <div 
             key={review.id} 
-            className={`flex-shrink-0 ${isMobile ? 'w-72' : 'w-64'}`}
-            style={{ minWidth: isMobile ? '288px' : '256px' }} // Ensure minimum width
+            className={`flex-shrink-0 ${isMobile ? 'w-72' : 'w-72'}`}
           >
             <ReviewCard review={review} />
           </div>
