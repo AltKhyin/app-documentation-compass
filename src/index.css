@@ -91,8 +91,23 @@
   * {
     @apply border-border;
   }
+  
+  html, body {
+    @apply min-h-screen;
+    margin: 0;
+    padding: 0;
+  }
+  
   body {
     @apply bg-background text-foreground;
+    /* Ensure body always has a background */
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+  
+  /* Ensure root element has full height */
+  #root {
+    @apply min-h-screen bg-background;
   }
 
   /* Discrete, theme-aware scrollbars */

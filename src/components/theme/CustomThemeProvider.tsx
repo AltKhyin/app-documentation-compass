@@ -32,13 +32,18 @@ export function CustomThemeProvider({
       const savedTheme = localStorage.getItem(storageKey) as Theme;
       if (savedTheme && ['dark', 'light', 'system'].includes(savedTheme)) {
         setThemeState(savedTheme);
+      } else {
+        // If no saved theme, set default to dark
+        setThemeState('dark');
+        localStorage.setItem(storageKey, 'dark');
       }
     } catch (error) {
       console.warn('Failed to load theme from localStorage:', error);
+      setThemeState('dark');
     }
   }, [storageKey]);
 
-  // Handle system theme changes
+  // Handle system theme changes and apply theme to document
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     
@@ -66,8 +71,18 @@ export function CustomThemeProvider({
 
   const updateDocumentTheme = (newTheme: 'dark' | 'light') => {
     const root = document.documentElement;
+    const body = document.body;
+    
+    // Remove all theme classes
     root.classList.remove('light', 'dark');
     root.classList.add(newTheme);
+    
+    // Ensure body has proper background
+    if (newTheme === 'dark') {
+      body.style.backgroundColor = 'hsl(0 0% 7%)'; // --background dark
+    } else {
+      body.style.backgroundColor = 'hsl(220 20% 98%)'; // --background light
+    }
   };
 
   const setTheme = (newTheme: Theme) => {

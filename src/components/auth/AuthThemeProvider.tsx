@@ -1,5 +1,5 @@
 
-// ABOUTME: Forces white theme for authentication pages while preserving main app theme
+// ABOUTME: Forces white theme ONLY for authentication pages without affecting main app theme
 import React, { useEffect } from 'react';
 
 interface AuthThemeProviderProps {
@@ -8,27 +8,25 @@ interface AuthThemeProviderProps {
 
 const AuthThemeProvider: React.FC<AuthThemeProviderProps> = ({ children }) => {
   useEffect(() => {
-    // Force white background for auth pages
+    // Store original theme state
     const root = document.documentElement;
-    const body = document.body;
+    const originalClasses = root.className;
     
-    // Store original classes
-    const originalRootClasses = root.className;
-    const originalBodyStyle = body.style.backgroundColor;
-    
-    // Apply white theme
+    // Force light theme for auth pages only
     root.classList.remove('dark');
     root.classList.add('light');
-    body.style.backgroundColor = 'white';
     
-    // Cleanup on unmount
+    // Cleanup on unmount - restore original theme
     return () => {
-      root.className = originalRootClasses;
-      body.style.backgroundColor = originalBodyStyle;
+      root.className = originalClasses;
     };
   }, []);
 
-  return <div className="min-h-screen bg-white">{children}</div>;
+  return (
+    <div className="min-h-screen bg-white text-black">
+      {children}
+    </div>
+  );
 };
 
 export default AuthThemeProvider;

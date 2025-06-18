@@ -65,16 +65,21 @@ const ReviewCarousel: React.FC<ReviewCarouselProps> = ({ title, reviews }) => {
         )}
       </div>
       
-      {/* Scrollable Reviews Container - Fixed spacing to prevent touching */}
+      {/* Scrollable Reviews Container - Fixed spacing using flex with explicit gaps */}
       <div 
         ref={scrollRef}
-        className={`flex overflow-x-auto scrollbar-hide pb-2 ${isMobile ? 'gap-3 mobile-carousel-hint' : 'gap-6'}`}
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        className={`flex overflow-x-auto scrollbar-hide pb-2 ${isMobile ? 'mobile-carousel-hint' : ''}`}
+        style={{ 
+          scrollbarWidth: 'none', 
+          msOverflowStyle: 'none',
+          gap: isMobile ? '12px' : '24px' // Explicit gap instead of class
+        }}
       >
         {reviews.map((review) => (
           <div 
             key={review.id} 
             className={`flex-shrink-0 ${isMobile ? 'w-72' : 'w-64'}`}
+            style={{ minWidth: isMobile ? '288px' : '256px' }} // Ensure minimum width
           >
             <ReviewCard review={review} />
           </div>

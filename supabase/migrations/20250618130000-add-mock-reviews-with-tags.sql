@@ -1,137 +1,107 @@
 
--- Add mock reviews with proper tag associations for testing the Acervo page
--- First, insert some mock reviews
+-- Add mock reviews with proper tag associations
+-- This migration creates sample content for the Acervo page
+
+-- Insert mock reviews
 INSERT INTO public."Reviews" (
   title, 
+  slug, 
   description, 
+  content, 
   cover_image_url, 
-  status, 
-  access_level, 
-  structured_content,
-  published_at,
-  created_at
-) VALUES 
-(
-  'Novas Diretrizes para Tratamento de Fibrilação Atrial',
-  'Análise das mais recentes recomendações para manejo de FA em pacientes com comorbidades cardiovasculares.',
-  'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=300&fit=crop',
-  'published',
-  'public',
-  '{"version": "2.0", "nodes": [], "layouts": {"desktop": [], "mobile": []}, "canvasState": {}}',
-  NOW(),
-  NOW()
-),
-(
-  'Diagnóstico Diferencial de AVC Isquêmico vs Hemorrágico',
-  'Protocolo atualizado para diagnóstico rápido e preciso em unidades de emergência.',
-  'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=300&fit=crop',
-  'published', 
-  'public',
-  '{"version": "2.0", "nodes": [], "layouts": {"desktop": [], "mobile": []}, "canvasState": {}}',
-  NOW(),
-  NOW()
-),
-(
-  'Vacinação em Pediatria: Calendário 2025',
-  'Atualizações no calendário vacinal pediátrico e considerações especiais para prematuros.',
-  'https://images.unsplash.com/photo-1581594693702-fbdc51b2763b?w=400&h=300&fit=crop',
-  'published',
-  'public', 
-  '{"version": "2.0", "nodes": [], "layouts": {"desktop": [], "mobile": []}, "canvasState": {}}',
-  NOW(),
-  NOW()
-),
-(
-  'Farmacologia Clínica de Anticoagulantes',
-  'Mecanismos de ação, indicações e monitoramento dos novos anticoagulantes orais.',
-  'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=300&fit=crop',
-  'published',
-  'public',
-  '{"version": "2.0", "nodes": [], "layouts": {"desktop": [], "mobile": []}, "canvasState": {}}',
-  NOW(),
-  NOW()
-),
-(
-  'Técnicas Avançadas em Cirurgia Minimamente Invasiva',
-  'Evolução das técnicas laparoscópicas e robóticas em cirurgias abdominais complexas.',
-  'https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400&h=300&fit=crop',
-  'published',
-  'public',
-  '{"version": "2.0", "nodes": [], "layouts": {"desktop": [], "mobile": []}, "canvasState": {}}',
-  NOW(),
-  NOW()
-),
-(
-  'Dermatologia Pediátrica: Lesões Comuns',
-  'Identificação e manejo das principais dermatoses na infância e adolescência.',
-  'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=400&h=300&fit=crop',
-  'published',
-  'public',
-  '{"version": "2.0", "nodes": [], "layouts": {"desktop": [], "mobile": []}, "canvasState": {}}',
-  NOW(),
-  NOW()
-);
+  view_count, 
+  is_published, 
+  is_featured,
+  created_at,
+  updated_at
+) VALUES
+('Manejo da Fibrilação Atrial em Idosos', 'manejo-fibrilacao-atrial-idosos', 'Uma revisão abrangente sobre o tratamento da fibrilação atrial em pacientes geriátricos', '{"blocks":[{"type":"heading","data":{"text":"Introdução","level":2}},{"type":"text","data":{"text":"A fibrilação atrial é a arritmia mais comum em idosos..."}}]}', 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&h=600&fit=crop', 1247, true, true, NOW() - INTERVAL '2 days', NOW()),
 
--- Now create tag associations for these reviews
--- Get the review IDs and tag IDs we just created
-WITH review_tags AS (
-  SELECT 
-    r.id as review_id,
-    r.title,
-    CASE 
-      WHEN r.title ILIKE '%fibrilação%' OR r.title ILIKE '%atrial%' THEN 'Cardiologia'
-      WHEN r.title ILIKE '%avc%' OR r.title ILIKE '%isquêmico%' THEN 'Neurologia' 
-      WHEN r.title ILIKE '%vacinação%' OR r.title ILIKE '%pediatria%' THEN 'Pediatria'
-      WHEN r.title ILIKE '%farmacologia%' OR r.title ILIKE '%anticoagulantes%' THEN 'Farmacologia'
-      WHEN r.title ILIKE '%cirurgia%' OR r.title ILIKE '%laparoscópicas%' THEN 'Cirurgia'
-      WHEN r.title ILIKE '%dermatologia%' THEN 'Dermatologia'
-      ELSE 'Medicina Interna'
-    END as category
-  FROM public."Reviews" r 
-  WHERE r.title IN (
-    'Novas Diretrizes para Tratamento de Fibrilação Atrial',
-    'Diagnóstico Diferencial de AVC Isquêmico vs Hemorrágico', 
-    'Vacinação em Pediatria: Calendário 2025',
-    'Farmacologia Clínica de Anticoagulantes',
-    'Técnicas Avançadas em Cirurgia Minimamente Invasiva',
-    'Dermatologia Pediátrica: Lesões Comuns'
-  )
-)
-INSERT INTO public."ReviewTags" (review_id, tag_id, created_at)
-SELECT 
-  rt.review_id,
-  t.id as tag_id,
-  NOW()
-FROM review_tags rt
-JOIN public."Tags" t ON t.tag_name = rt.category
-WHERE t.parent_id IS NULL;
+('Neuroproteção em AVC Isquêmico', 'neuroprotecao-avc-isquemico', 'Estratégias modernas de neuroproteção no tratamento do AVC isquêmico agudo', '{"blocks":[{"type":"heading","data":{"text":"Fisiopatologia","level":2}},{"type":"text","data":{"text":"O AVC isquêmico resulta da interrupção do fluxo sanguíneo cerebral..."}}]}', 'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=800&h=600&fit=crop', 892, true, false, NOW() - INTERVAL '5 days', NOW()),
 
--- Add some child tag associations as well
-WITH specific_associations AS (
-  SELECT r.id as review_id, 'Eletrofisiologia' as tag_name
-  FROM public."Reviews" r 
-  WHERE r.title = 'Novas Diretrizes para Tratamento de Fibrilação Atrial'
-  
-  UNION ALL
-  
-  SELECT r.id as review_id, 'AVC' as tag_name  
-  FROM public."Reviews" r
-  WHERE r.title = 'Diagnóstico Diferencial de AVC Isquêmico vs Hemorrágico'
-  
-  UNION ALL
-  
-  SELECT r.id as review_id, 'Neonatologia' as tag_name
-  FROM public."Reviews" r 
-  WHERE r.title = 'Vacinação em Pediatria: Calendário 2025'
-)
-INSERT INTO public."ReviewTags" (review_id, tag_id, created_at)
-SELECT 
-  sa.review_id,
-  t.id as tag_id,
-  NOW()
-FROM specific_associations sa
-JOIN public."Tags" t ON t.tag_name = sa.tag_name
-WHERE NOT EXISTS (
-  SELECT 1 FROM public."ReviewTags" rt 
-  WHERE rt.review_id = sa.review_id AND rt.tag_id = t.id
-);
+('Medicina Intensiva Pediátrica: Ventilação Mecânica', 'medicina-intensiva-pediatrica-ventilacao', 'Princípios e práticas da ventilação mecânica em pediatria', '{"blocks":[{"type":"heading","data":{"text":"Indicações","level":2}},{"type":"text","data":{"text":"A ventilação mecânica em pediatria requer considerações especiais..."}}]}', 'https://images.unsplash.com/photo-1581595220892-b0739db3ba8c?w=800&h=600&fit=crop', 634, true, false, NOW() - INTERVAL '7 days', NOW()),
+
+('Farmacologia Cardiovascular Moderna', 'farmacologia-cardiovascular-moderna', 'Novos medicamentos e abordagens terapêuticas em cardiologia', '{"blocks":[{"type":"heading","data":{"text":"Inibidores SGLT2","level":2}},{"type":"text","data":{"text":"Os inibidores SGLT2 revolucionaram o tratamento da insuficiência cardíaca..."}}]}', 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=800&h=600&fit=crop', 1156, true, false, NOW() - INTERVAL '10 days', NOW()),
+
+('Cirurgia Robótica em Urologia', 'cirurgia-robotica-urologia', 'Aplicações e benefícios da cirurgia robótica em procedimentos urológicos', '{"blocks":[{"type":"heading","data":{"text":"Vantagens","level":2}},{"type":"text","data":{"text":"A cirurgia robótica oferece precisão superior e menor invasividade..."}}]}', 'https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=800&h=600&fit=crop', 723, true, false, NOW() - INTERVAL '12 days', NOW()),
+
+('Radiologia Intervencionista em Emergências', 'radiologia-intervencionista-emergencias', 'Procedimentos de radiologia intervencionista no atendimento de emergência', '{"blocks":[{"type":"heading","data":{"text":"Embolização","level":2}},{"type":"text","data":{"text":"A embolização é fundamental no controle de hemorragias graves..."}}]}', 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&h=600&fit=crop', 445, true, false, NOW() - INTERVAL '15 days', NOW()),
+
+('Psiquiatria Geriátrica: Depressão e Demência', 'psiquiatria-geriatrica-depressao-demencia', 'Diagnóstico diferencial entre depressão e demência em idosos', '{"blocks":[{"type":"heading","data":{"text":"Avaliação Clínica","level":2}},{"type":"text","data":{"text":"A distinção entre depressão e demência requer avaliação cuidadosa..."}}]}', 'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=800&h=600&fit=crop', 567, true, false, NOW() - INTERVAL '18 days', NOW()),
+
+('Dermatologia Oncológica: Melanoma', 'dermatologia-oncologica-melanoma', 'Diagnóstico precoce e tratamento do melanoma cutâneo', '{"blocks":[{"type":"heading","data":{"text":"Diagnóstico","level":2}},{"type":"text","data":{"text":"O diagnóstico precoce do melanoma é crucial para o prognóstico..."}}]}', 'https://images.unsplash.com/photo-1581595220892-b0739db3ba8c?w=800&h=600&fit=crop', 892, true, false, NOW() - INTERVAL '20 days', NOW());
+
+-- Associate reviews with tags
+-- First, get the tag IDs and review IDs, then create associations
+
+-- Cardiologia tags
+INSERT INTO public."Review_Tags" (review_id, tag_id)
+SELECT r.id, t.id
+FROM public."Reviews" r, public."Tags" t
+WHERE r.slug = 'manejo-fibrilacao-atrial-idosos' AND t.tag_name = 'Cardiologia';
+
+INSERT INTO public."Review_Tags" (review_id, tag_id)
+SELECT r.id, t.id
+FROM public."Reviews" r, public."Tags" t
+WHERE r.slug = 'manejo-fibrilacao-atrial-idosos' AND t.tag_name = 'Eletrofisiologia';
+
+INSERT INTO public."Review_Tags" (review_id, tag_id)
+SELECT r.id, t.id
+FROM public."Reviews" r, public."Tags" t
+WHERE r.slug = 'farmacologia-cardiovascular-moderna' AND t.tag_name = 'Cardiologia';
+
+INSERT INTO public."Review_Tags" (review_id, tag_id)
+SELECT r.id, t.id
+FROM public."Reviews" r, public."Tags" t
+WHERE r.slug = 'farmacologia-cardiovascular-moderna' AND t.tag_name = 'Farmacologia';
+
+-- Neurologia tags
+INSERT INTO public."Review_Tags" (review_id, tag_id)
+SELECT r.id, t.id
+FROM public."Reviews" r, public."Tags" t
+WHERE r.slug = 'neuroprotecao-avc-isquemico' AND t.tag_name = 'Neurologia';
+
+INSERT INTO public."Review_Tags" (review_id, tag_id)
+SELECT r.id, t.id
+FROM public."Reviews" r, public."Tags" t
+WHERE r.slug = 'neuroprotecao-avc-isquemico' AND t.tag_name = 'AVC';
+
+-- Pediatria tags
+INSERT INTO public."Review_Tags" (review_id, tag_id)
+SELECT r.id, t.id
+FROM public."Reviews" r, public."Tags" t
+WHERE r.slug = 'medicina-intensiva-pediatrica-ventilacao' AND t.tag_name = 'Pediatria';
+
+INSERT INTO public."Review_Tags" (review_id, tag_id)
+SELECT r.id, t.id
+FROM public."Reviews" r, public."Tags" t
+WHERE r.slug = 'medicina-intensiva-pediatrica-ventilacao' AND t.tag_name = 'Medicina Intensiva Pediátrica';
+
+-- Cirurgia tags
+INSERT INTO public."Review_Tags" (review_id, tag_id)
+SELECT r.id, t.id
+FROM public."Reviews" r, public."Tags" t
+WHERE r.slug = 'cirurgia-robotica-urologia' AND t.tag_name = 'Cirurgia';
+
+-- Radiologia tags
+INSERT INTO public."Review_Tags" (review_id, tag_id)
+SELECT r.id, t.id
+FROM public."Reviews" r, public."Tags" t
+WHERE r.slug = 'radiologia-intervencionista-emergencias' AND t.tag_name = 'Radiologia';
+
+INSERT INTO public."Review_Tags" (review_id, tag_id)
+SELECT r.id, t.id
+FROM public."Reviews" r, public."Tags" t
+WHERE r.slug = 'radiologia-intervencionista-emergencias' AND t.tag_name = 'Medicina de Emergência';
+
+-- Psiquiatria tags
+INSERT INTO public."Review_Tags" (review_id, tag_id)
+SELECT r.id, t.id
+FROM public."Reviews" r, public."Tags" t
+WHERE r.slug = 'psiquiatria-geriatrica-depressao-demencia' AND t.tag_name = 'Psiquiatria';
+
+-- Dermatologia tags
+INSERT INTO public."Review_Tags" (review_id, tag_id)
+SELECT r.id, t.id
+FROM public."Reviews" r, public."Tags" t
+WHERE r.slug = 'dermatologia-oncologica-melanoma' AND t.tag_name = 'Dermatologia';
