@@ -65,10 +65,10 @@ const ReviewCarousel: React.FC<ReviewCarouselProps> = ({ title, reviews }) => {
         )}
       </div>
       
-      {/* Scrollable Reviews Container - Mobile shows ~1.5 cards per DOC_8 RULE 4 */}
+      {/* Scrollable Reviews Container - Fixed spacing to prevent touching */}
       <div 
         ref={scrollRef}
-        className={`flex gap-4 overflow-x-auto scrollbar-hide pb-2 ${isMobile ? 'mobile-carousel-hint' : ''}`}
+        className={`flex overflow-x-auto scrollbar-hide pb-2 ${isMobile ? 'gap-3 mobile-carousel-hint' : 'gap-6'}`}
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {reviews.map((review) => (

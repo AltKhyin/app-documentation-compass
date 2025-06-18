@@ -5,14 +5,9 @@
 
 /* Global styles */
 html, body, #root {
-  @apply min-h-screen bg-white;
+  @apply min-h-screen;
   margin: 0;
   padding: 0;
-}
-
-/* Ensure white background throughout */
-body {
-  background-color: white !important;
 }
 
 /* Masonry grid spacing optimization */
