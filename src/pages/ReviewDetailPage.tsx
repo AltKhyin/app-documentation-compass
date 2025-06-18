@@ -1,214 +1,213 @@
 
-// ABOUTME: Review detail page with layout-aware rendering and community integration.
+// ABOUTME: Review detail page that renders structured content using the Layout-Aware Renderer architecture per Blueprint 05.
 
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useReviewDetailQuery } from '../../packages/hooks/useReviewDetailQuery';
+import LayoutAwareRenderer from '@/components/review-detail/LayoutAwareRenderer';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { AlertTriangle, Lock } from 'lucide-react';
 
 const ReviewDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
-  const navigate = useNavigate();
-  const { data: review, isLoading, error } = useReviewDetailQuery(slug);
+  const { data: review, isLoading, isError, error } = useReviewDetailQuery(slug);
 
+  console.log('ReviewDetailPage render:', { slug, review, isLoading, isError, error });
+
+  // Loading state with skeleton loaders
   if (isLoading) {
     return (
-      <div className="min-h-screen">
-        <div className="max-w-4xl mx-auto p-6">
+      <div className="min-h-screen bg-background">
+        <div className="max-w-4xl mx-auto p-6 space-y-8">
           {/* Header skeleton */}
-          <div className="mb-8">
-            <Skeleton className="h-4 w-24 mb-4" />
-            <Skeleton className="h-10 w-3/4 mb-4" />
-            <div className="flex items-center gap-4 mb-6">
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-3/4" />
+            <div className="flex items-center gap-4">
               <Skeleton className="h-10 w-10 rounded-full" />
-              <div>
-                <Skeleton className="h-4 w-32 mb-1" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-32" />
                 <Skeleton className="h-3 w-24" />
               </div>
             </div>
           </div>
-
+          
           {/* Content skeleton */}
-          <div className="space-y-4">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-5/6" />
-            <Skeleton className="h-4 w-4/5" />
-            <Skeleton className="h-64 w-full rounded-lg" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
+          <div className="space-y-6">
+            <Skeleton className="w-full h-64" />
+            <Skeleton className="h-6 w-full" />
+            <Skeleton className="h-6 w-5/6" />
+            <Skeleton className="h-6 w-4/6" />
           </div>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  // Error states
+  if (isError) {
+    console.error('Review detail error:', error);
+    
+    // Handle specific error types
+    if (error?.message?.includes('not found')) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center space-y-4 max-w-md mx-auto p-6">
+            <AlertTriangle className="h-16 w-16 text-muted-foreground mx-auto" />
+            <h1 className="text-2xl font-bold text-foreground font-serif">Review não encontrado</h1>
+            <p className="text-muted-foreground">
+              O review que você está procurando não existe ou foi removido.
+            </p>
+            <button
+              onClick={() => window.history.back()}
+              className="bg-primary text-primary-foreground px-6 py-2 rounded-md font-semibold hover:bg-primary/90 transition-colors"
+            >
+              Voltar
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    if (error?.message?.includes('Access denied')) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center space-y-4 max-w-md mx-auto p-6">
+            <Lock className="h-16 w-16 text-muted-foreground mx-auto" />
+            <h1 className="text-2xl font-bold text-foreground font-serif">Acesso restrito</h1>
+            <p className="text-muted-foreground">
+              Este conteúdo requer uma assinatura premium para ser acessado.
+            </p>
+            <button
+              onClick={() => window.location.href = '/perfil'}
+              className="bg-primary text-primary-foreground px-6 py-2 rounded-md font-semibold hover:bg-primary/90 transition-colors"
+            >
+              Ver planos
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Generic error
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="max-w-md mx-auto p-6">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="mt-2">
-              {error.message.includes('not found') 
-                ? 'Esta revisão não foi encontrada ou não está mais disponível.'
-                : error.message.includes('Access denied')
-                ? 'Acesso negado. Este conteúdo requer uma assinatura de nível superior.'
-                : 'Erro ao carregar a revisão. Tente novamente mais tarde.'
-              }
-            </AlertDescription>
-          </Alert>
-          
-          <Button 
-            variant="outline" 
-            className="mt-4 w-full"
-            onClick={() => navigate('/acervo')}
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md mx-auto p-6">
+          <AlertTriangle className="h-16 w-16 text-muted-foreground mx-auto" />
+          <h1 className="text-2xl font-bold text-foreground font-serif">Erro ao carregar</h1>
+          <p className="text-muted-foreground">
+            {error?.message || 'Ocorreu um erro inesperado. Tente novamente.'}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-primary text-primary-foreground px-6 py-2 rounded-md font-semibold hover:bg-primary/90 transition-colors"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar ao Acervo
-          </Button>
+            Tentar Novamente
+          </button>
         </div>
       </div>
     );
   }
 
+  // No data state
   if (!review) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-2">Revisão não encontrada</h2>
-          <p className="text-muted-foreground mb-4">
-            A revisão solicitada não foi encontrada
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md mx-auto p-6">
+          <h1 className="text-2xl font-bold text-foreground font-serif">Nenhum conteúdo</h1>
+          <p className="text-muted-foreground">
+            Não foi possível carregar o review solicitado.
           </p>
-          <Button onClick={() => navigate('/acervo')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar ao Acervo
-          </Button>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen">
-      <div className="max-w-4xl mx-auto p-6">
-        {/* Navigation */}
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="mb-6"
-          onClick={() => navigate('/acervo')}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar ao Acervo
-        </Button>
+  console.log('Rendering review successfully:', review.title);
 
-        {/* Header */}
-        <header className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4 leading-tight">
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="max-w-4xl mx-auto p-6">
+        {/* Review Header */}
+        <header className="mb-8 space-y-6">
+          <h1 className="text-4xl font-bold text-foreground font-serif leading-tight">
             {review.title}
           </h1>
           
           {review.description && (
-            <p className="text-lg text-muted-foreground mb-6">
+            <p className="text-xl text-muted-foreground leading-relaxed">
               {review.description}
             </p>
           )}
-
-          {/* Author info */}
-          {review.author && (
-            <div className="flex items-center gap-4 mb-6">
-              {review.author.avatar_url ? (
-                <img 
-                  src={review.author.avatar_url} 
-                  alt={review.author.full_name || 'Author'}
-                  className="h-10 w-10 rounded-full object-cover"
-                />
-              ) : (
-                <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                  <span className="text-sm font-medium">
-                    {review.author.full_name?.charAt(0) || '?'}
-                  </span>
+          
+          {/* Author and Meta Information */}
+          <div className="flex items-center gap-4 pt-4 border-t border-border">
+            {review.author && (
+              <>
+                {review.author.avatar_url ? (
+                  <img 
+                    src={review.author.avatar_url}
+                    alt={review.author.full_name || 'Autor'}
+                    className="h-12 w-12 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                    <span className="text-lg font-semibold text-muted-foreground">
+                      {(review.author.full_name || 'A').charAt(0)}
+                    </span>
+                  </div>
+                )}
+                <div>
+                  <p className="font-semibold text-foreground">
+                    {review.author.full_name || 'Autor anônimo'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Publicado em {new Date(review.published_at).toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric'
+                    })}
+                  </p>
                 </div>
-              )}
-              <div>
-                <p className="font-medium">
-                  {review.author.full_name || 'Autor Anônimo'}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {new Date(review.published_at).toLocaleDateString('pt-BR', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </p>
-              </div>
-            </div>
-          )}
+              </>
+            )}
+          </div>
         </header>
 
-        {/* Content Body - Placeholder for LayoutAwareRenderer */}
+        {/* Main Content - Layout-Aware Renderer */}
         <main className="mb-12">
-          {/* Cover image */}
-          {review.cover_image_url && (
-            <div className="mb-8">
-              <img 
-                src={review.cover_image_url}
-                alt={review.title}
-                className="w-full h-64 md:h-96 object-cover rounded-lg"
-              />
+          {review.structured_content ? (
+            <LayoutAwareRenderer content={review.structured_content} />
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">
+                Este review ainda não possui conteúdo estruturado.
+              </p>
             </div>
           )}
-
-          {/* Structured content placeholder */}
-          <div className="prose prose-lg max-w-none">
-            <div className="p-6 bg-muted/50 rounded-lg border-2 border-dashed">
-              <h3 className="text-lg font-semibold mb-2">
-                📝 LayoutAwareRenderer - Em Desenvolvimento
-              </h3>
-              <p className="text-muted-foreground mb-4">
-                O sistema de renderização de layout personalizado será implementado aqui.
-                Este componente irá interpretar o structured_content v2.0 e renderizar
-                os blocos de conteúdo conforme o design personalizado criado no editor.
-              </p>
-              <details className="text-sm">
-                <summary className="cursor-pointer font-medium mb-2">
-                  Ver dados brutos do structured_content
-                </summary>
-                <pre className="bg-background p-4 rounded border overflow-auto text-xs">
-                  {JSON.stringify(review.structured_content, null, 2)}
-                </pre>
-              </details>
-            </div>
-          </div>
         </main>
 
-        {/* Community Thread Placeholder */}
+        {/* Community Thread Section - Lazy loaded per Blueprint 05 */}
         {review.community_post_id && (
-          <section className="border-t pt-8">
-            <div className="p-6 bg-muted/50 rounded-lg border-2 border-dashed">
-              <h3 className="text-lg font-semibold mb-2">
-                💬 Discussão da Comunidade - Em Desenvolvimento
-              </h3>
+          <section className="border-t border-border pt-8">
+            <h2 className="text-2xl font-bold text-foreground font-serif mb-6">
+              Discussão da comunidade
+            </h2>
+            <div className="bg-muted/30 rounded-lg p-8 text-center">
               <p className="text-muted-foreground">
-                Sistema de comentários lazy-loaded será implementado aqui.
-                Community Post ID: {review.community_post_id}
+                Seção de comentários será implementada em breve.
               </p>
             </div>
           </section>
         )}
 
-        {/* Recommended Section Placeholder */}
-        <section className="border-t pt-8 mt-8">
-          <div className="p-6 bg-muted/50 rounded-lg border-2 border-dashed">
-            <h3 className="text-lg font-semibold mb-2">
-              📚 Leituras Recomendadas - Em Desenvolvimento
-            </h3>
+        {/* Recommended Section */}
+        <section className="border-t border-border pt-8 mt-12">
+          <h2 className="text-2xl font-bold text-foreground font-serif mb-6">
+            Leituras recomendadas
+          </h2>
+          <div className="bg-muted/30 rounded-lg p-8 text-center">
             <p className="text-muted-foreground">
-              Sistema de recomendações será implementado aqui.
+              Recomendações personalizadas serão implementadas em breve.
             </p>
           </div>
         </section>
