@@ -65,14 +65,13 @@ const ReviewCarousel: React.FC<ReviewCarouselProps> = ({ title, reviews }) => {
         )}
       </div>
       
-      {/* Scrollable Reviews Container - Fixed spacing using flex with explicit gaps */}
+      {/* Scrollable Reviews Container - Using Tailwind responsive gap classes */}
       <div 
         ref={scrollRef}
-        className={`flex overflow-x-auto scrollbar-hide pb-2 ${isMobile ? 'mobile-carousel-hint' : ''}`}
+        className={`flex overflow-x-auto scrollbar-hide pb-2 gap-3 md:gap-6 ${isMobile ? 'mobile-carousel-hint' : ''}`}
         style={{ 
           scrollbarWidth: 'none', 
-          msOverflowStyle: 'none',
-          gap: isMobile ? '12px' : '24px' // Explicit gap instead of class
+          msOverflowStyle: 'none'
         }}
       >
         {reviews.map((review) => (
