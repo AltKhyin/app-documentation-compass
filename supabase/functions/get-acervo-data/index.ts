@@ -8,26 +8,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-interface AcervoReview {
-  review_id: number;
-  title: string;
-  description: string | null;
-  cover_image_url: string | null;
-  published_at: string;
-  tags_json: { [categoria: string]: string[] };
-}
-
-interface AcervoTag {
-  id: number;
-  tag_name: string;
-  parent_id: number | null;
-}
-
-interface AcervoResponse {
-  reviews: AcervoReview[];
-  tags: AcervoTag[];
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -40,19 +20,21 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get user ID for rate limiting
+    // Get user for rate limiting and RLS
     const authHeader = req.headers.get('Authorization');
     let userId = 'anonymous';
+    let userSubscriptionTier = 'free';
     
     if (authHeader) {
       const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
       if (user) {
         userId = user.id;
+        userSubscriptionTier = user.user_metadata?.subscription_tier || 'free';
       }
     }
 
-    // Check rate limit (30 requests per 60 seconds)
-    const rateLimitResult = await checkRateLimit(supabase, 'get-acervo-data', userId);
+    // Check rate limit (30 requests per 60 seconds) - per [DOC_5]
+    const rateLimitResult = await checkRateLimit(supabase, 'get-acervo-data', userId, 30, 60);
     if (!rateLimitResult.allowed) {
       return new Response(JSON.stringify({
         error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }
@@ -66,101 +48,100 @@ serve(async (req) => {
       });
     }
 
-    console.log('Starting Acervo data fetch for user:', userId);
+    console.log(`Starting Acervo data fetch for user: ${userId}`);
 
-    // Execute parallel queries for optimal performance
-    const [reviewsResult, tagsResult] = await Promise.all([
-      // Query 1: Fetch all published reviews with their tags
-      supabase
-        .from('Reviews')
+    // Fetch published reviews with RLS applied through access_level filtering
+    const reviewsQuery = supabase
+      .from('Reviews')
+      .select(`
+        review_id:id,
+        title,
+        description,
+        cover_image_url,
+        published_at,
+        view_count,
+        access_level
+      `)
+      .eq('status', 'published')
+      .order('published_at', { ascending: false });
+
+    // Apply access level filtering based on user subscription
+    if (userId === 'anonymous') {
+      reviewsQuery.eq('access_level', 'public');
+    } else if (userSubscriptionTier === 'free') {
+      reviewsQuery.in('access_level', ['public', 'free_users_only']);
+    }
+    // Paying users see all content (no additional filter needed)
+
+    const { data: reviews, error: reviewsError } = await reviewsQuery;
+
+    if (reviewsError) {
+      console.error('Reviews fetch error:', reviewsError);
+      throw new Error(`Failed to fetch reviews: ${reviewsError.message}`);
+    }
+
+    // Fetch all tags with their hierarchy
+    const { data: tags, error: tagsError } = await supabase
+      .from('Tags')
+      .select('id, tag_name, parent_id')
+      .order('tag_name');
+
+    if (tagsError) {
+      console.error('Tags fetch error:', tagsError);
+      throw new Error(`Failed to fetch tags: ${tagsError.message}`);
+    }
+
+    // For each review, fetch its tags and build the tags_json structure
+    const reviewsWithTags = [];
+    
+    for (const review of reviews || []) {
+      // Fetch tags for this review
+      const { data: reviewTags } = await supabase
+        .from('ReviewTags')
         .select(`
-          id,
-          title,
-          description,
-          cover_image_url,
-          published_at,
-          ReviewTags!inner(
-            Tags!inner(
-              id,
-              tag_name,
-              parent_id
-            )
+          Tags!inner(
+            id,
+            tag_name,
+            parent_id
           )
         `)
-        .eq('status', 'published')
-        .not('published_at', 'is', null)
-        .order('published_at', { ascending: false }),
+        .eq('review_id', review.review_id);
 
-      // Query 2: Fetch complete tag hierarchy
-      supabase
-        .from('Tags')
-        .select('id, tag_name, parent_id')
-        .order('tag_name', { ascending: true })
-    ]);
-
-    if (reviewsResult.error) {
-      console.error('Reviews query error:', reviewsResult.error);
-      throw new Error(`Failed to fetch reviews: ${reviewsResult.error.message}`);
-    }
-
-    if (tagsResult.error) {
-      console.error('Tags query error:', tagsResult.error);
-      throw new Error(`Failed to fetch tags: ${tagsResult.error.message}`);
-    }
-
-    console.log(`Fetched ${reviewsResult.data?.length || 0} reviews and ${tagsResult.data?.length || 0} tags`);
-
-    // Transform reviews data to match frontend expectations
-    const transformedReviews: AcervoReview[] = (reviewsResult.data || []).map(review => {
-      // Build tags_json object with parent-child hierarchy
+      // Build tags_json structure: { categoria: [subtags] }
       const tagsJson: { [categoria: string]: string[] } = {};
       
-      if (review.ReviewTags && Array.isArray(review.ReviewTags)) {
-        review.ReviewTags.forEach((reviewTag: any) => {
-          if (reviewTag.Tags) {
-            const tag = reviewTag.Tags;
-            
-            if (tag.parent_id === null) {
-              // This is a parent tag (categoria)
-              if (!tagsJson[tag.tag_name]) {
-                tagsJson[tag.tag_name] = [];
+      if (reviewTags) {
+        reviewTags.forEach((rt: any) => {
+          const tag = rt.Tags;
+          if (tag.parent_id === null) {
+            // This is a parent category
+            if (!tagsJson[tag.tag_name]) {
+              tagsJson[tag.tag_name] = [];
+            }
+          } else {
+            // This is a subtag, find its parent
+            const parentTag = tags?.find(t => t.id === tag.parent_id);
+            if (parentTag) {
+              if (!tagsJson[parentTag.tag_name]) {
+                tagsJson[parentTag.tag_name] = [];
               }
-            } else {
-              // This is a child tag (subtag) - find its parent
-              const parentTag = tagsResult.data?.find(t => t.id === tag.parent_id);
-              if (parentTag) {
-                if (!tagsJson[parentTag.tag_name]) {
-                  tagsJson[parentTag.tag_name] = [];
-                }
-                if (!tagsJson[parentTag.tag_name].includes(tag.tag_name)) {
-                  tagsJson[parentTag.tag_name].push(tag.tag_name);
-                }
-              }
+              tagsJson[parentTag.tag_name].push(tag.tag_name);
             }
           }
         });
       }
 
-      return {
-        review_id: review.id,
-        title: review.title,
-        description: review.description,
-        cover_image_url: review.cover_image_url,
-        published_at: review.published_at,
+      reviewsWithTags.push({
+        ...review,
         tags_json: tagsJson
-      };
-    });
+      });
+    }
 
-    // Transform tags data to match frontend expectations
-    const transformedTags: AcervoTag[] = (tagsResult.data || []).map(tag => ({
-      id: tag.id,
-      tag_name: tag.tag_name,
-      parent_id: tag.parent_id
-    }));
+    console.log(`Fetched ${reviewsWithTags.length} reviews and ${tags?.length || 0} tags`);
 
-    const response: AcervoResponse = {
-      reviews: transformedReviews,
-      tags: transformedTags
+    const response = {
+      reviews: reviewsWithTags,
+      tags: tags || []
     };
 
     console.log('Acervo data transformation complete. Returning response.');

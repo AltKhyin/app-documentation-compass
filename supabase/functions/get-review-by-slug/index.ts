@@ -81,8 +81,12 @@ serve(async (req) => {
 
     console.log(`Fetching review with slug: ${slug} for user: ${userId}`);
 
-    // Enhanced query with tags and better error handling per [D3.4] - FIXED: Use correct table name 'ReviewTags'
-    const { data: review, error } = await supabase
+    // Decode the slug to handle URL encoding
+    const decodedSlug = decodeURIComponent(slug);
+    console.log(`Decoded slug: ${decodedSlug}`);
+
+    // First, try to find the review without tags to avoid relationship issues
+    const { data: basicReview, error: basicError } = await supabase
       .from('Reviews')
       .select(`
         id,
@@ -98,19 +102,44 @@ serve(async (req) => {
           id,
           full_name,
           avatar_url
-        ),
-        ReviewTags!inner(
-          Tags(tag_name)
         )
       `)
       .eq('status', 'published')
-      .eq('title', decodeURIComponent(slug))
-      .single();
+      .eq('title', decodedSlug)
+      .maybeSingle(); // Use maybeSingle() instead of single() to handle no results gracefully
 
-    if (error) {
-      console.error('Review fetch error:', error);
+    if (basicError) {
+      console.error('Basic review fetch error:', basicError);
+      throw new Error(`Failed to fetch review: ${basicError.message}`);
+    }
+
+    if (!basicReview) {
+      console.log(`No review found with title: ${decodedSlug}`);
       
-      if (error.code === 'PGRST116') {
+      // Let's also try a LIKE search to be more flexible
+      const { data: fuzzyReview } = await supabase
+        .from('Reviews')
+        .select(`
+          id,
+          title,
+          description,
+          cover_image_url,
+          structured_content,
+          published_at,
+          access_level,
+          community_post_id,
+          view_count,
+          author:Practitioners!author_id(
+            id,
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('status', 'published')
+        .ilike('title', `%${decodedSlug.replace(/\[.*?\]\s*/, '')}%`) // Remove [mockdata] prefix and search
+        .maybeSingle();
+
+      if (!fuzzyReview) {
         return new Response(JSON.stringify({
           error: { message: 'Review not found', code: 'REVIEW_NOT_FOUND' }
         }), {
@@ -118,9 +147,12 @@ serve(async (req) => {
           headers: { 'Content-Type': 'application/json', ...corsHeaders }
         });
       }
-      
-      throw new Error(`Failed to fetch review: ${error.message}`);
+
+      // Use fuzzy match result
+      Object.assign(basicReview, fuzzyReview);
     }
+
+    const review = basicReview;
 
     // Check access level permissions (following RLS logic but explicit for clarity)
     const isPublic = review.access_level === 'public';
@@ -141,6 +173,24 @@ serve(async (req) => {
       });
     }
 
+    // Now try to get tags separately to avoid breaking the main query
+    let tags: string[] = [];
+    try {
+      const { data: tagData } = await supabase
+        .from('ReviewTags')
+        .select(`
+          Tags(tag_name)
+        `)
+        .eq('review_id', review.id);
+
+      if (tagData) {
+        tags = tagData.map((rt: any) => rt.Tags?.tag_name).filter(Boolean) || [];
+      }
+    } catch (tagError) {
+      console.warn('Failed to fetch tags, continuing without them:', tagError);
+      // Continue without tags rather than failing the entire request
+    }
+
     // Asynchronously increment view count (fire and forget) - performance optimization
     if (userId !== 'anonymous') {
       supabase
@@ -150,9 +200,6 @@ serve(async (req) => {
         .then(() => console.log(`View count incremented for review ${review.id}`))
         .catch(err => console.error('Failed to increment view count:', err));
     }
-
-    // Extract tags from nested structure - FIXED: Use correct property name
-    const tags = review.ReviewTags?.map((rt: any) => rt.Tags?.tag_name).filter(Boolean) || [];
 
     const response: ReviewDetailResponse = {
       id: review.id,

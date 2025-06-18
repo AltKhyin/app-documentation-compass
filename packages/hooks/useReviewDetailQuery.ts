@@ -1,5 +1,5 @@
 
-// ABOUTME: TanStack Query hook for fetching individual review details by slug with RLS enforcement.
+// ABOUTME: TanStack Query hook for fetching individual review details by slug with enhanced error handling and RLS enforcement.
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../src/integrations/supabase/client';
@@ -20,6 +20,8 @@ export interface ReviewDetail {
   author: ReviewAuthor | null;
   access_level: string;
   community_post_id: number | null;
+  view_count: number | null;
+  tags: string[];
 }
 
 const fetchReviewBySlug = async (slug: string): Promise<ReviewDetail> => {
