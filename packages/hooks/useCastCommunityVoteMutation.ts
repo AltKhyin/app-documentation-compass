@@ -2,6 +2,7 @@
 // ABOUTME: TanStack Query mutation hook for casting votes on community posts with optimistic updates.
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { QueryKey } from '@tanstack/react-query';
 import { supabase } from '../../src/integrations/supabase/client';
 
 interface CastVotePayload {
@@ -16,9 +17,9 @@ interface VoteResponse {
   user_vote: string | null;
 }
 
-// Type for the mutation context returned from onMutate
+// Type for the mutation context returned from onMutate - aligned with TanStack Query types
 interface MutationContext {
-  previousData: [string[], any][];
+  previousData: [QueryKey, unknown][];
 }
 
 export const useCastCommunityVoteMutation = () => {
