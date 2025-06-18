@@ -16,10 +16,15 @@ interface VoteResponse {
   user_vote: string | null;
 }
 
+// Type for the mutation context returned from onMutate
+interface MutationContext {
+  previousData: [string[], any][];
+}
+
 export const useCastCommunityVoteMutation = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<VoteResponse, Error, CastVotePayload>({
+  return useMutation<VoteResponse, Error, CastVotePayload, MutationContext>({
     mutationFn: async (payload) => {
       console.log('Casting community vote:', payload);
       
@@ -90,7 +95,7 @@ export const useCastCommunityVoteMutation = () => {
       return { previousData };
     },
     onError: (error, variables, context) => {
-      // Rollback optimistic update
+      // Rollback optimistic update with proper typing
       if (context?.previousData) {
         context.previousData.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
