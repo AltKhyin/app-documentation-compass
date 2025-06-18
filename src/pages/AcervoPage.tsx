@@ -1,7 +1,7 @@
 
 // ABOUTME: Main Acervo page component with responsive tag filtering and review display.
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAcervoDataQuery } from '../../packages/hooks/useAcervoDataQuery';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,7 +16,7 @@ const AcervoPage = () => {
   
   const { data: acervoData, isLoading, error } = useAcervoDataQuery();
 
-  const handleTagSelect = (tagName: string) => {
+  const handleTagSelect = useMemo(() => (tagName: string) => {
     setSelectedTags(prev => {
       if (prev.includes(tagName)) {
         // Remove tag
@@ -26,29 +26,32 @@ const AcervoPage = () => {
         return [...prev, tagName];
       }
     });
-  };
+  }, []);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen">
-        <div className="p-6">
-          <Skeleton className="h-8 w-32 mb-6" />
-          <div className="flex gap-2 mb-6">
-            <Skeleton className="h-8 w-24" />
-            <Skeleton className="h-8 w-20" />
-            <Skeleton className="h-8 w-28" />
-            <Skeleton className="h-8 w-22" />
-          </div>
-          <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="mb-4 break-inside-avoid">
-                <Skeleton className="w-full h-48" />
-              </div>
-            ))}
-          </div>
+  // Memoize skeleton component to prevent re-renders
+  const loadingSkeleton = useMemo(() => (
+    <div className="min-h-screen">
+      <div className="p-6">
+        <Skeleton className="h-8 w-32 mb-6" />
+        <div className="flex gap-2 mb-6">
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-8 w-20" />
+          <Skeleton className="h-8 w-28" />
+          <Skeleton className="h-8 w-22" />
+        </div>
+        <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="mb-4 break-inside-avoid">
+              <Skeleton className="w-full h-48" />
+            </div>
+          ))}
         </div>
       </div>
-    );
+    </div>
+  ), []);
+
+  if (isLoading) {
+    return loadingSkeleton;
   }
 
   if (error) {

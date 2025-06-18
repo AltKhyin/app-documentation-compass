@@ -1,7 +1,7 @@
 
 // ABOUTME: Horizontal tags panel for desktop view with categoria/subtag reveal logic.
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '../ui/button';
 import { AcervoTag } from '../../../packages/hooks/useAcervoDataQuery';
 
@@ -14,9 +14,12 @@ interface TagsPanelProps {
 const TagsPanel: React.FC<TagsPanelProps> = ({ allTags, selectedTags, onTagSelect }) => {
   const [visibleSubtags, setVisibleSubtags] = useState<string[]>([]);
 
-  // Build tag hierarchy
-  const parentTags = allTags.filter(tag => tag.parent_id === null);
-  const childTags = allTags.filter(tag => tag.parent_id !== null);
+  // Memoize tag hierarchy computation
+  const { parentTags, childTags } = useMemo(() => {
+    const parentTags = allTags.filter(tag => tag.parent_id === null);
+    const childTags = allTags.filter(tag => tag.parent_id !== null);
+    return { parentTags, childTags };
+  }, [allTags]);
 
   // Update visible subtags when selected tags change
   useEffect(() => {
@@ -36,7 +39,7 @@ const TagsPanel: React.FC<TagsPanelProps> = ({ allTags, selectedTags, onTagSelec
     setVisibleSubtags(newVisibleSubtags);
   }, [selectedTags, parentTags, childTags]);
 
-  const getTagVariant = (tagName: string): "default" | "outline" | "secondary" => {
+  const getTagVariant = useCallback((tagName: string): "default" | "outline" | "secondary" => {
     if (selectedTags.includes(tagName)) {
       return "default"; // Selected state: white background, dark text
     }
@@ -44,7 +47,7 @@ const TagsPanel: React.FC<TagsPanelProps> = ({ allTags, selectedTags, onTagSelec
       return "secondary"; // Highlighted state: dim outline, white text
     }
     return "outline"; // Unselected state: transparent background, dim white text
-  };
+  }, [selectedTags, visibleSubtags]);
 
   return (
     <div className="flex flex-wrap gap-2 p-4 border-b border-border">
