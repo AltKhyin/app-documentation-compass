@@ -65,10 +65,10 @@ const ReviewCarousel: React.FC<ReviewCarouselProps> = ({ title, reviews }) => {
         )}
       </div>
       
-      {/* Scrollable Reviews Container - Using Tailwind responsive gap classes */}
+      {/* Scrollable Reviews Container - Reduced gaps by 50% for improved content density */}
       <div 
         ref={scrollRef}
-        className={`flex overflow-x-auto scrollbar-hide pb-2 gap-3 md:gap-6 ${isMobile ? 'mobile-carousel-hint' : ''}`}
+        className={`flex overflow-x-auto scrollbar-hide pb-2 gap-1.5 md:gap-3 ${isMobile ? 'mobile-carousel-hint' : ''}`}
         style={{ 
           scrollbarWidth: 'none', 
           msOverflowStyle: 'none'

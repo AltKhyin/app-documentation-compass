@@ -1,7 +1,7 @@
 
-// ABOUTME: Bottom sheet modal for tag selection on mobile devices.
+// ABOUTME: Bottom sheet modal for tag selection on mobile devices with intelligent priority sorting.
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Button } from '../ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';
 import { Filter } from 'lucide-react';
@@ -16,6 +16,37 @@ interface MobileTagsModalProps {
 const MobileTagsModal: React.FC<MobileTagsModalProps> = ({ allTags, selectedTags, onTagSelect }) => {
   const parentTags = allTags.filter(tag => tag.parent_id === null);
   const childTags = allTags.filter(tag => tag.parent_id !== null);
+
+  // Intelligent sorting for parent tags: selected first, then alphabetical
+  const sortedParentTags = useMemo(() => {
+    return [...parentTags].sort((a, b) => {
+      const aSelected = selectedTags.includes(a.tag_name);
+      const bSelected = selectedTags.includes(b.tag_name);
+      
+      // Selected tags first
+      if (aSelected && !bSelected) return -1;
+      if (!aSelected && bSelected) return 1;
+      
+      // If both selected or both unselected, maintain alphabetical order
+      return a.tag_name.localeCompare(b.tag_name);
+    });
+  }, [parentTags, selectedTags]);
+
+  // Function to sort subtags by priority: selected first, then alphabetical
+  const getSortedSubtags = (parentId: number) => {
+    const subtags = childTags.filter(child => child.parent_id === parentId);
+    return subtags.sort((a, b) => {
+      const aSelected = selectedTags.includes(a.tag_name);
+      const bSelected = selectedTags.includes(b.tag_name);
+      
+      // Selected subtags first
+      if (aSelected && !bSelected) return -1;
+      if (!aSelected && bSelected) return 1;
+      
+      // If both selected or both unselected, maintain alphabetical order
+      return a.tag_name.localeCompare(b.tag_name);
+    });
+  };
 
   const getTagVariant = (tagName: string): "default" | "outline" | "secondary" => {
     return selectedTags.includes(tagName) ? "default" : "outline";
@@ -39,8 +70,8 @@ const MobileTagsModal: React.FC<MobileTagsModalProps> = ({ allTags, selectedTags
           <SheetTitle>Filtrar por Categoria</SheetTitle>
         </SheetHeader>
         <div className="mt-6 space-y-6 overflow-y-auto">
-          {parentTags.map(parentTag => {
-            const subtags = childTags.filter(child => child.parent_id === parentTag.id);
+          {sortedParentTags.map(parentTag => {
+            const sortedSubtags = getSortedSubtags(parentTag.id);
             
             return (
               <div key={parentTag.id} className="space-y-3">
@@ -54,9 +85,9 @@ const MobileTagsModal: React.FC<MobileTagsModalProps> = ({ allTags, selectedTags
                     {parentTag.tag_name}
                   </Button>
                 </div>
-                {subtags.length > 0 && (
+                {sortedSubtags.length > 0 && (
                   <div className="flex flex-wrap gap-2 ml-4">
-                    {subtags.map(subtag => (
+                    {sortedSubtags.map(subtag => (
                       <Button
                         key={subtag.id}
                         variant={getTagVariant(subtag.tag_name)}

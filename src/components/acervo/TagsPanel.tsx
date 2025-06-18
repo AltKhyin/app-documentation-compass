@@ -1,5 +1,5 @@
 
-// ABOUTME: Horizontal tags panel for desktop view with categoria/subtag reveal logic.
+// ABOUTME: Horizontal tags panel for desktop view with categoria/subtag reveal logic and intelligent priority sorting.
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '../ui/button';
@@ -39,6 +39,35 @@ const TagsPanel: React.FC<TagsPanelProps> = ({ allTags, selectedTags, onTagSelec
     setVisibleSubtags(newVisibleSubtags);
   }, [selectedTags, parentTags, childTags]);
 
+  // Intelligent tag sorting with priority: selected → highlighted → unselected
+  const sortedParentTags = useMemo(() => {
+    return [...parentTags].sort((a, b) => {
+      const aSelected = selectedTags.includes(a.tag_name);
+      const bSelected = selectedTags.includes(b.tag_name);
+      
+      // Selected tags first
+      if (aSelected && !bSelected) return -1;
+      if (!aSelected && bSelected) return 1;
+      
+      // If both selected or both unselected, maintain alphabetical order
+      return a.tag_name.localeCompare(b.tag_name);
+    });
+  }, [parentTags, selectedTags]);
+
+  const sortedVisibleSubtags = useMemo(() => {
+    return [...visibleSubtags].sort((a, b) => {
+      const aSelected = selectedTags.includes(a);
+      const bSelected = selectedTags.includes(b);
+      
+      // Selected subtags first
+      if (aSelected && !bSelected) return -1;
+      if (!aSelected && bSelected) return 1;
+      
+      // If both selected or both unselected, maintain alphabetical order
+      return a.localeCompare(b);
+    });
+  }, [visibleSubtags, selectedTags]);
+
   const getTagVariant = useCallback((tagName: string): "default" | "outline" | "secondary" => {
     if (selectedTags.includes(tagName)) {
       return "default"; // Selected state: white background, dark text
@@ -51,8 +80,8 @@ const TagsPanel: React.FC<TagsPanelProps> = ({ allTags, selectedTags, onTagSelec
 
   return (
     <div className="flex flex-wrap gap-2 p-4 border-b border-border">
-      {/* Parent tags (categorias) */}
-      {parentTags.map(tag => (
+      {/* Parent tags (categorias) - sorted by priority */}
+      {sortedParentTags.map(tag => (
         <Button
           key={tag.id}
           variant={getTagVariant(tag.tag_name)}
@@ -64,8 +93,8 @@ const TagsPanel: React.FC<TagsPanelProps> = ({ allTags, selectedTags, onTagSelec
         </Button>
       ))}
       
-      {/* Visible subtags */}
-      {visibleSubtags.map(subtagName => (
+      {/* Visible subtags - sorted by priority */}
+      {sortedVisibleSubtags.map(subtagName => (
         <Button
           key={subtagName}
           variant={getTagVariant(subtagName)}
