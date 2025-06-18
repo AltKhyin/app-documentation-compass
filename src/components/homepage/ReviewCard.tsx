@@ -7,15 +7,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from 'lucide-react';
 
+export interface Review {
+  id: number;
+  title: string;
+  description: string | null;
+  cover_image_url: string | null;
+  published_at: string;
+  tags?: string[];
+}
+
 interface ReviewCardProps {
-  review: {
-    id: number;
-    title: string;
-    description: string | null;
-    cover_image_url: string | null;
-    published_at: string;
-    tags?: string[];
-  };
+  review: Review;
 }
 
 const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
