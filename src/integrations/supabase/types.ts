@@ -9,6 +9,106 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      CommunityPost_Votes: {
+        Row: {
+          created_at: string | null
+          id: string
+          post_id: number | null
+          practitioner_id: string | null
+          vote_type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          post_id?: number | null
+          practitioner_id?: string | null
+          vote_type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          post_id?: number | null
+          practitioner_id?: string | null
+          vote_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "CommunityPost_Votes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "CommunityPosts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "CommunityPost_Votes_practitioner_id_fkey"
+            columns: ["practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "Practitioners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      CommunityPosts: {
+        Row: {
+          author_id: string | null
+          category: string
+          content: string
+          created_at: string | null
+          downvotes: number | null
+          id: number
+          parent_post_id: number | null
+          review_id: number | null
+          title: string | null
+          upvotes: number | null
+        }
+        Insert: {
+          author_id?: string | null
+          category?: string
+          content: string
+          created_at?: string | null
+          downvotes?: number | null
+          id?: number
+          parent_post_id?: number | null
+          review_id?: number | null
+          title?: string | null
+          upvotes?: number | null
+        }
+        Update: {
+          author_id?: string | null
+          category?: string
+          content?: string
+          created_at?: string | null
+          downvotes?: number | null
+          id?: number
+          parent_post_id?: number | null
+          review_id?: number | null
+          title?: string | null
+          upvotes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "CommunityPosts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "Practitioners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "CommunityPosts_parent_post_id_fkey"
+            columns: ["parent_post_id"]
+            isOneToOne: false
+            referencedRelation: "CommunityPosts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "CommunityPosts_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "Reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Notifications: {
         Row: {
           content: string
@@ -109,6 +209,111 @@ export type Database = {
           question_type?: string
         }
         Relationships: []
+      }
+      PollOptions: {
+        Row: {
+          created_at: string | null
+          id: number
+          option_text: string
+          poll_id: number | null
+          vote_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          option_text: string
+          poll_id?: number | null
+          vote_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          option_text?: string
+          poll_id?: number | null
+          vote_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "PollOptions_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "Polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Polls: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: number
+          is_featured: boolean | null
+          question: string
+          total_votes: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: number
+          is_featured?: boolean | null
+          question: string
+          total_votes?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: number
+          is_featured?: boolean | null
+          question?: string
+          total_votes?: number | null
+        }
+        Relationships: []
+      }
+      PollVotes: {
+        Row: {
+          created_at: string | null
+          id: string
+          option_id: number | null
+          poll_id: number | null
+          practitioner_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          option_id?: number | null
+          poll_id?: number | null
+          practitioner_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          option_id?: number | null
+          poll_id?: number | null
+          practitioner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "PollVotes_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "PollOptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "PollVotes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "Polls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "PollVotes_practitioner_id_fkey"
+            columns: ["practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "Practitioners"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       Practitioners: {
         Row: {
