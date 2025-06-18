@@ -6,9 +6,9 @@ import BottomTabBar from './BottomTabBar';
 
 const MobileShell = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="flex min-h-screen w-full flex-col">
+    <div className="flex min-h-screen w-full flex-col bg-background">
       <Header />
-      <main className="flex-1 mobile-content py-4 pb-20">{children}</main>
+      <main className="flex-1 mobile-content py-4 pb-20 bg-background">{children}</main>
       <BottomTabBar />
     </div>
   );
