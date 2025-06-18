@@ -1,4 +1,5 @@
 
+
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
@@ -16,6 +17,7 @@ import AppShell from './components/shell/AppShell';
 import AuthSessionProvider from './components/auth/AuthSessionProvider';
 import PWAProvider from './components/pwa/PWAProvider';
 import { CustomThemeProvider } from './components/theme/CustomThemeProvider';
+import { AppDataProvider } from './contexts/AppDataContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
 
@@ -36,27 +38,29 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <PWAProvider>
         <AuthSessionProvider>
-          <CustomThemeProvider>
-            <ErrorBoundary>
-              <BrowserRouter>
-                <AppShell>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/acervo" element={<AcervoPage />} />
-                    <Route path="/reviews/:slug" element={<ReviewDetailPage />} />
-                    <Route path="/comunidade" element={<ComunidadePage />} />
-                    <Route path="/perfil" element={<PerfilPage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/signup" element={<SignupPage />} />
-                    <Route path="/debug-signup" element={<DebugSignupPage />} />
-                    <Route path="/unauthorized" element={<UnauthorizedPage />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </AppShell>
-              </BrowserRouter>
-              <Toaster />
-            </ErrorBoundary>
-          </CustomThemeProvider>
+          <AppDataProvider>
+            <CustomThemeProvider>
+              <ErrorBoundary>
+                <BrowserRouter>
+                  <AppShell>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/acervo" element={<AcervoPage />} />
+                      <Route path="/reviews/:slug" element={<ReviewDetailPage />} />
+                      <Route path="/comunidade" element={<ComunidadePage />} />
+                      <Route path="/perfil" element={<PerfilPage />} />
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route path="/signup" element={<SignupPage />} />
+                      <Route path="/debug-signup" element={<DebugSignupPage />} />
+                      <Route path="/unauthorized" element={<UnauthorizedPage />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </AppShell>
+                </BrowserRouter>
+                <Toaster />
+              </ErrorBoundary>
+            </CustomThemeProvider>
+          </AppDataProvider>
         </AuthSessionProvider>
       </PWAProvider>
     </QueryClientProvider>
@@ -64,3 +68,4 @@ function App() {
 }
 
 export default App;
+
