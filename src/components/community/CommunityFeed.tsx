@@ -98,8 +98,7 @@ export const CommunityFeed = () => {
             <Button 
               variant="outline" 
               className="mt-4"
-              onClick={() => setIs
-CompleteDialogOpen(true)}
+              onClick={() => setIsCreateDialogOpen(true)}
             >
               Criar a primeira discussão
             </Button>
