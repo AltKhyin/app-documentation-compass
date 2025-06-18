@@ -19,10 +19,19 @@ const DesktopShell = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <div className="min-h-screen w-full">
-      {/* Fixed Header at top of page */}
-      <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-end gap-4 border-b bg-background px-6">
-        <NotificationBell />
+    <div className="min-h-screen w-full bg-background">
+      {/* Fixed Header at top of page with proper background */}
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between border-b border-border bg-background px-6">
+        {/* Logo - matching sidebar styling */}
+        <div className="flex items-center">
+          <h1 className="text-2xl font-serif font-bold text-foreground">
+            Reviews<span className="text-primary">.</span>
+          </h1>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <NotificationBell />
+        </div>
       </header>
       
       {/* Fixed Sidebar */}
@@ -30,7 +39,7 @@ const DesktopShell = ({ children }: { children: React.ReactNode }) => {
       
       {/* Main Content Area with top padding for fixed header and left margin for sidebar */}
       <div className={cn(
-        'min-h-screen transition-all duration-300 pt-16',
+        'min-h-screen transition-all duration-300 pt-16 bg-background',
         isCollapsed ? 'ml-20' : 'ml-60'
       )}>
         {/* Main Content */}
