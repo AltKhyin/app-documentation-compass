@@ -1,5 +1,5 @@
 
-// ABOUTME: Renders the two-column layout for desktop and tablet viewports.
+// ABOUTME: Renders the two-column layout for desktop and tablet viewports with fixed header.
 import React, { useState } from 'react';
 import CollapsibleSidebar from './CollapsibleSidebar';
 import { cn } from '@/lib/utils';
@@ -20,19 +20,19 @@ const DesktopShell = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen w-full">
+      {/* Fixed Header at top of page */}
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-end gap-4 border-b bg-background px-6">
+        <NotificationBell />
+      </header>
+      
       {/* Fixed Sidebar */}
       <CollapsibleSidebar isCollapsed={isCollapsed} onToggle={toggleSidebar} />
       
-      {/* Main Content Area with left margin for sidebar */}
+      {/* Main Content Area with top padding for fixed header and left margin for sidebar */}
       <div className={cn(
-        'min-h-screen transition-all duration-300',
+        'min-h-screen transition-all duration-300 pt-16',
         isCollapsed ? 'ml-20' : 'ml-60'
       )}>
-        {/* Header */}
-        <header className="sticky top-0 z-10 h-16 flex items-center justify-end gap-4 border-b bg-background px-6">
-          <NotificationBell />
-        </header>
-        
         {/* Main Content */}
         <main className="p-6">{children}</main>
       </div>

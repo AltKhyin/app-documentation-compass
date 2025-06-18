@@ -1,5 +1,4 @@
 
-
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
@@ -35,42 +34,44 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <PWAProvider>
-        <AuthSessionProvider>
-          <AppDataProvider>
-            <CustomThemeProvider>
-              <ErrorBoundary>
-                <BrowserRouter>
-                  <Routes>
-                    {/* Authentication routes - outside AppShell */}
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/signup" element={<SignupPage />} />
-                    <Route path="/debug-signup" element={<DebugSignupPage />} />
-                    
-                    {/* Main app routes - inside AppShell */}
-                    <Route path="/*" element={
-                      <AppShell>
-                        <Routes>
-                          <Route path="/" element={<Index />} />
-                          <Route path="/acervo" element={<AcervoPage />} />
-                          <Route path="/reviews/:slug" element={<ReviewDetailPage />} />
-                          <Route path="/comunidade" element={<ComunidadePage />} />
-                          <Route path="/perfil" element={<PerfilPage />} />
-                          <Route path="/unauthorized" element={<UnauthorizedPage />} />
-                          <Route path="*" element={<NotFound />} />
-                        </Routes>
-                      </AppShell>
-                    } />
-                  </Routes>
-                </BrowserRouter>
-                <Toaster />
-              </ErrorBoundary>
-            </CustomThemeProvider>
-          </AppDataProvider>
-        </AuthSessionProvider>
-      </PWAProvider>
-    </QueryClientProvider>
+    <div className="min-h-screen bg-white">
+      <QueryClientProvider client={queryClient}>
+        <PWAProvider>
+          <AuthSessionProvider>
+            <AppDataProvider>
+              <CustomThemeProvider>
+                <ErrorBoundary>
+                  <BrowserRouter>
+                    <Routes>
+                      {/* Authentication routes - outside AppShell */}
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route path="/signup" element={<SignupPage />} />
+                      <Route path="/debug-signup" element={<DebugSignupPage />} />
+                      
+                      {/* Main app routes - inside AppShell */}
+                      <Route path="/*" element={
+                        <AppShell>
+                          <Routes>
+                            <Route path="/" element={<Index />} />
+                            <Route path="/acervo" element={<AcervoPage />} />
+                            <Route path="/reviews/:slug" element={<ReviewDetailPage />} />
+                            <Route path="/comunidade" element={<ComunidadePage />} />
+                            <Route path="/perfil" element={<PerfilPage />} />
+                            <Route path="/unauthorized" element={<UnauthorizedPage />} />
+                            <Route path="*" element={<NotFound />} />
+                          </Routes>
+                        </AppShell>
+                      } />
+                    </Routes>
+                  </BrowserRouter>
+                  <Toaster />
+                </ErrorBoundary>
+              </CustomThemeProvider>
+            </AppDataProvider>
+          </AuthSessionProvider>
+        </PWAProvider>
+      </QueryClientProvider>
+    </div>
   );
 }
 

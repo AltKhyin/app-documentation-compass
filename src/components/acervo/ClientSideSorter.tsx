@@ -1,58 +1,74 @@
 
-// ABOUTME: Client-side sorting logic component for Acervo reviews based on selected tags.
-
+// ABOUTME: Client-side sorting and filtering logic for Acervo reviews with search and tag filtering.
 import React, { useMemo } from 'react';
 import { AcervoReview } from '../../../packages/hooks/useAcervoDataQuery';
 
 interface ClientSideSorterProps {
   reviews: AcervoReview[];
   selectedTags: string[];
+  searchQuery: string;
   children: (sortedReviews: AcervoReview[]) => React.ReactNode;
 }
 
-const ClientSideSorter: React.FC<ClientSideSorterProps> = ({ reviews, selectedTags, children }) => {
-  const sortedReviews = useMemo(() => {
+const ClientSideSorter: React.FC<ClientSideSorterProps> = ({ 
+  reviews, 
+  selectedTags, 
+  searchQuery,
+  children 
+}) => {
+  const sortedAndFilteredReviews = useMemo(() => {
+    let filteredReviews = [...reviews];
+
+    // Apply search filter first
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filteredReviews = filteredReviews.filter(review => 
+        review.title.toLowerCase().includes(query) ||
+        (review.description && review.description.toLowerCase().includes(query))
+      );
+    }
+
+    // If no tags selected, return reviews sorted by date (newest first)
     if (selectedTags.length === 0) {
-      // Default sort: chronological by published_at (newest first)
-      return [...reviews].sort((a, b) => 
+      return filteredReviews.sort((a, b) => 
         new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
       );
     }
 
-    // Score each review based on tag matches
-    const scoredReviews = reviews.map(review => {
+    // Calculate relevance score for each review based on matching tags
+    const reviewsWithScores = filteredReviews.map(review => {
       let score = 0;
       
-      // Check all tags associated with this review
-      Object.keys(review.tags_json).forEach(categoria => {
-        // Check if categoria is selected
-        if (selectedTags.includes(categoria)) {
+      // Check each selected tag against review's tags
+      selectedTags.forEach(selectedTag => {
+        // Check if tag matches any categoria
+        if (Object.keys(review.tags_json).includes(selectedTag)) {
           score += 1;
         }
         
-        // Check if any subtags are selected
-        review.tags_json[categoria].forEach(subtag => {
-          if (selectedTags.includes(subtag)) {
+        // Check if tag matches any subtag
+        Object.values(review.tags_json).forEach(subtags => {
+          if (subtags && subtags.includes(selectedTag)) {
             score += 1;
           }
         });
       });
-
+      
       return { review, score };
     });
 
-    // Sort by score (highest first), then by publication date (newest first) for tie-breaking
-    return scoredReviews
+    // Sort by score (highest first), then by date (newest first) for ties
+    return reviewsWithScores
       .sort((a, b) => {
-        if (a.score === b.score) {
-          return new Date(b.review.published_at).getTime() - new Date(a.review.published_at).getTime();
+        if (a.score !== b.score) {
+          return b.score - a.score;
         }
-        return b.score - a.score;
+        return new Date(b.review.published_at).getTime() - new Date(a.review.published_at).getTime();
       })
       .map(item => item.review);
-  }, [reviews, selectedTags]);
+  }, [reviews, selectedTags, searchQuery]);
 
-  return <>{children(sortedReviews)}</>;
+  return <>{children(sortedAndFilteredReviews)}</>;
 };
 
 export default ClientSideSorter;

@@ -1,5 +1,5 @@
 
-// ABOUTME: Responsive masonry grid component for displaying review cards with mobile optimization.
+// ABOUTME: Responsive masonry grid component for displaying review cards with Pinterest-like layout.
 
 import React from 'react';
 import Masonry from 'react-masonry-css';
@@ -23,17 +23,19 @@ const MasonryGrid: React.FC<MasonryGridProps> = ({ reviews }) => {
   };
 
   return (
-    <Masonry
-      breakpointCols={breakpointColumnsObj}
-      className="flex w-auto -ml-4"
-      columnClassName="pl-4 bg-clip-padding"
-    >
-      {reviews.map((review) => (
-        <div key={review.review_id} className="mb-4">
-          <ReviewCard review={review} />
-        </div>
-      ))}
-    </Masonry>
+    <div className="w-full">
+      <Masonry
+        breakpointCols={breakpointColumnsObj}
+        className="flex w-auto -ml-4"
+        columnClassName="pl-4 bg-clip-padding"
+      >
+        {reviews.map((review) => (
+          <div key={review.review_id} className="mb-4">
+            <ReviewCard review={review} />
+          </div>
+        ))}
+      </Masonry>
+    </div>
   );
 };
 
