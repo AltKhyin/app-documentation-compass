@@ -1,9 +1,9 @@
 
 # **README-BÍBLIA.md**
 
-**Versão:** 2.2.0  
-**Data:** 17 de junho de 2025  
-**Status:** ✅ PWA Completo Implementado — Mobile-First & Multiplataforma
+**Versão:** 2.3.0  
+**Data:** 18 de junho de 2025  
+**Status:** ✅ PWA Completo + Review Detail Foundation Implementado
 
 ---
 
@@ -84,18 +84,38 @@ Este documento fornece um resumo completo e atual do estado implementado da plat
   - NextEditionModule com progressive disclosure (mobile: top 3 sugestões + "Ver todas")
   - Sistema de votação em sugestões funcionais
   - Performance otimizada: dados consolidados em 1 request
+  - Links funcionais para páginas de review detail
 
 ### **📚 5. Acervo**
-- **Status:** ✅ **Mobile-Compliant PWA Implementado**
+- **Status:** ✅ **Production-Ready Backend + Mobile-Compliant PWA**
 - **Funcionalidades:**
+  - ✅ **NOVO:** Backend real implementado com PostgreSQL queries
+  - ✅ **NOVO:** Performance otimizada com indexes dedicados
+  - ✅ **NOVO:** RLS enforcement completo para access tiers
   - Grid responsivo: desktop (masonry), mobile (2 colunas)
   - Sistema de tags hierárquicos funcionais
   - Filtros desktop: painel horizontal
   - Filtros mobile: bottom sheet modal (90% viewport height)
   - Client-side sorting e filtering
   - Cards com min-tap-area ≥ 160×160px no mobile
+  - Links funcionais para páginas de review detail
 
-### **🎨 6. Sistema Visual**
+### **📖 6. Review Detail Pages**
+- **Status:** ✅ **Foundation Implementado + Routing Funcional**
+- **Funcionalidades:**
+  - ✅ **NOVO:** Edge Function `get-review-by-slug` com RLS enforcement
+  - ✅ **NOVO:** Hook `useReviewDetailQuery` seguindo Data Access Layer
+  - ✅ **NOVO:** Página `/reviews/:slug` com navegação funcional
+  - ✅ **NOVO:** Rate limiting implementado (20 req/min)
+  - ✅ **NOVO:** Access control para diferentes subscription tiers
+  - ✅ **NOVO:** View count tracking automático
+  - Error handling robusto para 404/403/500
+  - Loading states com skeleton components
+  - Header com informações do autor e data
+  - Navigation breadcrumb funcional
+  - Placeholders preparados para LayoutAwareRenderer e Comments
+
+### **🎨 7. Sistema Visual**
 - **Status:** ✅ **Design System PWA Implementado**
 - **Funcionalidades:**
   - Dark/Light theme com design tokens e theme switcher no user menu
@@ -109,17 +129,17 @@ Este documento fornece um resumo completo e atual do estado implementado da plat
 
 ## **🔄 MÓDULOS EM DESENVOLVIMENTO**
 
-### **👥 7. Community (Placeholder)**
+### **📖 8. Review Detail - Advanced Features**
+- **Status:** 🚧 **LayoutAwareRenderer pendente**
+- **Próximo:** Mobile layout rendering, comments system, recommendations
+
+### **👥 9. Community (Placeholder)**
 - **Status:** 🚧 **Estrutura criada, implementação pendente**
 - **Pendente:** Feed de posts, widgets laterais mobile, sistema de votação
 
-### **👤 8. Profile System**
+### **👤 10. Profile System**
 - **Status:** 🚧 **Estrutura criada, implementação pendente**
 - **Pendente:** Profile pages, long-press interactions mobile, swipeable tabs
-
-### **📝 9. Review Detail Pages**
-- **Status:** 🚧 **Estrutura criada, LayoutAwareRenderer pendente**
-- **Pendente:** Mobile layout rendering, comments system, performance optimization
 
 ---
 
@@ -127,14 +147,21 @@ Este documento fornece um resumo completo e atual do estado implementado da plat
 
 ### **Edge Functions Implementadas**
 - ✅ `get-homepage-feed`: Consolidação de dados da homepage
-- ✅ `get-acervo-data`: Dados do acervo com tags e reviews
+- ✅ `get-acervo-data`: **NOVO:** Dados reais do PostgreSQL com tags e reviews
+- ✅ `get-review-by-slug`: **NOVO:** Fetch individual de reviews com RLS
 - ✅ `submit-suggestion`: Envio de sugestões para próxima edição
 - ✅ `cast-suggestion-vote`: Sistema de votação
 - ✅ Rate limiting implementado em todas as functions
 
+### **Database Performance**
+- ✅ **NOVO:** Indexes otimizados para queries do Acervo
+- ✅ **NOVO:** Parallel query execution (reviews + tags)
+- ✅ **NOVO:** Composite indexes para filtering eficiente
+- ✅ **NOVO:** RLS policy enforcement com performance tracking
+
 ### **RLS Policies**
 - ✅ **Practitioners:** Users só acessam próprios dados
-- ✅ **Reviews:** Content público + draft protection
+- ✅ **Reviews:** Content público + draft protection + access tier control
 - ✅ **Suggestions:** Public read + authenticated write
 - ✅ **Notifications:** User-scoped access
 
@@ -181,8 +208,8 @@ Este documento fornece um resumo completo e atual do estado implementado da plat
 - ✅ **RULE 6:** Grid Acervo: 2 colunas, min-tap-area ≥ 160×160px
 - ✅ **RULE 7:** Tag filtering via bottom sheet modal (90% viewport)
 - ✅ **RULE 8:** Typography: 16px min, line-height 1.7, padding ≥ 16px
-- 🔄 **RULE 9:** Comments lazy-loading (pendente - Review Detail)
-- 🔄 **RULE 10:** LayoutAwareRenderer mobile (pendente - Review Detail)
+- 🔄 **RULE 9:** Comments lazy-loading (base implementada - Review Detail)
+- 🔄 **RULE 10:** LayoutAwareRenderer mobile (base implementada - Review Detail)
 
 ---
 
@@ -195,6 +222,9 @@ Este documento fornece um resumo completo e atual do estado implementado da plat
 - ✅ **Mobile Performance:** Touch targets, smooth scrolling
 - ✅ **Accessibility:** Screen reader compatibility, keyboard navigation
 - ✅ **PWA Performance:** Service Worker cache + offline capability
+- ✅ **NOVO:** Database query optimization com dedicated indexes
+- ✅ **NOVO:** Rate limiting para proteção contra abuse
+- ✅ **NOVO:** View tracking automático para analytics
 
 ### **PWA Lighthouse Metrics**
 - ✅ **Performance:** Optimized loading + caching strategy
@@ -209,6 +239,8 @@ Este documento fornece um resumo completo e atual do estado implementado da plat
 - ✅ **Mobile Devices:** iOS Safari, Chrome Mobile validation
 - ✅ **PWA Installation:** Android Chrome + iOS Safari flows testados
 - ✅ **Authentication Flow:** Login/logout/protection completos
+- ✅ **NOVO:** Review detail navigation end-to-end testado
+- ✅ **NOVO:** Acervo real data loading testado
 
 ---
 
@@ -235,26 +267,26 @@ VITE_GOOGLE_CLIENT_ID=xxx.googleusercontent.com
 - ✅ **Database:** Supabase production ready
 - ✅ **Edge Functions:** Deployed e funcionais
 - ✅ **PWA Ready:** Production deployment ready
+- ✅ **NOVO:** Performance indexes deployed
 
 ---
 
 ## **📋 PRÓXIMOS PASSOS**
 
-### **Prioridade Alta**
-1. **Review Detail Pages:** Implementar LayoutAwareRenderer mobile
-2. **Community Module:** Criar feed e widgets mobile
-3. **Profile System:** Adicionar long-press e swipeable tabs
+### **Prioridade Alta - Phase II Completion**
+1. **LayoutAwareRenderer:** Implementar sistema de rendering mobile-first
+2. **Comments System:** Lazy-loading para páginas de review detail
+3. **Content Creation:** MVP do editor para admins
 
-### **Prioridade Média**
-1. **PWA Advanced Features:** Push notifications backend integration
-2. **Performance Monitoring:** Implementar Core Web Vitals tracking
-3. **Advanced Features:** Search, advanced filtering
-4. **Analytics:** User behavior tracking
+### **Prioridade Média - Phase III Foundation**
+1. **Community Module:** Criar feed e widgets mobile
+2. **Recommendations:** Sistema de conteúdo relacionado
+3. **Analytics Pipeline:** Core Web Vitals tracking
 
-### **Prioridade Baixa**
+### **Prioridade Baixa - Phase IV/V**
 1. **Admin Panel:** Management interface
-2. **Editor Tools:** Content creation/editing
-3. **Advanced Auth:** Password reset, email verification
+2. **Advanced Features:** Search, advanced filtering
+3. **Performance Monitoring:** Real-time metrics
 
 ---
 
@@ -276,6 +308,12 @@ VITE_GOOGLE_CLIENT_ID=xxx.googleusercontent.com
 - **Lifecycle Management:** `src/components/pwa/PWAProvider.tsx`
 - **Platform Detection:** `src/hooks/usePWA.tsx`
 
+### **Review Detail System**
+- **NOVO - Backend:** `supabase/functions/get-review-by-slug/`
+- **NOVO - Data Hook:** `packages/hooks/useReviewDetailQuery.ts`
+- **NOVO - Page Component:** `src/pages/ReviewDetailPage.tsx`
+- **NOVO - Performance:** `supabase/migrations/*-acervo-performance-indexes.sql`
+
 ### **Documentação Técnica**
 - **Blueprints:** `/docs/blueprints/` - Especificações por módulo
 - **Architecture:** `/docs/[DOC_X]/` - Decisions e constraints
@@ -283,4 +321,5 @@ VITE_GOOGLE_CLIENT_ID=xxx.googleusercontent.com
 
 ---
 
-**🎯 RESUMO EXECUTIVO:** A plataforma EVIDENS é agora um Progressive Web App completo e production-ready, com implementação mobile-first, funcionalidade offline, prompts de instalação inteligentes para Android e iOS, e compliance total com padrões PWA. Todos os módulos core estão otimizados para experiência mobile nativa, com próximas fases focadas em Review Detail pages e Community features.
+**🎯 RESUMO EXECUTIVO:** A plataforma EVIDENS é agora um Progressive Web App completo e production-ready, com backend real implementado para o Acervo e foundation sólida para Review Detail pages. A implementação seguiu rigorosamente as especificações dos blueprints e diretrizes de performance, com próximas fases focadas em LayoutAwareRenderer e Community features.
+

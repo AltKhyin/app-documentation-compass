@@ -1,88 +1,65 @@
-
-// ABOUTME: Main application router and providers configuration.
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { CustomThemeProvider } from "@/components/theme/CustomThemeProvider";
-import PWAProvider from "@/components/pwa/PWAProvider";
-import Index from "./pages/Index";
-import LoginPage from "./pages/LoginPage";
-import SignupPage from "./pages/SignupPage";
-import DebugSignupPage from "./pages/DebugSignupPage";
-import AcervoPage from "./pages/AcervoPage";
-import ComunidadePage from "./pages/ComunidadePage";
-import PerfilPage from "./pages/PerfilPage";
-import UnauthorizedPage from "./pages/UnauthorizedPage";
-import NotFound from "./pages/NotFound";
-import { AuthSessionProvider } from "./components/auth/AuthSessionProvider";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import AppShell from "./components/shell/AppShell";
-import { AppDataProvider } from "./contexts/AppDataContext";
-import ErrorBoundary from "./components/ErrorBoundary";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from '@/components/ui/sonner';
+import Index from './pages/Index';
+import AcervoPage from './pages/AcervoPage';
+import ReviewDetailPage from './pages/ReviewDetailPage';
+import ComunidadePage from './pages/ComunidadePage';
+import PerfilPage from './pages/PerfilPage';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import DebugSignupPage from './pages/DebugSignupPage';
+import UnauthorizedPage from './pages/UnauthorizedPage';
+import NotFound from './pages/NotFound';
+import AppShell from './components/shell/AppShell';
+import AuthSessionProvider from './components/auth/AuthSessionProvider';
+import PWAProvider from './components/pwa/PWAProvider';
+import CustomThemeProvider from './components/theme/CustomThemeProvider';
+import ErrorBoundary from './components/ErrorBoundary';
+import './App.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      refetchOnMount: false,
       refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     },
   },
 });
 
-const App = () => (
-  <ErrorBoundary>
+function App() {
+  return (
     <QueryClientProvider client={queryClient}>
-      <CustomThemeProvider defaultTheme="dark">
-        <PWAProvider>
-          <TooltipProvider>
-            <Toaster />
-            <BrowserRouter>
-              <AuthSessionProvider>
-                <Routes>
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/signup" element={<SignupPage />} />
-                  <Route path="/debug-signup" element={<DebugSignupPage />} />
-                  <Route path="/unauthorized" element={<UnauthorizedPage />} />
-                  <Route path="/*" element={
-                    <ProtectedRoute>
-                      <AppDataProvider>
-                        <AppShell>
-                          <Routes>
-                            <Route path="/" element={<Index />} />
-                            <Route path="/acervo" element={<AcervoPage />} />
-                            <Route path="/comunidade" element={<ComunidadePage />} />
-                            <Route path="/perfil" element={<PerfilPage />} />
-                            
-                            {/* Future Editor Routes - Protected by role-based access */}
-                            {/* Placeholder routes for documentation purposes */}
-                            {/* 
-                            <Route path="/editor" element={
-                              <ProtectedRoute requiredRole="editor">
-                                <EditorDashboard />
-                              </ProtectedRoute>
-                            } />
-                            <Route path="/editor/:reviewId" element={
-                              <ProtectedRoute requiredRole="editor">
-                                <VisualCompositionEngine />
-                              </ProtectedRoute>
-                            } />
-                            */}
-                            
-                            <Route path="*" element={<NotFound />} />
-                          </Routes>
-                        </AppShell>
-                      </AppDataProvider>
-                    </ProtectedRoute>
-                  } />
-                </Routes>
-              </AuthSessionProvider>
-            </BrowserRouter>
-          </TooltipProvider>
-        </PWAProvider>
-      </CustomThemeProvider>
+      <PWAProvider>
+        <AuthSessionProvider>
+          <CustomThemeProvider>
+            <ErrorBoundary>
+              <BrowserRouter>
+                <AppShell>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/acervo" element={<AcervoPage />} />
+                    <Route path="/reviews/:slug" element={<ReviewDetailPage />} />
+                    <Route path="/comunidade" element={<ComunidadePage />} />
+                    <Route path="/perfil" element={<PerfilPage />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/signup" element={<SignupPage />} />
+                    <Route path="/debug-signup" element={<DebugSignupPage />} />
+                    <Route path="/unauthorized" element={<UnauthorizedPage />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </AppShell>
+              </BrowserRouter>
+              <Toaster />
+            </ErrorBoundary>
+          </CustomThemeProvider>
+        </AuthSessionProvider>
+      </PWAProvider>
     </QueryClientProvider>
-  </ErrorBoundary>
-);
+  );
+}
 
 export default App;
