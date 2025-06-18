@@ -1,10 +1,10 @@
 
-// ABOUTME: Provides a split-screen layout for authentication pages.
+// ABOUTME: Provides a split-screen layout for authentication pages with pure white background.
 import React from 'react';
 
 const SplitScreenAuthLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-white via-white to-gray-100 relative overflow-hidden">
+    <div className="min-h-screen w-full flex items-center justify-center bg-white relative overflow-hidden">
       <div className="flex flex-col md:flex-row items-center justify-center w-full max-w-6xl px-6">
         <div className="flex-1 flex justify-center items-center">
           <div className="w-full max-w-[400px]">
