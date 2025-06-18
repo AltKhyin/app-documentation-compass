@@ -1,77 +1,136 @@
-
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/sonner';
-import Index from './pages/Index';
+import { AuthSessionProvider } from './providers/AuthSessionProvider';
+import { AuthThemeProvider } from './providers/AuthThemeProvider';
+import { PWAProvider } from './providers/PWAProvider';
+import { useAuth } from './hooks/useAuth';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import HomePage from './pages/HomePage';
 import AcervoPage from './pages/AcervoPage';
 import ReviewDetailPage from './pages/ReviewDetailPage';
+import EditorPage from './pages/EditorPage';
+import ManagementPage from './pages/ManagementPage';
 import ComunidadePage from './pages/ComunidadePage';
-import PerfilPage from './pages/PerfilPage';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import DebugSignupPage from './pages/DebugSignupPage';
-import UnauthorizedPage from './pages/UnauthorizedPage';
-import NotFound from './pages/NotFound';
-import AppShell from './components/shell/AppShell';
-import AuthSessionProvider from './components/auth/AuthSessionProvider';
-import PWAProvider from './components/pwa/PWAProvider';
-import { CustomThemeProvider } from './components/theme/CustomThemeProvider';
-import { AppDataProvider } from './contexts/AppDataContext';
-import ErrorBoundary from './components/ErrorBoundary';
-import './App.css';
+import CommunityInfoPage from './pages/CommunityInfoPage';
+import DesktopShell from './components/shell/DesktopShell';
+import MobileShell from './components/shell/MobileShell';
+import { useIsMobile } from './hooks/use-mobile';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime)
-      refetchOnMount: false,
       refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
+      retry: false,
     },
   },
 });
 
+// ProtectedRoute component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { session, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div>Loading...</div>; // Replace with a proper loading indicator
+  }
+
+  if (!session) {
+    return <Navigate to="/login" />;
+  }
+
+  return <>{children}</>;
+};
+
+// AppShell component
+const AppShell = ({ children }: { children: React.ReactNode }) => {
+  const isMobile = useIsMobile();
+
+  return (
+    <>
+      {isMobile ? (
+        <MobileShell>{children}</MobileShell>
+      ) : (
+        <DesktopShell>{children}</DesktopShell>
+      )}
+    </>
+  );
+};
+
 function App() {
   return (
-    <div className="min-h-screen bg-white">
-      <QueryClientProvider client={queryClient}>
-        <PWAProvider>
-          <AuthSessionProvider>
-            <AppDataProvider>
-              <CustomThemeProvider>
-                <ErrorBoundary>
-                  <BrowserRouter>
-                    <Routes>
-                      {/* Authentication routes - outside AppShell */}
-                      <Route path="/login" element={<LoginPage />} />
-                      <Route path="/signup" element={<SignupPage />} />
-                      <Route path="/debug-signup" element={<DebugSignupPage />} />
-                      
-                      {/* Main app routes - inside AppShell */}
-                      <Route path="/*" element={
-                        <AppShell>
-                          <Routes>
-                            <Route path="/" element={<Index />} />
-                            <Route path="/acervo" element={<AcervoPage />} />
-                            <Route path="/reviews/:slug" element={<ReviewDetailPage />} />
-                            <Route path="/comunidade" element={<ComunidadePage />} />
-                            <Route path="/perfil" element={<PerfilPage />} />
-                            <Route path="/unauthorized" element={<UnauthorizedPage />} />
-                            <Route path="*" element={<NotFound />} />
-                          </Routes>
-                        </AppShell>
-                      } />
-                    </Routes>
-                  </BrowserRouter>
-                  <Toaster />
-                </ErrorBoundary>
-              </CustomThemeProvider>
-            </AppDataProvider>
-          </AuthSessionProvider>
-        </PWAProvider>
-      </QueryClientProvider>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <AuthSessionProvider>
+        <AuthThemeProvider>
+          <PWAProvider>
+            <BrowserRouter>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+
+                {/* Protected routes */}
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <AppShell>
+                      <HomePage />
+                    </AppShell>
+                  </ProtectedRoute>
+                } />
+                <Route path="/acervo" element={
+                  <ProtectedRoute>
+                    <AppShell>
+                      <AcervoPage />
+                    </AppShell>
+                  </ProtectedRoute>
+                } />
+                <Route path="/reviews/:id" element={
+                  <ProtectedRoute>
+                    <AppShell>
+                      <ReviewDetailPage />
+                    </AppShell>
+                  </ProtectedRoute>
+                } />
+                <Route path="/editor" element={
+                  <ProtectedRoute>
+                    <AppShell>
+                      <EditorPage />
+                    </AppShell>
+                  </ProtectedRoute>
+                } />
+                <Route path="/management" element={
+                  <ProtectedRoute>
+                    <AppShell>
+                      <ManagementPage />
+                    </AppShell>
+                  </ProtectedRoute>
+                } />
+                
+                {/* Community routes */}
+                <Route path="/comunidade" element={
+                  <ProtectedRoute>
+                    <AppShell>
+                      <ComunidadePage />
+                    </AppShell>
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/comunidade/info" element={
+                  <ProtectedRoute>
+                    <AppShell>
+                      <CommunityInfoPage />
+                    </AppShell>
+                  </ProtectedRoute>
+                } />
+                
+                {/* Default route */}
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </BrowserRouter>
+          </PWAProvider>
+        </AuthThemeProvider>
+      </AuthSessionProvider>
+    </QueryClientProvider>
   );
 }
 

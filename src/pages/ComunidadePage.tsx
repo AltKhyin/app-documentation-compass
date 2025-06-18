@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { CommunityFeed } from '../components/community/CommunityFeed';
+import { CommunityFeedWithSidebar } from '../components/community/CommunityFeedWithSidebar';
 import { CommunitySidebar } from '../components/community/CommunitySidebar';
 import { useIsMobile } from '../hooks/use-mobile';
 
@@ -12,7 +13,7 @@ const ComunidadePage = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       {isMobile ? (
-        // Mobile: Single column layout
+        // Mobile: Single column layout with pinned sidebar cards
         <div className="space-y-6">
           <div className="border-l-4 border-primary bg-muted/50 p-4 rounded-r-lg">
             <h1 className="text-2xl font-bold text-foreground mb-1">Comunidade</h1>
@@ -21,7 +22,7 @@ const ComunidadePage = () => {
             </p>
           </div>
           
-          <CommunityFeed />
+          <CommunityFeedWithSidebar />
         </div>
       ) : (
         // Desktop: Two column layout per Blueprint 06

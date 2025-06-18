@@ -193,10 +193,11 @@ serve(async (req) => {
       };
     }
 
-    // Process trending discussions
+    // Process trending discussions - FIX: Don't call .json() on Supabase function response
     let trendingDiscussions: any[] = [];
     if (trendingResult.status === 'fulfilled' && trendingResult.value.data) {
-      const trendingData = await trendingResult.value.json();
+      // The data is already parsed JSON from Supabase functions.invoke()
+      const trendingData = trendingResult.value.data;
       trendingDiscussions = trendingData.posts?.slice(0, 3).map((post: any) => ({
         id: post.id,
         title: post.title,
