@@ -22,6 +22,8 @@ interface ReviewDetailResponse {
   } | null;
   access_level: string;
   community_post_id: number | null;
+  view_count: number | null;
+  tags: string[];
 }
 
 serve(async (req) => {
@@ -63,8 +65,8 @@ serve(async (req) => {
       }
     }
 
-    // Check rate limit (20 requests per 60 seconds)
-    const rateLimitResult = await checkRateLimit(supabase, 'get-review-by-slug', userId);
+    // Check rate limit (20 requests per 60 seconds) - enhanced per [DOC_5]
+    const rateLimitResult = await checkRateLimit(supabase, 'get-review-by-slug', userId, 20, 60);
     if (!rateLimitResult.allowed) {
       return new Response(JSON.stringify({
         error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }
@@ -80,8 +82,7 @@ serve(async (req) => {
 
     console.log(`Fetching review with slug: ${slug} for user: ${userId}`);
 
-    // For now, we'll use title as slug since slug column doesn't exist yet
-    // This follows the current URL structure in the app
+    // Enhanced query with tags and better error handling per [D3.4]
     const { data: review, error } = await supabase
       .from('Reviews')
       .select(`
@@ -93,10 +94,14 @@ serve(async (req) => {
         published_at,
         access_level,
         community_post_id,
+        view_count,
         author:Practitioners!author_id(
           id,
           full_name,
           avatar_url
+        ),
+        Review_Tags!inner(
+          Tags(tag_name)
         )
       `)
       .eq('status', 'published')
@@ -137,13 +142,18 @@ serve(async (req) => {
       });
     }
 
-    // Increment view count (fire and forget)
-    supabase
-      .from('Reviews')
-      .update({ view_count: (review.view_count || 0) + 1 })
-      .eq('id', review.id)
-      .then(() => console.log(`View count incremented for review ${review.id}`))
-      .catch(err => console.error('Failed to increment view count:', err));
+    // Asynchronously increment view count (fire and forget) - performance optimization
+    if (userId !== 'anonymous') {
+      supabase
+        .from('Reviews')
+        .update({ view_count: (review.view_count || 0) + 1 })
+        .eq('id', review.id)
+        .then(() => console.log(`View count incremented for review ${review.id}`))
+        .catch(err => console.error('Failed to increment view count:', err));
+    }
+
+    // Extract tags from nested structure
+    const tags = review.Review_Tags?.map((rt: any) => rt.Tags?.tag_name).filter(Boolean) || [];
 
     const response: ReviewDetailResponse = {
       id: review.id,
@@ -154,10 +164,12 @@ serve(async (req) => {
       published_at: review.published_at,
       author: review.author,
       access_level: review.access_level,
-      community_post_id: review.community_post_id
+      community_post_id: review.community_post_id,
+      view_count: review.view_count,
+      tags
     };
 
-    console.log(`Successfully fetched review: ${review.title}`);
+    console.log(`Successfully fetched review: ${review.title} with ${tags.length} tags`);
 
     return new Response(JSON.stringify(response), {
       headers: {
