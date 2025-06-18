@@ -38,9 +38,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Extract slug from URL
-    const url = new URL(req.url);
-    const slug = url.pathname.split('/').pop();
+    // Extract slug from request body
+    const { slug } = await req.json();
 
     if (!slug) {
       return new Response(JSON.stringify({
@@ -82,7 +81,7 @@ serve(async (req) => {
 
     console.log(`Fetching review with slug: ${slug} for user: ${userId}`);
 
-    // Enhanced query with tags and better error handling per [D3.4]
+    // Enhanced query with tags and better error handling per [D3.4] - FIXED: Use correct table name 'ReviewTags'
     const { data: review, error } = await supabase
       .from('Reviews')
       .select(`
@@ -100,7 +99,7 @@ serve(async (req) => {
           full_name,
           avatar_url
         ),
-        Review_Tags!inner(
+        ReviewTags!inner(
           Tags(tag_name)
         )
       `)
@@ -152,8 +151,8 @@ serve(async (req) => {
         .catch(err => console.error('Failed to increment view count:', err));
     }
 
-    // Extract tags from nested structure
-    const tags = review.Review_Tags?.map((rt: any) => rt.Tags?.tag_name).filter(Boolean) || [];
+    // Extract tags from nested structure - FIXED: Use correct property name
+    const tags = review.ReviewTags?.map((rt: any) => rt.Tags?.tag_name).filter(Boolean) || [];
 
     const response: ReviewDetailResponse = {
       id: review.id,
