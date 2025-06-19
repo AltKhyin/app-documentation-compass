@@ -1,3 +1,4 @@
+
 // ABOUTME: Individual post card component with voting buttons, author information, and moderation indicators.
 
 import React from 'react';
@@ -6,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
 import type { CommunityPost } from '../../../packages/hooks/useCommunityPageQuery';
 import { VoteButtons } from './VoteButtons';
 import { PostActionMenu } from './PostActionMenu';
@@ -32,14 +34,32 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export const PostCard = ({ post }: PostCardProps) => {
+  const navigate = useNavigate();
   const categoryLabel = CATEGORY_LABELS[post.category] || post.category;
   const categoryColor = CATEGORY_COLORS[post.category] || 'default';
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking on interactive elements
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('button') || 
+      target.closest('[role="button"]') ||
+      target.closest('a')
+    ) {
+      return;
+    }
+    
+    navigate(`/comunidade/${post.id}`);
+  };
+
   return (
-    <Card className={cn(
-      "hover:shadow-md transition-shadow",
-      post.is_pinned && "ring-2 ring-primary/20 bg-primary/5"
-    )}>
+    <Card 
+      className={cn(
+        "hover:shadow-md transition-all cursor-pointer",
+        post.is_pinned && "ring-2 ring-primary/20 bg-primary/5"
+      )}
+      onClick={handleCardClick}
+    >
       <CardContent className="p-6">
         <div className="flex gap-4">
           {/* Vote buttons */}
@@ -129,12 +149,12 @@ export const PostCard = ({ post }: PostCardProps) => {
 
             {/* Title */}
             {post.title && (
-              <h3 className="font-semibold text-foreground mb-2 leading-tight">
+              <h3 className="font-semibold text-foreground mb-2 leading-tight hover:text-primary transition-colors">
                 {post.title}
               </h3>
             )}
 
-            {/* Content - TASK 1.2: Render HTML content with prose classes */}
+            {/* Content preview */}
             <div 
               className="prose dark:prose-invert prose-sm max-w-none text-muted-foreground line-clamp-3 mb-3"
               dangerouslySetInnerHTML={{ __html: post.content }}

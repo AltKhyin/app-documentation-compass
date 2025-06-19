@@ -384,4 +384,65 @@ const SavePost = z.object({
 
 ---
 
+### **4.8 Function: `get-community-post-detail`**
+
+* **Trigger:** `POST /functions/v1/get-community-post-detail`
+* **Purpose:** Retrieve individual community post with full details, user vote status, and save status.
+* **Auth:** Optional (authenticated users get personalized data).
+* **Rate Limit:** 60 requests per minute per user/IP
+
+**Request Body Schema (Zod):**
+
+```typescript
+import { z } from 'zod';
+
+const GetPostDetail = z.object({
+  post_id: z.number().int().positive(),
+});
+```
+
+**Business Logic:**
+
+1. Handle CORS preflight request.
+2. Check rate limit; return 429 if exceeded.
+3. Extract `practitioner_id` from JWT if available.
+4. Validate input; else 400.
+5. Fetch complete post data from `CommunityPosts` with author info.
+6. If authenticated, fetch user's vote and save status for the post.
+7. Fetch reply count for the post.
+8. Return comprehensive post data.
+
+**Success Response:** `200 OK`
+
+```json
+{
+  "id": 123,
+  "title": "Post title",
+  "content": "Full post content",
+  "category": "general",
+  "upvotes": 15,
+  "downvotes": 2,
+  "reply_count": 8,
+  "created_at": "2025-06-19T10:00:00Z",
+  "is_pinned": false,
+  "is_locked": false,
+  "flair_text": "Discussion",
+  "flair_color": "#3b82f6",
+  "image_url": "https://example.com/image.jpg",
+  "video_url": null,
+  "poll_data": null,
+  "post_type": "text",
+  "author": {
+    "id": "uuid",
+    "full_name": "Author Name",
+    "avatar_url": "https://example.com/avatar.jpg"
+  },
+  "user_vote": "up",
+  "is_saved": true,
+  "user_can_moderate": false
+}
+```
+
+---
+
 *End of [DOC_5] EVIDENS API Contract*

@@ -1,23 +1,58 @@
-// ABOUTME: Action bar component for community posts with reply count and interactive buttons.
+
+// ABOUTME: Action bar component for community posts with reply count, save, and share buttons.
 
 import React from 'react';
-import { MessageCircle, Bookmark, Share } from 'lucide-react';
+import { MessageCircle, Bookmark, BookmarkCheck, Share2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { toast } from 'sonner';
+import { cn } from '../../lib/utils';
 import type { CommunityPost } from '../../../packages/hooks/useCommunityPageQuery';
+import { useSavePostMutation } from '../../../packages/hooks/useSavePostMutation';
 
 interface PostActionBarProps {
   post: CommunityPost;
 }
 
 export const PostActionBar = ({ post }: PostActionBarProps) => {
-  // TASK 2.3: Provide clear placeholder feedback for unimplemented features
+  const savePostMutation = useSavePostMutation();
+
   const handleComment = () => {
     toast.info('Sistema de comentários em breve!');
   };
 
-  const handleSave = () => {
-    toast.info('Salvar posts em breve!');
+  const handleSave = async () => {
+    try {
+      await savePostMutation.mutateAsync({
+        post_id: post.id,
+        is_saved: !post.is_saved
+      });
+      
+      toast.success(
+        post.is_saved ? 'Post removido dos salvos' : 'Post salvo com sucesso'
+      );
+    } catch (error) {
+      toast.error('Erro ao salvar post. Tente novamente.');
+    }
+  };
+
+  const handleShare = async () => {
+    const postUrl = `${window.location.origin}/comunidade/${post.id}`;
+    
+    try {
+      await navigator.share({
+        title: post.title || 'Post da Comunidade EVIDENS',
+        text: post.content ? post.content.substring(0, 200) + '...' : '',
+        url: postUrl
+      });
+    } catch (error) {
+      // Fallback to copying URL to clipboard
+      try {
+        await navigator.clipboard.writeText(postUrl);
+        toast.success('Link copiado para a área de transferência');
+      } catch (clipboardError) {
+        toast.error('Erro ao compartilhar post');
+      }
+    }
   };
 
   return (
@@ -41,12 +76,27 @@ export const PostActionBar = ({ post }: PostActionBarProps) => {
           variant="ghost"
           size="sm"
           onClick={handleSave}
-          className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
+          disabled={savePostMutation.isPending}
+          className={cn(
+            "text-muted-foreground hover:text-foreground h-8 w-8 p-0",
+            post.is_saved && "text-primary hover:text-primary"
+          )}
         >
-          <Bookmark className="w-4 h-4" />
+          {post.is_saved ? (
+            <BookmarkCheck className="w-4 h-4" />
+          ) : (
+            <Bookmark className="w-4 h-4" />
+          )}
         </Button>
         
-        {/* TASK 2.3: Share button removed as per plan - no longer needed in closed community */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleShare}
+          className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
+        >
+          <Share2 className="w-4 h-4" />
+        </Button>
       </div>
     </div>
   );

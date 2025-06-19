@@ -10,6 +10,7 @@ import ReviewDetailPage from './pages/ReviewDetailPage';
 import ComunidadePage from './pages/ComunidadePage';
 import CommunityInfoPage from './pages/CommunityInfoPage';
 import { SubmitPage } from './pages/community/SubmitPage';
+import CommunityPostPage from "./pages/CommunityPostPage";
 
 function App() {
   return (
@@ -57,6 +58,16 @@ function App() {
             element={
               <ProtectedAppRoute>
                 <SubmitPage />
+              </ProtectedAppRoute>
+            } 
+          />
+          
+          {/* Community Post Route - NEW */}
+          <Route 
+            path="/comunidade/:postId" 
+            element={
+              <ProtectedAppRoute>
+                <CommunityPostPage />
               </ProtectedAppRoute>
             } 
           />
