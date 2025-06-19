@@ -1,4 +1,3 @@
-
 // ABOUTME: Dropdown menu for post moderation actions with role-based visibility.
 
 import React from 'react';
@@ -12,7 +11,7 @@ import {
 } from '../ui/dropdown-menu';
 import { useAuthStore } from '../../store/auth';
 import { usePostActionMutation } from '../../../packages/hooks/usePostActionMutation';
-import type { CommunityPost } from '../../../packages/hooks/useCommunityFeedQuery';
+import type { CommunityPost } from '../../../packages/hooks/useCommunityPageQuery';
 
 interface PostActionMenuProps {
   post: CommunityPost;

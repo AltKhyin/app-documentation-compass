@@ -1,9 +1,14 @@
-
 // ABOUTME: Useful links module for community sidebar displaying helpful resources and external links.
 
 import React from 'react';
 import { ExternalLink } from 'lucide-react';
-import type { SidebarLink } from '../../../../packages/hooks/useCommunitySidebarQuery';
+
+// Define local types for sidebar links
+interface SidebarLink {
+  title: string;
+  url: string;
+  description?: string;
+}
 
 interface LinksModuleProps {
   links: SidebarLink[];

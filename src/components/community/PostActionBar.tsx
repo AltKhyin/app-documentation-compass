@@ -1,11 +1,10 @@
-
 // ABOUTME: Action bar component for community posts with reply count and interactive buttons.
 
 import React from 'react';
 import { MessageCircle, Bookmark, Share } from 'lucide-react';
 import { Button } from '../ui/button';
 import { toast } from 'sonner';
-import type { CommunityPost } from '../../../packages/hooks/useCommunityFeedQuery';
+import type { CommunityPost } from '../../../packages/hooks/useCommunityPageQuery';
 
 interface PostActionBarProps {
   post: CommunityPost;

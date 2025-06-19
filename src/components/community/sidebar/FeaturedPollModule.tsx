@@ -1,4 +1,3 @@
-
 // ABOUTME: Featured poll module for displaying and interacting with community polls.
 
 import React from 'react';
@@ -7,10 +6,23 @@ import { Progress } from '../../ui/progress';
 import { BarChart3, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import type { FeaturedPoll } from '../../../../packages/hooks/useCommunitySidebarQuery';
 import { useCastPollVoteMutation } from '../../../../packages/hooks/useCastPollVoteMutation';
 import { useAuthStore } from '../../../store/auth';
 import { toast } from 'sonner';
+
+// Define local types for the featured poll
+interface FeaturedPoll {
+  id: number;
+  question: string;
+  expires_at: string | null;
+  total_votes: number;
+  user_vote: number | null;
+  options: Array<{
+    id: number;
+    text: string;
+    vote_count: number;
+  }>;
+}
 
 interface FeaturedPollModuleProps {
   poll: FeaturedPoll;

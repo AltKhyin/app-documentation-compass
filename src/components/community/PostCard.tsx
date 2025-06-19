@@ -1,4 +1,3 @@
-
 // ABOUTME: Individual post card component with voting buttons, author information, and moderation indicators.
 
 import React from 'react';
@@ -7,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import type { CommunityPost } from '../../../packages/hooks/useCommunityFeedQuery';
+import type { CommunityPost } from '../../../packages/hooks/useCommunityPageQuery';
 import { VoteButtons } from './VoteButtons';
 import { PostActionMenu } from './PostActionMenu';
 import { PostActionBar } from './PostActionBar';

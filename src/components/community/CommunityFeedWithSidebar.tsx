@@ -1,4 +1,3 @@
-
 // ABOUTME: Two-column layout component that renders community feed and sidebar with data passed as props.
 
 import React from 'react';
@@ -8,8 +7,7 @@ import { Loader2, Plus } from 'lucide-react';
 import { PostCard } from './PostCard';
 import { CommunitySidebar } from './CommunitySidebar';
 import { useIsMobile } from '../../hooks/use-mobile';
-import type { CommunityPost } from '../../../packages/hooks/useCommunityFeedQuery';
-import type { CommunityPageResponse } from '../../../packages/hooks/useCommunityPageQuery';
+import type { CommunityPost, CommunityPageResponse } from '../../../packages/hooks/useCommunityPageQuery';
 
 interface CommunityFeedWithSidebarProps {
   posts: CommunityPost[];

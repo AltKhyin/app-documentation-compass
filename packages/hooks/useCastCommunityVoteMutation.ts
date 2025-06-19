@@ -4,7 +4,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../src/integrations/supabase/client';
 import { toast } from 'sonner';
-import type { CommunityPost } from './useCommunityFeedQuery';
+import type { CommunityPost } from './useCommunityPageQuery';
 
 interface VoteParams {
   postId: number;
@@ -49,20 +49,20 @@ export const useCastCommunityVoteMutation = () => {
     // TASK 2.2: Implement optimistic updates for immediate UI feedback
     onMutate: async ({ postId, voteType }) => {
       // Cancel any outgoing refetches to prevent conflicts
-      await queryClient.cancelQueries({ queryKey: ['community-feed'] });
+      await queryClient.cancelQueries({ queryKey: ['community-page-data'] });
 
       // Snapshot the previous value
-      const previousData = queryClient.getQueriesData({ queryKey: ['community-feed'] });
+      const previousData = queryClient.getQueriesData({ queryKey: ['community-page-data'] });
 
       // Optimistically update the cache
       queryClient.setQueriesData(
-        { queryKey: ['community-feed'] },
+        { queryKey: ['community-page-data'] },
         (old: any) => {
           if (!old?.pages) return old;
 
           return {
             ...old,
-            pages: old.pages.map((page: FeedResponse) => ({
+            pages: old.pages.map((page: any) => ({
               ...page,
               posts: page.posts.map((post: CommunityPost) => {
                 if (post.id !== postId) return post;
@@ -107,7 +107,7 @@ export const useCastCommunityVoteMutation = () => {
     onSuccess: () => {
       // The optimistic update already handled the UI change
       // We just need to ensure final consistency by invalidating
-      queryClient.invalidateQueries({ queryKey: ['community-feed'] });
+      queryClient.invalidateQueries({ queryKey: ['community-page-data'] });
     },
   });
 };

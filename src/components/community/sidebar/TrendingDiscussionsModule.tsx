@@ -1,11 +1,25 @@
-
 // ABOUTME: Trending discussions module showing the most engaging community posts.
 
 import React from 'react';
 import { MessageCircle, TrendingUp, Pin } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import type { TrendingDiscussion } from '../../../../packages/hooks/useCommunitySidebarQuery';
+
+// Define local types for trending discussions
+interface TrendingDiscussion {
+  id: number;
+  title: string;
+  content: string;
+  category: string;
+  reply_count: number;
+  upvotes: number;
+  created_at: string;
+  author: {
+    full_name: string | null;
+  } | null;
+  flair_text?: string;
+  is_pinned?: boolean;
+}
 
 interface TrendingDiscussionsModuleProps {
   discussions: TrendingDiscussion[];
