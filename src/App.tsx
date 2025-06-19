@@ -5,6 +5,7 @@ import { AppProviders } from './components/providers/AppProviders';
 import { ProtectedAppRoute } from './components/routes/ProtectedAppRoute';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import Index from './pages/Index';
 import AcervoPage from './pages/AcervoPage';
 import ReviewDetailPage from './pages/ReviewDetailPage';
 import ComunidadePage from './pages/ComunidadePage';
@@ -22,7 +23,7 @@ function App() {
           {/* Protected routes */}
           <Route path="/" element={
             <ProtectedAppRoute>
-              <div>Home Page - Coming Soon</div>
+              <Index />
             </ProtectedAppRoute>
           } />
           
