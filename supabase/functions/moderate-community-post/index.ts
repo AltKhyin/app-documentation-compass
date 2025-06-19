@@ -1,12 +1,20 @@
 
+// ABOUTME: Enhanced community post moderation using centralized role checking and error handling.
+
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0'
 import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { 
+  createErrorResponse, 
+  createSuccessResponse, 
+  handleCorsPreflightRequest,
+  authenticateUser,
+  validateRequiredFields,
+  ValidationError,
+  ForbiddenError,
+  NotFoundError,
+  RateLimitError 
+} from '../_shared/api-helpers.ts'
 
 interface ModerationRequest {
   post_id: number;
@@ -19,7 +27,7 @@ interface ModerationRequest {
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreflightRequest();
   }
 
   try {
@@ -28,59 +36,30 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Check authentication
+    // Authenticate user
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({
-        error: { message: 'Authentication required', code: 'UNAUTHORIZED' }
-      }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-    if (authError || !user) {
-      return new Response(JSON.stringify({
-        error: { message: 'Invalid authentication', code: 'UNAUTHORIZED' }
-      }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
-    }
-
-    // Check user role (must be editor or admin)
-    const { data: profile } = await supabase
-      .from('Practitioners')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile || !['editor', 'admin'].includes(profile.role)) {
-      return new Response(JSON.stringify({
-        error: { message: 'Insufficient permissions', code: 'FORBIDDEN' }
-      }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
-    }
+    const user = await authenticateUser(supabase, authHeader);
 
     // Check rate limit (10 actions per 60 seconds)
     const rateLimitResult = await checkRateLimit(supabase, 'moderate-community-post', user.id, 10, 60);
     if (!rateLimitResult.allowed) {
-      return new Response(JSON.stringify({
-        error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }
-      }), {
-        status: 429,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-          ...rateLimitHeaders(rateLimitResult)
-        }
-      });
+      throw RateLimitError;
     }
 
+    // *** THE FIX 1: Centralized RBAC Check ***
+    // Instead of fetching the whole profile, just call our new RPC
+    const { data: canModerate, error: roleError } = await supabase.rpc('is_editor', { 
+      p_user_id: user.id 
+    });
+
+    if (roleError || !canModerate) {
+      throw ForbiddenError;
+    }
+
+    // Parse and validate request body
     const requestBody: ModerationRequest = await req.json();
+    validateRequiredFields(requestBody, ['post_id', 'action_type']);
+    
     const { post_id, action_type, reason, flair_text, flair_color } = requestBody;
 
     console.log('Processing moderation action:', { post_id, action_type, moderator: user.id });
@@ -93,12 +72,7 @@ serve(async (req) => {
       .single();
 
     if (postError || !post) {
-      return new Response(JSON.stringify({
-        error: { message: 'Post not found', code: 'NOT_FOUND' }
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
+      throw NotFoundError;
     }
 
     // Apply moderation action
@@ -126,12 +100,7 @@ serve(async (req) => {
         updateData.category = 'hidden';
         break;
       default:
-        return new Response(JSON.stringify({
-          error: { message: 'Invalid action type', code: 'INVALID_ACTION' }
-        }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders }
-        });
+        throw ValidationError('Invalid action type');
     }
 
     // Update the post
@@ -142,12 +111,7 @@ serve(async (req) => {
 
     if (updateError) {
       console.error('Failed to apply moderation action:', updateError);
-      return new Response(JSON.stringify({
-        error: { message: 'Failed to apply moderation action', code: 'UPDATE_FAILED' }
-      }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
+      throw new Error('Failed to apply moderation action');
     }
 
     // Log the moderation action
@@ -168,31 +132,13 @@ serve(async (req) => {
 
     console.log('Moderation action applied successfully');
 
-    return new Response(JSON.stringify({
+    return createSuccessResponse({
       success: true,
       message: 'Moderation action applied successfully'
-    }), {
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders,
-        ...rateLimitHeaders(rateLimitResult)
-      }
-    });
+    }, rateLimitHeaders(rateLimitResult));
 
   } catch (error) {
     console.error('Moderation action error:', error);
-    
-    return new Response(JSON.stringify({
-      error: {
-        message: error.message || 'Internal server error',
-        code: 'INTERNAL_ERROR'
-      }
-    }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders
-      }
-    });
+    return createErrorResponse(error);
   }
 });

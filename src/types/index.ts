@@ -10,7 +10,7 @@ export interface Review {
   published_at: string | null;
   view_count: number;
   status: 'draft' | 'published' | 'archived';
-  access_level: 'public' | 'premium' | 'exclusive';
+  access_level: 'public' | 'free' | 'premium'; // Fixed: aligned with documentation
   structured_content: Record<string, any>;
   author_id: string | null;
   community_post_id: number | null;
@@ -47,6 +47,53 @@ export interface Notification {
   content: string;
   link: string | null;
   is_read: boolean;
+  created_at: string;
+}
+
+// Enhanced community types for better type safety
+export interface CommunityPost {
+  id: number;
+  title: string | null;
+  content: string;
+  category: string;
+  upvotes: number;
+  downvotes: number;
+  created_at: string;
+  is_pinned?: boolean;
+  is_locked?: boolean;
+  flair_text?: string;
+  flair_color?: string;
+  author: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null;
+  user_vote: 'up' | 'down' | null;
+  reply_count: number;
+}
+
+export interface Poll {
+  id: number;
+  question: string;
+  options: PollOption[];
+  total_votes: number;
+  expires_at: string | null;
+  is_featured: boolean;
+  created_at: string;
+}
+
+export interface PollOption {
+  id: number;
+  option_text: string;
+  vote_count: number;
+  poll_id: number;
+}
+
+export interface PollVote {
+  id: string;
+  poll_id: number;
+  option_id: number;
+  practitioner_id: string;
   created_at: string;
 }
 
@@ -99,11 +146,24 @@ export interface SuggestionFormData {
   description: string;
 }
 
+export interface CreatePostFormData {
+  title?: string;
+  content: string;
+  category: string;
+}
+
 // API Error types
 export interface APIError {
   message: string;
   code?: string;
   details?: Record<string, any>;
+}
+
+export interface StandardizedAPIError {
+  error: {
+    message: string;
+    code: string;
+  };
 }
 
 // Auth types
@@ -137,4 +197,22 @@ export interface CanvasElement {
   position: { x: number; y: number };
   size: { width: number; height: number };
   properties: Record<string, any>;
+}
+
+// Rate limiting types
+export interface RateLimitResponse {
+  allowed: boolean;
+  remaining?: number;
+  resetTime?: number;
+}
+
+// Moderation types
+export interface ModerationAction {
+  id: string;
+  post_id: number;
+  moderator_id: string;
+  action_type: 'pin' | 'unpin' | 'lock' | 'unlock' | 'flair' | 'hide';
+  reason: string | null;
+  metadata: Record<string, any>;
+  created_at: string;
 }
