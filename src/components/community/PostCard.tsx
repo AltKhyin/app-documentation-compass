@@ -123,7 +123,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                   {categoryLabel}
                 </Badge>
 
-                {/* NEW: Post Action Menu - Additive integration */}
+                {/* Post Action Menu */}
                 <PostActionMenu post={post} />
               </div>
             </div>
@@ -135,14 +135,14 @@ export const PostCard = ({ post }: PostCardProps) => {
               </h3>
             )}
 
-            {/* Content */}
-            <div className="text-muted-foreground text-sm leading-relaxed mb-3">
-              <p className="line-clamp-3">{post.content}</p>
-            </div>
+            {/* Content - TASK 1.2: Render HTML content with prose classes */}
+            <div 
+              className="prose dark:prose-invert prose-sm max-w-none text-muted-foreground line-clamp-3 mb-3"
+              dangerouslySetInnerHTML={{ __html: post.content }}
+            />
 
             {/* Footer with action bar */}
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              {/* NEW: Post Action Bar - Additive integration */}
               <PostActionBar post={post} />
             </div>
           </div>
