@@ -1,8 +1,7 @@
-
 import './App.css'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from '@/components/ui/sonner'
-import { ErrorBoundary } from '@/components/ErrorBoundary'
+import ErrorBoundary from '@/components/ErrorBoundary'
 import { AppProviders } from '@/components/providers/AppProviders'
 
 // Pages
