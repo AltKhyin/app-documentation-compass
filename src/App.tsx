@@ -1,17 +1,15 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthSessionProvider } from './providers/AuthSessionProvider';
-import { AuthThemeProvider } from './providers/AuthThemeProvider';
-import { PWAProvider } from './providers/PWAProvider';
-import { useAuth } from './hooks/useAuth';
+import AuthSessionProvider from './components/auth/AuthSessionProvider';
+import AuthThemeProvider from './components/auth/AuthThemeProvider';
+import PWAProvider from './components/pwa/PWAProvider';
+import { useAuthStore } from './store/auth';
 import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import HomePage from './pages/HomePage';
+import SignupPage from './pages/SignupPage';
 import AcervoPage from './pages/AcervoPage';
 import ReviewDetailPage from './pages/ReviewDetailPage';
-import EditorPage from './pages/EditorPage';
-import ManagementPage from './pages/ManagementPage';
 import ComunidadePage from './pages/ComunidadePage';
 import CommunityInfoPage from './pages/CommunityInfoPage';
 import DesktopShell from './components/shell/DesktopShell';
@@ -29,7 +27,7 @@ const queryClient = new QueryClient({
 
 // ProtectedRoute component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { session, isLoading } = useAuth();
+  const { session, isLoading } = useAuthStore();
 
   if (isLoading) {
     return <div>Loading...</div>; // Replace with a proper loading indicator
@@ -67,13 +65,13 @@ function App() {
               <Routes>
                 {/* Public routes */}
                 <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/register" element={<SignupPage />} />
 
                 {/* Protected routes */}
                 <Route path="/" element={
                   <ProtectedRoute>
                     <AppShell>
-                      <HomePage />
+                      <div>Home Page - Coming Soon</div>
                     </AppShell>
                   </ProtectedRoute>
                 } />
@@ -88,20 +86,6 @@ function App() {
                   <ProtectedRoute>
                     <AppShell>
                       <ReviewDetailPage />
-                    </AppShell>
-                  </ProtectedRoute>
-                } />
-                <Route path="/editor" element={
-                  <ProtectedRoute>
-                    <AppShell>
-                      <EditorPage />
-                    </AppShell>
-                  </ProtectedRoute>
-                } />
-                <Route path="/management" element={
-                  <ProtectedRoute>
-                    <AppShell>
-                      <ManagementPage />
                     </AppShell>
                   </ProtectedRoute>
                 } />
