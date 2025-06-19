@@ -8,20 +8,34 @@ import { Filter } from 'lucide-react';
 import { AcervoTag } from '../../../packages/hooks/useAcervoDataQuery';
 
 interface MobileTagsModalProps {
-  allTags: AcervoTag[];
-  selectedTags: string[];
-  onTagSelect: (tagName: string) => void;
+  isOpen: boolean;
+  onClose: () => void;
+  tags: AcervoTag[];
+  selectedTags: number[];
+  onTagToggle: (tagId: number) => void;
+  onClearAll: () => void;
+  sortBy: 'newest' | 'oldest' | 'most_viewed';
+  onSortChange: (sortBy: 'newest' | 'oldest' | 'most_viewed') => void;
 }
 
-const MobileTagsModal: React.FC<MobileTagsModalProps> = ({ allTags, selectedTags, onTagSelect }) => {
-  const parentTags = allTags.filter(tag => tag.parent_id === null);
-  const childTags = allTags.filter(tag => tag.parent_id !== null);
+const MobileTagsModal: React.FC<MobileTagsModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  tags, 
+  selectedTags, 
+  onTagToggle, 
+  onClearAll,
+  sortBy,
+  onSortChange 
+}) => {
+  const parentTags = tags.filter(tag => tag.parent_id === null);
+  const childTags = tags.filter(tag => tag.parent_id !== null);
 
   // Intelligent sorting for parent tags: selected first, then alphabetical
   const sortedParentTags = useMemo(() => {
     return [...parentTags].sort((a, b) => {
-      const aSelected = selectedTags.includes(a.tag_name);
-      const bSelected = selectedTags.includes(b.tag_name);
+      const aSelected = selectedTags.includes(a.id);
+      const bSelected = selectedTags.includes(b.id);
       
       // Selected tags first
       if (aSelected && !bSelected) return -1;
@@ -36,8 +50,8 @@ const MobileTagsModal: React.FC<MobileTagsModalProps> = ({ allTags, selectedTags
   const getSortedSubtags = (parentId: number) => {
     const subtags = childTags.filter(child => child.parent_id === parentId);
     return subtags.sort((a, b) => {
-      const aSelected = selectedTags.includes(a.tag_name);
-      const bSelected = selectedTags.includes(b.tag_name);
+      const aSelected = selectedTags.includes(a.id);
+      const bSelected = selectedTags.includes(b.id);
       
       // Selected subtags first
       if (aSelected && !bSelected) return -1;
@@ -48,28 +62,55 @@ const MobileTagsModal: React.FC<MobileTagsModalProps> = ({ allTags, selectedTags
     });
   };
 
-  const getTagVariant = (tagName: string): "default" | "outline" | "secondary" => {
-    return selectedTags.includes(tagName) ? "default" : "outline";
+  const getTagVariant = (tagId: number): "default" | "outline" | "secondary" => {
+    return selectedTags.includes(tagId) ? "default" : "outline";
   };
 
+  if (!isOpen) return null;
+
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="mb-4">
-          <Filter className="w-4 h-4 mr-2" />
-          Categorias
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-end">
+      <div className="bg-background w-full h-[80vh] rounded-t-lg p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold">Filtrar por Categoria</h2>
+          <Button variant="ghost" onClick={onClose}>
+            ✕
+          </Button>
+        </div>
+        
+        <div className="space-y-4 mb-6">
+          <div className="flex gap-2">
+            <Button
+              variant={sortBy === 'newest' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => onSortChange('newest')}
+            >
+              Mais Recentes
+            </Button>
+            <Button
+              variant={sortBy === 'oldest' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => onSortChange('oldest')}
+            >
+              Mais Antigos
+            </Button>
+            <Button
+              variant={sortBy === 'most_viewed' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => onSortChange('most_viewed')}
+            >
+              Mais Vistos
+            </Button>
+          </div>
+          
           {selectedTags.length > 0 && (
-            <span className="ml-2 bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs">
-              {selectedTags.length}
-            </span>
+            <Button variant="outline" size="sm" onClick={onClearAll}>
+              Limpar Filtros ({selectedTags.length})
+            </Button>
           )}
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="bottom" className="h-[80vh]">
-        <SheetHeader>
-          <SheetTitle>Filtrar por Categoria</SheetTitle>
-        </SheetHeader>
-        <div className="mt-6 space-y-6 overflow-y-auto">
+        </div>
+        
+        <div className="space-y-6 overflow-y-auto">
           {sortedParentTags.map(parentTag => {
             const sortedSubtags = getSortedSubtags(parentTag.id);
             
@@ -77,9 +118,9 @@ const MobileTagsModal: React.FC<MobileTagsModalProps> = ({ allTags, selectedTags
               <div key={parentTag.id} className="space-y-3">
                 <div>
                   <Button
-                    variant={getTagVariant(parentTag.tag_name)}
+                    variant={getTagVariant(parentTag.id)}
                     size="sm"
-                    onClick={() => onTagSelect(parentTag.tag_name)}
+                    onClick={() => onTagToggle(parentTag.id)}
                     className="rounded-full"
                   >
                     {parentTag.tag_name}
@@ -90,9 +131,9 @@ const MobileTagsModal: React.FC<MobileTagsModalProps> = ({ allTags, selectedTags
                     {sortedSubtags.map(subtag => (
                       <Button
                         key={subtag.id}
-                        variant={getTagVariant(subtag.tag_name)}
+                        variant={getTagVariant(subtag.id)}
                         size="sm"
-                        onClick={() => onTagSelect(subtag.tag_name)}
+                        onClick={() => onTagToggle(subtag.id)}
                         className="rounded-full text-xs"
                       >
                         {subtag.tag_name}
@@ -104,8 +145,8 @@ const MobileTagsModal: React.FC<MobileTagsModalProps> = ({ allTags, selectedTags
             );
           })}
         </div>
-      </SheetContent>
-    </Sheet>
+      </div>
+    </div>
   );
 };
 

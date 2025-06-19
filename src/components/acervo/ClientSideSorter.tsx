@@ -1,18 +1,18 @@
 
-// ABOUTME: Client-side sorting and filtering logic for the Acervo page with corrected tag priority sorting
+// ABOUTME: Client-side sorting and filtering logic for the Acervo page with AcervoReview types
 
 import React, { useMemo } from 'react';
-import type { Review, Tag } from '../../types';
+import type { AcervoReview, AcervoTag } from '../../../packages/hooks/useAcervoDataQuery';
 
 interface ClientSideSorterProps {
-  reviews: Review[];
+  reviews: AcervoReview[];
   selectedTags: number[];
   sortBy: 'newest' | 'oldest' | 'most_viewed';
   searchQuery: string;
-  allTags: Tag[];
+  allTags: AcervoTag[];
   children: (sortedData: { 
-    reviews: Review[]; 
-    tags: Tag[]; 
+    reviews: AcervoReview[]; 
+    tags: AcervoTag[]; 
     stats: { totalReviews: number; totalTags: number } 
   }) => React.ReactNode;
 }
@@ -30,8 +30,13 @@ export const ClientSideSorter = ({
     let filteredReviews = reviews.filter(review => {
       // Tag filtering
       if (selectedTags.length > 0) {
-        const reviewTagIds = review.tags?.map(tag => tag.id) || [];
-        const hasSelectedTag = selectedTags.some(tagId => reviewTagIds.includes(tagId));
+        const reviewTagNames = Object.keys(review.tags_json).concat(
+          Object.values(review.tags_json).flat()
+        );
+        const hasSelectedTag = selectedTags.some(tagId => {
+          const tag = allTags.find(t => t.id === tagId);
+          return tag && reviewTagNames.includes(tag.tag_name);
+        });
         if (!hasSelectedTag) return false;
       }
 
@@ -40,8 +45,10 @@ export const ClientSideSorter = ({
         const query = searchQuery.toLowerCase();
         const matchesTitle = review.title.toLowerCase().includes(query);
         const matchesDescription = review.description?.toLowerCase().includes(query);
-        const matchesTags = review.tags?.some(tag => 
-          tag.tag_name.toLowerCase().includes(query)
+        const matchesTags = Object.keys(review.tags_json).some(tag => 
+          tag.toLowerCase().includes(query)
+        ) || Object.values(review.tags_json).flat().some(tag =>
+          tag.toLowerCase().includes(query)
         );
         
         if (!matchesTitle && !matchesDescription && !matchesTags) {
@@ -56,18 +63,19 @@ export const ClientSideSorter = ({
     filteredReviews.sort((a, b) => {
       switch (sortBy) {
         case 'newest':
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
         case 'oldest':
-          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          return new Date(a.published_at).getTime() - new Date(b.published_at).getTime();
         case 'most_viewed':
-          return (b.view_count || 0) - (a.view_count || 0);
+          // For AcervoReview, we don't have view_count, so maintain order
+          return 0;
         default:
           return 0;
       }
     });
 
     // Enhanced tag sorting with corrected priority algorithm
-    const getTagPriority = (tag: Tag): number => {
+    const getTagPriority = (tag: AcervoTag): number => {
       // Priority 1: Selected tags (highest priority)
       if (selectedTags.includes(tag.id)) {
         return 1;

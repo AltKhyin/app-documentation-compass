@@ -55,16 +55,14 @@ const HomePage = () => {
       {/* Recent Reviews */}
       {data.recent && data.recent.length > 0 && (
         <section>
-          <h2 className="text-2xl font-bold mb-4">Reviews Recentes</h2>
-          <ReviewCarousel reviews={data.recent} />
+          <ReviewCarousel title="Reviews Recentes" reviews={data.recent} />
         </section>
       )}
 
       {/* Popular Reviews */}
       {data.popular && data.popular.length > 0 && (
         <section>
-          <h2 className="text-2xl font-bold mb-4">Reviews Populares</h2>
-          <ReviewCarousel reviews={data.popular} />
+          <ReviewCarousel title="Reviews Populares" reviews={data.popular} />
         </section>
       )}
 
