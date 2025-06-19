@@ -1,9 +1,9 @@
 
 # **README-BÍBLIA.md**
 
-**Versão:** 2.3.0  
-**Data:** 18 de junho de 2025  
-**Status:** ✅ PWA Completo + Review Detail Foundation Implementado
+**Versão:** 2.4.0  
+**Data:** 19 de junho de 2025  
+**Status:** 🔧 **Provider Architecture Fixed + Community Enhancement In Progress**
 
 ---
 
@@ -62,7 +62,9 @@ Este documento fornece um resumo completo e atual do estado implementado da plat
   - 4 níveis de usuário: `practitioner`, `editor`, `admin`, `super_admin`
 
 ### **📱 3. Application Shell**
-- **Status:** ✅ **Mobile-First PWA Implementado**
+- **Status:** ✅ **Consolidado e Funcional**
+- **NOVO:** Provider hierarchy consolidado em `AppProviders` component
+- **NOVO:** Route duplication eliminado via `ProtectedAppRoute` wrapper
 - **Funcionalidades Desktop:**
   - Sidebar colapsível com navegação persistente
   - Layout two-column responsivo
@@ -89,9 +91,9 @@ Este documento fornece um resumo completo e atual do estado implementado da plat
 ### **📚 5. Acervo**
 - **Status:** ✅ **Production-Ready Backend + Mobile-Compliant PWA**
 - **Funcionalidades:**
-  - ✅ **NOVO:** Backend real implementado com PostgreSQL queries
-  - ✅ **NOVO:** Performance otimizada com indexes dedicados
-  - ✅ **NOVO:** RLS enforcement completo para access tiers
+  - ✅ Backend real implementado com PostgreSQL queries
+  - ✅ Performance otimizada com indexes dedicados
+  - ✅ RLS enforcement completo para access tiers
   - Grid responsivo: desktop (masonry), mobile (2 colunas)
   - Sistema de tags hierárquicos funcionais
   - Filtros desktop: painel horizontal
@@ -103,12 +105,12 @@ Este documento fornece um resumo completo e atual do estado implementado da plat
 ### **📖 6. Review Detail Pages**
 - **Status:** ✅ **Foundation Implementado + Routing Funcional**
 - **Funcionalidades:**
-  - ✅ **NOVO:** Edge Function `get-review-by-slug` com RLS enforcement
-  - ✅ **NOVO:** Hook `useReviewDetailQuery` seguindo Data Access Layer
-  - ✅ **NOVO:** Página `/reviews/:slug` com navegação funcional
-  - ✅ **NOVO:** Rate limiting implementado (20 req/min)
-  - ✅ **NOVO:** Access control para diferentes subscription tiers
-  - ✅ **NOVO:** View count tracking automático
+  - ✅ Edge Function `get-review-by-slug` com RLS enforcement
+  - ✅ Hook `useReviewDetailQuery` seguindo Data Access Layer
+  - ✅ Página `/reviews/:slug` com navegação funcional
+  - ✅ Rate limiting implementado (20 req/min)
+  - ✅ Access control para diferentes subscription tiers
+  - ✅ View count tracking automático
   - Error handling robusto para 404/403/500
   - Loading states com skeleton components
   - Header com informações do autor e data
@@ -129,13 +131,21 @@ Este documento fornece um resumo completo e atual do estado implementado da plat
 
 ## **🔄 MÓDULOS EM DESENVOLVIMENTO**
 
-### **📖 8. Review Detail - Advanced Features**
+### **👥 8. Community Module - Scientific Reddit**
+- **Status:** 🚧 **Enhanced Implementation In Progress**
+- **NOVO:** Foundation components implementados seguindo Blueprint 06
+- **Features Funcionais:**
+  - ✅ CommunityFeed com infinite scroll e filtering
+  - ✅ PostCard com voting system
+  - ✅ CommunitySidebar com modules (Rules, Trending, Polls)
+  - ✅ Mobile adaptation via CommunityFeedWithSidebar
+  - ✅ CreatePostDialog com form validation
+  - ✅ VoteButtons com optimistic updates
+- **Pendente:** Threaded discussions, advanced moderation, real-time features
+
+### **📖 9. Review Detail - Advanced Features**
 - **Status:** 🚧 **LayoutAwareRenderer pendente**
 - **Próximo:** Mobile layout rendering, comments system, recommendations
-
-### **👥 9. Community (Placeholder)**
-- **Status:** 🚧 **Estrutura criada, implementação pendente**
-- **Pendente:** Feed de posts, widgets laterais mobile, sistema de votação
 
 ### **👤 10. Profile System**
 - **Status:** 🚧 **Estrutura criada, implementação pendente**
@@ -147,28 +157,33 @@ Este documento fornece um resumo completo e atual do estado implementado da plat
 
 ### **Edge Functions Implementadas**
 - ✅ `get-homepage-feed`: Consolidação de dados da homepage
-- ✅ `get-acervo-data`: **NOVO:** Dados reais do PostgreSQL com tags e reviews
-- ✅ `get-review-by-slug`: **NOVO:** Fetch individual de reviews com RLS
+- ✅ `get-acervo-data`: Dados reais do PostgreSQL com tags e reviews
+- ✅ `get-review-by-slug`: Fetch individual de reviews com RLS
+- ✅ `get-community-feed`: Feed de posts da comunidade com pagination
+- ✅ `get-trending-discussions`: Algoritmo de trending baseado em engagement
 - ✅ `submit-suggestion`: Envio de sugestões para próxima edição
 - ✅ `cast-suggestion-vote`: Sistema de votação
 - ✅ Rate limiting implementado em todas as functions
 
 ### **Database Performance**
-- ✅ **NOVO:** Indexes otimizados para queries do Acervo
-- ✅ **NOVO:** Parallel query execution (reviews + tags)
-- ✅ **NOVO:** Composite indexes para filtering eficiente
-- ✅ **NOVO:** RLS policy enforcement com performance tracking
+- ✅ Indexes otimizados para queries do Acervo
+- ✅ Parallel query execution (reviews + tags)
+- ✅ Composite indexes para filtering eficiente
+- ✅ RLS policy enforcement com performance tracking
+- ✅ Community tables com vote aggregation triggers
 
 ### **RLS Policies**
 - ✅ **Practitioners:** Users só acessam próprios dados
 - ✅ **Reviews:** Content público + draft protection + access tier control
+- ✅ **CommunityPosts:** Public read + authenticated write + author edit
 - ✅ **Suggestions:** Public read + authenticated write
 - ✅ **Notifications:** User-scoped access
 
 ### **Database Schema**
 - ✅ **Core tables:** Practitioners, Reviews, Tags, Suggestions, Notifications
+- ✅ **Community tables:** CommunityPosts, CommunityPost_Votes, Polls, PollOptions, PollVotes
 - ✅ **Relationships:** Foreign keys e indexes otimizados
-- ✅ **Custom functions:** `get_my_claim()`, `handle_new_user` trigger
+- ✅ **Custom functions:** `get_my_claim()`, `handle_new_user` trigger, vote aggregation functions
 
 ---
 
@@ -222,9 +237,16 @@ Este documento fornece um resumo completo e atual do estado implementado da plat
 - ✅ **Mobile Performance:** Touch targets, smooth scrolling
 - ✅ **Accessibility:** Screen reader compatibility, keyboard navigation
 - ✅ **PWA Performance:** Service Worker cache + offline capability
-- ✅ **NOVO:** Database query optimization com dedicated indexes
-- ✅ **NOVO:** Rate limiting para proteção contra abuse
-- ✅ **NOVO:** View tracking automático para analytics
+- ✅ **Database Optimization:** Dedicated indexes + parallel queries
+- ✅ **Rate Limiting:** Proteção contra abuse em todas as APIs
+- ✅ **View Tracking:** Analytics automático para métricas de uso
+
+### **Code Quality & Architecture**
+- ✅ **NOVO:** Provider hierarchy consolidado e simplificado
+- ✅ **NOVO:** Route duplication eliminado via wrapper components
+- ✅ **NOVO:** Component isolation seguindo Data Access Layer golden rules
+- ✅ **Error Boundaries:** Robust error handling em componentes críticos
+- ✅ **Type Safety:** TypeScript estrito em toda a codebase
 
 ### **PWA Lighthouse Metrics**
 - ✅ **Performance:** Optimized loading + caching strategy
@@ -239,8 +261,8 @@ Este documento fornece um resumo completo e atual do estado implementado da plat
 - ✅ **Mobile Devices:** iOS Safari, Chrome Mobile validation
 - ✅ **PWA Installation:** Android Chrome + iOS Safari flows testados
 - ✅ **Authentication Flow:** Login/logout/protection completos
-- ✅ **NOVO:** Review detail navigation end-to-end testado
-- ✅ **NOVO:** Acervo real data loading testado
+- ✅ **Community Features:** Post creation, voting, feed loading testados
+- ✅ **Provider Architecture:** Theme switching, auth persistence testados
 
 ---
 
@@ -267,25 +289,25 @@ VITE_GOOGLE_CLIENT_ID=xxx.googleusercontent.com
 - ✅ **Database:** Supabase production ready
 - ✅ **Edge Functions:** Deployed e funcionais
 - ✅ **PWA Ready:** Production deployment ready
-- ✅ **NOVO:** Performance indexes deployed
+- ✅ **Performance Indexes:** Deployed e otimizados
 
 ---
 
 ## **📋 PRÓXIMOS PASSOS**
 
-### **Prioridade Alta - Phase II Completion**
-1. **LayoutAwareRenderer:** Implementar sistema de rendering mobile-first
+### **Prioridade Alta - Community Enhancement Phase**
+1. **Threaded Discussions:** Sistema de replies aninhados para discussões
+2. **Real-time Features:** Live voting updates e activity feeds
+3. **Advanced Moderation:** Tools para pin/lock posts e user management
+
+### **Prioridade Média - Content Creation**
+1. **LayoutAwareRenderer:** Sistema de rendering mobile-first para reviews
 2. **Comments System:** Lazy-loading para páginas de review detail
-3. **Content Creation:** MVP do editor para admins
+3. **Content Editor:** MVP do editor para admins
 
-### **Prioridade Média - Phase III Foundation**
-1. **Community Module:** Criar feed e widgets mobile
-2. **Recommendations:** Sistema de conteúdo relacionado
-3. **Analytics Pipeline:** Core Web Vitals tracking
-
-### **Prioridade Baixa - Phase IV/V**
-1. **Admin Panel:** Management interface
-2. **Advanced Features:** Search, advanced filtering
+### **Prioridade Baixa - Advanced Features**
+1. **Analytics Pipeline:** Core Web Vitals tracking
+2. **Search Functionality:** Full-text search across content
 3. **Performance Monitoring:** Real-time metrics
 
 ---
@@ -293,14 +315,22 @@ VITE_GOOGLE_CLIENT_ID=xxx.googleusercontent.com
 ## **📞 PONTOS DE CONTATO TÉCNICO**
 
 ### **Arquivos Críticos**
+- **App Structure:** `src/App.tsx`, `src/components/providers/AppProviders.tsx`
 - **Shell:** `src/components/shell/AppShell.tsx`
 - **PWA Core:** `src/components/pwa/PWAProvider.tsx`, `src/hooks/usePWA.tsx`
 - **Service Worker:** `public/sw.js`
 - **Manifest:** `public/manifest.json`
 - **Data Fetching:** `packages/hooks/use*Query.ts`
 - **Mobile Detection:** `src/hooks/use-mobile.tsx`
-- **Routing:** `src/App.tsx`
+- **Routing:** `src/components/routes/ProtectedAppRoute.tsx`
 - **Themes:** `src/components/theme/CustomThemeProvider.tsx`
+
+### **Community Module**
+- **Main Components:** `src/components/community/CommunityFeed.tsx`
+- **Sidebar System:** `src/components/community/CommunitySidebar.tsx`
+- **Post Management:** `src/components/community/PostCard.tsx`, `src/components/community/CreatePostDialog.tsx`
+- **Voting System:** `src/components/community/VoteButtons.tsx`
+- **Backend APIs:** `supabase/functions/get-community-feed/`, `supabase/functions/get-trending-discussions/`
 
 ### **PWA Específicos**
 - **Install Prompts:** `src/components/pwa/PWAInstallPrompt.tsx`
@@ -309,10 +339,10 @@ VITE_GOOGLE_CLIENT_ID=xxx.googleusercontent.com
 - **Platform Detection:** `src/hooks/usePWA.tsx`
 
 ### **Review Detail System**
-- **NOVO - Backend:** `supabase/functions/get-review-by-slug/`
-- **NOVO - Data Hook:** `packages/hooks/useReviewDetailQuery.ts`
-- **NOVO - Page Component:** `src/pages/ReviewDetailPage.tsx`
-- **NOVO - Performance:** `supabase/migrations/*-acervo-performance-indexes.sql`
+- **Backend:** `supabase/functions/get-review-by-slug/`
+- **Data Hook:** `packages/hooks/useReviewDetailQuery.ts`
+- **Page Component:** `src/pages/ReviewDetailPage.tsx`
+- **Performance:** `supabase/migrations/*-acervo-performance-indexes.sql`
 
 ### **Documentação Técnica**
 - **Blueprints:** `/docs/blueprints/` - Especificações por módulo
@@ -321,5 +351,4 @@ VITE_GOOGLE_CLIENT_ID=xxx.googleusercontent.com
 
 ---
 
-**🎯 RESUMO EXECUTIVO:** A plataforma EVIDENS é agora um Progressive Web App completo e production-ready, com backend real implementado para o Acervo e foundation sólida para Review Detail pages. A implementação seguiu rigorosamente as especificações dos blueprints e diretrizes de performance, com próximas fases focadas em LayoutAwareRenderer e Community features.
-
+**🎯 RESUMO EXECUTIVO:** A plataforma EVIDENS é agora um Progressive Web App completo e funcional, com arquitetura de providers consolidada e community module em desenvolvimento avançado. A implementação seguiu rigorosamente as especificações dos blueprints e diretrizes de performance, com próximas fases focadas em features avançadas da comunidade e sistema de comentários.
