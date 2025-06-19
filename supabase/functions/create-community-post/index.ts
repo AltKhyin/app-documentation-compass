@@ -1,91 +1,251 @@
 
-// ABOUTME: Transactional community post creation using RPC for data consistency.
+// ABOUTME: Edge function for creating new community posts with auto-upvote and comprehensive validation.
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0'
-import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts'
-import { 
-  createErrorResponse, 
-  createSuccessResponse, 
-  handleCorsPreflightRequest,
-  authenticateUser,
-  validateRequiredFields,
-  ValidationError,
-  RateLimitError 
-} from '../_shared/api-helpers.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { corsHeaders } from '../_shared/cors.ts'
+import { rateLimit } from '../_shared/rate-limit.ts'
+
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+)
 
 interface CreatePostRequest {
   title?: string;
   content: string;
   category: string;
+  post_type?: 'text' | 'image' | 'video' | 'poll';
+  image_url?: string;
+  video_url?: string;
+  poll_data?: Record<string, any>;
+  review_id?: number;
+  parent_post_id?: number;
 }
 
-serve(async (req) => {
+interface CreatePostResponse {
+  success: boolean;
+  post_id: number;
+  message: string;
+}
+
+Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return handleCorsPreflightRequest();
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
-    // Authenticate user
-    const authHeader = req.headers.get('Authorization');
-    const user = await authenticateUser(supabase, authHeader);
-
-    // Check rate limit (5 posts per 5 minutes)
-    const rateLimitResult = await checkRateLimit(supabase, 'create-community-post', user.id, 5, 300);
-    if (!rateLimitResult.allowed) {
-      throw RateLimitError;
-    }
-
-    // Parse and validate request body
-    const requestBody: CreatePostRequest = await req.json();
-    validateRequiredFields(requestBody, ['content', 'category']);
+    // Rate limiting check - more restrictive for post creation
+    const clientIP = req.headers.get('x-forwarded-for') || 'unknown';
+    const rateLimitResult = await rateLimit(supabase, `create-post:${clientIP}`, 10, 60); // 10 posts per minute
     
-    const { title, content, category } = requestBody;
-
-    // Additional validation
-    if (content.trim().length < 10) {
-      throw ValidationError('Post content must be at least 10 characters long');
+    if (!rateLimitResult.allowed) {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'Rate limit exceeded. Please wait before creating another post.',
+            code: 'RATE_LIMIT_EXCEEDED'
+          }
+        }),
+        { 
+          status: 429, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    if (title && title.trim().length > 200) {
-      throw ValidationError('Post title cannot exceed 200 characters');
+    // Authentication check - required for post creation
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'Authentication required to create posts',
+            code: 'UNAUTHORIZED'
+          }
+        }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    console.log('Creating community post via transactional RPC:', { 
-      userId: user.id, 
-      category, 
-      hasTitle: !!title 
-    });
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
 
-    // *** THE FIX: Call the single transactional RPC ***
-    const { data: newPost, error } = await supabase.rpc('create_post_and_auto_vote', {
-      p_author_id: user.id,
-      p_title: title?.trim() || null,
-      p_content: content.trim(),
-      p_category: category,
-    }).single(); // .single() is important as our RPC returns a single record
-
-    if (error) {
-      console.error('Failed to create post via RPC:', error);
-      throw new Error('Failed to create post');
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'Invalid authentication token',
+            code: 'UNAUTHORIZED'
+          }
+        }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    console.log('Post created successfully via RPC:', newPost.id);
+    // Parse request body
+    const body: CreatePostRequest = await req.json();
+    
+    // Validation
+    if (!body.content || body.content.trim().length === 0) {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'Post content is required',
+            code: 'VALIDATION_ERROR'
+          }
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
-    return createSuccessResponse({
+    if (!body.category || body.category.trim().length === 0) {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'Post category is required',
+            code: 'VALIDATION_ERROR'
+          }
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Validate category
+    const validCategories = ['general', 'review_discussion', 'question', 'announcement'];
+    if (!validCategories.includes(body.category)) {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'Invalid category provided',
+            code: 'VALIDATION_ERROR'
+          }
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Content length validation
+    if (body.content.length > 10000) {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'Post content exceeds maximum length (10,000 characters)',
+            code: 'VALIDATION_ERROR'
+          }
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Title validation (if provided)
+    if (body.title && body.title.length > 200) {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'Post title exceeds maximum length (200 characters)',
+            code: 'VALIDATION_ERROR'
+          }
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Use database function for post creation with auto-upvote
+    const { data: newPost, error: createError } = await supabase
+      .rpc('create_post_and_auto_vote', {
+        p_author_id: user.id,
+        p_title: body.title || null,
+        p_content: body.content,
+        p_category: body.category
+      });
+
+    if (createError || !newPost) {
+      console.error('Error creating post:', createError);
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'Failed to create post',
+            code: 'DATABASE_ERROR'
+          }
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Update post with multimedia fields if provided
+    if (body.post_type || body.image_url || body.video_url || body.poll_data) {
+      const updateData: any = {};
+      
+      if (body.post_type) updateData.post_type = body.post_type;
+      if (body.image_url) updateData.image_url = body.image_url;
+      if (body.video_url) updateData.video_url = body.video_url;
+      if (body.poll_data) updateData.poll_data = body.poll_data;
+
+      const { error: updateError } = await supabase
+        .from('CommunityPosts')
+        .update(updateData)
+        .eq('id', newPost.id);
+
+      if (updateError) {
+        console.error('Error updating post with multimedia:', updateError);
+        // Don't fail the entire operation, just log the error
+      }
+    }
+
+    const response: CreatePostResponse = {
       success: true,
       post_id: newPost.id,
       message: 'Post created successfully'
-    }, rateLimitHeaders(rateLimitResult));
+    };
+
+    return new Response(
+      JSON.stringify(response),
+      { 
+        status: 201, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
 
   } catch (error) {
-    console.error('Post creation error:', error);
-    return createErrorResponse(error);
+    console.error('Unexpected error in create-community-post function:', error);
+    return new Response(
+      JSON.stringify({
+        error: {
+          message: 'Internal server error',
+          code: 'INTERNAL_ERROR'
+        }
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
   }
 });

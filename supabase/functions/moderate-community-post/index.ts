@@ -1,144 +1,262 @@
 
-// ABOUTME: Enhanced community post moderation using centralized role checking and error handling.
+// ABOUTME: Edge function for community post moderation actions (pin, lock, flair) with proper authorization checks.
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0'
-import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts'
-import { 
-  createErrorResponse, 
-  createSuccessResponse, 
-  handleCorsPreflightRequest,
-  authenticateUser,
-  validateRequiredFields,
-  ValidationError,
-  ForbiddenError,
-  NotFoundError,
-  RateLimitError 
-} from '../_shared/api-helpers.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { corsHeaders } from '../_shared/cors.ts'
+import { rateLimit } from '../_shared/rate-limit.ts'
+
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+)
 
 interface ModerationRequest {
   post_id: number;
-  action_type: 'pin' | 'unpin' | 'lock' | 'unlock' | 'flair' | 'hide';
+  action_type: 'pin' | 'unpin' | 'lock' | 'unlock' | 'flair' | 'hide' | 'delete';
   reason?: string;
   flair_text?: string;
   flair_color?: string;
 }
 
-serve(async (req) => {
+interface ModerationResponse {
+  success: boolean;
+  message: string;
+}
+
+Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return handleCorsPreflightRequest();
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
-    // Authenticate user
-    const authHeader = req.headers.get('Authorization');
-    const user = await authenticateUser(supabase, authHeader);
-
-    // Check rate limit (10 actions per 60 seconds)
-    const rateLimitResult = await checkRateLimit(supabase, 'moderate-community-post', user.id, 10, 60);
+    // Rate limiting check
+    const clientIP = req.headers.get('x-forwarded-for') || 'unknown';
+    const rateLimitResult = await rateLimit(supabase, `moderate:${clientIP}`, 20, 60); // 20 actions per minute
+    
     if (!rateLimitResult.allowed) {
-      throw RateLimitError;
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'Rate limit exceeded. Please try again later.',
+            code: 'RATE_LIMIT_EXCEEDED'
+          }
+        }),
+        { 
+          status: 429, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    // *** THE FIX 1: Centralized RBAC Check ***
-    // Instead of fetching the whole profile, just call our new RPC
-    const { data: canModerate, error: roleError } = await supabase.rpc('is_editor', { 
-      p_user_id: user.id 
-    });
-
-    if (roleError || !canModerate) {
-      throw ForbiddenError;
+    // Authentication check - required for moderation
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'Authentication required for moderation actions',
+            code: 'UNAUTHORIZED'
+          }
+        }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    // Parse and validate request body
-    const requestBody: ModerationRequest = await req.json();
-    validateRequiredFields(requestBody, ['post_id', 'action_type']);
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'Invalid authentication token',
+            code: 'UNAUTHORIZED'
+          }
+        }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Parse request body
+    const body: ModerationRequest = await req.json();
     
-    const { post_id, action_type, reason, flair_text, flair_color } = requestBody;
-
-    console.log('Processing moderation action:', { post_id, action_type, moderator: user.id });
-
-    // Validate the post exists
-    const { data: post, error: postError } = await supabase
-      .from('CommunityPosts')
-      .select('id')
-      .eq('id', post_id)
-      .single();
-
-    if (postError || !post) {
-      throw NotFoundError;
+    if (!body.post_id || typeof body.post_id !== 'number') {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'Invalid post_id provided',
+            code: 'VALIDATION_ERROR'
+          }
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    // Apply moderation action
-    let updateData: any = {};
-    
-    switch (action_type) {
-      case 'pin':
-        updateData.is_pinned = true;
-        break;
-      case 'unpin':
-        updateData.is_pinned = false;
-        break;
-      case 'lock':
-        updateData.is_locked = true;
-        break;
-      case 'unlock':
-        updateData.is_locked = false;
-        break;
-      case 'flair':
-        updateData.flair_text = flair_text;
-        updateData.flair_color = flair_color;
-        break;
-      case 'hide':
-        // For now, we'll use a special category to hide posts
-        updateData.category = 'hidden';
-        break;
-      default:
-        throw ValidationError('Invalid action type');
+    if (!body.action_type) {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'action_type is required',
+            code: 'VALIDATION_ERROR'
+          }
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    // Update the post
-    const { error: updateError } = await supabase
-      .from('CommunityPosts')
-      .update(updateData)
-      .eq('id', post_id);
+    // Use database function for moderation actions
+    const { data: result, error: moderationError } = await supabase
+      .rpc('handle_post_action', {
+        p_post_id: body.post_id,
+        p_user_id: user.id,
+        p_action_type: body.action_type
+      });
 
-    if (updateError) {
-      console.error('Failed to apply moderation action:', updateError);
-      throw new Error('Failed to apply moderation action');
+    if (moderationError) {
+      console.error('Moderation error:', moderationError);
+      
+      // Handle specific error cases
+      if (moderationError.message.includes('POST_NOT_FOUND')) {
+        return new Response(
+          JSON.stringify({
+            error: {
+              message: 'Post not found',
+              code: 'POST_NOT_FOUND'
+            }
+          }),
+          { 
+            status: 404, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+      
+      if (moderationError.message.includes('FORBIDDEN')) {
+        return new Response(
+          JSON.stringify({
+            error: {
+              message: 'Insufficient permissions for this action',
+              code: 'FORBIDDEN'
+            }
+          }),
+          { 
+            status: 403, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'Failed to execute moderation action',
+            code: 'MODERATION_ERROR'
+          }
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    // Log the moderation action
+    // Handle flair actions separately (not covered by the database function)
+    if (body.action_type === 'flair' && body.flair_text) {
+      const { error: flairError } = await supabase
+        .from('CommunityPosts')
+        .update({
+          flair_text: body.flair_text,
+          flair_color: body.flair_color || null
+        })
+        .eq('id', body.post_id);
+
+      if (flairError) {
+        console.error('Error setting flair:', flairError);
+        return new Response(
+          JSON.stringify({
+            error: {
+              message: 'Failed to set post flair',
+              code: 'DATABASE_ERROR'
+            }
+          }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+    }
+
+    // Log moderation action
     const { error: logError } = await supabase
       .from('CommunityModerationActions')
       .insert({
-        post_id,
+        post_id: body.post_id,
         moderator_id: user.id,
-        action_type,
-        reason: reason || null,
-        metadata: { flair_text, flair_color }
+        action_type: body.action_type,
+        reason: body.reason || null,
+        metadata: {
+          flair_text: body.flair_text || null,
+          flair_color: body.flair_color || null
+        }
       });
 
     if (logError) {
-      console.error('Failed to log moderation action:', logError);
-      // Don't fail the request if logging fails
+      console.error('Error logging moderation action:', logError);
+      // Don't fail the operation, just log the error
     }
 
-    console.log('Moderation action applied successfully');
+    const actionMessages = {
+      pin: 'Post pinned successfully',
+      unpin: 'Post unpinned successfully',
+      lock: 'Post locked successfully',
+      unlock: 'Post unlocked successfully',
+      flair: 'Post flair updated successfully',
+      hide: 'Post hidden successfully',
+      delete: 'Post deleted successfully'
+    };
 
-    return createSuccessResponse({
+    const response: ModerationResponse = {
       success: true,
-      message: 'Moderation action applied successfully'
-    }, rateLimitHeaders(rateLimitResult));
+      message: actionMessages[body.action_type] || 'Moderation action completed'
+    };
+
+    return new Response(
+      JSON.stringify(response),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
 
   } catch (error) {
-    console.error('Moderation action error:', error);
-    return createErrorResponse(error);
+    console.error('Unexpected error in moderate-community-post function:', error);
+    return new Response(
+      JSON.stringify({
+        error: {
+          message: 'Internal server error',
+          code: 'INTERNAL_ERROR'
+        }
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
   }
 });

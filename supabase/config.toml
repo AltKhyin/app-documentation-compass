@@ -5,179 +5,58 @@ project_id = "qjoxiowuiiupbvqlssgk"
 enabled = true
 port = 54321
 schemas = ["public", "graphql_public"]
-extra_search_path = ["public", "extensions"]
+extra_search_path = ["extensions"]
 max_rows = 1000
-
-[db]
-port = 54322
-shadow_port = 54320
-major_version = 15
-
-[db.pooler]
-enabled = false
-port = 54329
-pool_mode = "transaction"
-default_pool_size = 20
-max_client_conn = 100
-
-[realtime]
-enabled = true
-port = 54323
-tenant_id = "realtime-dev"
-encryption_key = "supabase_realtime_dev"
-
-[studio]
-enabled = true
-port = 54324
-api_url = "http://127.0.0.1:54321"
-openai_api_key = "env(OPENAI_API_KEY)"
-
-[inbucket]
-enabled = true
-port = 54325
-smtp_port = 54326
-pop3_port = 54327
-
-[storage]
-enabled = true
-port = 54326
-file_size_limit = "50MiB"
-image_transformation = { enabled = true }
 
 [auth]
 enabled = true
-port = 54327
-site_url = "http://127.0.0.1:3000"
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+port = 54324
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["https://id-preview--bf5f0070-40f8-4760-bbe1-41e5ac0dce78.lovable.app"]
 jwt_expiry = 3600
+refresh_token_rotation_enabled = true
+secure_password_change_enabled = true
 enable_signup = true
-enable_email_confirmations = false
-enable_email_change_confirmations = false
-enable_phone_confirmations = false
-enable_phone_change_confirmations = false
-
-[auth.email]
-enable_signup = true
-double_confirm_changes = true
 enable_confirmations = false
-secure_password_change = false
 
-[auth.external.apple]
-enabled = false
-client_id = ""
-secret = ""
+[db]
+port = 54322
 
-[auth.external.azure]
-enabled = false
-client_id = ""
-secret = ""
-
-[auth.external.bitbucket]
-enabled = false
-client_id = ""
-secret = ""
-
-[auth.external.discord]
-enabled = false
-client_id = ""
-secret = ""
-
-[auth.external.facebook]
-enabled = false
-client_id = ""
-secret = ""
-
-[auth.external.figma]
-enabled = false
-client_id = ""
-secret = ""
-
-[auth.external.github]
-enabled = false
-client_id = ""
-secret = ""
-
-[auth.external.gitlab]
-enabled = false
-client_id = ""
-secret = ""
-
-[auth.external.google]
-enabled = false
-client_id = ""
-secret = ""
-
-[auth.external.keycloak]
-enabled = false
-client_id = ""
-secret = ""
-url = ""
-
-[auth.external.linkedin]
-enabled = false
-client_id = ""
-secret = ""
-
-[auth.external.notion]
-enabled = false
-client_id = ""
-secret = ""
-
-[auth.external.twitch]
-enabled = false
-client_id = ""
-secret = ""
-
-[auth.external.twitter]
-enabled = false
-client_id = ""
-secret = ""
-
-[auth.external.slack]
-enabled = false
-client_id = ""
-secret = ""
-
-[auth.external.spotify]
-enabled = false
-client_id = ""
-secret = ""
-
-[auth.external.workos]
-enabled = false
-client_id = ""
-secret = ""
-
-[auth.external.zoom]
-enabled = false
-client_id = ""
-secret = ""
-
-[edge_runtime]
+[studio]
 enabled = true
-port = 54328
+port = 54323
 
-[functions.get-homepage-feed]
-verify_jwt = true
+[inbucket]
+enabled = true
+port = 54324
 
-[functions.get-personalized-recommendations]
-verify_jwt = true
+[storage]
+enabled = true
+port = 54325
 
-[functions.cast-vote]
-verify_jwt = true
-
-[functions.submit-suggestion]
-verify_jwt = true
-
-[functions.get-acervo-data]
+[functions]
 verify_jwt = true
 
 [functions.get-community-page-data]
+verify_jwt = false
+
+[functions.get-saved-posts]
 verify_jwt = true
 
-[analytics]
-enabled = false
-port = 54327
-vector_port = 54328
-tenant_id = "dev"
-api_key = "env(SUPABASE_ACCESS_TOKEN)"
+[functions.save-post]
+verify_jwt = true
+
+[functions.get-community-post-detail]
+verify_jwt = false
+
+[functions.create-community-post]
+verify_jwt = true
+
+[functions.moderate-community-post]
+verify_jwt = true
+
+[functions.get-review-by-slug]
+verify_jwt = false
+
+[functions.cast-poll-vote]
+verify_jwt = true

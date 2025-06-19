@@ -1,143 +1,189 @@
 
-// ABOUTME: Edge Function for retrieving individual community post details with full content and user interaction data.
+// ABOUTME: Edge function for fetching individual community post details with user-specific data (votes, save status).
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.0";
-import { corsHeaders, createErrorResponse, createSuccessResponse } from "../_shared/api-helpers.ts";
-import { checkRateLimit, rateLimitHeaders } from "../_shared/rate-limit.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { corsHeaders } from '../_shared/cors.ts'
+import { rateLimit } from '../_shared/rate-limit.ts'
 
-serve(async (req) => {
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+)
+
+interface PostDetailRequest {
+  post_id: number;
+}
+
+Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (req.method !== 'POST') {
-    return createErrorResponse('Method not allowed', 'METHOD_NOT_ALLOWED', 405);
-  }
-
   try {
-    // Initialize Supabase client
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    );
-
-    // Get authenticated user (optional for public posts)
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    const userId = user?.id || null;
-
-    console.log(`Get community post detail request from user: ${userId || 'anonymous'}`);
-
-    // Rate limiting check (lighter limit for individual posts)
-    const rateLimitResult = await checkRateLimit(supabase, 'get-community-post-detail', userId || 'anonymous');
+    // Rate limiting check
+    const clientIP = req.headers.get('x-forwarded-for') || 'unknown';
+    const rateLimitResult = await rateLimit(supabase, `get-post-detail:${clientIP}`, 60, 60); // 60 requests per minute
+    
     if (!rateLimitResult.allowed) {
-      return new Response(JSON.stringify({
-        error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }
-      }), {
-        status: 429,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-          ...rateLimitHeaders(rateLimitResult)
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'Rate limit exceeded. Please try again later.',
+            code: 'RATE_LIMIT_EXCEEDED'
+          }
+        }),
+        { 
+          status: 429, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
-      });
+      );
     }
 
-    // Parse and validate request body
-    const { post_id } = await req.json();
-
-    if (!post_id || typeof post_id !== 'number') {
-      return createErrorResponse('Invalid or missing post_id', 'VALIDATION_FAILED', 400);
+    // Get authenticated user (optional for this endpoint)
+    const authHeader = req.headers.get('Authorization');
+    let user = null;
+    
+    if (authHeader) {
+      const { data: { user: authUser } } = await supabase.auth.getUser(
+        authHeader.replace('Bearer ', '')
+      );
+      user = authUser;
     }
 
-    console.log(`Fetching community post detail: ${post_id}`);
+    // Parse request body
+    const body: PostDetailRequest = await req.json();
+    
+    if (!body.post_id || typeof body.post_id !== 'number') {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'Invalid post_id provided',
+            code: 'VALIDATION_ERROR'
+          }
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
-    // Fetch the individual post with all details
+    // Fetch post with author details
     const { data: post, error: postError } = await supabase
       .from('CommunityPosts')
       .select(`
-        id,
-        title,
-        content,
-        category,
-        upvotes,
-        downvotes,
-        created_at,
-        is_pinned,
-        is_locked,
-        flair_text,
-        flair_color,
-        image_url,
-        video_url,
-        poll_data,
-        post_type,
-        author:Practitioners!CommunityPosts_author_id_fkey (
+        *,
+        author:Practitioners!author_id (
           id,
           full_name,
           avatar_url
         )
       `)
-      .eq('id', post_id)
+      .eq('id', body.post_id)
       .single();
 
     if (postError || !post) {
-      console.error('Error fetching post:', postError);
-      return createErrorResponse('Post not found', 'POST_NOT_FOUND', 404);
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'Post not found',
+            code: 'POST_NOT_FOUND'
+          }
+        }),
+        { 
+          status: 404, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    // Get user's vote on this post (if authenticated)
     let userVote = null;
-    if (userId) {
+    let isSaved = false;
+    let userCanModerate = false;
+
+    if (user) {
+      // Get user's vote on this post
       const { data: voteData } = await supabase
         .from('CommunityPost_Votes')
         .select('vote_type')
-        .eq('post_id', post_id)
-        .eq('practitioner_id', userId)
-        .maybeSingle();
-
+        .eq('post_id', body.post_id)
+        .eq('practitioner_id', user.id)
+        .single();
+      
       userVote = voteData?.vote_type || null;
-    }
 
-    // Check if user has saved this post (if authenticated)
-    let isSaved = false;
-    if (userId) {
+      // Check if post is saved by user
       const { data: savedData } = await supabase
         .from('SavedPosts')
         .select('id')
-        .eq('post_id', post_id)
-        .eq('practitioner_id', userId)
-        .maybeSingle();
-
+        .eq('post_id', body.post_id)
+        .eq('practitioner_id', user.id)
+        .single();
+      
       isSaved = !!savedData;
+
+      // Check if user can moderate (admin/editor role)
+      const { data: userData } = await supabase
+        .from('Practitioners')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      userCanModerate = userData?.role === 'admin' || userData?.role === 'editor';
     }
 
-    // Get reply count
+    // Get reply count for the post
     const { count: replyCount } = await supabase
       .from('CommunityPosts')
-      .select('*', { count: 'exact', head: true })
-      .eq('parent_post_id', post_id);
+      .select('id', { count: 'exact' })
+      .eq('parent_post_id', body.post_id);
 
-    // Transform the data to match the expected format
-    const postDetail = {
-      ...post,
+    // Format response
+    const response = {
+      id: post.id,
+      title: post.title,
+      content: post.content,
+      category: post.category,
+      upvotes: post.upvotes || 0,
+      downvotes: post.downvotes || 0,
+      created_at: post.created_at,
+      is_pinned: post.is_pinned || false,
+      is_locked: post.is_locked || false,
+      flair_text: post.flair_text,
+      flair_color: post.flair_color,
+      post_type: post.post_type || 'text',
+      image_url: post.image_url,
+      video_url: post.video_url,
+      poll_data: post.poll_data,
+      author: post.author,
       user_vote: userVote,
       reply_count: replyCount || 0,
       is_saved: isSaved,
-      user_can_moderate: false // Will be populated by frontend if needed
+      user_can_moderate: userCanModerate
     };
 
-    console.log(`Successfully fetched post detail for post ${post_id}`);
-
-    return createSuccessResponse(postDetail);
+    return new Response(
+      JSON.stringify(response),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
 
   } catch (error) {
     console.error('Unexpected error in get-community-post-detail function:', error);
-    return createErrorResponse('Internal server error', 'INTERNAL_ERROR', 500);
+    return new Response(
+      JSON.stringify({
+        error: {
+          message: 'Internal server error',
+          code: 'INTERNAL_ERROR'
+        }
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
   }
 });

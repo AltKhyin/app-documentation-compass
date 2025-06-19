@@ -1,110 +1,70 @@
 
-// ABOUTME: Centralized rate limiting utility for all Edge Functions with configurable limits.
+// ABOUTME: Shared rate limiting utility for edge functions using database-based tracking.
 
-export interface RateLimitConfig {
-  requests: number;
-  window: number; // seconds
-  identifier?: string; // custom identifier, defaults to user ID
+interface RateLimitResult {
+  allowed: boolean;
+  remaining?: number;
+  resetTime?: number;
 }
 
-export const RATE_LIMITS: Record<string, RateLimitConfig> = {
-  'get-homepage-feed': { requests: 60, window: 60 }, // 1 req/sec per user
-  'get-acervo-data': { requests: 30, window: 60 }, // 30 req/min per user
-  'get-community-feed': { requests: 30, window: 60 }, // 30 req/min per user
-  'get-community-sidebar-data': { requests: 20, window: 60 }, // 20 req/min per user
-  'submit-suggestion': { requests: 5, window: 300 }, // 5 req/5min per user
-  'cast-suggestion-vote': { requests: 10, window: 60 }, // 10 votes/min per user
-  'cast-community-vote': { requests: 20, window: 60 }, // 20 votes/min per user
-  'cast-poll-vote': { requests: 20, window: 60 }, // 20 votes/min per user
-  'cast-vote': { requests: 20, window: 60 }, // 20 votes/min per user (legacy)
-  'create-community-post': { requests: 5, window: 300 }, // 5 posts/5min per user
-  'moderate-community-post': { requests: 10, window: 60 }, // 10 actions/min per moderator
-  'get-personalized-recommendations': { requests: 10, window: 60 }, // 10 req/min per user
-  'get-community-page-data': { requests: 30, window: 60 }, // 30 req/min per user
-};
-
-export async function checkRateLimit(
+export async function rateLimit(
   supabase: any,
-  functionName: string,
-  userId: string,
-  customRequests?: number,
-  customWindow?: number
-): Promise<{ allowed: boolean; remaining?: number; resetTime?: number }> {
-  const config = RATE_LIMITS[functionName];
-  
-  // Use custom limits if provided, otherwise fall back to config
-  const requests = customRequests ?? config?.requests;
-  const window = customWindow ?? config?.window;
-  
-  if (!requests || !window) {
-    // No rate limit configured, allow request
-    return { allowed: true };
-  }
-
-  const identifier = userId;
-  const key = `${functionName}:${identifier}`;
-  const now = Math.floor(Date.now() / 1000);
-  const windowStart = now - window;
-
+  key: string,
+  limit: number,
+  windowSeconds: number
+): Promise<RateLimitResult> {
   try {
-    // Check current request count in the time window - FIXED: Proper destructuring
-    const { data: requestHistory, error } = await supabase
-      .from('rate_limit_log')
-      .select('timestamp')
-      .eq('key', key)
-      .gte('timestamp', windowStart);
-
-    if (error) {
-      console.error('Rate limit check error:', error);
-      // On error, allow request (fail open)
-      return { allowed: true };
-    }
-
-    const currentCount = requestHistory?.length || 0;
+    const now = Math.floor(Date.now() /  1000);
+    const windowStart = now - windowSeconds;
     
-    if (currentCount >= requests) {
-      const oldestRequest = Math.min(...requestHistory.map(r => r.timestamp));
-      const resetTime = oldestRequest + window;
-      return { 
-        allowed: false, 
-        remaining: 0, 
-        resetTime 
-      };
-    }
-
-    // Log this request
-    await supabase
-      .from('rate_limit_log')
-      .insert({ key, timestamp: now });
-
-    // Clean up old entries (optional, for performance)
+    // Clean old entries
     await supabase
       .from('rate_limit_log')
       .delete()
-      .eq('key', key)
       .lt('timestamp', windowStart);
-
+    
+    // Count current requests in window
+    const { count, error: countError } = await supabase
+      .from('rate_limit_log')
+      .select('*', { count: 'exact' })
+      .eq('key', key)
+      .gte('timestamp', windowStart);
+    
+    if (countError) {
+      console.error('Rate limit count error:', countError);
+      // Allow request if we can't check rate limit
+      return { allowed: true };
+    }
+    
+    if ((count || 0) >= limit) {
+      return { 
+        allowed: false, 
+        remaining: 0,
+        resetTime: windowStart + windowSeconds
+      };
+    }
+    
+    // Log this request
+    const { error: insertError } = await supabase
+      .from('rate_limit_log')
+      .insert({
+        key: key,
+        timestamp: now
+      });
+    
+    if (insertError) {
+      console.error('Rate limit log error:', insertError);
+    }
+    
     return { 
       allowed: true, 
-      remaining: requests - currentCount - 1 
+      remaining: limit - (count || 0) - 1,
+      resetTime: windowStart + windowSeconds
     };
+    
   } catch (error) {
-    console.error('Rate limit error:', error);
-    // On error, allow request (fail open)
+    console.error('Rate limiting error:', error);
+    // Allow request if rate limiting fails
     return { allowed: true };
   }
-}
-
-export function rateLimitHeaders(result: { allowed: boolean; remaining?: number; resetTime?: number }) {
-  const headers: Record<string, string> = {};
-  
-  if (result.remaining !== undefined) {
-    headers['X-RateLimit-Remaining'] = result.remaining.toString();
-  }
-  
-  if (result.resetTime !== undefined) {
-    headers['X-RateLimit-Reset'] = result.resetTime.toString();
-  }
-  
-  return headers;
 }
