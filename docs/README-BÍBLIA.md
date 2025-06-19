@@ -1,368 +1,382 @@
 
-# **README-BÍBLIA.md**
+# **📋 EVIDENS Implementation Plan: Core Application Stabilization (REVISED)**
 
-**Versão:** 4.0.0  
-**Data:** 19 de junho de 2025  
-**Status:** ✅ **Production-Hardened Community Platform**
-
----
-
-## **📋 ESTADO ATUAL DO REPOSITÓRIO (2 min read)**
-
-Este documento fornece um resumo completo e atual do estado implementado da plataforma EVIDENS — um Progressive Web App (PWA) para sistema editorial científico desenvolvido em React + Supabase, agora **production-hardened** com otimizações críticas de performance e arquitetura.
+**Version:** 6.1 (Risk-Mitigated)  
+**Date:** June 19, 2025  
+**Status:** 🟢 Ready for Constrained Implementation  
+**Author:** Senior Systems Architect  
+**Audit:** Risk-Mitigated per Senior Systems Architect Review
 
 ---
 
-## **🏗️ ARQUITETURA & STACK TECNOLÓGICO**
+## **🎯 EXECUTIVE SUMMARY & STRATEGIC ALIGNMENT**
 
-### **Frontend**
-- **Framework:** React 18.3.1 + TypeScript + Vite
-- **UI Library:** shadcn/ui + Tailwind CSS + Lucide React
-- **Estado:** Zustand para auth + TanStack Query para server state
-- **Roteamento:** React Router DOM 6.26.2
-- **Charts:** Recharts 2.12.7
-- **PWA:** Service Worker + Web App Manifest + Install Prompts
+### **Primary Objective**
+Transform the current functional EVIDENS application into a **stable, feature-complete platform** by implementing missing core interactions through **strictly constrained, additive changes**. This plan prioritizes **functional completeness with zero architectural risk**.
 
-### **Backend**
-- **Database:** Supabase PostgreSQL com **otimizações de performance**
-- **Auth:** Supabase Auth com RLS policies e **role-based access control centralizado**
-- **API:** Auto-generated + **Edge Functions otimizadas** para lógica complexa
-- **Storage:** Supabase Storage para imagens
-- **Rate Limiting:** **Sistema centralizado** com cleanup automático
+### **Critical Implementation Constraints**
+This plan has been audited and revised to eliminate all identified sources of scope creep and complexity. The following constraints are **NON-NEGOTIABLE**:
 
-### **Deployment**
-- **Hosting:** Lovable (staging)
-- **Database:** Supabase Cloud com **funções RPC otimizadas**
-- **CDN:** Automatic via Lovable
-- **PWA:** Ready for production deployment
+1. **Strictly Additive UI Changes**: No refactoring or restyling of existing components
+2. **No Draft Functionality**: Single-submission workflow only
+3. **Minimal Tiptap Extensions**: StarterKit only, no additional extensions
+4. **Sequential Milestone Execution**: Complete verification before proceeding
+5. **Stability Over Performance**: No optimistic updates or complex optimizations
 
 ---
 
-## **✅ MÓDULOS IMPLEMENTADOS & FUNCIONAIS**
+## **🚀 MILESTONE 1: CORE INTERACTION PARITY**
+*Estimated Duration: 3-4 implementation cycles*
 
-### **📱 1. Progressive Web App (PWA)**
-- **Status:** ✅ **Production-Ready**
-- **Funcionalidades:**
-  - Service Worker com cache estratégico e funcionalidade offline
-  - Web App Manifest otimizado com ícones em múltiplas resoluções
-  - Prompt de instalação inteligente para Android (Chrome) e iOS (Safari)
-  - Meta tags completas para iOS, Android, e Windows
-  - Componente PWAProvider para gerenciamento de estado global
-  - Botão de instalação integrado no header
-  - Suporte completo a notificações push
-  - Background sync para funcionalidade offline
-  - Shortcuts de app para navegação rápida
-
-### **🔐 2. Sistema de Autenticação**
-- **Status:** ✅ **Production-Ready**
-- **Funcionalidades:**
-  - Login/signup com email + senha
-  - OAuth com Google (configurado)
-  - Proteção de rotas com `ProtectedRoute`
-  - **RLS policies ativas** para todos os recursos
-  - **4 níveis de usuário:** `practitioner`, `moderator`, `editor`, `admin`
-  - **JWT custom claims** para autorização adequada
-  - **✅ NOVO:** **Funções centralizadas de role checking** (`is_editor`, `is_admin`, `can_moderate`)
-
-### **📱 3. Application Shell**
-- **Status:** ✅ **Production-Ready**
-- **Funcionalidades Desktop:**
-  - Sidebar colapsível com navegação persistente
-  - Layout two-column responsivo
-  - User profile block com avatar, logout e theme switcher
-  - Notification bell com PWA install button
-- **Funcionalidades Mobile:**
-  - Bottom tab bar navigation (sempre visível)
-  - Single-column layout otimizado
-  - Header com logo centralizado, PWA install e notification bell
-  - Touch targets ≥ 44×44px
-  - Discrete scrollbars theme-aware
-
-### **🏠 4. Homepage**
-- **Status:** ✅ **Production-Ready**
-- **Funcionalidades:**
-  - Feed consolidado via Edge Function `get-homepage-feed`
-  - FeaturedReview hero section (mobile: altura reduzida, padding otimizado)
-  - ReviewCarousel horizontal (mobile: ~1.5 cards visíveis, scroll hints)
-  - NextEditionModule com progressive disclosure (mobile: top 3 sugestões + "Ver todas")
-  - **Sistema de votação otimizado** com triggers incrementais
-  - Performance otimizada: dados consolidados em 1 request
-  - Links funcionais para páginas de review detail
-
-### **📚 5. Acervo**
-- **Status:** ✅ **Production-Ready**
-- **Funcionalidades:**
-  - Backend real implementado com PostgreSQL queries
-  - Performance otimizada com indexes dedicados
-  - RLS enforcement completo para access tiers
-  - Grid responsivo: desktop (masonry), mobile (2 colunas)
-  - Sistema de tags hierárquicos funcionais
-  - Filtros desktop: painel horizontal
-  - Filtros mobile: bottom sheet modal (90% viewport height)
-  - Client-side sorting e filtering
-  - Cards com min-tap-area ≥ 160×160px no mobile
-  - Links funcionais para páginas de review detail
-
-### **📖 6. Review Detail Pages**
-- **Status:** ✅ **Production-Ready**
-- **Funcionalidades:**
-  - Edge Function `get-review-by-slug` com RLS enforcement
-  - Hook `useReviewDetailQuery` seguindo Data Access Layer
-  - Página `/reviews/:slug` com navegação funcional
-  - **Rate limiting centralizado** implementado
-  - Access control para diferentes subscription tiers
-  - View count tracking automático
-  - **Error handling padronizado** para 404/403/500
-  - Loading states com skeleton components
-  - Header com informações do autor e data
-  - Navigation breadcrumb funcional
-
-### **👥 7. Community Module - Production-Hardened Scientific Reddit**
-- **Status:** ✅ **Production-Hardened** ⭐
-- **✅ PERFORMANCE BREAKTHROUGH:** **Eliminação completa de N+1 queries**
-- **Core Features:**
-  - ✅ **CommunityFeed** com **RPC otimizada** (`get_community_feed_with_details`)
-  - ✅ **PostCard** com sistema de votação e indicadores de moderação
-  - ✅ **VoteButtons** com **triggers incrementais** e optimistic updates
-  - ✅ **CreatePostDialog** com **operações transacionais** (`create_post_and_auto_vote`)
-  - ✅ **CommunitySidebar** com 6 módulos funcionais
-  - ✅ **Mobile Integration** via CommunityFeedWithSidebar
-- **Advanced Sidebar Modules:**
-  - ✅ **RulesModule**: Regras expansíveis da comunidade
-  - ✅ **FeaturedPollModule**: Enquetes interativas com votação
-  - ✅ **TrendingDiscussionsModule**: Algoritmo de trending baseado em engagement
-  - ✅ **RecentActivityModule**: Estatísticas em tempo real
-  - ✅ **LinksModule**: Links úteis configuráveis
-- **✅ HARDENED Moderation System:**
-  - ✅ **Post Actions**: Pin, lock, flair, hide posts
-  - ✅ **Centralized Role Checking**: Funções RPC para permission validation
-  - ✅ **Standardized Error Handling**: Consistent API responses
-  - ✅ **Moderation Log**: Complete action tracking
-  - ✅ **RLS Enforcement**: Role-based permissions
-
-### **🎨 8. Sistema Visual**
-- **Status:** ✅ **Production-Ready**
-- **Funcionalidades:**
-  - Dark/Light theme com design tokens e theme switcher no user menu
-  - Typography: Inter (sans) + Source Serif 4 (serif)
-  - Scrollbars discretos e theme-aware
-  - Mobile typography: 16px min, line-height 1.7
-  - Touch-friendly spacing e interactions
-  - PWA branding consistente em todos os tamanhos
+### **Objective**
+Enable all post-related user interactions currently supported by the backend but missing from the UI through **strictly additive changes only**.
 
 ---
 
-## **🚀 OTIMIZAÇÕES DE PERFORMANCE IMPLEMENTADAS**
+### **TASK 1.1: Community Post Actions Data Layer**
 
-### **⚡ Database Performance Breakthrough**
-- **✅ ELIMINAÇÃO DE N+1 QUERIES:** RPC `get_community_feed_with_details` substitui 20+ queries por 1
-- **✅ OPERAÇÕES TRANSACIONAIS:** RPC `create_post_and_auto_vote` garante consistência de dados
-- **✅ TRIGGERS INCREMENTAIS:** Vote counting otimizado com atualizações atômicas
-- **✅ ÍNDICES OTIMIZADOS:** Performance indexes para todos os query patterns
+**Priority:** CRITICAL  
+**Governing Directives:** [DAL.1], [DAL.2], [DAL.3], [DAL.4]
 
-### **🛡️ Security & Error Handling Hardening**
-- **✅ CENTRALIZED ERROR HANDLING:** Classe `ApiError` com responses padronizados
-- **✅ ROLE-BASED ACCESS CONTROL:** Funções RPC centralizadas (`is_editor`, `is_admin`)
-- **✅ STANDARDIZED API RESPONSES:** Consistent error codes e message structure
-- **✅ RATE LIMITING CENTRALIZADO:** Sistema unificado com cleanup automático
+#### **CRITICAL CONSTRAINT: Simplicity Over Performance**
+**MANDATORY SIMPLIFICATION**: Do not implement optimistic updates. Use only `queryClient.invalidateQueries` for cache management. This constraint is non-negotiable for stability.
 
-### **📊 Edge Functions Optimization**
-- **✅ REFATORADAS:** 11 Edge Functions otimizadas com novos padrões
-- **✅ ERROR HANDLING:** Consistent error responses em todas as functions
-- **✅ PERFORMANCE:** Redução de 70%+ em database queries
-- **✅ MAINTAINABILITY:** Código centralizado e reutilizável
+#### **Technical Specifications**
 
----
+**File Creation:**
+- `packages/hooks/usePostActionMutation.ts`
 
-## **📊 DADOS & API**
+**Implementation Requirements:**
+```typescript
+// Mandatory Hook Interface
+interface PostActionPayload {
+  postId: number;
+  action: 'delete' | 'pin' | 'unpin' | 'lock' | 'unlock';
+}
 
-### **✅ OPTIMIZED Edge Functions**
-- ✅ `get-homepage-feed`: Consolidação de dados da homepage
-- ✅ `get-acervo-data`: Dados reais do PostgreSQL com tags e reviews
-- ✅ `get-review-by-slug`: Fetch individual de reviews com RLS
-- ✅ **`get-community-feed`**: **OTIMIZADA** com RPC para eliminar N+1 queries
-- ✅ `get-community-sidebar-data`: Dados completos da sidebar com polls e trending
-- ✅ `get-trending-discussions`: Algoritmo de trending baseado em engagement
-- ✅ **`create-community-post`**: **OTIMIZADA** com operações transacionais
-- ✅ `cast-community-vote`: Sistema de votação com triggers incrementais
-- ✅ `cast-poll-vote`: Sistema de votação em enquetes
-- ✅ **`moderate-community-post`**: **HARDENED** com role checking centralizado
-- ✅ `submit-suggestion`: Envio de sugestões para próxima edição
-- ✅ `cast-suggestion-vote`: Sistema de votação otimizado
-- ✅ **Rate limiting centralizado** em todas as functions
-
-### **✅ HARDENED TanStack Query Hooks**
-- ✅ `useCommunityFeedQuery`: Feed infinito com RPC otimizada
-- ✅ `useCommunitySidebarQuery`: Dados consolidados da sidebar
-- ✅ `useCreateCommunityPostMutation`: Criação transacional de posts
-- ✅ `useCastCommunityVoteMutation`: Votação com triggers otimizados
-- ✅ `useCastPollVoteMutation`: Votação em enquetes
-- ✅ `useModerateCommunityPostMutation`: Actions com role checking centralizado
-- ✅ **Invalidação automática** de cache para consistência
-- ✅ **Error handling padronizado** em todos os hooks
-
-### **⚡ Database Performance - PRODUCTION-GRADE**
-- ✅ **RPC Functions**: `get_community_feed_with_details`, `create_post_and_auto_vote`
-- ✅ **Role Checking**: `is_editor`, `is_admin`, `can_moderate` RPCs
-- ✅ **Incremental Triggers**: Optimized vote counting com atomic updates
-- ✅ **Community Tables**: CommunityPosts, CommunityPost_Votes, CommunityModerationActions
-- ✅ **Poll System**: Polls, PollOptions, PollVotes com aggregation triggers
-- ✅ **Statistics**: CommunityStats com auto-update triggers
-- ✅ **Performance Indexes**: **Composite indexes** para filtering eficiente
-- ✅ **Rate Limiting**: `rate_limit_log` com automatic cleanup
-
-### **🔒 Enhanced RLS Policies**
-- ✅ **CommunityPosts**: Public read + authenticated write + author edit
-- ✅ **CommunityPost_Votes**: Public read + user-scoped write/update/delete
-- ✅ **CommunityModerationActions**: Public read + editor/admin write
-- ✅ **CommunityStats**: Public read + admin write
-- ✅ **Polls & PollVotes**: Public read + authenticated participation
-- ✅ **Enhanced Security**: JWT custom claims enforcement + RPC role checking
-
----
-
-## **📱 PWA & MOBILE COMPLIANCE**
-
-### **PWA Core Features**
-- ✅ **Service Worker:** Cache estratégico + funcionalidade offline completa
-- ✅ **Web App Manifest:** Configuração completa com ícones, shortcuts, theme
-- ✅ **Install Prompts:** Suporte nativo Chrome/Edge + instruções iOS Safari
-- ✅ **Offline Capability:** Cache de recursos críticos + fallback navigation
-- ✅ **Push Notifications:** Infraestrutura completa implementada
-- ✅ **Background Sync:** Preparado para sincronização offline
-
-### **Mobile Compliance Status**
-- ✅ **RULE 1:** Single-column layout implementado
-- ✅ **RULE 2:** Bottom tab bar navigation persistente
-- ✅ **RULE 3:** Homepage stacking vertical implementado
-- ✅ **RULE 4:** Carousels mostram ~1.5 cards com scroll hints
-- ✅ **RULE 5:** Progressive disclosure no NextEditionModule
-- ✅ **RULE 6:** Grid Acervo: 2 colunas, min-tap-area ≥ 160×160px
-- ✅ **RULE 7:** Tag filtering via bottom sheet modal (90% viewport)
-- ✅ **RULE 8:** Typography: 16px min, line-height 1.7, padding ≥ 16px
-- ✅ **Community Mobile:** Sidebar modules como pinned cards
-- ✅ **Touch Optimization:** Vote buttons com feedback tátil
-
----
-
-## **⚡ PERFORMANCE & QUALIDADE - PRODUCTION-GRADE**
-
-### **🚀 Community Module Performance - BREAKTHROUGH**
-- ✅ **Database Optimization**: **N+1 queries eliminadas** - 95% redução em DB calls
-- ✅ **Transactional Operations**: Data consistency garantida com RPCs
-- ✅ **Incremental Updates**: Vote triggers otimizados para performance
-- ✅ **Real-time Updates**: Vote changes com optimistic updates
-- ✅ **Cache Strategy**: Intelligent invalidation patterns
-- ✅ **Mobile Performance**: Touch-friendly interactions
-- ✅ **Rate Limiting**: Centralized abuse protection
-- ✅ **Trending Algorithm**: Engagement-based scoring
-- ✅ **Statistics Engine**: Auto-updating community metrics
-
-### **🛡️ Code Quality & Architecture - HARDENED**
-- ✅ **Data Access Layer:** All hooks follow [DAL.1-4] golden rules
-- ✅ **Component Architecture:** Modular sidebar system
-- ✅ **State Management:** TanStack Query + optimistic updates
-- ✅ **Security Implementation:** **Centralized RLS** + JWT custom claims + **RPC role checking**
-- ✅ **Error Boundaries:** **Standardized error handling** com `ApiError` class
-- ✅ **Type Safety:** Full TypeScript coverage com **types atualizados**
-- ✅ **Mobile-First:** Responsive design patterns
-- ✅ **API Consistency:** **Unified error responses** em todas Edge Functions
-
-### **✅ Testing & Validation - PRODUCTION-VERIFIED**
-- ✅ **Community Features:** Post creation, voting, moderation testados
-- ✅ **Performance:** Database queries reduzidas de 20+ para 1 por operação
-- ✅ **Transactional Safety:** Data consistency verificada em todas operações
-- ✅ **Admin Functions:** Pin, lock, flair actions com role checking centralizado
-- ✅ **Mobile Experience:** Touch interactions e layout responsivo
-- ✅ **Authentication Flow:** Role-based permissions com RPCs centralizadas
-- ✅ **Error Handling:** Standardized responses em todos os endpoints
-- ✅ **Rate Limiting:** Centralized protection verificado
-
----
-
-## **🔧 CONFIGURAÇÃO & DEPLOY**
-
-### **Environment Variables**
-```bash
-# Supabase
-VITE_SUPABASE_URL=https://xxx.supabase.co
-VITE_SUPABASE_ANON_KEY=eyxxx
-
-# OAuth
-VITE_GOOGLE_CLIENT_ID=xxx.googleusercontent.com
+interface PostActionResponse {
+  success: boolean;
+  message: string;
+}
 ```
 
-### **✅ HARDENED Admin Configuration**
-- ✅ **Admin Users:** Configured via database migration
-- ✅ **Centralized Role Checking:** RPC functions para permission validation
-- ✅ **Moderation Tools:** Available to editor/admin roles com standardized security
-- ✅ **Community Management:** Full CRUD operations com transactional safety
-- ✅ **Statistics Dashboard:** Real-time community metrics
-- ✅ **Error Monitoring:** Standardized error logging e response handling
+**Backend Integration:**
+- Use existing `handle_post_action` RPC function only
+- Implement standard error handling (no advanced retry logic)
+- **MANDATORY**: Use `queryClient.invalidateQueries({ queryKey: ['community-feed'] })` on success
 
-### **Deploy Status - PRODUCTION-READY**
-- ✅ **Staging:** Lovable auto-deploy ativo
-- ✅ **Database:** **Supabase production ready** com **performance RPCs**
-- ✅ **Edge Functions:** **11 functions optimized** e funcionais
-- ✅ **PWA Ready:** Production deployment ready
-- ✅ **Performance:** **N+1 queries eliminated**, **70%+ reduction** em DB load
-- ✅ **Security:** **Centralized role checking**, **standardized error handling**
+#### **Verification Criteria**
+- [ ] Hook interfaces correctly with `handle_post_action` RPC
+- [ ] Standard error handling implemented
+- [ ] Cache invalidation triggers immediate UI updates
+- [ ] No optimistic updates or complex cache manipulations
 
 ---
 
-## **📋 PRÓXIMOS PASSOS**
+### **TASK 1.2: Post Interaction UI Components**
 
-### **Phase 3: Advanced Features**
-1. **Threaded Discussions:** Sistema de replies aninhados para discussões
-2. **Real-time Notifications:** Live updates para activity feeds
-3. **Advanced Search:** Full-text search em posts e comentários
-4. **User Profiles:** Sistema de perfis expandido
+**Priority:** HIGH  
+**Governing Directives:** [D3.2.1], [SEC.2], [AD.2]
 
-### **Phase 4: Analytics & Optimization**
-1. **Community Analytics:** Engagement metrics e user behavior
-2. **Performance Monitoring:** Real-time metrics e alerting
-3. **A/B Testing:** Feature flag system para experiments
+#### **CRITICAL CONSTRAINT: Strictly Additive Changes**
+**MANDATORY RESTRICTION**: Modifications to `PostCard.tsx` must be strictly additive. You are explicitly forbidden from refactoring, restyling, or altering the existing CSS or layout structure. The goal is functional completion, not visual redesign.
 
-### **Phase 5: Content Creation**
-1. **LayoutAwareRenderer:** Sistema de rendering mobile-first para reviews
-2. **Content Editor:** MVP do editor para admins
-3. **Media Management:** Upload e gerenciamento de imagens
+#### **Component Architecture**
 
----
+**New Components to Create:**
 
-## **📞 PONTOS DE CONTATO TÉCNICO**
+1. **`src/components/community/PostActionMenu.tsx`**
+   - Dropdown menu with contextual actions only
+   - Role-based visibility using `useAuthStore`
+   - No styling changes to parent components
 
-### **Community Module - PRODUCTION-HARDENED ⭐**
-- **Main Feed:** `src/components/community/CommunityFeed.tsx`
-- **Sidebar System:** `src/components/community/CommunitySidebar.tsx`
-- **Post Management:** `src/components/community/PostCard.tsx`, `CreatePostDialog.tsx`
-- **Voting System:** `src/components/community/VoteButtons.tsx`
-- **Moderation:** `src/components/community/moderation/` (admin tools)
+2. **`src/components/community/PostActionBar.tsx`**
+   - Horizontal action bar: comment, share, save buttons
+   - **SAVE BUTTON CONSTRAINT**: Implement as placeholder with toast message "Funcionalidade em breve"
+   - Mobile-optimized touch targets (≥44px)
 
-### **✅ HARDENED Data Layer - PRODUCTION-GRADE**
-- **Optimized Hooks:** `packages/hooks/use*CommunityMutation.ts`
-- **Performance APIs:** `supabase/functions/*community*/` (N+1 queries eliminated)
-- **Database RPCs:** `get_community_feed_with_details`, `create_post_and_auto_vote`
-- **Role Security:** `is_editor`, `is_admin`, `can_moderate` RPCs
-- **RLS Policies:** Complete security implementation
-- **Error Handling:** `supabase/functions/_shared/api-helpers.ts`
+3. **`src/components/community/PostCard.tsx` (Modification)**
+   - **STRICTLY ADDITIVE**: Add components to existing layout only
+   - No changes to existing CSS classes or structure
+   - No visual redesigns or "improvements"
 
-### **Documentation Técnica**
-- **Blueprints:** `/docs/blueprints/06_COMMUNITY_BLUEPRINT.md`
-- **Architecture:** `/docs/[DOC_X]/` - Decisions e constraints
-- **Mobile Guide:** `/docs/[DOC_8]_MOBILE_ADAPTATION.md`
-- **Performance:** Engineering Playbook com benchmarks
+#### **Permission Logic Implementation**
+```typescript
+// Simple role-based visibility (no complex permission systems)
+const canModerate = user?.role === 'editor' || user?.role === 'admin';
+const canDelete = post.author_id === user?.id || canModerate;
+```
+
+#### **Verification Criteria**
+- [ ] Action menu appears with role-appropriate options
+- [ ] Post deletion removes item from feed immediately
+- [ ] Save button shows placeholder toast message
+- [ ] **CRITICAL**: PostCard layout unchanged except for added components
+- [ ] Mobile touch targets meet standards
 
 ---
 
-**🎯 RESUMO EXECUTIVO:** A plataforma EVIDENS foi **completamente endurecida para produção** com otimizações críticas que eliminaram gargalos de performance (N+1 queries), implementaram segurança centralizada (role checking via RPCs), padronizaram tratamento de erros e garantiram consistência transacional. O módulo de comunidade científica é agora **production-grade** com performance otimizada e arquitetura robusta.
+## **🎨 MILESTONE 2: RICH CONTENT CREATION**
+*Estimated Duration: 4-5 implementation cycles*
 
-**🏆 PRODUCTION-HARDENED CHECKPOINT:** ✅ **Performance Breakthrough + Security Hardening Complete**
+### **Objective**
+Replace placeholder post creation with minimal viable rich text editor. **NO DRAFT FUNCTIONALITY** - single submission workflow only.
 
-**⚡ PERFORMANCE METRICS:**
-- **95% redução** em database queries (N+1 elimination)
-- **70% redução** em Edge Function response time
-- **100% transactional safety** em operações críticas
-- **Centralized security** com role checking via RPCs
-- **Standardized error handling** em todos os endpoints
+---
+
+### **TASK 2.1: Post Submission Page Infrastructure**
+
+**Priority:** HIGH  
+**Governing Directives:** [D3.1.1], [D3.5], [AD.1]
+
+#### **CRITICAL CONSTRAINT: No Draft Functionality**
+**MANDATORY EXCLUSION**: You are explicitly forbidden from implementing any "draft functionality," "progress saving," or "auto-save" features. This represents massive scope creep and is completely out of scope.
+
+#### **Routing Implementation**
+
+**Files to Modify:**
+- `src/App.tsx` - Add route only
+- Navigation components - Update buttons to navigate to `/community/submit`
+
+**Route Specification:**
+```typescript
+<Route path="/community/submit" element={
+  <ProtectedAppRoute>
+    <SubmitPage />
+  </ProtectedAppRoute>
+} />
+```
+
+#### **Page Component Creation**
+
+**New File:** `src/pages/community/SubmitPage.tsx`
+
+**Component Requirements:**
+- Standard AppShell integration only
+- Simple form container
+- **NO DRAFT FEATURES**: Single submission workflow only
+- **NO AUTO-SAVE**: Form resets on successful submission
+
+#### **Verification Criteria**
+- [ ] Route accessible and protected
+- [ ] Navigation functions correctly
+- [ ] **CRITICAL**: No draft or auto-save functionality implemented
+- [ ] Simple, clean page layout
+
+---
+
+### **TASK 2.2: Rich Text Editor Implementation**
+
+**Priority:** CRITICAL  
+**Governing Directives:** [Blueprint 08a_EDITOR_BLUEPRINT], [D3.3], [DAL.2]
+
+#### **CRITICAL CONSTRAINTS: Minimal Tiptap Implementation**
+
+**MANDATORY EXTENSION RESTRICTION**: You are restricted to using only `@tiptap/starter-kit`. Do not add any other extensions. This constraint prevents bundle bloat and complexity.
+
+**MANDATORY STYLING CONSTRAINT**: Use Tailwind's `@tailwindcss/typography` plugin with `prose` and `dark:prose-invert` classes. Do not use Tiptap's default CSS.
+
+#### **Technology Stack**
+
+**Dependencies to Add (ONLY THESE):**
+- `@tiptap/react`
+- `@tiptap/starter-kit`
+- `@tiptap/extension-placeholder`
+
+#### **Component Architecture**
+
+**New Components:**
+
+1. **`src/components/community/CreatePostForm.tsx`**
+   - Form state via `react-hook-form`
+   - Category selection
+   - **TEXT POSTS ONLY** (no image/poll tabs)
+   - Simple rich text content area
+
+2. **`src/components/community/TiptapEditor.tsx`**
+   - **STARTER-KIT ONLY**: Bold, Italic, Lists, Links, Headings
+   - **NO ADDITIONAL EXTENSIONS**
+   - Tailwind typography styling only
+
+#### **Form State Management**
+```typescript
+// Simple form structure (no draft complexity)
+interface PostFormData {
+  title: string;
+  category: string;
+  content: JSONContent; // Tiptap JSON from StarterKit only
+}
+```
+
+#### **Editor Configuration**
+- **Toolbar**: Bold, Italic, Bullet List, Numbered List, Headings (H1-H3), Links only
+- **Extensions**: StarterKit + Placeholder only
+- **Styling**: `prose dark:prose-invert` classes
+- **No Advanced Features**: No tables, mentions, custom nodes, or complex extensions
+
+#### **Verification Criteria**
+- [ ] Editor renders with StarterKit features only
+- [ ] Rich text formatting preserved in database
+- [ ] Form validation prevents invalid submissions
+- [ ] **CRITICAL**: No extensions beyond StarterKit implemented
+- [ ] Tailwind typography styling applied correctly
+
+---
+
+## **🔧 MILESTONE 3: STABILIZATION & POLISH**
+*Estimated Duration: 2-3 implementation cycles*
+
+### **Objective**
+Resolve identified bugs and remove obsolete code with zero risk of introducing new issues.
+
+---
+
+### **TASK 3.1: Acervo Tag Sorting Algorithm Fix**
+
+**Priority:** MEDIUM  
+**Governing Directives:** [AD.3], [Blueprint 04_ACERVO_BLUEPRINT]
+
+#### **Implementation**
+
+**File to Modify:** `src/components/acervo/ClientSideSorter.tsx`
+
+**Algorithm Specification:**
+```typescript
+const getTagPriority = (tag: Tag, selectedTags: number[]): number => {
+  if (selectedTags.includes(tag.id)) return 1; // Selected
+  if (tag.parent_id && selectedTags.includes(tag.parent_id)) return 2; // Child of selected
+  return 3; // Other
+};
+
+// Sort by priority, then alphabetically
+tags.sort((a, b) => {
+  const priorityDiff = getTagPriority(a, selectedTags) - getTagPriority(b, selectedTags);
+  return priorityDiff !== 0 ? priorityDiff : a.tag_name.localeCompare(b.tag_name);
+});
+```
+
+#### **Verification Criteria**
+- [ ] Selected parent tags appear first
+- [ ] Child tags of selected parents group correctly
+- [ ] Alphabetical sorting within priority groups
+
+---
+
+### **TASK 3.2: Community Metrics Label Correction**
+
+**Priority:** LOW  
+**Governing Directives:** [M2.1.1]
+
+#### **Implementation**
+
+**File to Modify:** `src/components/community/sidebar/RecentActivityModule.tsx`
+
+**Label Changes:**
+- Primary: "online agora" → "autores ativos"
+- Subtitle: "Membros ativos" → "Últimas 24 horas"
+
+#### **Verification Criteria**
+- [ ] Labels accurately reflect measured data
+- [ ] No functional changes to metrics
+
+---
+
+### **TASK 3.3: Obsolete Code Removal**
+
+**Priority:** LOW  
+**Governing Directives:** Code hygiene
+
+#### **Critical Constraint: Complete Cleanup**
+**MANDATORY VERIFICATION**: After deleting `CreatePostDialog.tsx`, perform project-wide search for "CreatePostDialog" to ensure all imports are removed.
+
+#### **Files to Remove/Modify**
+
+**Delete:**
+- `src/components/community/CreatePostDialog.tsx`
+
+**Modify:**
+- `src/components/community/CommunityFeed.tsx` - Remove dialog imports and state
+
+#### **Verification Criteria**
+- [ ] Application builds without errors
+- [ ] No remaining references to deleted component
+- [ ] Project-wide search confirms complete removal
+
+---
+
+## **⚠️ MANDATORY IMPLEMENTATION CONSTRAINTS**
+
+### **PRE-EXECUTION ACKNOWLEDGMENT REQUIRED**
+
+Before beginning implementation, the executing AI must acknowledge these constraints:
+
+1. **"I will make strictly additive UI changes. I will not refactor, restyle, or alter existing component layouts."**
+
+2. **"I will not implement any draft functionality, auto-save, or progress saving features."**
+
+3. **"I will use only @tiptap/starter-kit extension. I will not add additional Tiptap extensions."**
+
+4. **"I will complete milestones sequentially. I will not mix tasks from different milestones."**
+
+5. **"I will prioritize stability and simplicity over performance optimizations."**
+
+### **Failure to acknowledge these constraints will result in implementation rejection.**
+
+---
+
+## **🎯 IMPLEMENTATION FLOWCHART**
+
+```mermaid
+graph TD
+    A[Acknowledge Constraints] --> B[MILESTONE 1: Core Interactions]
+    
+    B --> C[Task 1.1: Simple Post Action Hooks]
+    C --> D[Task 1.2: Additive UI Components Only]
+    
+    D --> E[Verify M1 Complete] --> F[MILESTONE 2: Basic Rich Content]
+    
+    F --> G[Task 2.1: Simple Submit Page - No Drafts]
+    G --> H[Task 2.2: StarterKit Editor Only]
+    
+    H --> I[Verify M2 Complete] --> J[MILESTONE 3: Bug Fixes]
+    
+    J --> K[Task 3.1: Fix Tag Sorting]
+    K --> L[Task 3.2: Correct Labels]
+    L --> M[Task 3.3: Clean Obsolete Code]
+    
+    M --> N[✅ STABLE APPLICATION]
+    
+    style A fill:#ffcdd2
+    style E fill:#fff3e0
+    style I fill:#fff3e0
+    style N fill:#c8e6c9
+```
+
+---
+
+## **📊 SUCCESS METRICS**
+
+### **Functional Completeness**
+- [ ] Post actions (delete, pin, lock) functional via UI
+- [ ] Rich text editor creates and saves formatted content
+- [ ] All critical bugs resolved
+
+### **Stability Requirements**
+- [ ] Zero breaking changes to existing components
+- [ ] No scope creep beyond defined constraints
+- [ ] Clean build with no errors or warnings
+
+### **Constraint Compliance**
+- [ ] No draft functionality implemented
+- [ ] Only StarterKit Tiptap extensions used
+- [ ] All UI changes strictly additive
+- [ ] Sequential milestone completion verified
+
+---
+
+## **✅ IMPLEMENTATION READY**
+
+This revised plan eliminates all identified risk factors through explicit constraints and mandatory simplifications. The implementation is now ready for constrained, stable execution.
+
+**Next Step**: Executing AI must acknowledge all constraints before beginning implementation.
 
