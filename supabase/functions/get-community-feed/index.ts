@@ -23,6 +23,10 @@ interface CommunityPost {
   } | null;
   user_vote: string | null;
   reply_count: number;
+  is_pinned?: boolean;
+  is_locked?: boolean;
+  flair_text?: string;
+  flair_color?: string;
 }
 
 serve(async (req) => {
@@ -72,7 +76,7 @@ serve(async (req) => {
 
     console.log(`Fetching community feed: page=${page}, limit=${limit}, category=${category}, sort=${sort}`);
 
-    // Build the main query
+    // Build the main query with enhanced fields
     let query = supabase
       .from('CommunityPosts')
       .select(`
@@ -83,6 +87,10 @@ serve(async (req) => {
         upvotes,
         downvotes,
         created_at,
+        is_pinned,
+        is_locked,
+        flair_text,
+        flair_color,
         author:Practitioners!author_id(
           id,
           full_name,
@@ -97,20 +105,21 @@ serve(async (req) => {
       query = query.eq('category', category);
     }
 
-    // Apply sorting
+    // Apply sorting with pinned posts priority
     switch (sort) {
       case 'popular':
-        query = query.order('upvotes', { ascending: false });
+        query = query.order('is_pinned', { ascending: false }).order('upvotes', { ascending: false });
         break;
       case 'trending':
-        // Simple trending: posts with most engagement in last 48 hours
+        // Simple trending: posts with most engagement in last 48 hours, with pinned posts first
         const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
         query = query
           .gte('created_at', twoDaysAgo)
+          .order('is_pinned', { ascending: false })
           .order('upvotes', { ascending: false });
         break;
       default: // recent
-        query = query.order('created_at', { ascending: false });
+        query = query.order('is_pinned', { ascending: false }).order('created_at', { ascending: false });
     }
 
     const { data: posts, error: postsError } = await query;
@@ -150,7 +159,7 @@ serve(async (req) => {
       })
     );
 
-    console.log(`Successfully fetched ${postsWithMetadata.length} community posts`);
+    console.log(`Successfully fetched ${postsWithMetadata.length} community posts with moderation data`);
 
     return new Response(JSON.stringify({
       posts: postsWithMetadata,

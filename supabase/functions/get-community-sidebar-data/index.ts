@@ -29,6 +29,8 @@ interface SidebarData {
     author: {
       full_name: string | null;
     } | null;
+    flair_text?: string;
+    is_pinned?: boolean;
   }>;
   recentActivity: {
     onlineUsers: number;
@@ -82,7 +84,7 @@ serve(async (req) => {
       settingsResult,
       featuredPollResult,
       trendingResult,
-      activityResult
+      statsResult
     ] = await Promise.allSettled([
       // Get community settings (rules, links, etc.)
       supabase
@@ -110,51 +112,56 @@ serve(async (req) => {
         .limit(1)
         .maybeSingle(),
       
-      // Get trending discussions via function call
-      supabase.functions.invoke('get-trending-discussions'),
+      // Get trending discussions with enhanced data
+      supabase
+        .from('CommunityPosts')
+        .select(`
+          id,
+          title,
+          content,
+          category,
+          upvotes,
+          flair_text,
+          is_pinned,
+          created_at,
+          author:Practitioners!author_id(
+            full_name
+          )
+        `)
+        .is('parent_post_id', null)
+        .gte('created_at', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString()) // Last 48 hours
+        .order('upvotes', { ascending: false })
+        .limit(5),
       
-      // Get activity stats
-      Promise.all([
-        // Total discussions count
-        supabase
-          .from('CommunityPosts')
-          .select('id', { count: 'exact' })
-          .is('parent_post_id', null),
-        
-        // Today's posts count
-        supabase
-          .from('CommunityPosts')
-          .select('id', { count: 'exact' })
-          .gte('created_at', new Date().toISOString().split('T')[0])
-      ])
+      // Get community stats from the new table
+      supabase
+        .from('CommunityStats')
+        .select('stat_key, stat_value')
+        .in('stat_key', ['total_discussions', 'today_posts', 'active_users_24h'])
     ]);
 
-    // Process settings data
+    // Process settings data with enhanced defaults
     let rules: string[] = [];
     let links: Array<{ title: string; url: string; description?: string }> = [];
     
     if (settingsResult.status === 'fulfilled' && settingsResult.value.data) {
       const settings = settingsResult.value.data.value;
-      rules = settings?.rules || [
-        'Mantenha discussões respeitosas e construtivas',
-        'Foque em evidências científicas',
-        'Evite spam e autopromoção excessiva',
-        'Use categorias apropriadas para seus posts',
-        'Cite fontes quando relevante'
-      ];
-      links = settings?.links || [
-        { title: 'Interpretando Evidência', url: '#', description: 'Curso sobre análise crítica' },
-        { title: 'Journals: Acervo de Revistas', url: '#', description: 'Base de dados científica' }
-      ];
-    } else {
-      // Default values
+      rules = settings?.rules || [];
+      links = settings?.links || [];
+    }
+    
+    // Default rules and links if none configured
+    if (rules.length === 0) {
       rules = [
         'Mantenha discussões respeitosas e construtivas',
         'Foque em evidências científicas',
-        'Evite spam e autopromoção excessiva',
+        'Evite spam e autopromoção excessiva', 
         'Use categorias apropriadas para seus posts',
         'Cite fontes quando relevante'
       ];
+    }
+    
+    if (links.length === 0) {
       links = [
         { title: 'Interpretando Evidência', url: '#', description: 'Curso sobre análise crítica' },
         { title: 'Journals: Acervo de Revistas', url: '#', description: 'Base de dados científica' }
@@ -193,35 +200,52 @@ serve(async (req) => {
       };
     }
 
-    // Process trending discussions - FIX: Don't call .json() on Supabase function response
+    // Process trending discussions with reply counts
     let trendingDiscussions: any[] = [];
     if (trendingResult.status === 'fulfilled' && trendingResult.value.data) {
-      // The data is already parsed JSON from Supabase functions.invoke()
-      const trendingData = trendingResult.value.data;
-      trendingDiscussions = trendingData.posts?.slice(0, 3).map((post: any) => ({
-        id: post.id,
-        title: post.title,
-        content: post.content.substring(0, 100) + (post.content.length > 100 ? '...' : ''),
-        category: post.category,
-        upvotes: post.upvotes,
-        reply_count: post.reply_count,
-        author: post.author
-      })) || [];
+      const posts = trendingResult.value.data;
+      
+      // Get reply counts for each post
+      trendingDiscussions = await Promise.all(
+        posts.map(async (post: any) => {
+          const { count: replyCount } = await supabase
+            .from('CommunityPosts')
+            .select('id', { count: 'exact' })
+            .eq('parent_post_id', post.id);
+
+          return {
+            id: post.id,
+            title: post.title,
+            content: post.content.substring(0, 100) + (post.content.length > 100 ? '...' : ''),
+            category: post.category,
+            upvotes: post.upvotes,
+            reply_count: replyCount || 0,
+            author: post.author,
+            flair_text: post.flair_text,
+            is_pinned: post.is_pinned
+          };
+        })
+      );
     }
 
-    // Process activity stats
+    // Process activity stats from new CommunityStats table
     let recentActivity = {
       onlineUsers: 0, // This would require real-time presence tracking
       todayPosts: 0,
       totalDiscussions: 0
     };
 
-    if (activityResult.status === 'fulfilled') {
-      const [totalResult, todayResult] = activityResult.value;
+    if (statsResult.status === 'fulfilled' && statsResult.value.data) {
+      const stats = statsResult.value.data;
+      const statsMap = stats.reduce((acc: any, stat: any) => {
+        acc[stat.stat_key] = stat.stat_value.count;
+        return acc;
+      }, {});
+
       recentActivity = {
-        onlineUsers: 0, // Placeholder - would need presence system
-        todayPosts: todayResult.count || 0,
-        totalDiscussions: totalResult.count || 0
+        onlineUsers: statsMap.active_users_24h || 0,
+        todayPosts: statsMap.today_posts || 0,
+        totalDiscussions: statsMap.total_discussions || 0
       };
     }
 
@@ -233,7 +257,7 @@ serve(async (req) => {
       recentActivity
     };
 
-    console.log('Successfully fetched community sidebar data');
+    console.log('Successfully fetched enhanced community sidebar data');
 
     return new Response(JSON.stringify(sidebarData), {
       headers: {

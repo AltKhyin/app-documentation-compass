@@ -1,5 +1,5 @@
 
-// ABOUTME: TanStack Query hook for fetching paginated community feed with voting data and user personalization.
+// ABOUTME: TanStack Query hook for fetching paginated community feed with voting data, user personalization, and moderation indicators.
 
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '../../src/integrations/supabase/client';
@@ -19,6 +19,10 @@ export interface CommunityPost {
   } | null;
   user_vote: string | null;
   reply_count: number;
+  is_pinned?: boolean;
+  is_locked?: boolean;
+  flair_text?: string;
+  flair_color?: string;
 }
 
 interface FeedResponse {
