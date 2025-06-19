@@ -1,5 +1,5 @@
 
-// ABOUTME: Main community feed component with infinite scroll and category filtering.
+// ABOUTME: Updated CommunityFeed with navigation to submit page instead of dialog
 
 import React, { useState } from 'react';
 import { Button } from '../ui/button';
@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 import { Loader2, Plus } from 'lucide-react';
 import { useCommunityFeedQuery } from '../../../packages/hooks/useCommunityFeedQuery';
 import { PostCard } from './PostCard';
-import { CreatePostDialog } from './CreatePostDialog';
+import { useNavigate } from 'react-router-dom';
 
 const CATEGORIES = [
   { value: 'all', label: 'Todas as Categorias' },
@@ -25,9 +25,9 @@ const SORT_OPTIONS = [
 ];
 
 export const CommunityFeed = () => {
+  const navigate = useNavigate();
   const [category, setCategory] = useState('all');
   const [sort, setSort] = useState<'recent' | 'popular' | 'trending'>('recent');
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const {
     data,
@@ -50,7 +50,7 @@ export const CommunityFeed = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Header with filters and create button */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
@@ -78,7 +78,7 @@ export const CommunityFeed = () => {
           </Tabs>
         </div>
 
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
+        <Button onClick={() => navigate('/community/submit')}>
           <Plus className="w-4 h-4 mr-2" />
           Nova Discussão
         </Button>
@@ -98,7 +98,7 @@ export const CommunityFeed = () => {
             <Button 
               variant="outline" 
               className="mt-4"
-              onClick={() => setIsCreateDialogOpen(true)}
+              onClick={() => navigate('/community/submit')}
             >
               Criar a primeira discussão
             </Button>
@@ -127,13 +127,6 @@ export const CommunityFeed = () => {
           </>
         )}
       </div>
-
-      {/* Create post dialog */}
-      <CreatePostDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        defaultCategory={category === 'all' ? 'general' : category}
-      />
     </div>
   );
 };

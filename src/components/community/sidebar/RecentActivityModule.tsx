@@ -1,9 +1,15 @@
 
-// ABOUTME: Recent activity module displaying community statistics and online presence.
+// ABOUTME: Enhanced recent activity module with corrected metric labels
 
 import React from 'react';
-import { Users, MessageCircle, TrendingUp } from 'lucide-react';
-import type { RecentActivity } from '../../../../packages/hooks/useCommunitySidebarQuery';
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { Users, MessageSquare, TrendingUp } from 'lucide-react';
+
+interface RecentActivity {
+  onlineUsers: number;
+  todayPosts: number;
+  totalDiscussions: number;
+}
 
 interface RecentActivityModuleProps {
   activity: RecentActivity;
@@ -11,43 +17,41 @@ interface RecentActivityModuleProps {
 
 export const RecentActivityModule = ({ activity }: RecentActivityModuleProps) => {
   return (
-    <div className="bg-card border rounded-lg p-6">
-      <h3 className="font-semibold mb-4 text-foreground">Atividade Recente</h3>
-      
-      <div className="space-y-4">
-        {/* Online Users */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-full">
-            <Users className="w-4 h-4 text-green-600" />
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <TrendingUp className="w-5 h-5" />
+          Atividade Recente
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm">Autores ativos</span>
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">{activity.onlineUsers} online agora</p>
-            <p className="text-xs text-muted-foreground">Membros ativos</p>
-          </div>
+          <span className="font-semibold">{activity.onlineUsers}</span>
         </div>
-
-        {/* Today's Posts */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full">
-            <MessageCircle className="w-4 h-4 text-blue-600" />
+        <p className="text-xs text-muted-foreground mb-3">
+          Contribuições nas últimas 24h
+        </p>
+        
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm">Posts hoje</span>
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">{activity.todayPosts} publicações hoje</p>
-            <p className="text-xs text-muted-foreground">Atividade diária</p>
-          </div>
+          <span className="font-semibold">{activity.todayPosts}</span>
         </div>
-
-        {/* Total Discussions */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-full">
-            <TrendingUp className="w-4 h-4 text-purple-600" />
+        
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm">Total discussões</span>
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">{activity.totalDiscussions.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">Discussões totais</p>
-          </div>
+          <span className="font-semibold">{activity.totalDiscussions}</span>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

@@ -1,62 +1,67 @@
 
+// ABOUTME: Updated App component with new /community/submit route
+
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AppProviders } from './components/providers/AppProviders';
-import { ProtectedAppRoute } from './components/routes/ProtectedAppRoute';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import Index from './pages/Index';
-import AcervoPage from './pages/AcervoPage';
-import ReviewDetailPage from './pages/ReviewDetailPage';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from './components/ui/toaster';
+import { ThemeProvider } from './components/theme/theme-provider';
+import { PWAProvider } from './components/pwa/PWAProvider';
+
+// Pages
+import HomePage from './pages/HomePage';
 import ComunidadePage from './pages/ComunidadePage';
 import CommunityInfoPage from './pages/CommunityInfoPage';
+import SubmitPage from './pages/community/SubmitPage';
+import AcervoPage from './pages/AcervoPage';
+import LoginPage from './pages/LoginPage';
 
-function App() {
+// Layout Components
+import { AppShell } from './components/layout/AppShell';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 30, // 30 minutes
+    },
+  },
+});
+
+const App = () => {
   return (
-    <AppProviders>
-      <BrowserRouter>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<SignupPage />} />
-
-          {/* Protected routes */}
-          <Route path="/" element={
-            <ProtectedAppRoute>
-              <Index />
-            </ProtectedAppRoute>
-          } />
-          
-          <Route path="/acervo" element={
-            <ProtectedAppRoute>
-              <AcervoPage />
-            </ProtectedAppRoute>
-          } />
-          
-          <Route path="/reviews/:id" element={
-            <ProtectedAppRoute>
-              <ReviewDetailPage />
-            </ProtectedAppRoute>
-          } />
-          
-          <Route path="/comunidade" element={
-            <ProtectedAppRoute>
-              <ComunidadePage />
-            </ProtectedAppRoute>
-          } />
-          
-          <Route path="/comunidade/info" element={
-            <ProtectedAppRoute>
-              <CommunityInfoPage />
-            </ProtectedAppRoute>
-          } />
-          
-          {/* Default route */}
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </BrowserRouter>
-    </AppProviders>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="system" storageKey="evidens-ui-theme">
+        <PWAProvider>
+          <Router>
+            <div className="min-h-screen bg-background">
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/login" element={<LoginPage />} />
+                
+                {/* Protected Routes with App Shell */}
+                <Route path="/*" element={
+                  <ProtectedRoute>
+                    <AppShell>
+                      <Routes>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/comunidade" element={<ComunidadePage />} />
+                        <Route path="/comunidade/info" element={<CommunityInfoPage />} />
+                        <Route path="/community/submit" element={<SubmitPage />} />
+                        <Route path="/acervo" element={<AcervoPage />} />
+                      </Routes>
+                    </AppShell>
+                  </ProtectedRoute>
+                } />
+              </Routes>
+            </div>
+          </Router>
+          <Toaster />
+        </PWAProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
-}
+};
 
 export default App;

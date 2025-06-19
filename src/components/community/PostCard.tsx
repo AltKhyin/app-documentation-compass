@@ -1,5 +1,5 @@
 
-// ABOUTME: Individual post card component with voting buttons, author information, and moderation indicators.
+// ABOUTME: Enhanced post card with action menu and action bar integration
 
 import React from 'react';
 import { Card, CardContent } from '../ui/card';
@@ -9,7 +9,9 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { CommunityPost } from '../../../packages/hooks/useCommunityFeedQuery';
 import { VoteButtons } from './VoteButtons';
-import { MessageCircle, Pin, Lock } from 'lucide-react';
+import { PostActionMenu } from './PostActionMenu';
+import { PostActionBar } from './PostActionBar';
+import { Pin, Lock } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface PostCardProps {
@@ -53,7 +55,7 @@ export const PostCard = ({ post }: PostCardProps) => {
 
           {/* Main content */}
           <div className="flex-1 min-w-0">
-            {/* Header with moderation indicators */}
+            {/* Header with moderation indicators and action menu */}
             <div className="flex items-start justify-between gap-4 mb-3">
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <Avatar className="w-8 h-8 flex-shrink-0">
@@ -120,6 +122,9 @@ export const PostCard = ({ post }: PostCardProps) => {
                 <Badge variant={categoryColor as any} className="flex-shrink-0">
                   {categoryLabel}
                 </Badge>
+
+                {/* Action Menu */}
+                <PostActionMenu post={post} />
               </div>
             </div>
 
@@ -135,14 +140,14 @@ export const PostCard = ({ post }: PostCardProps) => {
               <p className="line-clamp-3">{post.content}</p>
             </div>
 
-            {/* Footer */}
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center gap-1">
-                  <MessageCircle className="w-3 h-3" />
-                  {post.reply_count} {post.reply_count === 1 ? 'resposta' : 'respostas'}
-                </span>
-              </div>
+            {/* Footer with Action Bar */}
+            <div className="flex items-center justify-between">
+              <PostActionBar 
+                replyCount={post.reply_count}
+                onReply={() => {/* TODO: Implement reply functionality */}}
+                onShare={() => {/* TODO: Implement share functionality */}}
+                onSave={() => {/* TODO: Implement save functionality */}}
+              />
             </div>
           </div>
         </div>
