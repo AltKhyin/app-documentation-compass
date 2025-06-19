@@ -1,6 +1,6 @@
 
 # EVIDENS - The Brazilian Evidence-Based Medicine Platform
-**Versão: 1.4.0** | **Data: 19 de Junho de 2025** | **Status: 🟡 Em Desenvolvimento (Community Enhancement Plan)**
+**Versão: 1.4.1** | **Data: 19 de Junho de 2025** | **Status: 🟡 Em Desenvolvimento (Community Enhancement Plan)**
 
 ## 📋 RESUMO EXECUTIVO
 
@@ -12,7 +12,10 @@ O EVIDENS é uma plataforma de medicina baseada em evidências que conecta profi
 - ✅ **Acervo**: Sistema de busca, filtros e tags implementado
 - ✅ **Review Detail**: Renderização de conteúdo estruturado v2.0
 - ✅ **Community Module**: Funcional com feed e sidebar
-- 🟡 **Community Enhancement**: **FASE ATUAL** - Sistema de interação com posts
+- ✅ **Database Foundation**: **CONCLUÍDO** - SavedPosts e multimedia support
+- 🟡 **Backend Services**: **PRÓXIMA FASE** - Edge Functions para interação com posts
+- ⏳ **Individual Post Pages**: Aguardando backend services
+- ⏳ **UI Enhancements**: Aguardando backend services
 - ⏳ **Editor**: Aguardando conclusão do Community
 - ⏳ **Admin Panel**: Próxima fase
 
@@ -27,7 +30,7 @@ src/
 │   ├── homepage/                # ✅ Carrosséis funcionais
 │   ├── acervo/                  # ✅ Search + filters
 │   ├── review-detail/           # ✅ Structured content v2.0
-│   └── community/               # ✅ Feed funcional + 🟡 Melhorias planejadas
+│   └── community/               # ✅ Feed funcional + 🟡 Melhorias em andamento
 │       ├── CommunityFeedWithSidebar.tsx    # Layout principal
 │       ├── PostCard.tsx                    # Cards de posts
 │       ├── VoteButtons.tsx                 # Sistema de votação
@@ -35,55 +38,61 @@ src/
 │       ├── TiptapEditor.tsx                # 🟡 Needs selection formatting
 │       ├── CreatePostForm.tsx              # 🟡 Needs multimedia support
 │       ├── sidebar/                        # Módulos da sidebar
-│       └── [NEW] PostDetailPage.tsx       # 🟡 Individual post pages
+│       └── [PLANNED] PostDetailPage.tsx   # 🟡 Individual post pages
 ├── pages/
 │   ├── community/
 │   │   ├── ComunidadePage.tsx             # ✅ Main feed
-│   │   └── [NEW] PostPage.tsx             # 🟡 Single post view
+│   │   └── [PLANNED] PostPage.tsx        # 🟡 Single post view
 └── packages/hooks/
     ├── useCommunityPageQuery.ts           # ✅ Consolidated data
-    ├── [NEW] useSavePostMutation.ts       # 🟡 Save/unsave posts
-    ├── [NEW] usePostDetailQuery.ts        # 🟡 Single post data
-    └── [NEW] useCreateMediaPostMutation.ts # 🟡 Multimedia posts
+    ├── [PLANNED] useSavePostMutation.ts   # 🟡 Save/unsave posts
+    ├── [PLANNED] usePostDetailQuery.ts    # 🟡 Single post data
+    └── [PLANNED] useCreateMediaPostMutation.ts # 🟡 Multimedia posts
 ```
 
 ### Backend (Supabase)
 ```
-supabase/
-├── functions/
-│   ├── get-community-page-data/           # ✅ Consolidated feed
-│   ├── [NEW] save-post/                   # 🟡 Save/unsave functionality
-│   ├── [NEW] get-post-detail/             # 🟡 Individual post data
-│   └── create-community-post/             # 🟡 Enhanced for multimedia
-└── migrations/
-    └── [NEW] add_saved_posts_table.sql    # 🟡 Bookmarking support
+Database Schema:
+├── SavedPosts                             # ✅ IMPLEMENTADO - Bookmarking posts
+│   ├── id (UUID, PK)
+│   ├── practitioner_id (UUID, FK)
+│   ├── post_id (INTEGER, FK)
+│   └── created_at (TIMESTAMPTZ)
+├── CommunityPosts                         # ✅ ENHANCED - Multimedia support
+│   ├── [existing fields...]
+│   ├── image_url (TEXT)                   # ✅ NEW - Image post support
+│   ├── video_url (TEXT)                   # ✅ NEW - Video post support
+│   └── poll_data (JSONB)                  # ✅ NEW - Poll post support
+
+Edge Functions:
+├── get-community-page-data/               # ✅ Consolidated feed
+├── [PLANNED] save-post/                   # 🟡 Save/unsave functionality
+├── [PLANNED] get-post-detail/             # 🟡 Individual post data
+└── create-community-post/                 # 🟡 Enhanced for multimedia
 ```
 
-## 🚀 COMMUNITY ENHANCEMENT PLAN - v1.4.0
+## 🚀 COMMUNITY ENHANCEMENT PLAN - v1.4.1
 
-### 📋 MILESTONE 1: Database Foundation
-**Objective:** Establish database infrastructure for post saving and multimedia content
+### ✅ MILESTONE 1: Database Foundation - **CONCLUÍDO**
+**Status:** ✅ **IMPLEMENTADO**
+**Data de Conclusão:** 19/06/2025
 
-**Files to Create/Modify:**
-- New migration: `add_saved_posts_multimedia_support.sql`
-- Update: `src/types/index.ts`
+**Implementações Realizadas:**
+- ✅ Tabela `SavedPosts` criada com RLS policies
+- ✅ Campos multimedia adicionados à tabela `CommunityPosts`
+- ✅ Indexes de performance implementados
+- ✅ TypeScript interfaces atualizadas
+- ✅ Suporte para post types: text, image, video, poll
 
-**Technical Specification:**
-1. Create `SavedPosts` table with user-post relationships
-2. Add multimedia fields to `CommunityPosts` table
-3. Implement RLS policies for saved posts
-4. Update TypeScript interfaces
+**Technical Details:**
+- SavedPosts table with proper foreign keys and unique constraints
+- RLS policies allowing users to manage their saved posts only
+- CommunityPosts enhanced with image_url, video_url, poll_data fields
+- Updated TypeScript interfaces for SavedPost, enhanced CommunityPost
+- New form types for multimedia post creation
 
-**Governing Directives:** [DAL.1], [SEC.1], [D3.4]
-
-**Verification Criteria:**
-- [ ] SavedPosts table created with proper foreign keys
-- [ ] RLS policies allow users to manage their saved posts only
-- [ ] CommunityPosts supports image_url, video_url, poll_data fields
-- [ ] All type definitions updated and compile successfully
-
-### 📋 MILESTONE 2: Backend Services
-**Objective:** Implement server-side logic for post interactions
+### 📋 MILESTONE 2: Backend Services - **EM PREPARAÇÃO**
+**Objective:** Implementar server-side logic para interação com posts
 
 **Files to Create/Modify:**
 - `supabase/functions/save-post/index.ts`
@@ -255,21 +264,21 @@ supabase/
    - **Mitigation:** Implement strict file size limits and compression
 
 2. **Database Performance:** SavedPosts table could grow large quickly
-   - **Mitigation:** Implement proper indexing and periodic cleanup
+   - **Mitigation:** ✅ **MITIGATED** - Proper indexing implemented and periodic cleanup planned
 
 3. **Mobile Performance:** Multimedia content may impact mobile performance
    - **Mitigation:** Implement lazy loading and responsive image sizing
 
 ### Medium-Risk Areas:
 1. **Rate Limiting:** New endpoints need proper rate limiting to prevent abuse
-2. **RLS Policy Complexity:** Multiple new tables require careful policy design
+2. **RLS Policy Complexity:** ✅ **MITIGATED** - SavedPosts RLS policies successfully implemented
 3. **Editor Complexity:** Advanced text selection features may conflict with existing functionality
 
 ## 📊 IMPLEMENTATION SEQUENCE
 
 ```mermaid
 graph TD
-    A[Milestone 1: Database Foundation] --> B[Milestone 2: Backend Services]
+    A[✅ Milestone 1: Database Foundation] --> B[🟡 Milestone 2: Backend Services]
     B --> C[Milestone 3: Individual Post Pages]
     B --> D[Milestone 4: UI Enhancements]
     C --> E[Milestone 5: Multimedia Posts]
@@ -278,6 +287,14 @@ graph TD
 ```
 
 ## 🔄 CHANGELOG
+
+### v1.4.1 (19/06/2025) - Database Foundation Complete
+- **MILESTONE 1 CONCLUÍDO**: Database foundation implemented successfully
+- ✅ **SavedPosts Table**: Created with proper RLS policies and performance indexes
+- ✅ **CommunityPosts Enhanced**: Added multimedia support fields (image_url, video_url, poll_data)
+- ✅ **TypeScript Interfaces**: Updated with new SavedPost interface and enhanced CommunityPost
+- ✅ **Database Schema Version**: Updated to v1.4.0 with milestone tracking
+- **NEXT**: Proceeding to Milestone 2 - Backend Services implementation
 
 ### v1.4.0 (19/06/2025) - Community Enhancement Plan
 - **PLANNING**: Comprehensive implementation plan for post interaction system
@@ -316,11 +333,13 @@ graph TD
 - **Acervo**: 100% ✅
 - **Review Detail**: 100% ✅
 - **Community**: 95% ✅ (base funcional)
-- **Community Enhancements**: 0% 🟡 (planejamento completo)
+- **Community Database Foundation**: 100% ✅ (Milestone 1 completo)
+- **Community Backend Services**: 0% 🟡 (Milestone 2 em preparação)
+- **Community UI Enhancements**: 0% ⏳ (aguardando backend)
 - **Editor**: 0% ⏳
 - **Admin**: 0% ⏳
 
 ---
-**Último Update**: 19/06/2025 - Community Enhancement Plan v1.4.0
-**Próximo Milestone**: Database Foundation & Backend Services
+**Último Update**: 19/06/2025 - Milestone 1: Database Foundation Complete
+**Próximo Milestone**: Backend Services (save-post, get-post-detail, enhanced create-post)
 

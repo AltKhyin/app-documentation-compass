@@ -1,3 +1,4 @@
+
 // ABOUTME: Centralized TypeScript interfaces and types for the entire application.
 
 // Core entity types matching database schema
@@ -78,14 +79,29 @@ export interface CommunityPost {
   is_pinned?: boolean;
   is_locked?: boolean;
   flair_text?: string;
-  flair_color?: string; // Added missing field
+  flair_color?: string;
+  // NEW: Multimedia support fields
+  image_url?: string | null;
+  video_url?: string | null;
+  poll_data?: Record<string, any> | null;
+  post_type?: 'text' | 'image' | 'video' | 'poll';
   author: {
     id: string;
     full_name: string | null;
-    avatar_url: string | null; // Added missing field
+    avatar_url: string | null;
   } | null;
   user_vote: 'up' | 'down' | null;
   reply_count: number;
+  // NEW: Saved post status
+  is_saved?: boolean;
+}
+
+// NEW: SavedPosts interface for bookmarking functionality
+export interface SavedPost {
+  id: string;
+  practitioner_id: string;
+  post_id: number;
+  created_at: string;
 }
 
 export interface Poll {
@@ -166,6 +182,14 @@ export interface CreatePostFormData {
   title?: string;
   content: string;
   category: string;
+  // NEW: Multimedia post creation support
+  post_type?: 'text' | 'image' | 'video' | 'poll';
+  image_url?: string;
+  video_url?: string;
+  poll_data?: {
+    options: string[];
+    expires_at?: string;
+  };
 }
 
 // API Error types
@@ -239,3 +263,29 @@ export interface ActivityMetrics {
   today_posts: number;
   total_discussions: number;
 }
+
+// NEW: Save post mutation types
+export interface SavePostMutationData {
+  post_id: number;
+  is_saved?: boolean;
+}
+
+export interface SavePostResponse {
+  success: boolean;
+  is_saved: boolean;
+  message?: string;
+}
+
+// NEW: Multimedia upload types
+export interface MediaUploadData {
+  file: File;
+  upload_type: 'image' | 'video';
+}
+
+export interface MediaUploadResponse {
+  success: boolean;
+  url: string;
+  file_name: string;
+  file_size: number;
+}
+

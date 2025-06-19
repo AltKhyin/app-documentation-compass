@@ -134,14 +134,17 @@ export type Database = {
           flair_color: string | null
           flair_text: string | null
           id: number
+          image_url: string | null
           is_locked: boolean | null
           is_pinned: boolean | null
           parent_post_id: number | null
+          poll_data: Json | null
           post_type: string
           review_id: number | null
           structured_content: Json | null
           title: string | null
           upvotes: number | null
+          video_url: string | null
         }
         Insert: {
           author_id?: string | null
@@ -153,14 +156,17 @@ export type Database = {
           flair_color?: string | null
           flair_text?: string | null
           id?: number
+          image_url?: string | null
           is_locked?: boolean | null
           is_pinned?: boolean | null
           parent_post_id?: number | null
+          poll_data?: Json | null
           post_type?: string
           review_id?: number | null
           structured_content?: Json | null
           title?: string | null
           upvotes?: number | null
+          video_url?: string | null
         }
         Update: {
           author_id?: string | null
@@ -172,14 +178,17 @@ export type Database = {
           flair_color?: string | null
           flair_text?: string | null
           id?: number
+          image_url?: string | null
           is_locked?: boolean | null
           is_pinned?: boolean | null
           parent_post_id?: number | null
+          poll_data?: Json | null
           post_type?: string
           review_id?: number | null
           structured_content?: Json | null
           title?: string | null
           upvotes?: number | null
+          video_url?: string | null
         }
         Relationships: [
           {
@@ -581,6 +590,42 @@ export type Database = {
             columns: ["tag_id"]
             isOneToOne: false
             referencedRelation: "Tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      SavedPosts: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: number
+          practitioner_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: number
+          practitioner_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: number
+          practitioner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "SavedPosts_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "CommunityPosts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "SavedPosts_practitioner_id_fkey"
+            columns: ["practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "Practitioners"
             referencedColumns: ["id"]
           },
         ]
