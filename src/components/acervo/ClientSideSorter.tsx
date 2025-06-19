@@ -4,14 +4,25 @@
 import React, { useMemo } from 'react';
 import type { Review, Tag } from '../../types';
 
+// Define AcervoReview interface here since it's specific to Acervo functionality
+export interface AcervoReview {
+  review_id: number;
+  title: string;
+  description: string | null;
+  cover_image_url: string | null;
+  published_at: string;
+  view_count: number;
+  tags_json: { [categoria: string]: string[] };
+}
+
 interface ClientSideSorterProps {
-  reviews: Review[];
+  reviews: AcervoReview[];
   tags: Tag[];
   selectedTags: number[];
   searchQuery: string;
   sortBy: 'recent' | 'popular' | 'alphabetical';
   children: (data: {
-    sortedReviews: Review[];
+    sortedReviews: AcervoReview[];
     sortedTags: Tag[];
   }) => React.ReactNode;
 }
@@ -48,10 +59,23 @@ export const ClientSideSorter = ({
         if (!matchesTitle && !matchesDescription) return false;
       }
 
-      // Tag filter
+      // Tag filter - check against tags_json structure
       if (selectedTags.length > 0) {
-        const reviewTagIds = review.ReviewTags?.map(rt => rt.tag_id) || [];
-        return selectedTags.some(tagId => reviewTagIds.includes(tagId));
+        const reviewTagNames = Object.entries(review.tags_json).flatMap(([categoria, subtags]) => {
+          const allTags = [categoria];
+          if (subtags && subtags.length > 0) {
+            allTags.push(...subtags);
+          }
+          return allTags;
+        });
+        
+        // Convert selected tag IDs to tag names for comparison
+        const selectedTagNames = selectedTags.map(tagId => {
+          const tag = tags.find(t => t.id === tagId);
+          return tag?.tag_name || '';
+        }).filter(Boolean);
+        
+        return selectedTagNames.some(tagName => reviewTagNames.includes(tagName));
       }
 
       return true;
@@ -61,8 +85,8 @@ export const ClientSideSorter = ({
     const sortedReviews = [...filteredReviews].sort((a, b) => {
       switch (sortBy) {
         case 'recent':
-          return new Date(b.published_at || b.created_at).getTime() - 
-                 new Date(a.published_at || a.created_at).getTime();
+          return new Date(b.published_at || '').getTime() - 
+                 new Date(a.published_at || '').getTime();
         case 'popular':
           return (b.view_count || 0) - (a.view_count || 0);
         case 'alphabetical':

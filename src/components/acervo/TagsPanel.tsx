@@ -7,12 +7,12 @@ import { AcervoTag } from '../../../packages/hooks/useAcervoDataQuery';
 
 interface TagsPanelProps {
   allTags: AcervoTag[];
-  selectedTags: string[];
-  onTagSelect: (tagName: string) => void;
+  selectedTags: number[];
+  onTagSelect: (tagId: number) => void;
 }
 
 const TagsPanel: React.FC<TagsPanelProps> = ({ allTags, selectedTags, onTagSelect }) => {
-  const [visibleSubtags, setVisibleSubtags] = useState<string[]>([]);
+  const [visibleSubtags, setVisibleSubtags] = useState<number[]>([]);
 
   // Memoize tag hierarchy computation
   const { parentTags, childTags } = useMemo(() => {
@@ -23,15 +23,15 @@ const TagsPanel: React.FC<TagsPanelProps> = ({ allTags, selectedTags, onTagSelec
 
   // Update visible subtags when selected tags change
   useEffect(() => {
-    const newVisibleSubtags: string[] = [];
+    const newVisibleSubtags: number[] = [];
     
-    selectedTags.forEach(selectedTag => {
-      const parentTag = parentTags.find(tag => tag.tag_name === selectedTag);
+    selectedTags.forEach(selectedTagId => {
+      const parentTag = parentTags.find(tag => tag.id === selectedTagId);
       if (parentTag) {
         // Show all subtags for this parent
         const subtags = childTags
           .filter(child => child.parent_id === parentTag.id)
-          .map(child => child.tag_name);
+          .map(child => child.id);
         newVisibleSubtags.push(...subtags);
       }
     });
@@ -42,8 +42,8 @@ const TagsPanel: React.FC<TagsPanelProps> = ({ allTags, selectedTags, onTagSelec
   // Intelligent tag sorting with priority: selected → highlighted → unselected
   const sortedParentTags = useMemo(() => {
     return [...parentTags].sort((a, b) => {
-      const aSelected = selectedTags.includes(a.tag_name);
-      const bSelected = selectedTags.includes(b.tag_name);
+      const aSelected = selectedTags.includes(a.id);
+      const bSelected = selectedTags.includes(b.id);
       
       // Selected tags first
       if (aSelected && !bSelected) return -1;
@@ -55,24 +55,25 @@ const TagsPanel: React.FC<TagsPanelProps> = ({ allTags, selectedTags, onTagSelec
   }, [parentTags, selectedTags]);
 
   const sortedVisibleSubtags = useMemo(() => {
-    return [...visibleSubtags].sort((a, b) => {
-      const aSelected = selectedTags.includes(a);
-      const bSelected = selectedTags.includes(b);
+    const visibleSubtagsData = childTags.filter(tag => visibleSubtags.includes(tag.id));
+    return [...visibleSubtagsData].sort((a, b) => {
+      const aSelected = selectedTags.includes(a.id);
+      const bSelected = selectedTags.includes(b.id);
       
       // Selected subtags first
       if (aSelected && !bSelected) return -1;
       if (!aSelected && bSelected) return 1;
       
       // If both selected or both unselected, maintain alphabetical order
-      return a.localeCompare(b);
+      return a.tag_name.localeCompare(b.tag_name);
     });
-  }, [visibleSubtags, selectedTags]);
+  }, [childTags, visibleSubtags, selectedTags]);
 
-  const getTagVariant = useCallback((tagName: string): "default" | "outline" | "secondary" => {
-    if (selectedTags.includes(tagName)) {
+  const getTagVariant = useCallback((tagId: number): "default" | "outline" | "secondary" => {
+    if (selectedTags.includes(tagId)) {
       return "default"; // Selected state: white background, dark text
     }
-    if (visibleSubtags.includes(tagName)) {
+    if (visibleSubtags.includes(tagId)) {
       return "secondary"; // Highlighted state: dim outline, white text
     }
     return "outline"; // Unselected state: transparent background, dim white text
@@ -84,9 +85,9 @@ const TagsPanel: React.FC<TagsPanelProps> = ({ allTags, selectedTags, onTagSelec
       {sortedParentTags.map(tag => (
         <Button
           key={tag.id}
-          variant={getTagVariant(tag.tag_name)}
+          variant={getTagVariant(tag.id)}
           size="sm"
-          onClick={() => onTagSelect(tag.tag_name)}
+          onClick={() => onTagSelect(tag.id)}
           className="rounded-full"
         >
           {tag.tag_name}
@@ -94,15 +95,15 @@ const TagsPanel: React.FC<TagsPanelProps> = ({ allTags, selectedTags, onTagSelec
       ))}
       
       {/* Visible subtags - sorted by priority */}
-      {sortedVisibleSubtags.map(subtagName => (
+      {sortedVisibleSubtags.map(subtag => (
         <Button
-          key={subtagName}
-          variant={getTagVariant(subtagName)}
+          key={subtag.id}
+          variant={getTagVariant(subtag.id)}
           size="sm"
-          onClick={() => onTagSelect(subtagName)}
+          onClick={() => onTagSelect(subtag.id)}
           className="rounded-full"
         >
-          {subtagName}
+          {subtag.tag_name}
         </Button>
       ))}
     </div>

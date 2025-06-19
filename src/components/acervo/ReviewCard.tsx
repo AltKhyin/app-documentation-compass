@@ -6,17 +6,10 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Eye } from 'lucide-react';
+import type { AcervoReview } from './ClientSideSorter';
 
 interface ReviewCardProps {
-  review: {
-    review_id: number;
-    title: string;
-    description: string | null;
-    cover_image_url: string | null;
-    published_at: string;
-    tags_json: { [categoria: string]: string[] };
-    view_count?: number;
-  };
+  review: AcervoReview;
 }
 
 const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {

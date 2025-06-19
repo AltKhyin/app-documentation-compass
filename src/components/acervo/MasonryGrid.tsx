@@ -5,7 +5,7 @@ import React from 'react';
 import Masonry from 'react-masonry-css';
 import ReviewCard from './ReviewCard';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { AcervoReview } from '../../../packages/hooks/useAcervoDataQuery';
+import type { AcervoReview } from './ClientSideSorter';
 
 interface MasonryGridProps {
   reviews: AcervoReview[];

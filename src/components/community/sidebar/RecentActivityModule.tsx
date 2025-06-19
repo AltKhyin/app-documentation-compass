@@ -4,12 +4,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Users, MessageCircle, TrendingUp } from 'lucide-react';
-
-interface ActivityMetrics {
-  active_authors_24h: number;
-  today_posts: number;
-  total_discussions: number;
-}
+import type { ActivityMetrics } from '../../../types';
 
 interface RecentActivityModuleProps {
   metrics: ActivityMetrics;

@@ -1,4 +1,3 @@
-
 // ABOUTME: Centralized TypeScript interfaces and types for the entire application.
 
 // Core entity types matching database schema
@@ -14,6 +13,23 @@ export interface Review {
   structured_content: Record<string, any>;
   author_id: string | null;
   community_post_id: number | null;
+  created_at: string;
+  ReviewTags?: ReviewTag[];
+}
+
+// Add missing Tag interface for Acervo functionality
+export interface Tag {
+  id: number;
+  tag_name: string;
+  parent_id: number | null;
+  created_at: string;
+}
+
+// Add ReviewTag interface for the relationship
+export interface ReviewTag {
+  id: number;
+  review_id: number;
+  tag_id: number;
   created_at: string;
 }
 
@@ -215,4 +231,11 @@ export interface ModerationAction {
   reason: string | null;
   metadata: Record<string, any>;
   created_at: string;
+}
+
+// Community activity metrics interface to match backend data structure
+export interface ActivityMetrics {
+  active_authors_24h: number;
+  today_posts: number;
+  total_discussions: number;
 }

@@ -9,8 +9,8 @@ import { AcervoTag } from '../../../packages/hooks/useAcervoDataQuery';
 
 interface MobileTagsModalProps {
   allTags: AcervoTag[];
-  selectedTags: string[];
-  onTagSelect: (tagName: string) => void;
+  selectedTags: number[];
+  onTagSelect: (tagId: number) => void;
 }
 
 const MobileTagsModal: React.FC<MobileTagsModalProps> = ({ allTags, selectedTags, onTagSelect }) => {
@@ -20,8 +20,8 @@ const MobileTagsModal: React.FC<MobileTagsModalProps> = ({ allTags, selectedTags
   // Intelligent sorting for parent tags: selected first, then alphabetical
   const sortedParentTags = useMemo(() => {
     return [...parentTags].sort((a, b) => {
-      const aSelected = selectedTags.includes(a.tag_name);
-      const bSelected = selectedTags.includes(b.tag_name);
+      const aSelected = selectedTags.includes(a.id);
+      const bSelected = selectedTags.includes(b.id);
       
       // Selected tags first
       if (aSelected && !bSelected) return -1;
@@ -36,8 +36,8 @@ const MobileTagsModal: React.FC<MobileTagsModalProps> = ({ allTags, selectedTags
   const getSortedSubtags = (parentId: number) => {
     const subtags = childTags.filter(child => child.parent_id === parentId);
     return subtags.sort((a, b) => {
-      const aSelected = selectedTags.includes(a.tag_name);
-      const bSelected = selectedTags.includes(b.tag_name);
+      const aSelected = selectedTags.includes(a.id);
+      const bSelected = selectedTags.includes(b.id);
       
       // Selected subtags first
       if (aSelected && !bSelected) return -1;
@@ -48,8 +48,8 @@ const MobileTagsModal: React.FC<MobileTagsModalProps> = ({ allTags, selectedTags
     });
   };
 
-  const getTagVariant = (tagName: string): "default" | "outline" | "secondary" => {
-    return selectedTags.includes(tagName) ? "default" : "outline";
+  const getTagVariant = (tagId: number): "default" | "outline" | "secondary" => {
+    return selectedTags.includes(tagId) ? "default" : "outline";
   };
 
   return (
@@ -77,9 +77,9 @@ const MobileTagsModal: React.FC<MobileTagsModalProps> = ({ allTags, selectedTags
               <div key={parentTag.id} className="space-y-3">
                 <div>
                   <Button
-                    variant={getTagVariant(parentTag.tag_name)}
+                    variant={getTagVariant(parentTag.id)}
                     size="sm"
-                    onClick={() => onTagSelect(parentTag.tag_name)}
+                    onClick={() => onTagSelect(parentTag.id)}
                     className="rounded-full"
                   >
                     {parentTag.tag_name}
@@ -90,9 +90,9 @@ const MobileTagsModal: React.FC<MobileTagsModalProps> = ({ allTags, selectedTags
                     {sortedSubtags.map(subtag => (
                       <Button
                         key={subtag.id}
-                        variant={getTagVariant(subtag.tag_name)}
+                        variant={getTagVariant(subtag.id)}
                         size="sm"
-                        onClick={() => onTagSelect(subtag.tag_name)}
+                        onClick={() => onTagSelect(subtag.id)}
                         className="rounded-full text-xs"
                       >
                         {subtag.tag_name}
