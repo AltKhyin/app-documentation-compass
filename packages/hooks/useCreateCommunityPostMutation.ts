@@ -33,37 +33,32 @@ const createCommunityPost = async (payload: CreatePostPayload): Promise<CreatePo
     throw new Error('Authentication required');
   }
 
-  // Use the existing optimized RPC function
-  const { data, error } = await supabase.rpc('create_post_and_auto_vote', {
-    p_author_id: user.id,
-    p_title: payload.title?.trim() || null,
-    p_content: payload.content.trim(),
-    p_category: payload.category,
+  // Call the edge function instead of RPC to avoid type issues
+  const { data, error } = await supabase.functions.invoke('create-community-post', {
+    body: {
+      title: payload.title?.trim() || null,
+      content: payload.content.trim(),
+      category: payload.category,
+    }
   });
 
   if (error) {
-    console.error('Create post RPC error:', error);
+    console.error('Create post function error:', error);
     throw new Error(error.message || 'Failed to create post');
   }
 
-  // If we have enhanced fields, update the post with additional data
-  if (payload.post_type !== 'text' || payload.structured_content) {
-    const { error: updateError } = await supabase
-      .from('CommunityPosts')
-      .update({
-        post_type: payload.post_type || 'text',
-        structured_content: payload.structured_content || null
-      })
-      .eq('id', data.id);
-
-    if (updateError) {
-      console.error('Failed to update post with enhanced fields:', updateError);
-      // Don't throw here as the post was created successfully
-    }
-  }
-
   console.log('Community post created successfully:', data);
-  return data;
+  return {
+    id: data.post_id,
+    title: payload.title || null,
+    content: payload.content,
+    category: payload.category,
+    post_type: payload.post_type || 'text',
+    structured_content: payload.structured_content || null,
+    upvotes: 1, // Auto-vote applied
+    created_at: new Date().toISOString(),
+    author_id: user.id
+  };
 };
 
 export const useCreateCommunityPostMutation = () => {

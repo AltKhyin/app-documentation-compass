@@ -1,4 +1,3 @@
-
 // ABOUTME: Centralized TypeScript interfaces and types for the entire application.
 
 // Core entity types matching database schema
@@ -14,6 +13,14 @@ export interface Review {
   structured_content: Record<string, any>;
   author_id: string | null;
   community_post_id: number | null;
+  created_at: string;
+  tags?: Tag[]; // Added tags property
+}
+
+export interface Tag {
+  id: number;
+  tag_name: string;
+  parent_id: number | null;
   created_at: string;
 }
 

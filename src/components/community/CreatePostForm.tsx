@@ -63,7 +63,9 @@ export const CreatePostForm = () => {
   const onSubmit = async (data: CreatePostForm) => {
     try {
       await createPostMutation.mutateAsync({
-        ...data,
+        title: data.title,
+        content: data.content,
+        category: data.category,
         post_type: activeTab as 'text' | 'image' | 'link' | 'poll'
       });
       

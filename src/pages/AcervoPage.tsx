@@ -1,157 +1,160 @@
 
-// ABOUTME: Main Acervo page component with responsive tag filtering, search, and review display.
+// ABOUTME: Acervo page with enhanced filtering, search, and responsive design
 
-import React, { useState, useMemo } from 'react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import React, { useState } from 'react';
 import { useAcervoDataQuery } from '../../packages/hooks/useAcervoDataQuery';
-import { Skeleton } from '@/components/ui/skeleton';
-import TagsPanel from '@/components/acervo/TagsPanel';
-import MobileTagsModal from '@/components/acervo/MobileTagsModal';
-import MasonryGrid from '@/components/acervo/MasonryGrid';
-import SearchInput from '@/components/acervo/SearchInput';
-import ClientSideSorter from '@/components/acervo/ClientSideSorter';
+import { ClientSideSorter } from '../components/acervo/ClientSideSorter';
+import { SearchInput } from '../components/acervo/SearchInput';
+import { TagsPanel } from '../components/acervo/TagsPanel';
+import { MasonryGrid } from '../components/acervo/MasonryGrid';
+import { MobileTagsModal } from '../components/acervo/MobileTagsModal';
+import { useIsMobile } from '../hooks/use-mobile';
+import { Alert, AlertDescription } from '../components/ui/alert';
+import { Skeleton } from '../components/ui/skeleton';
+import { Button } from '../components/ui/button';
+import { Filter } from 'lucide-react';
 
 const AcervoPage = () => {
-  const isMobile = useIsMobile();
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedTags, setSelectedTags] = useState<number[]>([]);
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'most_viewed'>('newest');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isMobileTagsOpen, setIsMobileTagsOpen] = useState(false);
   
-  const { data: acervoData, isLoading, error } = useAcervoDataQuery();
-
-  const handleTagSelect = useMemo(() => (tagName: string) => {
-    setSelectedTags(prev => {
-      if (prev.includes(tagName)) {
-        // Remove tag
-        return prev.filter(tag => tag !== tagName);
-      } else {
-        // Add tag
-        return [...prev, tagName];
-      }
-    });
-  }, []);
-
-  const handleSearchChange = useMemo(() => (query: string) => {
-    setSearchQuery(query);
-  }, []);
-
-  // Memoize skeleton component to prevent re-renders
-  const loadingSkeleton = useMemo(() => (
-    <div className="min-h-screen">
-      <div className="p-6">
-        <Skeleton className="h-8 w-32 mb-6" />
-        <div className="flex gap-2 mb-6">
-          <Skeleton className="h-8 w-24" />
-          <Skeleton className="h-8 w-20" />
-          <Skeleton className="h-8 w-28" />
-          <Skeleton className="h-8 w-22" />
-        </div>
-        <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="mb-4 break-inside-avoid">
-              <Skeleton className="w-full h-48" />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  ), []);
+  const isMobile = useIsMobile();
+  const { data, isLoading, error } = useAcervoDataQuery();
 
   if (isLoading) {
-    return loadingSkeleton;
-  }
-
-  if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-destructive mb-2">Erro ao carregar Acervo</h2>
-          <p className="text-muted-foreground">
-            {error.message || 'Ocorreu um erro inesperado'}
-          </p>
+      <div className="container mx-auto px-4 py-6">
+        <div className="space-y-6">
+          <Skeleton className="h-12 w-full" />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="md:col-span-1">
+              <Skeleton className="h-64 w-full" />
+            </div>
+            <div className="md:col-span-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[...Array(6)].map((_, i) => (
+                  <Skeleton key={i} className="h-48 w-full" />
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
-  if (!acervoData) {
+  if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-2">Nenhum dado encontrado</h2>
-          <p className="text-muted-foreground">
-            Não foi possível carregar o conteúdo do Acervo
-          </p>
-        </div>
+      <div className="container mx-auto px-4 py-6">
+        <Alert>
+          <AlertDescription>
+            Erro ao carregar o acervo: {error.message}
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="container mx-auto px-4 py-6 text-center">
+        <p className="text-muted-foreground">Nenhum conteúdo disponível</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="p-6">
-        {/* Header Section */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-4">Acervo</h1>
-          
-          {/* Search Bar */}
-          <div className="mb-4">
+    <div className="container mx-auto px-4 py-6">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="border-l-4 border-primary bg-muted/50 p-6 rounded-r-lg">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Acervo</h1>
+          <p className="text-muted-foreground">
+            Explore nossa coleção completa de reviews e análises científicas.
+          </p>
+        </div>
+
+        {/* Search and Mobile Filter Button */}
+        <div className="flex gap-4">
+          <div className="flex-1">
             <SearchInput 
-              searchQuery={searchQuery}
-              onSearchChange={handleSearchChange}
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Buscar reviews, temas, assuntos..."
             />
           </div>
+          {isMobile && (
+            <Button
+              variant="outline"
+              onClick={() => setIsMobileTagsOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Filter className="w-4 h-4" />
+              Filtros
+            </Button>
+          )}
         </div>
-        
-        {/* Desktop: Horizontal Tags Panel */}
-        {!isMobile && (
-          <TagsPanel
-            allTags={acervoData.tags}
-            selectedTags={selectedTags}
-            onTagSelect={handleTagSelect}
-          />
-        )}
-        
-        {/* Mobile: Tags Filter Button */}
-        {isMobile && (
-          <MobileTagsModal
-            allTags={acervoData.tags}
-            selectedTags={selectedTags}
-            onTagSelect={handleTagSelect}
-          />
-        )}
-        
-        {/* Reviews Grid with Client-Side Sorting and Search */}
-        <ClientSideSorter 
-          reviews={acervoData.reviews} 
+
+        {/* Main Content */}
+        <ClientSideSorter
+          reviews={data.reviews}
           selectedTags={selectedTags}
+          sortBy={sortBy}
           searchQuery={searchQuery}
+          allTags={data.tags}
         >
-          {(sortedReviews) => (
-            <>
-              {sortedReviews.length === 0 ? (
-                <div className="text-center py-12">
-                  <h3 className="text-xl font-semibold mb-2">Nenhum review encontrado</h3>
-                  <p className="text-muted-foreground">
-                    {searchQuery.trim() 
-                      ? `Tente uma busca diferente ou ajuste os filtros selecionados`
-                      : `Tente ajustar os filtros selecionados`
-                    }
-                  </p>
+          {({ reviews, tags, stats }) => (
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {/* Desktop Tags Panel */}
+              {!isMobile && (
+                <div className="lg:col-span-1">
+                  <TagsPanel
+                    tags={tags}
+                    selectedTags={selectedTags}
+                    onTagToggle={(tagId) => {
+                      setSelectedTags(prev => 
+                        prev.includes(tagId) 
+                          ? prev.filter(id => id !== tagId)
+                          : [...prev, tagId]
+                      );
+                    }}
+                    onClearAll={() => setSelectedTags([])}
+                    sortBy={sortBy}
+                    onSortChange={setSortBy}
+                    totalReviews={stats.totalReviews}
+                  />
                 </div>
-              ) : (
-                <MasonryGrid reviews={sortedReviews} />
               )}
-              
-              {/* Results summary */}
-              <div className="text-center py-4 text-sm text-muted-foreground">
-                {searchQuery.trim() || selectedTags.length > 0 
-                  ? `${sortedReviews.length} reviews encontrados`
-                  : `${sortedReviews.length} reviews no total`
-                }
+
+              {/* Reviews Grid */}
+              <div className={isMobile ? "col-span-1" : "lg:col-span-3"}>
+                <MasonryGrid reviews={reviews} />
               </div>
-            </>
+            </div>
           )}
         </ClientSideSorter>
+
+        {/* Mobile Tags Modal */}
+        {isMobile && (
+          <MobileTagsModal
+            isOpen={isMobileTagsOpen}
+            onClose={() => setIsMobileTagsOpen(false)}
+            tags={data.tags}
+            selectedTags={selectedTags}
+            onTagToggle={(tagId) => {
+              setSelectedTags(prev => 
+                prev.includes(tagId) 
+                  ? prev.filter(id => id !== tagId)
+                  : [...prev, tagId]
+              );
+            }}
+            onClearAll={() => setSelectedTags([])}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+          />
+        )}
       </div>
     </div>
   );

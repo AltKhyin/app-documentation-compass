@@ -35,9 +35,12 @@ interface CommunityPost {
 }
 
 const fetchCommunityFeed = async ({ pageParam = 0 }) => {
-  const { data, error } = await supabase.rpc('get_community_feed_with_details', {
-    p_limit: 10,
-    p_offset: pageParam * 10
+  // Use the edge function instead of RPC to avoid type issues
+  const { data, error } = await supabase.functions.invoke('get-community-feed', {
+    body: {
+      page: pageParam,
+      limit: 10
+    }
   });
 
   if (error) {
@@ -46,8 +49,8 @@ const fetchCommunityFeed = async ({ pageParam = 0 }) => {
   }
 
   return {
-    posts: data || [],
-    nextCursor: data && data.length === 10 ? pageParam + 1 : null
+    posts: data?.posts || [],
+    nextCursor: data?.pagination?.hasMore ? pageParam + 1 : null
   };
 };
 

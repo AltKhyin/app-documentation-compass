@@ -1,12 +1,12 @@
 
-// ABOUTME: Updated App component with new /community/submit route
+// ABOUTME: Updated App component with fixed imports
 
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from './components/ui/toaster';
 import { CustomThemeProvider } from './components/theme/CustomThemeProvider';
-import { PWAProvider } from './components/pwa/PWAProvider';
+import PWAProvider from './components/pwa/PWAProvider';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -18,7 +18,7 @@ import LoginPage from './pages/LoginPage';
 
 // Layout Components
 import { AppShell } from './components/layout/AppShell';
-import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 const queryClient = new QueryClient({
   defaultOptions: {

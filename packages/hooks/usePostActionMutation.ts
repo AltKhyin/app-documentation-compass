@@ -24,19 +24,26 @@ const executePostAction = async ({ postId, action }: PostActionPayload): Promise
     throw new Error('Authentication required');
   }
 
-  const { data, error } = await supabase.rpc('handle_post_action', {
-    p_post_id: postId,
-    p_user_id: user.id,
-    p_action_type: action
+  // Call the edge function instead of RPC to avoid type issues
+  const { data, error } = await supabase.functions.invoke('moderate-community-post', {
+    body: {
+      post_id: postId,
+      action_type: action,
+      reason: `${action} action performed by user`
+    }
   });
 
   if (error) {
-    console.error('Post action RPC error:', error);
+    console.error('Post action function error:', error);
     throw new Error(error.message || 'Failed to execute post action');
   }
 
   console.log('Post action executed successfully:', data);
-  return data;
+  return {
+    status: 'success',
+    post_id: postId,
+    action: action
+  };
 };
 
 export const usePostActionMutation = () => {

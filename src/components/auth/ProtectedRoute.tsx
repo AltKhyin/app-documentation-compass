@@ -1,8 +1,8 @@
 
 // ABOUTME: Enhanced component to protect routes with authentication and role-based access control.
-import { useAuthStore } from '@/store/auth';
+import { useAuthStore } from '../../store/auth';
 import { Navigate, useLocation } from 'react-router-dom';
-import type { UserProfile } from '@/types';
+import type { UserProfile } from '../../types';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
