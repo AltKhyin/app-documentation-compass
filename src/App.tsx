@@ -1,12 +1,10 @@
 
-// ABOUTME: Updated App component with fixed imports
+// ABOUTME: Updated App component with proper provider hierarchy and consistent routing
 
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AppProviders } from './components/providers/AppProviders';
 import { Toaster } from './components/ui/toaster';
-import { CustomThemeProvider } from './components/theme/CustomThemeProvider';
-import PWAProvider from './components/pwa/PWAProvider';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -15,52 +13,56 @@ import CommunityInfoPage from './pages/CommunityInfoPage';
 import SubmitPage from './pages/community/SubmitPage';
 import AcervoPage from './pages/AcervoPage';
 import LoginPage from './pages/LoginPage';
+import PerfilPage from './pages/PerfilPage';
 
-// Layout Components
-import { AppShell } from './components/layout/AppShell';
-import ProtectedRoute from './components/auth/ProtectedRoute';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      gcTime: 1000 * 60 * 30, // 30 minutes
-    },
-  },
-});
+// Protected Route Wrapper
+import { ProtectedAppRoute } from './components/routes/ProtectedAppRoute';
 
 const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <CustomThemeProvider defaultTheme="dark" storageKey="evidens-ui-theme">
-        <PWAProvider>
-          <Router>
-            <div className="min-h-screen bg-background">
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/login" element={<LoginPage />} />
-                
-                {/* Protected Routes with App Shell */}
-                <Route path="/*" element={
-                  <ProtectedRoute>
-                    <AppShell>
-                      <Routes>
-                        <Route path="/" element={<HomePage />} />
-                        <Route path="/comunidade" element={<ComunidadePage />} />
-                        <Route path="/comunidade/info" element={<CommunityInfoPage />} />
-                        <Route path="/community/submit" element={<SubmitPage />} />
-                        <Route path="/acervo" element={<AcervoPage />} />
-                      </Routes>
-                    </AppShell>
-                  </ProtectedRoute>
-                } />
-              </Routes>
-            </div>
-          </Router>
-          <Toaster />
-        </PWAProvider>
-      </CustomThemeProvider>
-    </QueryClientProvider>
+    <AppProviders>
+      <Router>
+        <div className="min-h-screen bg-background">
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<LoginPage />} />
+            
+            {/* Protected Routes - All wrapped with ProtectedAppRoute */}
+            <Route path="/" element={
+              <ProtectedAppRoute>
+                <HomePage />
+              </ProtectedAppRoute>
+            } />
+            <Route path="/comunidade" element={
+              <ProtectedAppRoute>
+                <ComunidadePage />
+              </ProtectedAppRoute>
+            } />
+            <Route path="/comunidade/info" element={
+              <ProtectedAppRoute>
+                <CommunityInfoPage />
+              </ProtectedAppRoute>
+            } />
+            <Route path="/community/submit" element={
+              <ProtectedAppRoute>
+                <SubmitPage />
+              </ProtectedAppRoute>
+            } />
+            <Route path="/acervo" element={
+              <ProtectedAppRoute>
+                <AcervoPage />
+              </ProtectedAppRoute>
+            } />
+            <Route path="/perfil" element={
+              <ProtectedAppRoute>
+                <PerfilPage />
+              </ProtectedAppRoute>
+            } />
+          </Routes>
+        </div>
+      </Router>
+      <Toaster />
+    </AppProviders>
   );
 };
 
