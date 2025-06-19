@@ -1,7 +1,7 @@
 
 # EVIDENS: Plataforma de Reviews Científicos
 
-**Versão**: 2.3.1  
+**Versão**: 2.3.2  
 **Última atualização**: 19 de Junho de 2025  
 **Status**: Fase de Desenvolvimento Ativo  
 
@@ -18,10 +18,11 @@
 - **Deploy Status**: ✅ Pronto para produção
 
 ### Última Atualização
-**HOTFIX CRÍTICO** (19/06/2025):
-- 🔧 **Provider Setup Fix**: Corrigido erro crítico de React import em AppProviders causando tela branca
-- 🔧 **App Structure**: Reorganizada estrutura de providers e rotas para máxima estabilidade
-- ✅ **Community Module**: Todos os milestones (1-3) concluídos com sucesso
+**HOTFIX CRÍTICO v2.3.2** (19/06/2025):
+- 🔧 **ErrorBoundary Export Fix**: Corrigido mismatch de export/import entre ErrorBoundary.tsx e App.tsx
+- 🔧 **RecentActivityModule Data Structure**: Corrigida estrutura de dados e adicionada proteção contra undefined
+- 🔧 **CommunitySidebar Data Flow**: Corrigido fluxo de dados entre sidebar e módulos
+- ✅ **Runtime Stability**: Todos os 3 erros críticos de runtime resolvidos
 
 **Milestone 3 CONCLUÍDO** (19/06/2025):
 - ✅ **Featured Poll Module**: Componente de enquetes em destaque com interface de votação
@@ -129,13 +130,14 @@ src/
    - ✅ Sistema de moderação básico
    - ✅ Ações de post (salvar, reportar)
 
-5. **Community Sidebar** ✅ **COMPLETE**
+5. **Community Sidebar** ✅ **COMPLETE & STABLE**
    - ✅ **Featured Poll Module**: Enquetes em destaque com votação interativa
    - ✅ **Trending Discussions**: Discussões populares com métricas
    - ✅ **Rules Module**: Regras da comunidade organizadas
    - ✅ **Links Module**: Links úteis com navegação externa/interna
-   - ✅ **Recent Activity Module**: Atividade recente da comunidade
+   - ✅ **Recent Activity Module**: Atividade recente com proteção contra undefined
    - ✅ **Sidebar Integration**: Componente principal orquestrando todos os módulos
+   - ✅ **Error Handling**: Tratamento robusto de erros e dados ausentes
 
 ---
 
@@ -143,7 +145,7 @@ src/
 
 ### 📅 IMPLEMENTATION PLAN v2.0 - COMMUNITY MODULE
 
-**Status Atual**: ✅ 100% concluído (5/5 milestones)
+**Status Atual**: ✅ 100% concluído + hotfixes aplicados (5/5 milestones + stability fixes)
 
 #### ✅ Milestone 1: Critical System Repairs (CONCLUÍDO)
 - ✅ **1.1**: Create Missing RPC Function
@@ -165,9 +167,9 @@ src/
 - ✅ **4.3**: App Stability Improvements
 
 #### ✅ Milestone 5: Production Readiness (CONCLUÍDO)
-- ✅ **5.1**: Error Boundary Implementation
-- ✅ **5.2**: Performance Optimization
-- ✅ **5.3**: Mobile UX Refinement
+- ✅ **5.1**: Error Boundary Implementation & Export Fix
+- ✅ **5.2**: Data Structure Validation & Protection
+- ✅ **5.3**: Runtime Error Resolution
 
 ---
 
@@ -205,7 +207,7 @@ src/
 - **Authentication**: 100% ✅
 - **Acervo**: 100% ✅
 - **Review Detail**: 100% ✅
-- **Community**: 100% ✅
+- **Community**: 100% ✅ (+ Runtime Stability)
 - **Profile**: 80% 🟡
 - **Admin Panel**: 30% 🔴
 
@@ -247,4 +249,4 @@ src/
 
 ---
 
-**📈 Status Geral: 95% Implementado | 🎯 Meta Q3 2025: Feature Complete & Production Optimized**
+**📈 Status Geral: 95% Implementado + Runtime Stable | 🎯 Meta Q3 2025: Feature Complete & Production Optimized**

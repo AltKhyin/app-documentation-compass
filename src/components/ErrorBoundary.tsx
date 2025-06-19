@@ -1,4 +1,3 @@
-
 // ABOUTME: Error boundary component to catch and display React errors gracefully.
 import React from 'react';
 
@@ -7,7 +6,7 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-class ErrorBoundary extends React.Component<
+export class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
   ErrorBoundaryState
 > {
@@ -58,4 +57,5 @@ class ErrorBoundary extends React.Component<
   }
 }
 
+// Keep both exports for maximum compatibility
 export default ErrorBoundary;
