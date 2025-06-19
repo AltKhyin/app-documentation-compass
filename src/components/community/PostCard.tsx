@@ -1,5 +1,5 @@
 
-// ABOUTME: Individual post card component with voting buttons, author information, and moderation indicators.
+// ABOUTME: Individual post card component with voting buttons, author information, moderation indicators, and integrated save functionality.
 
 import React from 'react';
 import { Card, CardContent } from '../ui/card';
@@ -12,8 +12,11 @@ import type { CommunityPost } from '../../../packages/hooks/useCommunityPageQuer
 import { VoteButtons } from './VoteButtons';
 import { PostActionMenu } from './PostActionMenu';
 import { PostActionBar } from './PostActionBar';
-import { MessageCircle, Pin, Lock } from 'lucide-react';
+import { MessageCircle, Pin, Lock, Bookmark, BookmarkCheck } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useSavePostMutation } from '../../../packages/hooks/useSavePostMutation';
+import { toast } from 'sonner';
+import { Button } from '../ui/button';
 
 interface PostCardProps {
   post: CommunityPost;
@@ -35,6 +38,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export const PostCard = ({ post }: PostCardProps) => {
   const navigate = useNavigate();
+  const savePostMutation = useSavePostMutation();
   const categoryLabel = CATEGORY_LABELS[post.category] || post.category;
   const categoryColor = CATEGORY_COLORS[post.category] || 'default';
 
@@ -50,6 +54,23 @@ export const PostCard = ({ post }: PostCardProps) => {
     }
     
     navigate(`/comunidade/${post.id}`);
+  };
+
+  const handleSave = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card navigation
+    
+    try {
+      await savePostMutation.mutateAsync({
+        post_id: post.id,
+        is_saved: !post.is_saved
+      });
+      
+      toast.success(
+        post.is_saved ? 'Post removido dos salvos' : 'Post salvo com sucesso'
+      );
+    } catch (error) {
+      toast.error('Erro ao salvar post. Tente novamente.');
+    }
   };
 
   return (
@@ -141,6 +162,27 @@ export const PostCard = ({ post }: PostCardProps) => {
                 <Badge variant={categoryColor as any} className="flex-shrink-0">
                   {categoryLabel}
                 </Badge>
+
+                {/* Save button - NEW */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={savePostMutation.isPending}
+                  className={cn(
+                    "h-8 w-8 p-0 transition-colors",
+                    post.is_saved 
+                      ? "text-primary hover:text-primary/80" 
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  title={post.is_saved ? 'Remover dos salvos' : 'Salvar post'}
+                >
+                  {post.is_saved ? (
+                    <BookmarkCheck className="w-4 h-4" />
+                  ) : (
+                    <Bookmark className="w-4 h-4" />
+                  )}
+                </Button>
 
                 {/* Post Action Menu */}
                 <PostActionMenu post={post} />

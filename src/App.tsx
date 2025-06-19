@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProviders } from './components/providers/AppProviders';
@@ -9,6 +10,7 @@ import AcervoPage from './pages/AcervoPage';
 import ReviewDetailPage from './pages/ReviewDetailPage';
 import ComunidadePage from './pages/ComunidadePage';
 import CommunityInfoPage from './pages/CommunityInfoPage';
+import SavedPostsPage from './pages/SavedPostsPage';
 import { SubmitPage } from './pages/community/SubmitPage';
 import CommunityPostPage from "./pages/CommunityPostPage";
 
@@ -52,7 +54,17 @@ function App() {
             </ProtectedAppRoute>
           } />
           
-          {/* Community Submit Route - NEW */}
+          {/* Saved Posts Route - NEW */}
+          <Route 
+            path="/comunidade/salvos" 
+            element={
+              <ProtectedAppRoute>
+                <SavedPostsPage />
+              </ProtectedAppRoute>
+            } 
+          />
+          
+          {/* Community Submit Route */}
           <Route 
             path="/community/submit" 
             element={
@@ -62,7 +74,7 @@ function App() {
             } 
           />
           
-          {/* Community Post Route - NEW */}
+          {/* Community Post Route */}
           <Route 
             path="/comunidade/:postId" 
             element={
