@@ -1,4 +1,4 @@
-// ABOUTME: Centralized TypeScript interfaces and types for the entire application.
+// ABOUTME: Central TypeScript type definitions for the EVIDENS application.
 
 // Core entity types matching database schema
 export interface Review {
@@ -290,3 +290,10 @@ export interface MediaUploadResponse {
   file_name: string;
   file_size: number;
 }
+
+// Community types
+export type {
+  CommunityPost,
+  SidebarData,
+  CommunityPageResponse
+} from './community';

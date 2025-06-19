@@ -1,8 +1,7 @@
-
 # EVIDENS - Documentação Canônica do Sistema
-**Versão:** 2.0.0  
+**Versão:** 2.1.0  
 **Data:** 19 de Junho de 2025  
-**Status:** Milestone 3 Community Module - Core Implementation Complete
+**Status:** Milestone 3 Community Module - Implementation Complete ✅
 
 ## 📚 VISÃO GERAL DO PROJETO
 Este documento serve como a fonte única de verdade para a arquitetura, convenções e decisões de design do aplicativo EVIDENS. Ele deve ser lido e referenciado por todos os membros da equipe de desenvolvimento antes de iniciar qualquer tarefa de codificação.
@@ -40,9 +39,19 @@ O objetivo é garantir consistência, manutenibilidade e escalabilidade em todo 
 │   ├── components/     # Componentes React reutilizáveis
 │   │   ├── community/  # Módulo da comunidade
 │   │   │   ├── sidebar/    # Componentes da barra lateral
+│   │   │   │   ├── RulesModule.tsx
+│   │   │   │   ├── LinksModule.tsx
+│   │   │   │   ├── TrendingDiscussionsModule.tsx
+│   │   │   │   ├── RecentActivityModule.tsx
+│   │   │   │   └── FeaturedPollModule.tsx
+│   │   │   ├── PostCard.tsx ✅ NEW
+│   │   │   ├── CommunitySidebar.tsx
 │   │   │   ├── CommunityErrorBoundary.tsx
 │   │   │   ├── CommunityLoadingState.tsx
 │   │   │   └── CommunityFeedWithSidebar.tsx
+│   ├── types/          # Definições de tipos TypeScript
+│   │   ├── index.ts
+│   │   └── community.ts ✅ NEW
 │   ├── contexts/       # Contextos React para gerenciamento de estado global
 │   ├── hooks/          # Hooks React personalizados
 │   ├── pages/          # Páginas do aplicativo
@@ -134,26 +143,29 @@ O aplicativo usa um design responsivo para se adaptar a diferentes tamanhos de t
 - **Acervo Completo:** Filtros, busca, tags hierárquicas
 - **Review Detail:** Renderização de conteúdo estruturado
 - **Community Module (MILESTONE 3 COMPLETE):**
-  - **✅ Backend:** Edge functions operacionais
-  - **✅ Frontend:** Routing estabilizado (CRITICAL FIX APPLIED)
-  - **✅ UI Padronizada:** Error boundaries e loading states
-  - **✅ Desktop:** Feed + Sidebar layout completo
-  - **✅ Mobile:** Feed responsivo (sidebar omitida)
-  - **✅ Sidebar Modules:** Rules, Links, Trending, Recent Activity
+  - **✅ Backend:** Edge functions operacionais com rate limiting
+  - **✅ Frontend:** Routing CORRIGIDO e funcional
+  - **✅ UI Completa:** PostCard, error boundaries, loading states
+  - **✅ Desktop:** Feed + Sidebar layout totalmente funcional
+  - **✅ Mobile:** Feed responsivo (sidebar omitida conforme blueprint)
+  - **✅ Sidebar Modules:** Rules, Links, Trending, Recent Activity, Featured Poll
+  - **✅ Type Safety:** Definições TypeScript completas
+  - **✅ Data Integration:** Hook consolidado para posts + sidebar
 
 ### 🔧 FEATURES TÉCNICAS IMPLEMENTADAS
-- **Rate Limiting:** Todos os endpoints protegidos
+- **Rate Limiting:** Todos os endpoints protegidos (30 req/60s)
 - **Error Boundaries:** Padronizados por módulo (CommunityErrorBoundary)
 - **Loading States:** Componentes reutilizáveis (CommunityLoadingState)
-- **Mobile-First Design:** Breakpoints padronizados
-- **Data Access Layer:** TanStack Query + hooks customizados
+- **Mobile-First Design:** Breakpoints padronizados com useIsMobile
+- **Data Access Layer:** TanStack Query + hooks customizados + types
+- **Component Architecture:** Hierarquia clara (Pages → Modules → Primitives)
 
 ### 🚧 PRÓXIMAS IMPLEMENTAÇÕES NECESSÁRIAS
-1. **Post Creation Workflow:** Completar fluxo de criação de posts
-2. **Post Detail View:** Implementar visualização individual
-3. **Voting System:** Sistema de upvote/downvote
-4. **Comment System:** Sistema de comentários e replies
-5. **Moderation Tools:** Ferramentas de moderação para admins
+1. **Post Detail View (Milestone 4.1):** Implementar CommunityPostPage
+2. **Voting System (Milestone 4.2):** Sistema de upvote/downvote
+3. **Comment System (Milestone 4.3):** Sistema de comentários e replies
+4. **Post Creation (Milestone 4.4):** Completar CreatePostPage workflow
+5. **Moderation Tools (Milestone 5):** Ferramentas de moderação para admins
 
 ## 🏛️ ARQUITETURA GERAL
 
@@ -197,14 +209,32 @@ CommunityFeedWithSidebar
 └── Responsive breakpoints ([DOC_8])
 ```
 
+### Feed Display Pattern
+```
+PostCard (Individual post display)
+├── Vote buttons (desktop: left column, mobile: inline)
+├── Author metadata (avatar, name, timestamp)
+├── Content preview (title, text, category, flair)
+├── Engagement metrics (votes, comments)
+└── Action buttons (share, save)
+```
+
 ### Módulos da Sidebar da Comunidade
 ```
 CommunitySidebar
-├── FeaturedPollModule (se disponível)
+├── FeaturedPollModule (enquete da semana)
 ├── RulesModule (regras da comunidade)
 ├── TrendingDiscussionsModule (discussões em alta)
 ├── RecentActivityModule (atividade recente)
 └── LinksModule (links úteis)
+```
+
+### Type Safety Architecture
+```
+src/types/community.ts
+├── CommunityPost (estrutura completa do post)
+├── SidebarData (dados da sidebar)
+└── CommunityPageResponse (resposta da API)
 ```
 
 ## 🛡️ DIRETRIZES DE SEGURANÇA
@@ -248,9 +278,10 @@ CommunitySidebar
 
 ## 📋 PLANO DE DESENVOLVIMENTO FUTURO
 
-### Phase 4: POST INTERACTION SYSTEM
+### Phase 4: POST INTERACTION SYSTEM (PRÓXIMO)
 **Objetivo:** Implementar sistema completo de interação com posts
 **Componentes Necessários:**
+- ✅ PostCard component (IMPLEMENTADO)
 - PostDetail component para visualização individual
 - VoteButtons component para upvote/downvote
 - Comment system para discussões aninhadas
@@ -285,6 +316,6 @@ CommunitySidebar
 - **Sidebar:** Barra lateral com módulos informativos da comunidade.
 
 ---
-**Última Atualização:** Milestone 3 - Core Community Implementation Complete (Routing Fixed)
+**Última Atualização:** Milestone 3 - Community Module Implementation Complete ✅
 **Próximo Marco:** Milestone 4 - Post Interaction System & Content Creation
-
+**Funcionalidade Atual:** Community feed funcional com sidebar completa, tipos TypeScript, error handling e loading states

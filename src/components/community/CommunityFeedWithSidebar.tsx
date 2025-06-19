@@ -10,11 +10,11 @@ import { CommunitySidebar } from './CommunitySidebar';
 import { CommunityErrorBoundary } from './CommunityErrorBoundary';
 import { CommunityLoadingState } from './CommunityLoadingState';
 import { useIsMobile } from '../../hooks/use-mobile';
-import type { CommunityPost, CommunityPageResponse } from '../../../packages/hooks/useCommunityPageQuery';
+import type { CommunityPost, SidebarData } from '../../types/community';
 
 interface CommunityFeedWithSidebarProps {
   posts: CommunityPost[];
-  sidebarData?: CommunityPageResponse['sidebarData'];
+  sidebarData?: SidebarData;
   onLoadMore: () => void;
   hasMore?: boolean;
   isLoadingMore?: boolean;

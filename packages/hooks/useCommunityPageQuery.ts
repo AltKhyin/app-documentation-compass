@@ -3,41 +3,7 @@
 
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '../../src/integrations/supabase/client';
-import type { CommunityPost } from '../../src/types';
-
-export interface CommunityPageResponse {
-  posts: CommunityPost[];
-  pagination: {
-    page: number;
-    limit: number;
-    hasMore: boolean;
-  };
-  sidebarData: {
-    rules: string[];
-    links: Array<{ title: string; url: string }>;
-    trendingDiscussions: Array<{
-      id: number;
-      title: string;
-      content: string;
-      category: string;
-      reply_count: number;
-      upvotes: number;
-      created_at: string;
-      author: {
-        full_name: string | null;
-      } | null;
-      flair_text?: string;
-      is_pinned?: boolean;
-    }>;
-    featuredPoll?: any;
-    recentActivity: Array<{
-      id: number;
-      title: string;
-      created_at: string;
-      Practitioners: { full_name: string };
-    }>;
-  };
-}
+import type { CommunityPageResponse } from '../../src/types/community';
 
 export const useCommunityPageQuery = () => {
   return useInfiniteQuery({
@@ -76,3 +42,6 @@ export const useCommunityPageQuery = () => {
     }
   });
 };
+
+// Re-export types for backwards compatibility
+export type { CommunityPageResponse } from '../../src/types/community';
