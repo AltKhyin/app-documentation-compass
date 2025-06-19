@@ -776,6 +776,36 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_post_and_auto_vote: {
+        Args: {
+          p_author_id: string
+          p_title: string
+          p_content: string
+          p_category: string
+        }
+        Returns: {
+          author_id: string | null
+          category: string
+          community_id: string | null
+          content: string
+          created_at: string | null
+          downvotes: number | null
+          flair_color: string | null
+          flair_text: string | null
+          id: number
+          image_url: string | null
+          is_locked: boolean | null
+          is_pinned: boolean | null
+          parent_post_id: number | null
+          poll_data: Json | null
+          post_type: string
+          review_id: number | null
+          structured_content: Json | null
+          title: string | null
+          upvotes: number | null
+          video_url: string | null
+        }
+      }
       get_homepage_suggestions: {
         Args: { p_user_id: string }
         Returns: {
