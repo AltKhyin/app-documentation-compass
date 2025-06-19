@@ -5,7 +5,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from './components/ui/toaster';
-import { ThemeProvider } from './components/theme/theme-provider';
+import { CustomThemeProvider } from './components/theme/CustomThemeProvider';
 import { PWAProvider } from './components/pwa/PWAProvider';
 
 // Pages
@@ -32,7 +32,7 @@ const queryClient = new QueryClient({
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="evidens-ui-theme">
+      <CustomThemeProvider defaultTheme="dark" storageKey="evidens-ui-theme">
         <PWAProvider>
           <Router>
             <div className="min-h-screen bg-background">
@@ -59,7 +59,7 @@ const App = () => {
           </Router>
           <Toaster />
         </PWAProvider>
-      </ThemeProvider>
+      </CustomThemeProvider>
     </QueryClientProvider>
   );
 };
