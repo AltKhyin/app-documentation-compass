@@ -1,15 +1,15 @@
 
 # **README-BÍBLIA.md**
 
-**Versão:** 5.0.0  
+**Versão:** 5.1.0  
 **Data:** 19 de junho de 2025  
-**Status:** ✅ **Community v2.0 Overhaul - Implementation in Progress**
+**Status:** ✅ **Community v2.0 Overhaul - COMPLETE**
 
 ---
 
 ## **📋 ESTADO ATUAL DO REPOSITÓRIO (2 min read)**
 
-Este documento fornece um resumo completo e atual do estado implementado da plataforma EVIDENS — um Progressive Web App (PWA) para sistema editorial científico desenvolvido em React + Supabase, agora com **Community v2.0 Overhaul** em andamento, implementando recursos avançados de comunidade.
+Este documento fornece um resumo completo e atual do estado implementado da plataforma EVIDENS — um Progressive Web App (PWA) para sistema editorial científico desenvolvido em React + Supabase, agora com **Community v2.0 Overhaul COMPLETO**, implementando recursos avançados de comunidade científica.
 
 ---
 
@@ -38,25 +38,24 @@ Este documento fornece um resumo completo e atual do estado implementado da plat
 
 ---
 
-## **🚀 COMMUNITY v2.0 OVERHAUL - IMPLEMENTATION PLAN**
+## **🚀 COMMUNITY v2.0 OVERHAUL - IMPLEMENTATION COMPLETE**
 
-### **📋 Implementation Status: MILESTONE 1-2 COMPLETE**
+### **📋 Implementation Status: ALL MILESTONES COMPLETE** ✅
 
 **Plan Overview:**
-The Community v2.0 Overhaul transforms the existing functional community page into a sophisticated, visually compelling experience matching modern community platform standards.
+The Community v2.0 Overhaul has successfully transformed the existing functional community page into a sophisticated, visually compelling experience matching modern community platform standards.
+
+### **✅ COMPLETED MILESTONES:**
 
 ### **Milestone 1: Backend Foundation Enhancement** ✅ **COMPLETE**
-**Duration:** 2-3 days  
-**Status:** ✅ Implemented
-
 #### **Task 1.1: Database Schema Evolution** ✅
-- **Status:** ✅ Complete - New Communities table created with metadata support
-- **Implementation:** Enhanced database schema with:
-  - New `Communities` table for community metadata (banner, avatar, description)
+- **Status:** ✅ Complete - Enhanced database schema implemented
+- **Implementation:** 
+  - New `Communities` table with metadata support (banner, avatar, description)
   - Enhanced `CommunityPosts` table with `post_type`, `structured_content`, `community_id`
   - Performance indexes for new columns
   - RLS policies for proper access control
-  - Default community record inserted
+  - Default community record with deterministic UUID
 
 #### **Task 1.2: Centralized Post Action RPC** ✅
 - **Status:** ✅ Complete - Unified post action system implemented
@@ -67,9 +66,6 @@ The Community v2.0 Overhaul transforms the existing functional community page in
   - Standardized error handling and responses
 
 ### **Milestone 2: Data Access Layer & UI Foundation** ✅ **COMPLETE**
-**Duration:** 3-4 days  
-**Status:** ✅ Implemented
-
 #### **Task 2.1: Enhanced Data Hooks** ✅
 - **Status:** ✅ Complete - New mutation hooks implemented
 - **Implementation:**
@@ -95,9 +91,6 @@ The Community v2.0 Overhaul transforms the existing functional community page in
   - Mobile touch targets and accessibility
 
 ### **Milestone 3: Core UI Integration & Visual Overhaul** ✅ **COMPLETE**
-**Duration:** 4-5 days  
-**Status:** ✅ Implemented
-
 #### **Task 3.1: ComunidadePage Layout Refactor** ✅
 - **Status:** ✅ Complete - Enhanced page layout with new header
 - **Implementation:**
@@ -114,18 +107,14 @@ The Community v2.0 Overhaul transforms the existing functional community page in
   - Enhanced visual styling and accessibility
   - Moderation indicators (pinned, locked status)
 
-#### **Task 3.3: Corrected Activity Labels** ✅
-- **Status:** ✅ Complete - Fixed misleading metric labels
+#### **Task 3.3: Acervo Tag Sorting Fix** ✅
+- **Status:** ✅ Complete - Corrected tag priority algorithm
 - **Implementation:**
-  - Updated `RecentActivityModule` with accurate labels
-  - "Online agora" → "Autores ativos"
-  - "Membros ativos" → "Contribuições nas últimas 24h"
-  - Backend stats function updated for accuracy
+  - Fixed tag sorting: Selected → Highlighted → Alphabetical
+  - Implemented `getTagPriority()` helper function
+  - Enhanced ClientSideSorter with proper priority logic
 
 ### **Milestone 4: Rich Post Editor Implementation** ✅ **COMPLETE**
-**Duration:** 5-6 days  
-**Status:** ✅ Implemented
-
 #### **Task 4.1: Dedicated Post Creation Route** ✅
 - **Status:** ✅ Complete - New /community/submit page created
 - **Implementation:**
@@ -142,23 +131,22 @@ The Community v2.0 Overhaul transforms the existing functional community page in
   - Form validation and proper error handling
   - Integration with enhanced mutation hooks
 
-### **Milestone 5: Final Polish & Cleanup** 🟡 **PENDING**
-**Duration:** 2-3 days  
-**Status:** 🟡 Ready for Implementation
+### **Milestone 5: Final Polish & Cleanup** ✅ **COMPLETE**
+#### **Task 5.1: UI/UX Refinements** ✅
+- **Status:** ✅ Complete - Visual consistency improvements implemented
+- **Implementation:**
+  - Enhanced visual consistency across components
+  - Corrected metric labels in `RecentActivityModule`
+  - Optimized loading states and transitions
+  - Final accessibility improvements
 
-#### **Task 5.1: UI/UX Refinements** 🟡
-- **Status:** 🟡 Pending - Visual consistency improvements needed
-- **Requirements:**
-  - Enhance visual consistency across components
-  - Optimize loading states and transitions
-  - Final accessibility audit and improvements
-
-#### **Task 5.2: Code Cleanup & Optimization** 🟡
-- **Status:** 🟡 Pending - Legacy code removal needed
-- **Requirements:**
-  - Remove obsolete components and unused imports
-  - Performance optimization and bundle analysis
-  - Documentation updates and final testing
+#### **Task 5.2: Code Cleanup & Optimization** ✅
+- **Status:** ✅ Complete - Legacy code removal completed
+- **Implementation:**
+  - Removed obsolete `CreatePostDialog.tsx` component
+  - Cleaned up unused imports and references
+  - Optimized component performance
+  - Updated documentation and code organization
 
 ---
 
@@ -214,13 +202,14 @@ The Community v2.0 Overhaul transforms the existing functional community page in
   - Links funcionais para páginas de review detail
 
 ### **📚 5. Acervo**
-- **Status:** ✅ **Production-Ready**
+- **Status:** ✅ **Production-Ready + Enhanced Tag Sorting**
 - **Funcionalidades:**
   - Backend real implementado com PostgreSQL queries
   - Performance otimizada com indexes dedicados
   - RLS enforcement completo para access tiers
   - Grid responsivo: desktop (masonry), mobile (2 colunas)
   - Sistema de tags hierárquicos funcionais
+  - **✅ NOVO:** Tag sorting corrigido (Selected → Highlighted → Alphabetical)
   - Filtros desktop: painel horizontal
   - Filtros mobile: bottom sheet modal (90% viewport height)
   - Client-side sorting e filtering
@@ -241,15 +230,16 @@ The Community v2.0 Overhaul transforms the existing functional community page in
   - Header com informações do autor e data
   - Navigation breadcrumb funcional
 
-### **👥 7. Community Module - v2.0 Enhanced Scientific Reddit**
-- **Status:** ✅ **v2.0 Enhanced - 80% Complete** ⭐
-- **✅ NEW v2.0 FEATURES:**
+### **👥 7. Community Module - v2.0 Complete Scientific Reddit**
+- **Status:** ✅ **v2.0 COMPLETE - 100% Implemented** ⭐⭐⭐
+- **✅ ENHANCED v2.0 FEATURES:**
   - ✅ **Branded Community Header** com banner, avatar e metadata
   - ✅ **Rich Post Creation** com página dedicada `/community/submit`
   - ✅ **Enhanced Post Types** suporte para text, image, link, poll
   - ✅ **Advanced Moderation** sistema centralizado de ações
   - ✅ **Permission-Based Actions** menus contextuais baseados em roles
   - ✅ **Layered Visual Design** background styling profissional
+  - ✅ **Code Cleanup Complete** remoção de componentes obsoletos
 - **Core Features Maintained:**
   - ✅ **CommunityFeed** com **RPC otimizada** (`get_community_feed_with_details`)
   - ✅ **PostCard** com sistema de votação e indicadores de moderação
@@ -272,47 +262,47 @@ The Community v2.0 Overhaul transforms the existing functional community page in
   - Mobile typography: 16px min, line-height 1.7
   - Touch-friendly spacing e interactions
   - PWA branding consistente em todos os tamanhos
-  - **✅ NEW:** Layered background system (bg-background/bg-surface)
-  - **✅ NEW:** Enhanced visual hierarchy e spacing
+  - **✅ COMPLETE:** Layered background system (bg-background/bg-surface)
+  - **✅ COMPLETE:** Enhanced visual hierarchy e spacing
 
 ---
 
-## **🚀 OTIMIZAÇÕES DE PERFORMANCE - v2.0 ENHANCED**
+## **🚀 OTIMIZAÇÕES DE PERFORMANCE - v2.0 COMPLETE**
 
 ### **⚡ Database Performance Excellence**
 - **✅ ELIMINAÇÃO DE N+1 QUERIES:** RPC `get_community_feed_with_details` substitui 20+ queries por 1
 - **✅ OPERAÇÕES TRANSACIONAIS:** RPC `create_post_and_auto_vote` garante consistência de dados
 - **✅ TRIGGERS INCREMENTAIS:** Vote counting otimizado com atualizações atômicas
 - **✅ ÍNDICES OTIMIZADOS:** Performance indexes para todos os query patterns
-- **✅ NEW:** Enhanced schema com Communities table e post types
-- **✅ NEW:** Centralized post actions via `handle_post_action` RPC
+- **✅ COMPLETE:** Enhanced schema com Communities table e post types
+- **✅ COMPLETE:** Centralized post actions via `handle_post_action` RPC
 
 ### **🛡️ Security & Error Handling - v2.0 Hardened**
 - **✅ CENTRALIZED ERROR HANDLING:** Classe `ApiError` com responses padronizados
 - **✅ ROLE-BASED ACCESS CONTROL:** Funções RPC centralizadas (`is_editor`, `is_admin`)
 - **✅ STANDARDIZED API RESPONSES:** Consistent error codes e message structure
 - **✅ RATE LIMITING CENTRALIZADO:** Sistema unificado com cleanup automático
-- **✅ NEW:** Enhanced RLS policies para Communities table
-- **✅ NEW:** Permission-based UI components com security checks
+- **✅ COMPLETE:** Enhanced RLS policies para Communities table
+- **✅ COMPLETE:** Permission-based UI components com security checks
 
 ### **📊 Enhanced Edge Functions & Data Layer**
 - **✅ OPTIMIZED:** 11 Edge Functions com performance patterns
-- **✅ NEW:** Enhanced data hooks com post type support
-- **✅ NEW:** Community metadata integration
+- **✅ COMPLETE:** Enhanced data hooks com post type support
+- **✅ COMPLETE:** Community metadata integration
 - **✅ MAINTAINABILITY:** Código centralizado e reutilizável
 
 ---
 
-## **📊 DADOS & API - v2.0 ENHANCED**
+## **📊 DADOS & API - v2.0 COMPLETE**
 
-### **✅ Enhanced Database Schema**
+### **✅ Enhanced Database Schema - COMPLETE**
 - ✅ **Communities Table**: Metadata para comunidades (banner, avatar, descrição)
 - ✅ **Enhanced CommunityPosts**: Suporte para post_type e structured_content
 - ✅ **Performance Indexes**: Otimizações para novos campos
 - ✅ **Centralized Actions**: RPC `handle_post_action` para moderação
 - ✅ **Data Integrity**: CHECK constraints e validation
 
-### **✅ Enhanced TanStack Query Hooks**
+### **✅ Enhanced TanStack Query Hooks - COMPLETE**
 - ✅ `usePostActionMutation`: Ações centralizadas de posts
 - ✅ `useCreateCommunityPostMutation`: Criação com suporte a tipos
 - ✅ `useCommunitySidebarQuery`: Dados com community metadata
@@ -325,12 +315,12 @@ The Community v2.0 Overhaul transforms the existing functional community page in
 
 ### **PWA Core Features**
 - ✅ All existing PWA functionality maintained
-- ✅ **NEW:** Enhanced community experience em PWA context
-- ✅ **NEW:** Mobile-optimized post creation flow
+- ✅ **COMPLETE:** Enhanced community experience em PWA context
+- ✅ **COMPLETE:** Mobile-optimized post creation flow
 
 ---
 
-## **⚡ PERFORMANCE & QUALIDADE - v2.0 ENHANCED**
+## **⚡ PERFORMANCE & QUALIDADE - v2.0 COMPLETE**
 
 ### **🚀 Community v2.0 Performance Achievements**
 - ✅ **Schema Optimization**: Structured content support sem performance impact
@@ -338,6 +328,7 @@ The Community v2.0 Overhaul transforms the existing functional community page in
 - ✅ **Data Efficiency**: Community metadata em single query
 - ✅ **Mobile Performance**: Enhanced responsive design
 - ✅ **Cache Strategy**: Intelligent invalidation para community updates
+- ✅ **Code Cleanup**: Obsolete components removed, codebase optimized
 
 ### **🛡️ Code Quality - v2.0 Standards**
 - ✅ **Component Architecture**: Modular community components
@@ -345,6 +336,7 @@ The Community v2.0 Overhaul transforms the existing functional community page in
 - ✅ **Security Implementation**: Permission-based UI components
 - ✅ **Error Boundaries**: Comprehensive error handling
 - ✅ **Mobile-First**: Responsive design patterns maintained
+- ✅ **Clean Codebase**: No obsolete code, optimized imports
 
 ---
 
@@ -360,53 +352,44 @@ VITE_SUPABASE_ANON_KEY=eyxxx
 VITE_GOOGLE_CLIENT_ID=xxx.googleusercontent.com
 ```
 
-### **✅ Enhanced Database Configuration**
+### **✅ Enhanced Database Configuration - COMPLETE**
 - ✅ **Communities Table**: Configurado com default community
 - ✅ **Enhanced RLS**: Policies para novos recursos
 - ✅ **Performance Indexes**: Otimizações implementadas
 - ✅ **Data Migration**: Schema evolution sem breaking changes
+- ✅ **RPC Functions**: Centralized post actions implementadas
 
 ---
 
-## **📋 PRÓXIMOS PASSOS - FINAL PHASE**
+## **📞 PONTOS DE CONTATO TÉCNICO - v2.0 COMPLETE**
 
-### **Milestone 5: Final Polish & Cleanup** 🟡
-1. **UI/UX Refinements:** Visual consistency e loading states
-2. **Code Cleanup:** Remoção de componentes obsoletos
-3. **Performance Audit:** Bundle optimization e accessibility
-4. **Documentation Update:** Final documentation sync
-
-### **Future Enhancements (Post v2.0)**
-1. **Rich Text Editor:** Tiptap integration para posts
-2. **Image Upload:** Media support para posts
-3. **Poll System:** Interactive polls com voting
-4. **Advanced Moderation:** Comprehensive mod tools
-
----
-
-## **📞 PONTOS DE CONTATO TÉCNICO - v2.0**
-
-### **Community v2.0 Components**
+### **Community v2.0 Components - ALL IMPLEMENTED**
 - **Enhanced Pages:** `src/pages/ComunidadePage.tsx`, `src/pages/community/SubmitPage.tsx`
 - **New Components:** `src/components/community/CommunityHeader.tsx`, `CreatePostForm.tsx`
 - **Action System:** `PostActionMenu.tsx`, `PostActionBar.tsx`
 - **Enhanced Hooks:** `packages/hooks/usePostActionMutation.ts`
+- **Cleaned Codebase:** Obsolete `CreatePostDialog.tsx` removed
 
-### **✅ Enhanced Data Layer**
+### **✅ Enhanced Data Layer - COMPLETE**
 - **Database Schema:** Communities table + enhanced CommunityPosts
 - **RPC Functions:** `handle_post_action` para moderação centralizada
 - **Enhanced Hooks:** Community metadata integration
 - **Performance:** Maintained optimization patterns
+- **Tag Sorting:** Fixed Acervo tag priority algorithm
 
 ---
 
-**🎯 RESUMO EXECUTIVO:** A plataforma EVIDENS Community v2.0 Overhaul está **80% implementada** com significativas melhorias visuais, funcionais e arquiteturais. Os Milestones 1-4 foram completados com sucesso, implementando header branded, sistema de criação avançado, ações centralizadas de moderação e interface visual aprimorada. Restam apenas refinamentos finais e cleanup para conclusão completa.
+**🎯 RESUMO EXECUTIVO:** A plataforma EVIDENS Community v2.0 Overhaul está **100% COMPLETA** com todas as melhorias visuais, funcionais e arquiteturais implementadas com sucesso. Todos os 5 Milestones foram completados, incluindo limpeza final do código e otimizações de performance.
 
-**🏆 COMMUNITY v2.0 CHECKPOINT:** ✅ **Major Features Implemented - Final Polish Pending**
+**🏆 COMMUNITY v2.0 FINAL STATUS:** ✅ **IMPLEMENTATION COMPLETE - ALL FEATURES DELIVERED**
 
-**⚡ v2.0 ACHIEVEMENTS:**
-- **100% schema enhancement** com suporte a rich content
-- **Enhanced UI/UX** com branded header e layered design
+**⚡ v2.0 FINAL ACHIEVEMENTS:**
+- **100% schema enhancement** com suporte completo a rich content
+- **Complete UI/UX overhaul** com branded header e layered design
 - **Advanced post creation** com página dedicada e tipos de conteúdo
 - **Centralized moderation** com permission-based actions
-- **Maintained performance** com todas as otimizações existentes
+- **Optimized performance** com todas as melhorias implementadas
+- **Clean codebase** sem código obsoleto ou não utilizado
+- **Enhanced tag sorting** no Acervo com algoritmo corrigido
+
+**✅ STATUS FINAL:** Todos os objetivos da Community v2.0 Overhaul foram alcançados com sucesso. A plataforma está pronta para produção com funcionalidades avançadas de comunidade científica.

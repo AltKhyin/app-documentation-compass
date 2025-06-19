@@ -20,7 +20,7 @@ import {
   Unlock,
   Flag
 } from 'lucide-react';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '../../store/auth';
 import { usePostActionMutation } from '../../../packages/hooks/usePostActionMutation';
 import type { CommunityPost } from '../../../packages/hooks/useCommunityFeedQuery';
 
