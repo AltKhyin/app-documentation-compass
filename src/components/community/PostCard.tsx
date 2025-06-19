@@ -12,11 +12,8 @@ import type { CommunityPost } from '../../types';
 import { VoteButtons } from './VoteButtons';
 import { PostActionMenu } from './PostActionMenu';
 import { PostActionBar } from './PostActionBar';
-import { MessageCircle, Pin, Lock, Bookmark, BookmarkCheck, Video, BarChart3 } from 'lucide-react';
+import { MessageCircle, Pin, Lock, Video, BarChart3 } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { useSavePostMutation } from '../../../packages/hooks/useSavePostMutation';
-import { toast } from 'sonner';
-import { Button } from '../ui/button';
 
 interface PostCardProps {
   post: CommunityPost;
@@ -38,7 +35,6 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export const PostCard = ({ post }: PostCardProps) => {
   const navigate = useNavigate();
-  const savePostMutation = useSavePostMutation();
   const categoryLabel = CATEGORY_LABELS[post.category] || post.category;
   const categoryColor = CATEGORY_COLORS[post.category] || 'default';
 
@@ -54,23 +50,6 @@ export const PostCard = ({ post }: PostCardProps) => {
     }
     
     navigate(`/comunidade/${post.id}`);
-  };
-
-  const handleSave = async (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card navigation
-    
-    try {
-      await savePostMutation.mutateAsync({
-        post_id: post.id,
-        is_saved: !post.is_saved
-      });
-      
-      toast.success(
-        post.is_saved ? 'Post removido dos salvos' : 'Post salvo com sucesso'
-      );
-    } catch (error) {
-      toast.error('Erro ao salvar post. Tente novamente.');
-    }
   };
 
   // Render multimedia content based on post type
@@ -218,27 +197,6 @@ export const PostCard = ({ post }: PostCardProps) => {
                   {categoryLabel}
                 </Badge>
 
-                {/* Save button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleSave}
-                  disabled={savePostMutation.isPending}
-                  className={cn(
-                    "h-8 w-8 p-0 transition-colors",
-                    post.is_saved 
-                      ? "text-primary hover:text-primary/80" 
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                  title={post.is_saved ? 'Remover dos salvos' : 'Salvar post'}
-                >
-                  {post.is_saved ? (
-                    <BookmarkCheck className="w-4 h-4" />
-                  ) : (
-                    <Bookmark className="w-4 h-4" />
-                  )}
-                </Button>
-
                 <PostActionMenu post={post} />
               </div>
             </div>
@@ -261,7 +219,7 @@ export const PostCard = ({ post }: PostCardProps) => {
               />
             )}
 
-            {/* Footer with action bar */}
+            {/* Footer with action bar - REMOVED DUPLICATE SAVE BUTTON */}
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <PostActionBar post={post} />
             </div>
