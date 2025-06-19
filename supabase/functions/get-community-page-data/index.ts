@@ -11,10 +11,20 @@ import {
   RateLimitError 
 } from '../_shared/api-helpers.ts'
 
+// CORS headers as mandated by [DOC_5] PRINCIPLE 5
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // Handle CORS preflight requests - [DOC_5] PRINCIPLE 5 compliance
   if (req.method === 'OPTIONS') {
-    return handleCorsPreflightRequest();
+    return new Response(null, { 
+      status: 200,
+      headers: corsHeaders 
+    });
   }
 
   try {
@@ -34,10 +44,19 @@ serve(async (req) => {
       }
     }
 
-    // Check rate limit (30 requests per 60 seconds)
+    // Check rate limit (30 requests per 60 seconds) - [DOC_5] PRINCIPLE 6 compliance
     const rateLimitResult = await checkRateLimit(supabase, 'get-community-page-data', userId, 30, 60);
     if (!rateLimitResult.allowed) {
-      throw RateLimitError;
+      return new Response(JSON.stringify({
+        error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }
+      }), {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders,
+          ...rateLimitHeaders(rateLimitResult)
+        }
+      });
     }
 
     // Parse query parameters
@@ -56,7 +75,15 @@ serve(async (req) => {
         
     if (postsError) {
       console.error('Community feed RPC error:', postsError);
-      throw new Error(`Failed to fetch community posts: ${postsError.message}`);
+      return new Response(JSON.stringify({
+        error: { message: `Failed to fetch community posts: ${postsError.message}`, code: 'DATABASE_ERROR' }
+      }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        }
+      });
     }
 
     console.log(`Successfully fetched ${(posts || []).length} community posts via RPC`);
@@ -167,10 +194,25 @@ serve(async (req) => {
 
     console.log('Successfully prepared consolidated community page data');
 
-    return createSuccessResponse(response, rateLimitHeaders(rateLimitResult));
+    return new Response(JSON.stringify(response), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        ...corsHeaders,
+        ...rateLimitHeaders(rateLimitResult)
+      }
+    });
 
   } catch (error) {
     console.error('Community page data fetch error:', error);
-    return createErrorResponse(error);
+    return new Response(JSON.stringify({
+      error: { message: error.message || 'Internal server error', code: 'INTERNAL_ERROR' }
+    }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        ...corsHeaders
+      }
+    });
   }
 });

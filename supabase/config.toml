@@ -172,6 +172,9 @@ verify_jwt = true
 [functions.get-acervo-data]
 verify_jwt = true
 
+[functions.get-community-page-data]
+verify_jwt = true
+
 [analytics]
 enabled = false
 port = 54327
