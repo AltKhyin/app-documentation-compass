@@ -7,10 +7,10 @@ import { AppShell } from '../components/shell/AppShell';
 import { ProtectedAppRoute } from '../components/routes/ProtectedAppRoute';
 import Index from '../pages/Index';
 import AcervoPage from '../pages/AcervoPage';
-import ComunidadePage from '../pages/ComunidadePage'; // FIXED: Correct import path
+import ComunidadePage from '../pages/ComunidadePage';
 import CommunityPostPage from '../pages/CommunityPostPage';
 import CreatePostPage from '../pages/CreatePostPage';
-import ProfilePage from '../pages/ProfilePage';
+import PerfilPage from '../pages/PerfilPage'; // FIXED: Use correct file name
 import ReviewDetailPage from '../pages/ReviewDetailPage';
 import AuthPage from '../pages/AuthPage';
 import { ErrorBoundary } from '../components/ErrorBoundary';
@@ -43,7 +43,7 @@ const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <ComunidadePage />  // FIXED: Correct component reference
+            element: <ComunidadePage />
           },
           {
             path: 'criar',
@@ -57,7 +57,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'profile',
-        element: <ProfilePage />
+        element: <PerfilPage /> // FIXED: Use correct component name
       },
       {
         path: 'reviews/:slug',
