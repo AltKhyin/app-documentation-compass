@@ -29,12 +29,12 @@ export const VoteButtons = ({ postId, upvotes, downvotes, userVote }: VoteButton
     }
 
     // If clicking the same vote type, remove the vote
-    const newVoteType = userVote === voteType ? 'none' : voteType;
+    const newVoteType = userVote === voteType ? null : voteType;
 
     try {
       await castVoteMutation.mutateAsync({
-        post_id: postId,
-        vote_type: newVoteType
+        postId: postId,
+        voteType: newVoteType
       });
     } catch (error) {
       toast.error('Erro ao votar. Tente novamente.');

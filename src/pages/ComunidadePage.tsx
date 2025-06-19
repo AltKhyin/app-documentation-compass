@@ -1,54 +1,45 @@
 
-// ABOUTME: Main Community page with desktop/mobile responsive layout per Blueprint 06.
+// ABOUTME: Main community page that orchestrates the two-column layout with consolidated data fetching.
 
 import React from 'react';
-import { CommunityFeed } from '../components/community/CommunityFeed';
 import { CommunityFeedWithSidebar } from '../components/community/CommunityFeedWithSidebar';
-import { CommunitySidebar } from '../components/community/CommunitySidebar';
-import { useIsMobile } from '../hooks/use-mobile';
+import { useCommunityPageQuery } from '../../packages/hooks/useCommunityPageQuery';
+import { Loader2 } from 'lucide-react';
 
-const ComunidadePage = () => {
-  const isMobile = useIsMobile();
+export default function ComunidadePage() {
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    error
+  } = useCommunityPageQuery();
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <p className="text-destructive mb-4">Erro ao carregar a comunidade</p>
+        <p className="text-muted-foreground text-sm">{error.message}</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      {isMobile ? (
-        // Mobile: Single column layout with pinned sidebar cards
-        <div className="space-y-6">
-          <div className="border-l-4 border-primary bg-muted/50 p-4 rounded-r-lg">
-            <h1 className="text-2xl font-bold text-foreground mb-1">Comunidade</h1>
-            <p className="text-muted-foreground text-sm">
-              Participe das discussões e compartilhe conhecimento com outros praticantes.
-            </p>
-          </div>
-          
-          <CommunityFeedWithSidebar />
-        </div>
-      ) : (
-        // Desktop: Two column layout per Blueprint 06
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main content - Left column (2/3 width) */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="border-l-4 border-primary bg-muted/50 p-6 rounded-r-lg">
-              <h1 className="text-3xl font-bold text-foreground mb-2">Comunidade</h1>
-              <p className="text-muted-foreground">
-                Participe das discussões e compartilhe conhecimento com outros praticantes de alto sinal.
-              </p>
-            </div>
-            
-            <CommunityFeed />
-          </div>
-
-          {/* Sidebar - Right column (1/3 width) */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-6">
-              <CommunitySidebar />
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    <CommunityFeedWithSidebar
+      posts={data?.posts || []}
+      sidebarData={data?.sidebarData}
+      onLoadMore={fetchNextPage}
+      hasMore={hasNextPage}
+      isLoadingMore={isFetchingNextPage}
+    />
   );
-};
-
-export default ComunidadePage;
+}

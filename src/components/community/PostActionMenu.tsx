@@ -2,7 +2,7 @@
 // ABOUTME: Dropdown menu for post moderation actions with role-based visibility.
 
 import React from 'react';
-import { MoreHorizontal, Pin, PinOff, EyeOff, Eye } from 'lucide-react';
+import { MoreHorizontal, Pin, PinOff, EyeOff } from 'lucide-react';
 import { Button } from '../ui/button';
 import {
   DropdownMenu,
@@ -25,7 +25,7 @@ export const PostActionMenu = ({ post }: PostActionMenuProps) => {
   // Role-based permission logic following [SEC.2]
   const canModerate = user?.app_metadata?.role === 'editor' || user?.app_metadata?.role === 'admin';
 
-  const handleAction = (action: 'pin' | 'unpin' | 'hide' | 'unhide') => {
+  const handleAction = (action: 'pin' | 'unpin' | 'hide') => {
     postActionMutation.mutate({
       postId: post.id,
       action

@@ -1,67 +1,107 @@
 
-// ABOUTME: Enhanced community feed that includes sidebar modules as pinned cards on mobile.
+// ABOUTME: Two-column layout component that renders community feed and sidebar with data passed as props.
 
-import React, { useState } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '../ui/button';
+import { Loader2, Plus } from 'lucide-react';
+import { PostCard } from './PostCard';
+import { CommunitySidebar } from './CommunitySidebar';
 import { useIsMobile } from '../../hooks/use-mobile';
-import { CommunityFeed } from './CommunityFeed';
-import { useCommunitySidebarQuery } from '../../../packages/hooks/useCommunitySidebarQuery';
-import { FeaturedPollModule } from './sidebar/FeaturedPollModule';
-import { TrendingDiscussionsModule } from './sidebar/TrendingDiscussionsModule';
-import { Skeleton } from '../ui/skeleton';
+import type { CommunityPost } from '../../../packages/hooks/useCommunityFeedQuery';
+import type { CommunityPageResponse } from '../../../packages/hooks/useCommunityPageQuery';
 
-export const CommunityFeedWithSidebar = () => {
+interface CommunityFeedWithSidebarProps {
+  posts: CommunityPost[];
+  sidebarData?: CommunityPageResponse['sidebarData'];
+  onLoadMore: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+}
+
+export const CommunityFeedWithSidebar = ({
+  posts,
+  sidebarData,
+  onLoadMore,
+  hasMore,
+  isLoadingMore
+}: CommunityFeedWithSidebarProps) => {
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { data: sidebarData, isLoading: sidebarLoading } = useCommunitySidebarQuery();
 
-  // On desktop, render just the regular feed (sidebar is separate)
-  if (!isMobile) {
-    return <CommunityFeed />;
-  }
+  const handleCreatePost = () => {
+    navigate('/community/submit');
+  };
 
-  // On mobile, render feed with pinned sidebar cards at top
   return (
-    <div className="space-y-6">
-      {/* Mobile: Pinned sidebar modules */}
-      <div className="space-y-4">
-        {sidebarLoading ? (
-          // Loading skeletons for mobile pinned cards
-          <div className="space-y-4">
-            <div className="bg-card border rounded-lg p-4">
-              <Skeleton className="h-5 w-32 mb-3" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-8 w-full" />
-              </div>
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4 py-6">
+        <div className={`flex gap-8 ${isMobile ? 'flex-col' : 'flex-row'}`}>
+          {/* Main Feed Column */}
+          <div className={`${isMobile ? 'w-full' : 'flex-1'}`}>
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-bold">Comunidade</h1>
+              <Button onClick={handleCreatePost}>
+                <Plus className="w-4 h-4 mr-2" />
+                Nova Discussão
+              </Button>
             </div>
-            <div className="bg-card border rounded-lg p-4">
-              <Skeleton className="h-5 w-32 mb-3" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-              </div>
+
+            {/* Posts feed */}
+            <div className="space-y-4">
+              {posts.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground mb-4">
+                    Nenhuma discussão encontrada.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleCreatePost}
+                  >
+                    Criar a primeira discussão
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {posts.map((post) => (
+                    <PostCard key={post.id} post={post} />
+                  ))}
+
+                  {/* Load more button */}
+                  {hasMore && (
+                    <div className="flex justify-center pt-6">
+                      <Button
+                        variant="outline"
+                        onClick={onLoadMore}
+                        disabled={isLoadingMore}
+                      >
+                        {isLoadingMore ? (
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        ) : null}
+                        {isLoadingMore ? 'Carregando...' : 'Carregar mais'}
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
-        ) : (
-          <>
-            {/* Featured Poll - Critical module */}
-            {sidebarData?.featuredPoll && (
-              <div className="bg-muted/30 border-l-4 border-primary rounded-r-lg">
-                <FeaturedPollModule poll={sidebarData.featuredPoll} />
-              </div>
-            )}
-            
-            {/* Trending Discussions - Critical module */}
-            {sidebarData?.trendingDiscussions && sidebarData.trendingDiscussions.length > 0 && (
-              <div className="bg-muted/30 border-l-4 border-secondary rounded-r-lg">
-                <TrendingDiscussionsModule discussions={sidebarData.trendingDiscussions} />
-              </div>
-            )}
-          </>
-        )}
-      </div>
 
-      {/* Main feed content */}
-      <CommunityFeed />
+          {/* Sidebar Column - Only render on desktop */}
+          {!isMobile && sidebarData && (
+            <div className="w-80 flex-shrink-0">
+              <CommunitySidebar 
+                rules={sidebarData.rules}
+                links={sidebarData.links}
+                trendingDiscussions={sidebarData.trendingDiscussions}
+                featuredPoll={sidebarData.featuredPoll}
+                recentActivity={sidebarData.recentActivity}
+              />
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

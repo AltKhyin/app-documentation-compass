@@ -1,86 +1,64 @@
 
-// ABOUTME: Main community sidebar component with multiple modules for desktop layout per Blueprint 06.
+// ABOUTME: Community sidebar component that displays rules, trending posts, and other community information via props.
 
 import React from 'react';
-import { useCommunitySidebarQuery } from '../../../packages/hooks/useCommunitySidebarQuery';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { RulesModule } from './sidebar/RulesModule';
-import { FeaturedPollModule } from './sidebar/FeaturedPollModule';
-import { TrendingDiscussionsModule } from './sidebar/TrendingDiscussionsModule';
-import { RecentActivityModule } from './sidebar/RecentActivityModule';
 import { LinksModule } from './sidebar/LinksModule';
-import { Skeleton } from '../ui/skeleton';
-import { Alert, AlertDescription } from '../ui/alert';
+import { TrendingDiscussionsModule } from './sidebar/TrendingDiscussionsModule';
+import { FeaturedPollModule } from './sidebar/FeaturedPollModule';
+import { RecentActivityModule } from './sidebar/RecentActivityModule';
 
-export const CommunitySidebar = () => {
-  const { data, isLoading, error } = useCommunitySidebarQuery();
+interface CommunitySidebarProps {
+  rules: string[];
+  links: Array<{ title: string; url: string }>;
+  trendingDiscussions: Array<{
+    id: number;
+    title: string;
+    reply_count: number;
+    upvotes: number;
+    created_at: string;
+  }>;
+  featuredPoll?: any;
+  recentActivity: Array<{
+    id: number;
+    title: string;
+    created_at: string;
+    Practitioners: { full_name: string };
+  }>;
+}
 
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <Alert>
-          <AlertDescription>
-            Erro ao carregar informações da comunidade. Tente novamente mais tarde.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        {/* Loading skeletons for each module */}
-        <div className="bg-card border rounded-lg p-6">
-          <Skeleton className="h-5 w-32 mb-3" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-          </div>
-        </div>
-        
-        <div className="bg-card border rounded-lg p-6">
-          <Skeleton className="h-5 w-24 mb-3" />
-          <div className="space-y-3">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-8 w-full" />
-          </div>
-        </div>
-        
-        <div className="bg-card border rounded-lg p-6">
-          <Skeleton className="h-5 w-32 mb-3" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-2/3" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!data) return null;
-
+export const CommunitySidebar = ({
+  rules,
+  links,
+  trendingDiscussions,
+  featuredPoll,
+  recentActivity
+}: CommunitySidebarProps) => {
   return (
-    <div className="space-y-6">
-      {/* Community Rules */}
-      <RulesModule rules={data.rules} />
-      
+    <div className="sticky top-6 space-y-6">
       {/* Featured Poll */}
-      {data.featuredPoll && (
-        <FeaturedPollModule poll={data.featuredPoll} />
+      {featuredPoll && (
+        <FeaturedPollModule poll={featuredPoll} />
       )}
-      
+
       {/* Trending Discussions */}
-      {data.trendingDiscussions.length > 0 && (
-        <TrendingDiscussionsModule discussions={data.trendingDiscussions} />
+      {trendingDiscussions.length > 0 && (
+        <TrendingDiscussionsModule discussions={trendingDiscussions} />
       )}
-      
-      {/* Recent Activity */}
-      <RecentActivityModule activity={data.recentActivity} />
-      
+
+      {/* Community Rules */}
+      <RulesModule rules={rules} />
+
       {/* Useful Links */}
-      <LinksModule links={data.links} />
+      {links.length > 0 && (
+        <LinksModule links={links} />
+      )}
+
+      {/* Recent Activity */}
+      {recentActivity.length > 0 && (
+        <RecentActivityModule activities={recentActivity} />
+      )}
     </div>
   );
 };
