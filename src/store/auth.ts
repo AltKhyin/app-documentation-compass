@@ -73,8 +73,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       );
 
-      // Cleanup subscription on unmount
-      return () => {
+      // Store cleanup function globally for later use
+      (window as any).__authCleanup = () => {
         subscription?.unsubscribe();
       };
 
