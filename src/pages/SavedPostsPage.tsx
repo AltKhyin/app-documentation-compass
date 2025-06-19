@@ -38,7 +38,8 @@ export default function SavedPostsPage() {
 
   const savePostMutation = useSavePostMutation();
 
-  const savedPosts = data?.posts || [];
+  // Correct data access pattern for infinite query
+  const savedPosts = data?.pages?.flatMap(page => page.posts) || [];
 
   // Filter posts based on search query
   const filteredPosts = savedPosts.filter(post => 
@@ -65,14 +66,13 @@ export default function SavedPostsPage() {
     }
   };
 
-  const handleSelectPost = (postId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleSelectPost = (postId: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const newSelected = new Set(selectedPosts);
     
-    if (newSelected.has(postId)) {
-      newSelected.delete(postId);
-    } else {
+    if (e.target.checked) {
       newSelected.add(postId);
+    } else {
+      newSelected.delete(postId);
     }
     
     setSelectedPosts(newSelected);
@@ -218,6 +218,7 @@ export default function SavedPostsPage() {
                       type="checkbox"
                       checked={selectedPosts.has(post.id)}
                       onChange={(e) => handleSelectPost(post.id, e)}
+                      onClick={(e) => e.stopPropagation()}
                       className="rounded border-gray-300 text-primary focus:ring-primary"
                     />
                   </div>
@@ -232,7 +233,7 @@ export default function SavedPostsPage() {
                           </Badge>
                         )}
                         <span className="text-muted-foreground text-xs">
-                          Salvo {formatDistanceToNow(new Date(post.saved_at), {
+                          Salvo {formatDistanceToNow(new Date(post.created_at), {
                             addSuffix: true,
                             locale: ptBR
                           })}

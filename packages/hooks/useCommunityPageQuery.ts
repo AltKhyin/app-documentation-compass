@@ -1,28 +1,9 @@
+
 // ABOUTME: Consolidated hook for fetching all community page data (posts + sidebar) in a single request.
 
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '../../src/integrations/supabase/client';
-
-export interface CommunityPost {
-  id: number;
-  title: string | null;
-  content: string | null;
-  category: string | null;
-  upvotes: number;
-  downvotes: number;
-  reply_count: number;
-  created_at: string;
-  is_pinned: boolean;
-  is_locked: boolean;
-  flair_text: string | null;
-  flair_color: string | null; // Added missing field
-  author: {
-    full_name: string | null;
-    avatar_url: string | null; // Added missing field
-  } | null;
-  user_vote: 'up' | 'down' | null;
-  user_can_moderate: boolean;
-}
+import type { CommunityPost } from '../../src/types';
 
 export interface CommunityPageResponse {
   posts: CommunityPost[];

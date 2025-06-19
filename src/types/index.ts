@@ -66,7 +66,7 @@ export interface Notification {
   created_at: string;
 }
 
-// Enhanced community types for better type safety
+// CONSOLIDATED CommunityPost interface - SINGLE SOURCE OF TRUTH
 export interface CommunityPost {
   id: number;
   title: string | null;
@@ -79,7 +79,7 @@ export interface CommunityPost {
   is_locked?: boolean;
   flair_text?: string;
   flair_color?: string;
-  // NEW: Multimedia support fields
+  // MULTIMEDIA SUPPORT FIELDS
   image_url?: string | null;
   video_url?: string | null;
   poll_data?: Record<string, any> | null;
@@ -91,8 +91,10 @@ export interface CommunityPost {
   } | null;
   user_vote: 'up' | 'down' | null;
   reply_count: number;
-  // NEW: Saved post status
+  // SAVED POST STATUS
   is_saved?: boolean;
+  // MODERATION FIELDS
+  user_can_moderate?: boolean;
 }
 
 // NEW: SavedPosts interface for bookmarking functionality

@@ -1,9 +1,9 @@
 
 # EVIDENS: Plataforma de Reviews Científicos
 
-**Versão**: 2.3.2  
+**Versão**: 2.4.0  
 **Última atualização**: 19 de Junho de 2025  
-**Status**: Fase de Desenvolvimento Ativo  
+**Status**: Fase de Estabilização e Protocolos  
 
 ---
 
@@ -12,24 +12,17 @@
 ### Status do Projeto
 - **Arquitetura Base**: ✅ Completa
 - **Funcionalidades Core**: 🟡 85% implementadas
-- **Community Module**: ✅ Implementação completa (v2.0 Plan - 100% concluído)
-- **Multimedia Features**: ✅ Implementadas
-- **Community Sidebar**: ✅ Implementado
-- **Deploy Status**: ✅ Pronto para produção
+- **Community Module**: 🔧 Em estabilização (Milestone System Consolidation)
+- **Type Safety & Development Protocols**: 🚧 Em implementação ativa
+- **Deploy Status**: 🔧 Estabilização em progresso
 
-### Última Atualização
-**HOTFIX CRÍTICO v2.3.2** (19/06/2025):
-- 🔧 **ErrorBoundary Export Fix**: Corrigido mismatch de export/import entre ErrorBoundary.tsx e App.tsx
-- 🔧 **RecentActivityModule Data Structure**: Corrigida estrutura de dados e adicionada proteção contra undefined
-- 🔧 **CommunitySidebar Data Flow**: Corrigido fluxo de dados entre sidebar e módulos
-- ✅ **Runtime Stability**: Todos os 3 erros críticos de runtime resolvidos
+### Milestone Atual: COMMUNITY MODULE STABILIZATION PLAN
+**Status Atual**: 🚧 Milestone 1/5 em execução - Type System Consolidation
 
-**Milestone 3 CONCLUÍDO** (19/06/2025):
-- ✅ **Featured Poll Module**: Componente de enquetes em destaque com interface de votação
-- ✅ **Trending Discussions Module**: Módulo de discussões em alta com métricas de engajamento
-- ✅ **Rules Module**: Exibição de regras da comunidade com formatação clara
-- ✅ **Links Module**: Links úteis organizados com ícones e descrições
-- ✅ **Community Sidebar Integration**: Integração completa dos módulos na sidebar
+**PLANO DE ESTABILIZAÇÃO v2.4.0** (19/06/2025):
+- 🎯 **Objetivo**: Resolver 26 erros TypeScript críticos e estabelecer protocolos robustos
+- 🔧 **Estratégia**: Consolidação de tipos + Protocolos de desenvolvimento 
+- ⚡ **Escopo**: Community module + Development protocols framework
 
 ---
 
@@ -100,7 +93,7 @@ src/
    - Bottom tab bar (mobile)
    - Sistema de temas
 
-### ✅ Community Module (100% Implementado)
+### 🚧 Community Module (Em Estabilização)
 
 #### ✅ Funcionalidades Ativas
 1. **Post Creation System**
@@ -137,39 +130,79 @@ src/
    - ✅ **Links Module**: Links úteis com navegação externa/interna
    - ✅ **Recent Activity Module**: Atividade recente com proteção contra undefined
    - ✅ **Sidebar Integration**: Componente principal orquestrando todos os módulos
-   - ✅ **Error Handling**: Tratamento robusto de erros e dados ausentes
 
 ---
 
-## 🔄 ROADMAP DE DESENVOLVIMENTO
+## 🔄 PLANO DE ESTABILIZAÇÃO E PROTOCOLOS v2.4.0
 
-### 📅 IMPLEMENTATION PLAN v2.0 - COMMUNITY MODULE
+### 📅 COMMUNITY MODULE STABILIZATION PLAN
 
-**Status Atual**: ✅ 100% concluído + hotfixes aplicados (5/5 milestones + stability fixes)
+**Status Atual**: 🚧 Em execução ativa (Milestone 1/5)
 
-#### ✅ Milestone 1: Critical System Repairs (CONCLUÍDO)
-- ✅ **1.1**: Create Missing RPC Function
-- ✅ **1.2**: Post Creation Workflow Verification
+**Objetivo Geral**: Resolver 26 erros críticos TypeScript e estabelecer protocolos robustos de desenvolvimento para prevenir problemas similares.
 
-#### ✅ Milestone 2: Multimedia Post Creation (CONCLUÍDO)
-- ✅ **2.1**: Image Upload Infrastructure
-- ✅ **2.2**: Video URL Integration  
-- ✅ **2.3**: Poll Creation System
+#### 🏗️ MILESTONE 1: Type System Consolidation (🚧 EM EXECUÇÃO)
+**Objetivo**: Estabelecer fonte única de verdade para tipos relacionados à comunidade
 
-#### ✅ Milestone 3: Community Sidebar Implementation (CONCLUÍDO)
-- ✅ **3.1**: Featured Poll Module
-- ✅ **3.2**: Trending Discussions Module
-- ✅ **3.3**: Rules & Links Modules
+**Tasks Principais**:
+- ✅ **1.1**: Consolidar interface CommunityPost (eliminar duplicações)
+- ✅ **1.2**: Atualizar imports de componentes para fonte canônica
 
-#### ✅ Milestone 4: System Stability & Fixes (CONCLUÍDO)
-- ✅ **4.1**: Provider Architecture Fix
-- ✅ **4.2**: React Import Resolution
-- ✅ **4.3**: App Stability Improvements
+**Status**: 🚧 Iniciado - Consolidando definições de tipos
 
-#### ✅ Milestone 5: Production Readiness (CONCLUÍDO)
-- ✅ **5.1**: Error Boundary Implementation & Export Fix
-- ✅ **5.2**: Data Structure Validation & Protection
-- ✅ **5.3**: Runtime Error Resolution
+#### 🔧 MILESTONE 2: TanStack Query Modernization (⏳ PENDENTE)
+**Objetivo**: Atualizar hooks para padrões TanStack Query v5
+
+**Tasks Principais**:
+- **2.1**: Adicionar `initialPageParam` em useSavedPostsQuery
+- **2.2**: Verificar consistência em useCommunityPageQuery
+
+**Dependências**: Milestone 1 (tipos atualizados)
+
+#### 🎯 MILESTONE 3: Component Integration Fixes (⏳ PENDENTE)
+**Objetivo**: Resolver erros de componentes e padrões de acesso a dados
+
+**Tasks Principais**:
+- **3.1**: Corrigir padrão de acesso SavedPostsPage (data.pages vs data.posts)
+- **3.2**: Adicionar imports de ícones Lucide React ausentes
+- **3.3**: Verificar type safety de todos os componentes
+
+**Dependências**: Milestones 1 & 2 (tipos e queries atualizados)
+
+#### 📋 MILESTONE 4: Development Protocol Implementation (⏳ PENDENTE)
+**Objetivo**: Implementar verificações automatizadas e protocolos
+
+**Tasks Principais**:
+- **4.1**: Configurar ESLint para type safety enforcement
+- **4.2**: Criar testes de integração para contratos de tipos
+
+**Dependências**: Milestone 3 (sistema funcional para testes)
+
+#### 📚 MILESTONE 5: Documentation & Knowledge Transfer (⏳ PENDENTE)
+**Objetivo**: Documentar mudanças e estabelecer protocolos
+
+**Tasks Principais**:
+- **5.1**: Atualizar documentação técnica
+- **5.2**: Criar guias de desenvolvimento (DEVELOPMENT_PROTOCOLS.md)
+
+**Dependências**: Milestone 4 (protocolos completos)
+
+### 🎯 PRÓXIMAS ETAPAS IDENTIFICADAS (Post-Stabilization)
+
+#### Prioridade Imediata (Após Milestone 5)
+1. **Advanced Community Features**: Sistema de threading para comentários
+2. **User Reputation System**: Sistema de reputação avançado
+3. **Enhanced Moderation**: Ferramentas de moderação expandidas
+
+#### Médio Prazo (1-2 meses)
+1. Sistema de notificações em tempo real
+2. Analytics e dashboard administrativo
+3. API pública para integrações
+
+#### Longo Prazo (3+ meses)
+1. Mobile app nativo
+2. Integração com ferramentas externas
+3. Sistema de certificações
 
 ---
 
@@ -207,28 +240,9 @@ src/
 - **Authentication**: 100% ✅
 - **Acervo**: 100% ✅
 - **Review Detail**: 100% ✅
-- **Community**: 100% ✅ (+ Runtime Stability)
+- **Community**: 85% 🚧 (Em estabilização técnica)
 - **Profile**: 80% 🟡
 - **Admin Panel**: 30% 🔴
-
----
-
-## 🚀 PRÓXIMOS PASSOS
-
-### Prioridade Imediata (Próximas 2 semanas)
-1. **Advanced Community Features**: Sistema de threading para comentários
-2. **User Reputation System**: Sistema de reputação avançado
-3. **Enhanced Moderation**: Ferramentas de moderação expandidas
-
-### Médio Prazo (1-2 meses)
-1. Sistema de notificações em tempo real
-2. Analytics e dashboard administrativo
-3. API pública para integrações
-
-### Longo Prazo (3+ meses)
-1. Mobile app nativo
-2. Integração com ferramentas externas
-3. Sistema de certificações
 
 ---
 
@@ -249,4 +263,28 @@ src/
 
 ---
 
-**📈 Status Geral: 95% Implementado + Runtime Stable | 🎯 Meta Q3 2025: Feature Complete & Production Optimized**
+## 📚 DÉBITO TÉCNICO IDENTIFICADO
+
+### Refatoração Necessária (Pós-Estabilização)
+1. **Arquivos Extensos Identificados**:
+   - `PostCard.tsx` (273 linhas) → Extrair componentes multimedia
+   - `PostDetailCard.tsx` (249 linhas) → Separar rendering logic
+   - `SavedPostsPage.tsx` (320 linhas) → Modularizar funcionalidades
+   - `src/types/index.ts` (291 linhas) → Dividir por domínios
+
+2. **Melhorias de Arquitetura**:
+   - Implementar component composition patterns
+   - Criar hooks especializados para multimedia
+   - Estabelecer design system mais robusto
+
+3. **Otimizações de Performance**:
+   - Lazy loading de componentes pesados
+   - Memoização estratégica
+   - Bundle size optimization
+
+**Estratégia**: Abordar itens após conclusão do plano de estabilização atual, priorizando por impacto no desenvolvimento futuro.
+
+---
+
+**📈 Status Geral: 85% Implementado | 🎯 Meta Atual: Estabilização Community Module + Development Protocols | 🚀 ETA Milestone 5: +5 dias**
+

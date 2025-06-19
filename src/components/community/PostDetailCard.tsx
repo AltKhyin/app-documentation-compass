@@ -11,7 +11,7 @@ import { ptBR } from 'date-fns/locale';
 import { Pin, Lock, Bookmark, BookmarkCheck, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '../../lib/utils';
-import type { CommunityPost } from '../../../packages/hooks/useCommunityPageQuery';
+import type { CommunityPost } from '../../types';
 import { VoteButtons } from './VoteButtons';
 import { PostActionMenu } from './PostActionMenu';
 import { useSavePostMutation } from '../../../packages/hooks/useSavePostMutation';

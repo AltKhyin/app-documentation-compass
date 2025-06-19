@@ -49,6 +49,7 @@ export const useSavedPostsQuery = () => {
   return useInfiniteQuery({
     queryKey: ['savedPosts'],
     queryFn: fetchSavedPosts,
+    initialPageParam: 0, // Required for TanStack Query v5
     getNextPageParam: (lastPage) => {
       if (lastPage.pagination.has_next) {
         return lastPage.pagination.page + 1;

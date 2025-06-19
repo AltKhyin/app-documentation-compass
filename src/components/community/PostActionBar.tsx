@@ -6,7 +6,7 @@ import { MessageCircle, Bookmark, BookmarkCheck, Share2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { toast } from 'sonner';
 import { cn } from '../../lib/utils';
-import type { CommunityPost } from '../../../packages/hooks/useCommunityPageQuery';
+import type { CommunityPost } from '../../types';
 import { useSavePostMutation } from '../../../packages/hooks/useSavePostMutation';
 
 interface PostActionBarProps {

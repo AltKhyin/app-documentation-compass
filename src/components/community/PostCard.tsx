@@ -1,3 +1,4 @@
+
 // ABOUTME: Individual post card component with voting buttons, author information, moderation indicators, and integrated save functionality.
 
 import React from 'react';
@@ -7,11 +8,11 @@ import { Badge } from '../ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
-import type { CommunityPost } from '../../../packages/hooks/useCommunityPageQuery';
+import type { CommunityPost } from '../../types';
 import { VoteButtons } from './VoteButtons';
 import { PostActionMenu } from './PostActionMenu';
 import { PostActionBar } from './PostActionBar';
-import { MessageCircle, Pin, Lock, Bookmark, BookmarkCheck } from 'lucide-react';
+import { MessageCircle, Pin, Lock, Bookmark, BookmarkCheck, Video, BarChart3 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useSavePostMutation } from '../../../packages/hooks/useSavePostMutation';
 import { toast } from 'sonner';
@@ -72,7 +73,7 @@ export const PostCard = ({ post }: PostCardProps) => {
     }
   };
 
-  // NEW: Render multimedia content based on post type
+  // Render multimedia content based on post type
   const renderMultimediaContent = () => {
     switch (post.post_type) {
       case 'image':
@@ -249,7 +250,7 @@ export const PostCard = ({ post }: PostCardProps) => {
               </h3>
             )}
 
-            {/* NEW: Multimedia content */}
+            {/* Multimedia content */}
             {renderMultimediaContent()}
 
             {/* Content preview */}
