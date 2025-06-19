@@ -1,37 +1,20 @@
 
-// ABOUTME: Main community sidebar component that orchestrates all sidebar modules with proper data flow.
+// ABOUTME: Main community sidebar component that orchestrates all sidebar modules per Blueprint 06.
 
 import React from 'react';
-import { FeaturedPollModule } from './sidebar/FeaturedPollModule';
-import { TrendingDiscussionsModule } from './sidebar/TrendingDiscussionsModule';
 import { RulesModule } from './sidebar/RulesModule';
 import { LinksModule } from './sidebar/LinksModule';
+import { TrendingDiscussionsModule } from './sidebar/TrendingDiscussionsModule';
+import { FeaturedPollModule } from './sidebar/FeaturedPollModule';
 import { RecentActivityModule } from './sidebar/RecentActivityModule';
+import type { CommunityPageResponse } from '../../../packages/hooks/useCommunityPageQuery';
 
 interface CommunitySidebarProps {
-  rules?: string[];
-  links?: Array<{ title: string; url: string }>;
-  trendingDiscussions?: Array<{
-    id: number;
-    title: string;
-    content: string;
-    category: string;
-    reply_count: number;
-    upvotes: number;
-    created_at: string;
-    author: {
-      full_name: string | null;
-    } | null;
-    flair_text?: string;
-    is_pinned?: boolean;
-  }>;
+  rules: string[];
+  links: Array<{ title: string; url: string }>;
+  trendingDiscussions: CommunityPageResponse['sidebarData']['trendingDiscussions'];
   featuredPoll?: any;
-  recentActivity?: Array<{
-    id: number;
-    title: string;
-    created_at: string;
-    Practitioners: { full_name: string };
-  }>;
+  recentActivity: CommunityPageResponse['sidebarData']['recentActivity'];
 }
 
 export const CommunitySidebar = ({
@@ -41,30 +24,24 @@ export const CommunitySidebar = ({
   featuredPoll,
   recentActivity
 }: CommunitySidebarProps) => {
-  // Transform recentActivity array into activity metrics object
-  // This is a temporary implementation until the backend provides proper activity metrics
-  const activityMetrics = {
-    onlineUsers: recentActivity?.length || 0,
-    todayPosts: Math.floor((recentActivity?.length || 0) * 0.3), // Rough estimation
-    totalDiscussions: (recentActivity?.length || 0) * 2 // Rough estimation
-  };
-
   return (
-    <div className="space-y-6">
-      {/* Featured Poll Module */}
-      <FeaturedPollModule poll={featuredPoll} />
-      
-      {/* Trending Discussions Module */}
-      <TrendingDiscussionsModule discussions={trendingDiscussions} />
-      
-      {/* Community Rules Module */}
+    <div className="space-y-4 sticky top-6">
+      {/* Featured Poll Module - Priority display if available */}
+      {featuredPoll && (
+        <FeaturedPollModule poll={featuredPoll} />
+      )}
+
+      {/* Community Rules - Always show */}
       <RulesModule rules={rules} />
-      
-      {/* Useful Links Module */}
+
+      {/* Trending Discussions - High engagement content */}
+      <TrendingDiscussionsModule posts={trendingDiscussions} />
+
+      {/* Recent Activity - Latest posts */}
+      <RecentActivityModule activities={recentActivity} />
+
+      {/* Useful Links - Static resources */}
       <LinksModule links={links} />
-      
-      {/* Recent Activity Module */}
-      <RecentActivityModule activity={activityMetrics} />
     </div>
   );
 };

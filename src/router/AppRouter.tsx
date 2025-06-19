@@ -7,7 +7,7 @@ import { AppShell } from '../components/shell/AppShell';
 import { ProtectedAppRoute } from '../components/routes/ProtectedAppRoute';
 import Index from '../pages/Index';
 import AcervoPage from '../pages/AcervoPage';
-import CommunityPage from '../pages/CommunityPage';
+import ComunidadePage from '../pages/ComunidadePage'; // FIXED: Correct import path
 import CommunityPostPage from '../pages/CommunityPostPage';
 import CreatePostPage from '../pages/CreatePostPage';
 import ProfilePage from '../pages/ProfilePage';
@@ -43,7 +43,7 @@ const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <CommunityPage />
+            element: <ComunidadePage />  // FIXED: Correct component reference
           },
           {
             path: 'criar',

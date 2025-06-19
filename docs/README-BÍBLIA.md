@@ -1,7 +1,8 @@
+
 # EVIDENS - Documentação Canônica do Sistema
-**Versão:** 1.8.0  
+**Versão:** 2.0.0  
 **Data:** 19 de Junho de 2025  
-**Status:** Milestone 3 Community Module - UI Standardization Complete
+**Status:** Milestone 3 Community Module - Core Implementation Complete
 
 ## 📚 VISÃO GERAL DO PROJETO
 Este documento serve como a fonte única de verdade para a arquitetura, convenções e decisões de design do aplicativo EVIDENS. Ele deve ser lido e referenciado por todos os membros da equipe de desenvolvimento antes de iniciar qualquer tarefa de codificação.
@@ -37,11 +38,18 @@ O objetivo é garantir consistência, manutenibilidade e escalabilidade em todo 
 ```
 ├── src/                # Código fonte principal
 │   ├── components/     # Componentes React reutilizáveis
+│   │   ├── community/  # Módulo da comunidade
+│   │   │   ├── sidebar/    # Componentes da barra lateral
+│   │   │   ├── CommunityErrorBoundary.tsx
+│   │   │   ├── CommunityLoadingState.tsx
+│   │   │   └── CommunityFeedWithSidebar.tsx
 │   ├── contexts/       # Contextos React para gerenciamento de estado global
 │   ├── hooks/          # Hooks React personalizados
 │   ├── pages/          # Páginas do aplicativo
 │   ├── styles/         # Estilos globais e temas
 │   ├── utils/          # Funções utilitárias
+├── packages/           # Hooks de data fetching
+│   └── hooks/          # Hooks customizados para acesso a dados
 ├── public/             # Arquivos estáticos
 ├── supabase/           # Configuração do Supabase
 ├── docs/               # Documentação do projeto
@@ -53,10 +61,11 @@ O objetivo é garantir consistência, manutenibilidade e escalabilidade em todo 
 O aplicativo usa `react-router-dom` para gerenciamento de rotas. As rotas são definidas no arquivo `src/router/AppRouter.tsx`.
 
 ### Rotas Principais
-- `/`: Homepage
+- `/`: Homepage (Index)
 - `/acervo`: Acervo de reviews
-- `/comunidade`: Comunidade (fórum)
+- `/comunidade`: Comunidade (fórum) - **FUNCIONAL**
 - `/comunidade/:postId`: Detalhe de um post na comunidade
+- `/comunidade/criar`: Criação de novos posts
 - `/profile`: Página de perfil do usuário
 - `/reviews/:slug`: Detalhe de uma review
 - `/auth`: Autenticação (login/signup)
@@ -84,7 +93,7 @@ O aplicativo usa RLS para garantir que os usuários só possam acessar os dados 
 O aplicativo usa Edge Functions do Supabase para expor uma API REST. Os contratos da API são definidos em `docs/[DOC_5]_API_CONTRACT.md`.
 
 ### Endpoints Principais
-- `get-community-page-data`: Retorna os dados para a página da comunidade (posts e sidebar).
+- `get-community-page-data`: Retorna os dados para a página da comunidade (posts e sidebar). **FUNCIONAL**
 - `get-review-by-slug`: Retorna uma review pelo seu slug.
 - `create-community-post`: Cria um novo post na comunidade.
 - `moderate-community-post`: Executa ações de moderação em um post da comunidade (pin, hide, etc.).
@@ -93,7 +102,7 @@ O aplicativo usa Edge Functions do Supabase para expor uma API REST. Os contrato
 O aplicativo usa TanStack Query para gerenciamento de estado e cache de dados. Os hooks de data fetching são definidos na pasta `packages/hooks/`.
 
 ### Hooks Principais
-- `useCommunityPageQuery`: Retorna os dados para a página da comunidade (posts e sidebar).
+- `useCommunityPageQuery`: Retorna os dados para a página da comunidade (posts e sidebar). **FUNCIONAL**
 - `useReviewBySlugQuery`: Retorna uma review pelo seu slug.
 - `useCreateCommunityPostMutation`: Cria um novo post na comunidade.
 - `usePostActionMutation`: Executa ações de moderação em um post da comunidade (pin, hide, etc.).
@@ -125,18 +134,26 @@ O aplicativo usa um design responsivo para se adaptar a diferentes tamanhos de t
 - **Acervo Completo:** Filtros, busca, tags hierárquicas
 - **Review Detail:** Renderização de conteúdo estruturado
 - **Community Module (MILESTONE 3 COMPLETE):**
-  - Backend: Edge functions operacionais
-  - Frontend: Routing estabilizado
-  - **NEW: UI Padronizada com error boundaries e loading states**
-  - Desktop: Feed + Sidebar layout
-  - Mobile: Feed responsivo (sidebar omitida)
+  - **✅ Backend:** Edge functions operacionais
+  - **✅ Frontend:** Routing estabilizado (CRITICAL FIX APPLIED)
+  - **✅ UI Padronizada:** Error boundaries e loading states
+  - **✅ Desktop:** Feed + Sidebar layout completo
+  - **✅ Mobile:** Feed responsivo (sidebar omitida)
+  - **✅ Sidebar Modules:** Rules, Links, Trending, Recent Activity
 
 ### 🔧 FEATURES TÉCNICAS IMPLEMENTADAS
 - **Rate Limiting:** Todos os endpoints protegidos
-- **Error Boundaries:** Padronizados por módulo
-- **Loading States:** Componentes reutilizáveis
+- **Error Boundaries:** Padronizados por módulo (CommunityErrorBoundary)
+- **Loading States:** Componentes reutilizáveis (CommunityLoadingState)
 - **Mobile-First Design:** Breakpoints padronizados
 - **Data Access Layer:** TanStack Query + hooks customizados
+
+### 🚧 PRÓXIMAS IMPLEMENTAÇÕES NECESSÁRIAS
+1. **Post Creation Workflow:** Completar fluxo de criação de posts
+2. **Post Detail View:** Implementar visualização individual
+3. **Voting System:** Sistema de upvote/downvote
+4. **Comment System:** Sistema de comentários e replies
+5. **Moderation Tools:** Ferramentas de moderação para admins
 
 ## 🏛️ ARQUITETURA GERAL
 
@@ -180,6 +197,16 @@ CommunityFeedWithSidebar
 └── Responsive breakpoints ([DOC_8])
 ```
 
+### Módulos da Sidebar da Comunidade
+```
+CommunitySidebar
+├── FeaturedPollModule (se disponível)
+├── RulesModule (regras da comunidade)
+├── TrendingDiscussionsModule (discussões em alta)
+├── RecentActivityModule (atividade recente)
+└── LinksModule (links úteis)
+```
+
 ## 🛡️ DIRETRIZES DE SEGURANÇA
 
 ### [SEC.1] Autenticação e Autorização
@@ -219,17 +246,45 @@ CommunityFeedWithSidebar
 - Configure o sistema de CI/CD para executar testes automatizados antes de fazer deploy do aplicativo.
 - Use um sistema de versionamento de código (Git) para gerenciar as alterações no código.
 
+## 📋 PLANO DE DESENVOLVIMENTO FUTURO
+
+### Phase 4: POST INTERACTION SYSTEM
+**Objetivo:** Implementar sistema completo de interação com posts
+**Componentes Necessários:**
+- PostDetail component para visualização individual
+- VoteButtons component para upvote/downvote
+- Comment system para discussões aninhadas
+- Reply functionality para respostas
+
+### Phase 5: CONTENT CREATION & MODERATION
+**Objetivo:** Completar ferramentas de criação e moderação
+**Componentes Necessários:**
+- Enhanced CreatePostForm com rich text editor
+- Moderation dashboard para admins
+- Content flagging system
+- User reputation system
+
+### Phase 6: PERFORMANCE OPTIMIZATION
+**Objetivo:** Otimizar performance e cache
+**Melhorias Necessárias:**
+- Implement virtual scrolling para feeds longos
+- Optimize image loading com lazy loading
+- Implement infinite scroll com intersection observer
+- Cache optimization para dados da sidebar
+
 ## 📜 GLOSSÁRIO
 
 ### Termos Comuns
 - **Review:** Avaliação de um artigo científico.
 - **Acervo:** Coleção de reviews.
-- **Comunidade:** Fórum de discussão.
+- **Comunidade:** Fórum de discussão científica.
 - **Post:** Mensagem em um fórum de discussão.
 - **Slug:** Identificador único de uma review (usado na URL).
 - **Edge Function:** Função serverless executada no Edge do Supabase.
 - **RLS:** Row Level Security (segurança em nível de linha).
+- **Sidebar:** Barra lateral com módulos informativos da comunidade.
 
 ---
-**Última Atualização:** Milestone 3 - Padronização UI e Error Handling implementados
-**Próximo Marco:** Milestone 4 - Performance & Cache Optimization
+**Última Atualização:** Milestone 3 - Core Community Implementation Complete (Routing Fixed)
+**Próximo Marco:** Milestone 4 - Post Interaction System & Content Creation
+

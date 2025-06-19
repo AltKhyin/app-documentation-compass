@@ -1,64 +1,64 @@
 
-// ABOUTME: Community sidebar module showing recent activity metrics with proper data handling.
+// ABOUTME: Recent community activity module for sidebar as specified in Blueprint 06.
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
-import { Users, MessageCircle, TrendingUp } from 'lucide-react';
+import { Clock } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-// Interface matching the actual data structure from useCommunitySidebarQuery
-interface ActivityData {
-  onlineUsers: number;
-  todayPosts: number;
-  totalDiscussions: number;
+interface RecentActivity {
+  id: number;
+  title: string;
+  created_at: string;
+  Practitioners: {
+    full_name: string;
+  };
 }
 
 interface RecentActivityModuleProps {
-  activity?: ActivityData;
+  activities: RecentActivity[];
 }
 
-export const RecentActivityModule = ({ activity }: RecentActivityModuleProps) => {
-  // Provide default values if activity is undefined
-  const activityData = activity || {
-    onlineUsers: 0,
-    todayPosts: 0,
-    totalDiscussions: 0
-  };
+export const RecentActivityModule = ({ activities }: RecentActivityModuleProps) => {
+  const navigate = useNavigate();
+
+  if (!activities || activities.length === 0) {
+    return null;
+  }
 
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold flex items-center gap-2">
-          <TrendingUp className="w-4 h-4" />
+        <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <Clock className="w-4 h-4" />
           Atividade Recente
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Autores ativos</span>
-          </div>
-          <span className="text-sm font-bold">{activityData.onlineUsers}</span>
-        </div>
-        
-        <div className="text-xs text-muted-foreground border-t pt-2">
-          Últimas 24 horas
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <MessageCircle className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Posts hoje</span>
-          </div>
-          <span className="text-sm font-bold">{activityData.todayPosts}</span>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <MessageCircle className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Total discussões</span>
-          </div>
-          <span className="text-sm font-bold">{activityData.totalDiscussions}</span>
+      <CardContent className="pt-0">
+        <div className="space-y-3">
+          {activities.slice(0, 3).map((activity) => (
+            <div
+              key={activity.id}
+              onClick={() => navigate(`/comunidade/${activity.id}`)}
+              className="cursor-pointer group space-y-1"
+            >
+              <h4 className="text-sm font-medium group-hover:text-primary transition-colors line-clamp-2">
+                {activity.title}
+              </h4>
+              <div className="text-xs text-muted-foreground">
+                <span>por {activity.Practitioners.full_name}</span>
+                <span className="mx-2">•</span>
+                <span>
+                  {formatDistanceToNow(new Date(activity.created_at), {
+                    addSuffix: true,
+                    locale: ptBR
+                  })}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>
