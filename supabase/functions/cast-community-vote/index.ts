@@ -8,6 +8,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+interface VoteRequest {
+  post_id: number;
+  vote_type: 'up' | 'down' | 'none';
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -20,11 +25,11 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get user from auth header
+    // Check authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({
-        error: { message: 'Authorization required', code: 'UNAUTHORIZED' }
+        error: { message: 'Authentication required', code: 'UNAUTHORIZED' }
       }), {
         status: 401,
         headers: { 'Content-Type': 'application/json', ...corsHeaders }
@@ -34,15 +39,15 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
     if (authError || !user) {
       return new Response(JSON.stringify({
-        error: { message: 'Invalid authorization', code: 'UNAUTHORIZED' }
+        error: { message: 'Invalid authentication', code: 'UNAUTHORIZED' }
       }), {
         status: 401,
         headers: { 'Content-Type': 'application/json', ...corsHeaders }
       });
     }
 
-    // Check rate limit (20 requests per 60 seconds)
-    const rateLimitResult = await checkRateLimit(supabase, 'cast-community-vote', user.id, 20, 60);
+    // Check rate limit (10 votes per 60 seconds)
+    const rateLimitResult = await checkRateLimit(supabase, 'cast-community-vote', user.id, 10, 60);
     if (!rateLimitResult.allowed) {
       return new Response(JSON.stringify({
         error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }
@@ -56,44 +61,45 @@ serve(async (req) => {
       });
     }
 
-    // Parse request body
-    const { post_id, vote_type } = await req.json();
+    const { post_id, vote_type }: VoteRequest = await req.json();
 
-    // Validate input
-    if (!post_id || !['up', 'down', 'none'].includes(vote_type)) {
+    console.log('Processing community vote:', { post_id, vote_type, user_id: user.id });
+
+    // Validate post exists
+    const { data: post, error: postError } = await supabase
+      .from('CommunityPosts')
+      .select('id')
+      .eq('id', post_id)
+      .single();
+
+    if (postError || !post) {
       return new Response(JSON.stringify({
-        error: { message: 'Invalid post_id or vote_type', code: 'VALIDATION_ERROR' }
+        error: { message: 'Post not found', code: 'NOT_FOUND' }
       }), {
-        status: 400,
+        status: 404,
         headers: { 'Content-Type': 'application/json', ...corsHeaders }
       });
     }
 
-    console.log(`Casting vote: post_id=${post_id}, vote_type=${vote_type}, user=${user.id}`);
-
-    // Check if vote exists
-    const { data: existingVote } = await supabase
-      .from('CommunityPost_Votes')
-      .select('vote_type')
-      .eq('post_id', post_id)
-      .eq('practitioner_id', user.id)
-      .maybeSingle();
-
     if (vote_type === 'none') {
-      // Remove vote if it exists
-      if (existingVote) {
-        const { error: deleteError } = await supabase
-          .from('CommunityPost_Votes')
-          .delete()
-          .eq('post_id', post_id)
-          .eq('practitioner_id', user.id);
+      // Remove existing vote
+      const { error: deleteError } = await supabase
+        .from('CommunityPost_Votes')
+        .delete()
+        .eq('post_id', post_id)
+        .eq('practitioner_id', user.id);
 
-        if (deleteError) {
-          throw new Error(`Failed to remove vote: ${deleteError.message}`);
-        }
+      if (deleteError) {
+        console.error('Failed to remove vote:', deleteError);
+        return new Response(JSON.stringify({
+          error: { message: 'Failed to remove vote', code: 'DELETE_FAILED' }
+        }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders }
+        });
       }
     } else {
-      // Upsert vote
+      // Upsert vote (insert or update)
       const { error: upsertError } = await supabase
         .from('CommunityPost_Votes')
         .upsert({
@@ -105,28 +111,21 @@ serve(async (req) => {
         });
 
       if (upsertError) {
-        throw new Error(`Failed to cast vote: ${upsertError.message}`);
+        console.error('Failed to cast vote:', upsertError);
+        return new Response(JSON.stringify({
+          error: { message: 'Failed to cast vote', code: 'UPSERT_FAILED' }
+        }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders }
+        });
       }
     }
 
-    // Get updated post data
-    const { data: post, error: postError } = await supabase
-      .from('CommunityPosts')
-      .select('id, upvotes, downvotes')
-      .eq('id', post_id)
-      .single();
-
-    if (postError) {
-      throw new Error(`Failed to fetch updated post: ${postError.message}`);
-    }
-
-    console.log(`Vote cast successfully: post_id=${post_id}, new_upvotes=${post.upvotes}, new_downvotes=${post.downvotes}`);
+    console.log('Community vote processed successfully');
 
     return new Response(JSON.stringify({
-      post_id: post.id,
-      upvotes: post.upvotes,
-      downvotes: post.downvotes,
-      user_vote: vote_type === 'none' ? null : vote_type
+      success: true,
+      message: 'Vote processed successfully'
     }), {
       headers: {
         'Content-Type': 'application/json',

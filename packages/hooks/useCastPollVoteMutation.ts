@@ -1,10 +1,10 @@
 
-// ABOUTME: TanStack Query mutation hook for casting votes on community polls.
+// ABOUTME: TanStack Query mutation hook for casting votes on community polls with optimistic updates.
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../src/integrations/supabase/client';
 
-interface CastPollVotePayload {
+interface PollVotePayload {
   poll_id: number;
   option_id: number;
 }
@@ -17,7 +17,7 @@ interface PollVoteResponse {
 export const useCastPollVoteMutation = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<PollVoteResponse, Error, CastPollVotePayload>({
+  return useMutation<PollVoteResponse, Error, PollVotePayload>({
     mutationFn: async (payload) => {
       console.log('Casting poll vote:', payload);
       
@@ -39,7 +39,7 @@ export const useCastPollVoteMutation = () => {
       return data;
     },
     onSuccess: () => {
-      console.log('Poll vote successful, invalidating sidebar data');
+      console.log('Poll vote casting successful, invalidating queries');
       
       // Invalidate sidebar data to refresh poll results
       queryClient.invalidateQueries({ 
@@ -47,7 +47,7 @@ export const useCastPollVoteMutation = () => {
       });
     },
     onError: (error) => {
-      console.error('Poll vote failed:', error);
+      console.error('Poll vote casting failed:', error);
     }
   });
 };

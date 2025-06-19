@@ -1,9 +1,9 @@
 
-// ABOUTME: Useful links module for community sidebar.
+// ABOUTME: Useful links module for displaying relevant links in the community sidebar.
 
 import React from 'react';
-import { SidebarLink } from '../../../../packages/hooks/useCommunitySidebarQuery';
 import { ExternalLink } from 'lucide-react';
+import type { SidebarLink } from '../../../../packages/hooks/useCommunitySidebarQuery';
 
 interface LinksModuleProps {
   links: SidebarLink[];
@@ -18,16 +18,22 @@ export const LinksModule = ({ links }: LinksModuleProps) => {
           <a
             key={index}
             href={link.url}
-            className="block p-3 rounded-md bg-muted/50 hover:bg-muted transition-colors"
+            className="block group hover:bg-muted/50 p-3 rounded-md transition-colors"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-foreground">{link.title}</p>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-medium text-sm text-foreground group-hover:text-primary transition-colors">
+                  {link.title}
+                </h4>
                 {link.description && (
-                  <p className="text-xs text-muted-foreground mt-1">{link.description}</p>
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                    {link.description}
+                  </p>
                 )}
               </div>
-              <ExternalLink className="w-4 h-4 text-muted-foreground" />
+              <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0 ml-2" />
             </div>
           </a>
         ))}

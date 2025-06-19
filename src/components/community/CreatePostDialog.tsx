@@ -1,21 +1,15 @@
 
-// ABOUTME: Dialog component for creating new community posts with form validation.
+// ABOUTME: Dialog component for creating new community posts with form validation and category selection.
 
 import React, { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
-import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Label } from '../ui/label';
 import { Loader2 } from 'lucide-react';
 import { useCreateCommunityPostMutation } from '../../../packages/hooks/useCreateCommunityPostMutation';
-import { useAuthStore } from '../../store/auth';
 import { toast } from 'sonner';
 
 interface CreatePostDialogProps {
@@ -32,23 +26,17 @@ const CATEGORIES = [
 ];
 
 export const CreatePostDialog = ({ open, onOpenChange, defaultCategory = 'general' }: CreatePostDialogProps) => {
-  const { user } = useAuthStore();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState(defaultCategory);
-
+  
   const createPostMutation = useCreateCommunityPostMutation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!user) {
-      toast.error('Você precisa estar logado para criar uma discussão');
-      return;
-    }
-
+    
     if (!content.trim()) {
-      toast.error('O conteúdo é obrigatório');
+      toast.error('O conteúdo da discussão é obrigatório');
       return;
     }
 
@@ -58,10 +46,8 @@ export const CreatePostDialog = ({ open, onOpenChange, defaultCategory = 'genera
         content: content.trim(),
         category
       });
-
-      toast.success('Discussão criada com sucesso!');
       
-      // Reset form
+      toast.success('Discussão criada com sucesso!');
       setTitle('');
       setContent('');
       setCategory(defaultCategory);
@@ -71,21 +57,23 @@ export const CreatePostDialog = ({ open, onOpenChange, defaultCategory = 'genera
     }
   };
 
-  const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen && createPostMutation.isPending) {
-      return; // Don't close while submitting
+  const handleClose = () => {
+    if (!createPostMutation.isPending) {
+      setTitle('');
+      setContent('');
+      setCategory(defaultCategory);
+      onOpenChange(false);
     }
-    onOpenChange(newOpen);
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Nova Discussão</DialogTitle>
         </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="category">Categoria</Label>
             <Select value={category} onValueChange={setCategory}>
@@ -103,12 +91,12 @@ export const CreatePostDialog = ({ open, onOpenChange, defaultCategory = 'genera
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="title">Título (opcional)</Label>
+            <Label htmlFor="title">Título (Opcional)</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Digite um título para sua discussão..."
+              placeholder="Dê um título para sua discussão..."
               maxLength={200}
             />
           </div>
@@ -119,33 +107,37 @@ export const CreatePostDialog = ({ open, onOpenChange, defaultCategory = 'genera
               id="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Compartilhe sua opinião, faça uma pergunta, ou inicie uma discussão..."
+              placeholder="Compartilhe suas ideias, perguntas ou insights..."
               rows={6}
-              maxLength={2000}
               required
+              maxLength={2000}
             />
-            <div className="text-xs text-muted-foreground text-right">
+            <p className="text-xs text-muted-foreground">
               {content.length}/2000 caracteres
-            </div>
+            </p>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={handleClose}
               disabled={createPostMutation.isPending}
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              disabled={createPostMutation.isPending || !content.trim()}
+              disabled={!content.trim() || createPostMutation.isPending}
             >
-              {createPostMutation.isPending && (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              {createPostMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Criando...
+                </>
+              ) : (
+                'Criar Discussão'
               )}
-              Publicar
             </Button>
           </div>
         </form>

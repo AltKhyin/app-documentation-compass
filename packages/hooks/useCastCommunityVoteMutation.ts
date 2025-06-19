@@ -2,30 +2,22 @@
 // ABOUTME: TanStack Query mutation hook for casting votes on community posts with optimistic updates.
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { QueryKey } from '@tanstack/react-query';
 import { supabase } from '../../src/integrations/supabase/client';
 
-interface CastVotePayload {
+interface VotePayload {
   post_id: number;
   vote_type: 'up' | 'down' | 'none';
 }
 
 interface VoteResponse {
-  post_id: number;
-  upvotes: number;
-  downvotes: number;
-  user_vote: string | null;
-}
-
-// Type for the mutation context returned from onMutate - aligned with TanStack Query types
-interface MutationContext {
-  previousData: [QueryKey, unknown][];
+  success: boolean;
+  message: string;
 }
 
 export const useCastCommunityVoteMutation = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<VoteResponse, Error, CastVotePayload, MutationContext>({
+  return useMutation<VoteResponse, Error, VotePayload>({
     mutationFn: async (payload) => {
       console.log('Casting community vote:', payload);
       
@@ -46,67 +38,59 @@ export const useCastCommunityVoteMutation = () => {
       console.log('Vote cast successfully:', data);
       return data;
     },
-    onMutate: async ({ post_id, vote_type }) => {
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['community-feed'] });
+    onSuccess: (response, variables) => {
+      console.log('Vote casting successful, invalidating queries');
+      
+      // Invalidate community feed to refresh vote counts
+      queryClient.invalidateQueries({ 
+        queryKey: ['community-feed'] 
+      });
 
-      // Snapshot previous value
-      const previousData = queryClient.getQueriesData({ queryKey: ['community-feed'] });
-
-      // Optimistically update the vote
+      // Optimistically update the post in cache
       queryClient.setQueriesData(
         { queryKey: ['community-feed'] },
         (oldData: any) => {
           if (!oldData) return oldData;
-
-          const newPages = oldData.pages.map((page: any) => ({
-            ...page,
-            posts: page.posts.map((post: any) => {
-              if (post.id === post_id) {
-                const currentVote = post.user_vote;
-                let newUpvotes = post.upvotes;
-                let newDownvotes = post.downvotes;
-
-                // Remove previous vote effect
-                if (currentVote === 'up') newUpvotes--;
-                if (currentVote === 'down') newDownvotes--;
-
-                // Apply new vote effect
-                if (vote_type === 'up') newUpvotes++;
-                if (vote_type === 'down') newDownvotes++;
-
-                return {
-                  ...post,
-                  upvotes: Math.max(0, newUpvotes),
-                  downvotes: Math.max(0, newDownvotes),
-                  user_vote: vote_type === 'none' ? null : vote_type
-                };
+          
+          const updatePost = (post: any) => {
+            if (post.id === variables.post_id) {
+              const updatedPost = { ...post };
+              
+              // Remove previous vote if any
+              if (post.user_vote === 'up') {
+                updatedPost.upvotes = Math.max(0, updatedPost.upvotes - 1);
+              } else if (post.user_vote === 'down') {
+                updatedPost.downvotes = Math.max(0, updatedPost.downvotes - 1);
               }
-              return post;
-            })
-          }));
+              
+              // Add new vote
+              if (variables.vote_type === 'up') {
+                updatedPost.upvotes += 1;
+                updatedPost.user_vote = 'up';
+              } else if (variables.vote_type === 'down') {
+                updatedPost.downvotes += 1;
+                updatedPost.user_vote = 'down';
+              } else {
+                updatedPost.user_vote = null;
+              }
+              
+              return updatedPost;
+            }
+            return post;
+          };
 
           return {
             ...oldData,
-            pages: newPages
+            pages: oldData.pages.map((page: any) => ({
+              ...page,
+              posts: page.posts.map(updatePost)
+            }))
           };
         }
       );
-
-      return { previousData };
     },
-    onError: (error, variables, context) => {
-      // Rollback optimistic update with proper typing
-      if (context?.previousData) {
-        context.previousData.forEach(([queryKey, data]) => {
-          queryClient.setQueryData(queryKey, data);
-        });
-      }
+    onError: (error) => {
       console.error('Vote casting failed:', error);
-    },
-    onSettled: () => {
-      // Always refetch after error or success
-      queryClient.invalidateQueries({ queryKey: ['community-feed'] });
     }
   });
 };
