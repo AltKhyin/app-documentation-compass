@@ -9,23 +9,24 @@ import TagsPanel from '@/components/acervo/TagsPanel';
 import MobileTagsModal from '@/components/acervo/MobileTagsModal';
 import MasonryGrid from '@/components/acervo/MasonryGrid';
 import SearchInput from '@/components/acervo/SearchInput';
-import ClientSideSorter from '@/components/acervo/ClientSideSorter';
+import { ClientSideSorter } from '@/components/acervo/ClientSideSorter';
 
 const AcervoPage = () => {
   const isMobile = useIsMobile();
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'alphabetical'>('recent');
   
   const { data: acervoData, isLoading, error } = useAcervoDataQuery();
 
-  const handleTagSelect = useMemo(() => (tagName: string) => {
+  const handleTagSelect = useMemo(() => (tagId: number) => {
     setSelectedTags(prev => {
-      if (prev.includes(tagName)) {
+      if (prev.includes(tagId)) {
         // Remove tag
-        return prev.filter(tag => tag !== tagName);
+        return prev.filter(id => id !== tagId);
       } else {
         // Add tag
-        return [...prev, tagName];
+        return [...prev, tagId];
       }
     });
   }, []);
@@ -123,10 +124,12 @@ const AcervoPage = () => {
         {/* Reviews Grid with Client-Side Sorting and Search */}
         <ClientSideSorter 
           reviews={acervoData.reviews} 
+          tags={acervoData.tags}
           selectedTags={selectedTags}
           searchQuery={searchQuery}
+          sortBy={sortBy}
         >
-          {(sortedReviews) => (
+          {({ sortedReviews }) => (
             <>
               {sortedReviews.length === 0 ? (
                 <div className="text-center py-12">
