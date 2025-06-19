@@ -93,27 +93,122 @@ serve(async (req) => {
 
     console.log(`Fetching community page data: page=${page}, limit=${actualLimit}, user=${userId}`);
 
-    // Fetch main feed posts using the optimized RPC
-    const { data: posts, error: postsError } = await supabase.rpc('get_community_feed_with_details', {
-      p_user_id: userId,
-      p_limit: actualLimit,
-      p_offset: offset,
-    });
-        
-    if (postsError) {
-      console.error('Community feed RPC error:', postsError);
-      return new Response(JSON.stringify({
-        error: { message: `Failed to fetch community posts: ${postsError.message}`, code: 'DATABASE_ERROR' }
-      }), {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders
-        }
+    // Try to fetch main feed posts using the optimized RPC first, with fallback
+    let posts = [];
+    try {
+      console.log('Attempting to use optimized RPC function...');
+      const { data: rpcPosts, error: rpcError } = await supabase.rpc('get_community_feed_with_details', {
+        p_user_id: userId,
+        p_limit: actualLimit,
+        p_offset: offset,
       });
-    }
+      
+      if (rpcError) {
+        console.warn('RPC function not available, falling back to manual query:', rpcError);
+        throw new Error('RPC not available');
+      }
+      
+      posts = rpcPosts || [];
+      console.log(`Successfully fetched ${posts.length} community posts via RPC`);
+    } catch (rpcError) {
+      console.log('Using fallback query strategy...');
+      
+      // Fallback: Manual query with joins (less efficient but functional)
+      const { data: fallbackPosts, error: fallbackError } = await supabase
+        .from('CommunityPosts')
+        .select(`
+          id,
+          title,
+          content,
+          category,
+          upvotes,
+          downvotes,
+          created_at,
+          is_pinned,
+          is_locked,
+          flair_text,
+          flair_color,
+          author_id,
+          Practitioners!author_id (
+            id,
+            full_name,
+            avatar_url
+          )
+        `)
+        .is('parent_post_id', null)
+        .order('is_pinned', { ascending: false })
+        .order('created_at', { ascending: false })
+        .range(offset, offset + actualLimit - 1);
 
-    console.log(`Successfully fetched ${(posts || []).length} community posts via RPC`);
+      if (fallbackError) {
+        console.error('Fallback query failed:', fallbackError);
+        throw new Error(`Failed to fetch community posts: ${fallbackError.message}`);
+      }
+
+      // Transform fallback data to match RPC structure
+      posts = (fallbackPosts || []).map(post => ({
+        id: post.id,
+        title: post.title,
+        content: post.content,
+        category: post.category,
+        upvotes: post.upvotes,
+        downvotes: post.downvotes,
+        created_at: post.created_at,
+        is_pinned: post.is_pinned,
+        is_locked: post.is_locked,
+        flair_text: post.flair_text,
+        flair_color: post.flair_color,
+        author: post.Practitioners ? {
+          id: post.Practitioners.id,
+          full_name: post.Practitioners.full_name,
+          avatar_url: post.Practitioners.avatar_url
+        } : null,
+        user_vote: null, // Will need separate query for user votes in fallback
+        reply_count: 0 // Will need separate query for reply counts in fallback
+      }));
+
+      // If we have posts and a valid user, fetch their votes
+      if (posts.length > 0 && userId !== '00000000-0000-0000-0000-000000000000') {
+        const postIds = posts.map(p => p.id);
+        const { data: userVotes } = await supabase
+          .from('CommunityPost_Votes')
+          .select('post_id, vote_type')
+          .eq('practitioner_id', userId)
+          .in('post_id', postIds);
+
+        // Map votes to posts
+        const voteMap = {};
+        (userVotes || []).forEach(vote => {
+          voteMap[vote.post_id] = vote.vote_type;
+        });
+
+        posts = posts.map(post => ({
+          ...post,
+          user_vote: voteMap[post.id] || null
+        }));
+      }
+
+      // Fetch reply counts for posts
+      if (posts.length > 0) {
+        const postIds = posts.map(p => p.id);
+        const { data: replyCounts } = await supabase
+          .from('CommunityPosts')
+          .select('parent_post_id')
+          .in('parent_post_id', postIds);
+
+        const replyMap = {};
+        (replyCounts || []).forEach(reply => {
+          replyMap[reply.parent_post_id] = (replyMap[reply.parent_post_id] || 0) + 1;
+        });
+
+        posts = posts.map(post => ({
+          ...post,
+          reply_count: replyMap[post.id] || 0
+        }));
+      }
+
+      console.log(`Successfully fetched ${posts.length} community posts via fallback query`);
+    }
 
     // Derive trending discussions from the already-fetched posts (server-side optimization)
     const trendingDiscussions = (posts || [])
