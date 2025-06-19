@@ -1,4 +1,3 @@
-
 // ABOUTME: Centralized TypeScript interfaces and types for the entire application.
 
 // Core entity types matching database schema
@@ -182,11 +181,12 @@ export interface CreatePostFormData {
   title?: string;
   content: string;
   category: string;
-  // NEW: Multimedia post creation support
+  // Enhanced multimedia post creation support
   post_type?: 'text' | 'image' | 'video' | 'poll';
   image_url?: string;
   video_url?: string;
   poll_data?: {
+    question: string;
     options: string[];
     expires_at?: string;
   };
@@ -288,4 +288,3 @@ export interface MediaUploadResponse {
   file_name: string;
   file_size: number;
 }
-

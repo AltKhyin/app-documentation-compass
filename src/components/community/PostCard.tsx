@@ -1,4 +1,3 @@
-
 // ABOUTME: Individual post card component with voting buttons, author information, moderation indicators, and integrated save functionality.
 
 import React from 'react';
@@ -71,6 +70,61 @@ export const PostCard = ({ post }: PostCardProps) => {
     } catch (error) {
       toast.error('Erro ao salvar post. Tente novamente.');
     }
+  };
+
+  // NEW: Render multimedia content based on post type
+  const renderMultimediaContent = () => {
+    switch (post.post_type) {
+      case 'image':
+        if (post.image_url) {
+          return (
+            <div className="mt-3 mb-3">
+              <img
+                src={post.image_url}
+                alt={post.title || 'Post image'}
+                className="w-full h-64 object-cover rounded-md cursor-pointer hover:opacity-95 transition-opacity"
+                onClick={handleCardClick}
+              />
+            </div>
+          );
+        }
+        break;
+      
+      case 'video':
+        if (post.video_url) {
+          return (
+            <div className="mt-3 mb-3">
+              <div className="aspect-video bg-gray-100 rounded-md flex items-center justify-center">
+                <Video className="w-12 h-12 text-gray-400" />
+                <span className="ml-2 text-gray-500">Vídeo</span>
+              </div>
+            </div>
+          );
+        }
+        break;
+      
+      case 'poll':
+        if (post.poll_data) {
+          const pollData = typeof post.poll_data === 'string' 
+            ? JSON.parse(post.poll_data) 
+            : post.poll_data;
+          
+          return (
+            <div className="mt-3 mb-3 p-4 bg-muted/50 rounded-md">
+              <div className="flex items-center gap-2 mb-2">
+                <BarChart3 className="w-4 h-4 text-primary" />
+                <span className="font-medium text-sm">Enquete</span>
+              </div>
+              <p className="font-medium mb-2">{pollData.question}</p>
+              <p className="text-sm text-muted-foreground">
+                {pollData.options?.length || 0} opções • Clique para participar
+              </p>
+            </div>
+          );
+        }
+        break;
+    }
+    return null;
   };
 
   return (
@@ -163,7 +217,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                   {categoryLabel}
                 </Badge>
 
-                {/* Save button - NEW */}
+                {/* Save button */}
                 <Button
                   variant="ghost"
                   size="sm"
@@ -184,7 +238,6 @@ export const PostCard = ({ post }: PostCardProps) => {
                   )}
                 </Button>
 
-                {/* Post Action Menu */}
                 <PostActionMenu post={post} />
               </div>
             </div>
@@ -196,11 +249,16 @@ export const PostCard = ({ post }: PostCardProps) => {
               </h3>
             )}
 
+            {/* NEW: Multimedia content */}
+            {renderMultimediaContent()}
+
             {/* Content preview */}
-            <div 
-              className="prose dark:prose-invert prose-sm max-w-none text-muted-foreground line-clamp-3 mb-3"
-              dangerouslySetInnerHTML={{ __html: post.content }}
-            />
+            {post.content && (
+              <div 
+                className="prose dark:prose-invert prose-sm max-w-none text-muted-foreground line-clamp-3 mb-3"
+                dangerouslySetInnerHTML={{ __html: post.content }}
+              />
+            )}
 
             {/* Footer with action bar */}
             <div className="flex items-center justify-between text-xs text-muted-foreground">

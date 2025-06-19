@@ -1,7 +1,7 @@
 
-// ABOUTME: Form component for creating new community posts with enhanced validation and comprehensive error handling.
+// ABOUTME: Form component for creating new community posts with enhanced multimedia support and comprehensive validation.
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
@@ -9,10 +9,14 @@ import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { TiptapEditor } from './TiptapEditor';
+import { ImageUploadZone } from './ImageUploadZone';
+import { VideoUrlInput } from './VideoUrlInput';
+import { PollCreator } from './PollCreator';
 import { useCreateCommunityPostMutation } from '../../../packages/hooks/useCreateCommunityPostMutation';
 import { toast } from 'sonner';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Type, Image, Video, BarChart3 } from 'lucide-react';
 import { Alert, AlertDescription } from '../ui/alert';
 
 const CATEGORIES = [
@@ -22,32 +26,59 @@ const CATEGORIES = [
   { value: 'announcement', label: 'Anúncios' }
 ];
 
+const POST_TYPES = [
+  { value: 'text', label: 'Texto', icon: Type },
+  { value: 'image', label: 'Imagem', icon: Image },
+  { value: 'video', label: 'Vídeo', icon: Video },
+  { value: 'poll', label: 'Enquete', icon: BarChart3 }
+];
+
 interface PostFormData {
   title: string;
   category: string;
   content: string;
+  post_type: 'text' | 'image' | 'video' | 'poll';
+}
+
+interface PollData {
+  question: string;
+  options: Array<{ id: string; text: string }>;
+  expiresAt?: string;
 }
 
 export const CreatePostForm = () => {
   const navigate = useNavigate();
   const createPostMutation = useCreateCommunityPostMutation();
+  
+  // Multimedia state
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string>('');
+  const [pollData, setPollData] = useState<PollData | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const form = useForm<PostFormData>({
     defaultValues: {
       title: '',
       category: 'general',
       content: '',
+      post_type: 'text',
     },
-    mode: 'onBlur', // Validate on blur for better UX
+    mode: 'onBlur',
   });
+
+  const postType = form.watch('post_type');
 
   // Enhanced content validation function
   const validateContent = (value: string) => {
+    // For polls, content is optional as the poll provides the main content
+    if (postType === 'poll' && pollData) {
+      return true;
+    }
+    
     if (!value || value.trim() === '' || value === '<p></p>') {
       return 'Conteúdo é obrigatório';
     }
     
-    // Extract text content from HTML to validate meaningful content
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = value;
     const textContent = tempDiv.textContent || tempDiv.innerText || '';
@@ -63,14 +94,69 @@ export const CreatePostForm = () => {
     return true;
   };
 
+  // Multimedia validation
+  const validateMultimedia = () => {
+    switch (postType) {
+      case 'image':
+        if (!selectedImage) {
+          toast.error('Selecione uma imagem para o post.');
+          return false;
+        }
+        break;
+      case 'video':
+        if (!videoUrl.trim()) {
+          toast.error('Adicione uma URL de vídeo válida.');
+          return false;
+        }
+        break;
+      case 'poll':
+        if (!pollData || !pollData.question.trim() || pollData.options.filter(opt => opt.text.trim()).length < 2) {
+          toast.error('A enquete deve ter uma pergunta e pelo menos 2 opções.');
+          return false;
+        }
+        break;
+    }
+    return true;
+  };
+
+  const handleImageSelect = (file: File) => {
+    setSelectedImage(file);
+  };
+
+  const handleImageRemove = () => {
+    setSelectedImage(null);
+  };
+
+  const handleVideoUrlChange = (url: string) => {
+    setVideoUrl(url);
+  };
+
+  const handleVideoUrlRemove = () => {
+    setVideoUrl('');
+  };
+
+  const handlePollDataChange = (data: PollData) => {
+    setPollData(data);
+  };
+
+  const handlePollRemove = () => {
+    setPollData(null);
+  };
+
   const onSubmit = async (data: PostFormData) => {
     console.log('Form submission started:', { 
       title: data.title, 
       category: data.category, 
+      postType: data.post_type,
       contentLength: data.content.length 
     });
 
-    // Final validation before submission
+    // Validate multimedia content
+    if (!validateMultimedia()) {
+      return;
+    }
+
+    // Final content validation
     const contentValidation = validateContent(data.content);
     if (contentValidation !== true) {
       toast.error(contentValidation);
@@ -78,28 +164,56 @@ export const CreatePostForm = () => {
     }
 
     try {
-      const result = await createPostMutation.mutateAsync({
-        title: data.title.trim(),
-        content: data.content,
+      // Prepare payload based on post type
+      const payload: any = {
+        title: data.title.trim() || null,
+        content: data.content || '',
         category: data.category,
-        post_type: 'text',
-      });
+        post_type: data.post_type,
+      };
+
+      // Add multimedia data based on type
+      switch (data.post_type) {
+        case 'image':
+          if (selectedImage) {
+            // For now, we'll use a placeholder URL since we don't have storage setup
+            // In a real implementation, you'd upload the image first
+            payload.image_url = URL.createObjectURL(selectedImage);
+          }
+          break;
+        case 'video':
+          payload.video_url = videoUrl;
+          break;
+        case 'poll':
+          if (pollData) {
+            payload.poll_data = {
+              question: pollData.question,
+              options: pollData.options.filter(opt => opt.text.trim()).map(opt => opt.text.trim()),
+              expires_at: pollData.expiresAt || null
+            };
+          }
+          break;
+      }
+
+      const result = await createPostMutation.mutateAsync(payload);
 
       console.log('Post creation successful:', result);
       
-      // Show success feedback
       toast.success('Discussão criada com sucesso!', {
-        description: 'Sua discussão foi publicada e está visível para a comunidade.',
+        description: `${data.post_type === 'poll' ? 'Enquete' : 'Post'} publicado e visível para a comunidade.`,
       });
       
-      // Reset form and navigate back to community feed
+      // Reset form and multimedia state
       form.reset();
+      setSelectedImage(null);
+      setVideoUrl('');
+      setPollData(null);
+      
       navigate('/comunidade');
       
     } catch (error) {
       console.error('Post creation failed:', error);
       
-      // Enhanced error handling with specific messages
       if (error instanceof Error) {
         if (error.message.includes('Rate limit')) {
           toast.error('Muitas tentativas. Aguarde um momento antes de tentar novamente.');
@@ -118,8 +232,7 @@ export const CreatePostForm = () => {
   };
 
   const handleCancel = () => {
-    // Check if form has unsaved changes
-    const hasChanges = form.formState.isDirty;
+    const hasChanges = form.formState.isDirty || selectedImage || videoUrl || pollData;
     
     if (hasChanges) {
       const shouldDiscard = window.confirm(
@@ -131,7 +244,6 @@ export const CreatePostForm = () => {
     navigate('/comunidade');
   };
 
-  // Get form errors for display
   const errors = form.formState.errors;
   const hasErrors = Object.keys(errors).length > 0;
 
@@ -141,7 +253,6 @@ export const CreatePostForm = () => {
         <CardTitle>Criar Nova Discussão</CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Display form-level errors */}
         {hasErrors && (
           <Alert className="mb-6" variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -153,12 +264,32 @@ export const CreatePostForm = () => {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Post Type Selection */}
+            <FormField
+              control={form.control}
+              name="post_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de Post *</FormLabel>
+                  <Tabs value={field.value} onValueChange={field.onChange} className="w-full">
+                    <TabsList className="grid w-full grid-cols-4">
+                      {POST_TYPES.map((type) => (
+                        <TabsTrigger key={type.value} value={type.value} className="flex items-center gap-2">
+                          <type.icon className="w-4 h-4" />
+                          <span className="hidden sm:inline">{type.label}</span>
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  </Tabs>
+                </FormItem>
+              )}
+            />
+
             {/* Title Field */}
             <FormField
               control={form.control}
               name="title"
               rules={{
-                required: 'Título é obrigatório',
                 minLength: {
                   value: 5,
                   message: 'Título deve ter pelo menos 5 caracteres'
@@ -168,8 +299,11 @@ export const CreatePostForm = () => {
                   message: 'Título deve ter no máximo 200 caracteres'
                 },
                 validate: (value) => {
-                  const trimmed = value.trim();
-                  if (trimmed.length < 5) {
+                  // Title is optional for polls if they have a question
+                  if (postType === 'poll' && pollData?.question.trim() && !value?.trim()) {
+                    return true;
+                  }
+                  if (value && value.trim().length < 5) {
                     return 'Título deve ter pelo menos 5 caracteres (sem contar espaços)';
                   }
                   return true;
@@ -177,7 +311,9 @@ export const CreatePostForm = () => {
               }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Título *</FormLabel>
+                  <FormLabel>
+                    Título {postType === 'poll' ? '(Opcional se a enquete tiver pergunta)' : '*'}
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Digite o título da sua discussão..."
@@ -221,22 +357,56 @@ export const CreatePostForm = () => {
               )}
             />
 
+            {/* Multimedia Content based on post type */}
+            {postType === 'image' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Imagem *</label>
+                <ImageUploadZone
+                  onImageSelect={handleImageSelect}
+                  selectedImage={selectedImage}
+                  onImageRemove={handleImageRemove}
+                  isUploading={isUploadingImage}
+                />
+              </div>
+            )}
+
+            {postType === 'video' && (
+              <VideoUrlInput
+                value={videoUrl}
+                onChange={handleVideoUrlChange}
+                onRemove={handleVideoUrlRemove}
+              />
+            )}
+
+            {postType === 'poll' && (
+              <PollCreator
+                value={pollData || undefined}
+                onChange={handlePollDataChange}
+                onRemove={handlePollRemove}
+              />
+            )}
+
             {/* Rich Text Content Field */}
             <FormField
               control={form.control}
               name="content"
               rules={{
-                required: 'Conteúdo é obrigatório',
                 validate: validateContent
               }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Conteúdo *</FormLabel>
+                  <FormLabel>
+                    Conteúdo {postType === 'poll' ? '(Opcional)' : '*'}
+                  </FormLabel>
                   <FormControl>
                     <TiptapEditor
                       content={field.value}
                       onChange={field.onChange}
-                      placeholder="Escreva o conteúdo da sua discussão aqui..."
+                      placeholder={
+                        postType === 'poll' 
+                          ? "Adicione detalhes opcionais sobre a enquete..."
+                          : "Escreva o conteúdo da sua discussão aqui..."
+                      }
                     />
                   </FormControl>
                   <FormMessage />
