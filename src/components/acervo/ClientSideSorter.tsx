@@ -2,18 +2,8 @@
 // ABOUTME: Client-side sorting component for Acervo page with improved tag priority algorithm.
 
 import React, { useMemo } from 'react';
-import type { Review, Tag } from '../../types';
-
-// Define AcervoReview interface here since it's specific to Acervo functionality
-export interface AcervoReview {
-  review_id: number;
-  title: string;
-  description: string | null;
-  cover_image_url: string | null;
-  published_at: string;
-  view_count: number;
-  tags_json: { [categoria: string]: string[] };
-}
+import type { Tag } from '../../types';
+import type { AcervoReview } from '../../../packages/hooks/useAcervoDataQuery';
 
 interface ClientSideSorterProps {
   reviews: AcervoReview[];

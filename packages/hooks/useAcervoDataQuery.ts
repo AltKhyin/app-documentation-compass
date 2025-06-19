@@ -10,6 +10,7 @@ export interface AcervoReview {
   description: string | null;
   cover_image_url: string | null;
   published_at: string;
+  view_count: number; // Added missing property
   tags_json: { [categoria: string]: string[] };
 }
 
@@ -17,6 +18,7 @@ export interface AcervoTag {
   id: number;
   tag_name: string;
   parent_id: number | null;
+  created_at: string; // Added missing property
 }
 
 export interface AcervoData {

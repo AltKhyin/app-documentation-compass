@@ -4,13 +4,17 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Users, MessageCircle, TrendingUp } from 'lucide-react';
-import type { ActivityMetrics } from '../../../types';
 
+// Updated interface to match the actual data structure from useCommunitySidebarQuery
 interface RecentActivityModuleProps {
-  metrics: ActivityMetrics;
+  activity: {
+    onlineUsers: number;
+    todayPosts: number;
+    totalDiscussions: number;
+  };
 }
 
-export const RecentActivityModule = ({ metrics }: RecentActivityModuleProps) => {
+export const RecentActivityModule = ({ activity }: RecentActivityModuleProps) => {
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -26,7 +30,7 @@ export const RecentActivityModule = ({ metrics }: RecentActivityModuleProps) => 
             <Users className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium">Autores ativos</span>
           </div>
-          <span className="text-sm font-bold">{metrics.active_authors_24h}</span>
+          <span className="text-sm font-bold">{activity.onlineUsers}</span>
         </div>
         
         <div className="text-xs text-muted-foreground border-t pt-2">
@@ -38,7 +42,7 @@ export const RecentActivityModule = ({ metrics }: RecentActivityModuleProps) => 
             <MessageCircle className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium">Posts hoje</span>
           </div>
-          <span className="text-sm font-bold">{metrics.today_posts}</span>
+          <span className="text-sm font-bold">{activity.todayPosts}</span>
         </div>
 
         <div className="flex items-center justify-between">
@@ -46,7 +50,7 @@ export const RecentActivityModule = ({ metrics }: RecentActivityModuleProps) => 
             <MessageCircle className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium">Total discussões</span>
           </div>
-          <span className="text-sm font-bold">{metrics.total_discussions}</span>
+          <span className="text-sm font-bold">{activity.totalDiscussions}</span>
         </div>
       </CardContent>
     </Card>
