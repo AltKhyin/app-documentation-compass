@@ -1,10 +1,14 @@
 
-// ABOUTME: Main community page that orchestrates the two-column layout with consolidated data fetching.
+// ABOUTME: Main community page that orchestrates the two-column layout with consolidated data fetching and standardized error handling.
 
 import React from 'react';
 import { CommunityFeedWithSidebar } from '../components/community/CommunityFeedWithSidebar';
+import { CommunityErrorBoundary } from '../components/community/CommunityErrorBoundary';
+import { CommunityLoadingState } from '../components/community/CommunityLoadingState';
 import { useCommunityPageQuery } from '../../packages/hooks/useCommunityPageQuery';
-import { Loader2 } from 'lucide-react';
+import { Alert, AlertDescription } from '../components/ui/alert';
+import { Button } from '../components/ui/button';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function ComunidadePage() {
   const {
@@ -13,33 +17,61 @@ export default function ComunidadePage() {
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-    error
+    error,
+    refetch
   } = useCommunityPageQuery();
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <p className="text-destructive mb-4">Erro ao carregar a comunidade</p>
-        <p className="text-muted-foreground text-sm">{error.message}</p>
+      <div className="flex flex-col items-center justify-center py-12 px-4 text-center max-w-md mx-auto">
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Erro ao carregar a comunidade: {error.message}
+          </AlertDescription>
+        </Alert>
+        <Button 
+          variant="outline" 
+          onClick={() => refetch()}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Tentar Novamente
+        </Button>
       </div>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="w-6 h-6 animate-spin" />
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex gap-8">
+          <div className="flex-1">
+            <div className="mb-6">
+              <div className="flex justify-between items-center">
+                <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
+                <div className="h-10 w-32 bg-gray-200 rounded animate-pulse" />
+              </div>
+            </div>
+            <CommunityLoadingState variant="feed" count={5} />
+          </div>
+          <div className="w-80 flex-shrink-0 hidden lg:block">
+            <CommunityLoadingState variant="sidebar" />
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <CommunityFeedWithSidebar
-      posts={data?.posts || []}
-      sidebarData={data?.sidebarData}
-      onLoadMore={fetchNextPage}
-      hasMore={hasNextPage}
-      isLoadingMore={isFetchingNextPage}
-    />
+    <CommunityErrorBoundary>
+      <CommunityFeedWithSidebar
+        posts={data?.posts || []}
+        sidebarData={data?.sidebarData}
+        onLoadMore={fetchNextPage}
+        hasMore={hasNextPage}
+        isLoadingMore={isFetchingNextPage}
+      />
+    </CommunityErrorBoundary>
   );
 }

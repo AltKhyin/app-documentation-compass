@@ -1,195 +1,235 @@
+# EVIDENS - Documentação Canônica do Sistema
+**Versão:** 1.8.0  
+**Data:** 19 de Junho de 2025  
+**Status:** Milestone 3 Community Module - UI Standardization Complete
 
-# EVIDENS - Plataforma de Reviews Médicos Baseados em Evidência
+## 📚 VISÃO GERAL DO PROJETO
+Este documento serve como a fonte única de verdade para a arquitetura, convenções e decisões de design do aplicativo EVIDENS. Ele deve ser lido e referenciado por todos os membros da equipe de desenvolvimento antes de iniciar qualquer tarefa de codificação.
 
-## Status Atual do Sistema (v5.2.1)
-**Última Atualização:** 19 de junho de 2025
+O objetivo é garantir consistência, manutenibilidade e escalabilidade em todo o projeto.
 
-### ✅ Módulos Implementados e Funcionais
+## 🎯 PRINCÍPIOS FUNDAMENTAIS
+- **[P1] Máxima Precisão:** Priorizar a exatidão e a correção em todas as implementações.
+- **[P2] Simplicidade:** Remover complexidade desnecessária e evitar soluções excessivamente intrincadas.
+- **[P3] Padronização:** Aderir a padrões e convenções estabelecidas para garantir a consistência.
+- **[P4] Reutilização:** Maximizar a reutilização de componentes e código para reduzir a duplicação.
+- **[P5] Testabilidade:** Projetar componentes e módulos para serem facilmente testáveis.
+- **[P6] Segurança:** Implementar medidas de segurança em todas as camadas do aplicativo.
+- **[P7] Desempenho:** Otimizar o desempenho para garantir uma experiência de usuário fluida.
+- **[P8] Acessibilidade:** Garantir que o aplicativo seja acessível a todos os usuários, independentemente de suas habilidades.
 
-#### 🏠 **Homepage (Módulo Principal)**
-- **Status:** ✅ COMPLETAMENTE FUNCIONAL
-- **Localização:** `src/pages/Index.tsx`
-- **Componentes:** FeaturedReview, ReviewCarousel, NextEditionModule
-- **Data Fetching:** Hook consolidado `useConsolidatedHomepageFeedQuery`
-- **Funcionalidades:** Sistema de recomendações personalizadas, carrosséis responsivos, módulo de sugestões com votação
+## ⚙️ CONFIGURAÇÃO DO AMBIENTE
+1.  Instale o Node.js (v18 ou superior)
+2.  Instale o pnpm (`npm install -g pnpm`)
+3.  Clone o repositório
+4.  Execute `pnpm install` na raiz do projeto
+5.  Configure as variáveis de ambiente (consulte a seção abaixo)
+6.  Execute `pnpm dev` para iniciar o servidor de desenvolvimento
 
-#### 🗂️ **Acervo (Catálogo de Reviews)**
-- **Status:** ✅ COMPLETAMENTE FUNCIONAL
-- **Localização:** `src/pages/AcervoPage.tsx`
-- **Componentes:** Masonry grid, filtros por tags, busca, ordenação
-- **Data Fetching:** Hook consolidado `useAcervoDataQuery`
-- **Funcionalidades:** Grid responsivo, busca em tempo real, filtros dinâmicos
+### Variáveis de Ambiente Necessárias
+- `SUPABASE_URL`: URL do seu projeto Supabase
+- `SUPABASE_ANON_KEY`: Chave anônima do seu projeto Supabase
+- `SUPABASE_SERVICE_ROLE_KEY`: Chave de função de serviço do seu projeto Supabase
+- `NEXT_PUBLIC_SUPABASE_URL`: URL do seu projeto Supabase (para o cliente)
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Chave anônima do seu projeto Supabase (para o cliente)
 
-#### 👤 **Sistema de Autenticação**
-- **Status:** ✅ COMPLETAMENTE FUNCIONAL
-- **Localização:** `src/pages/AuthPage.tsx`, `src/components/auth/`
-- **Funcionalidades:** Login/signup, proteção de rotas, gerenciamento de sessão
-- **Integração:** Supabase Auth com RLS completo
-
-#### 🏗️ **App Shell (Interface Principal)**
-- **Status:** ✅ COMPLETAMENTE FUNCIONAL
-- **Localização:** `src/components/shell/`
-- **Componentes:** DesktopShell, MobileShell, navegação responsiva
-- **Funcionalidades:** Navegação adaptativa, sidebar colapsível, bottom tabs mobile
-
-#### 📖 **Review Detail (Visualização de Artigos)**
-- **Status:** ✅ COMPLETAMENTE FUNCIONAL
-- **Localização:** `src/pages/ReviewDetailPage.tsx`
-- **Funcionalidades:** Renderização de blocos dinâmicos, layout responsivo
-
-### 🔄 Módulos em Recuperação/Estabilização
-
-#### 💬 **Community (Discussões e Posts)**
-- **Status:** 🔄 EM RECUPERAÇÃO (Milestone 3/5)
-- **Progresso Atual:** 40% implementado
-- **Localização Principal:** `src/pages/CommunityPage.tsx`, `src/components/community/`
-
-**✅ Milestone 1 - Backend Foundation Recovery (CONCLUÍDO)**
-- Edge Functions implementadas e funcionais:
-  - `save-post` - Salvar/dessalvar posts
-  - `get-community-post-detail` - Detalhes de post individual  
-  - `create-community-post` - Criação de novos posts
-  - `moderate-community-post` - Moderação de conteúdo
-- Utilitários compartilhados: CORS, rate limiting
-- Configuração Supabase atualizada
-
-**✅ Milestone 2 - Frontend Integration Stabilization (CONCLUÍDO)**
-- Roteamento corrigido e padronizado em `src/router/AppRouter.tsx`
-- Páginas principais criadas/atualizadas:
-  - `src/pages/CreatePostPage.tsx` - Criação de posts
-  - `src/pages/CommunityPostPage.tsx` - Visualização individual
-- Import paths corrigidos (Index.tsx ao invés de HomePage.tsx)
-- Eliminação de duplicação na UI de salvamento
-
-**🔄 Milestone 3 - UI Standardization & Error Handling (EM PROGRESSO)**
-- Próximas ações: Padronização de componentes, tratamento de erros, loading states
-
-**⏳ Milestone 4 - Post Creation & Management (PENDENTE)**
-- Criação e edição de posts
-- Sistema de categorias e tags
-- Upload de mídia
-
-**⏳ Milestone 5 - Testing & Documentation (PENDENTE)**
-- Testes de integração
-- Documentação atualizada
-
-#### 📊 **Outros Módulos**
-- **Profile:** ✅ Funcional básico
-- **PWA:** ✅ Configurado e funcional
-- **Notifications:** ⏳ Planejado
-- **Analytics:** ⏳ Planejado
-
----
-
-## 🏗️ Arquitetura Técnica
-
-### **Stack Principal**
-- **Frontend:** React 18 + TypeScript + Vite
-- **Styling:** Tailwind CSS + shadcn/ui
-- **Routing:** React Router v6
-- **State Management:** TanStack Query + Zustand
-- **Backend:** 100% Supabase (Database + Auth + Edge Functions)
-
-### **Estrutura de Pastas (Feature-First)**
+## 🗂️ ESTRUTURA DE PASTAS
 ```
-src/
-├── components/          # Componentes reutilizáveis
-│   ├── ui/             # Primitivos shadcn/ui
-│   ├── auth/           # Componentes de autenticação
-│   ├── community/      # Componentes da comunidade
-│   ├── homepage/       # Componentes da homepage
-│   └── shell/          # App shell e navegação
-├── pages/              # Componentes de página
-├── packages/hooks/     # Data-fetching hooks
-├── hooks/              # Custom hooks de UI
-├── contexts/           # Context providers
-└── router/             # Configuração de rotas
+├── src/                # Código fonte principal
+│   ├── components/     # Componentes React reutilizáveis
+│   ├── contexts/       # Contextos React para gerenciamento de estado global
+│   ├── hooks/          # Hooks React personalizados
+│   ├── pages/          # Páginas do aplicativo
+│   ├── styles/         # Estilos globais e temas
+│   ├── utils/          # Funções utilitárias
+├── public/             # Arquivos estáticos
+├── supabase/           # Configuração do Supabase
+├── docs/               # Documentação do projeto
+├── README.md           # Instruções de configuração e uso
+└── package.json        # Metadados do projeto e dependências
 ```
 
-### **Padrões de Data Fetching**
-- **Regra Ouro:** UI components NUNCA acessam supabase client diretamente
-- **Abstração:** Todos os dados via custom hooks em `/packages/hooks/`
-- **Query Engine:** TanStack Query para cache e sincronização
-- **Edge Functions:** Lógica de negócio no backend Supabase
+## 🗺️ ROUTING
+O aplicativo usa `react-router-dom` para gerenciamento de rotas. As rotas são definidas no arquivo `src/router/AppRouter.tsx`.
+
+### Rotas Principais
+- `/`: Homepage
+- `/acervo`: Acervo de reviews
+- `/comunidade`: Comunidade (fórum)
+- `/comunidade/:postId`: Detalhe de um post na comunidade
+- `/profile`: Página de perfil do usuário
+- `/reviews/:slug`: Detalhe de uma review
+- `/auth`: Autenticação (login/signup)
+
+## 💾 BANCO DE DADOS
+O aplicativo usa o Supabase como banco de dados. O esquema do banco de dados é definido no arquivo `supabase/migrations/*.sql`.
+
+### Tabelas Principais
+- `Practitioners`: Informações dos usuários (profissionais)
+- `Reviews`: Reviews de artigos científicos
+- `CommunityPosts`: Posts da comunidade (fórum)
+- `CommunityPost_Votes`: Votos dos usuários nos posts da comunidade
+- `SiteSettings`: Configurações do site (administradas pelo painel de controle)
+
+## 🔑 ROW LEVEL SECURITY (RLS)
+O aplicativo usa RLS para garantir que os usuários só possam acessar os dados que têm permissão para acessar. As políticas de RLS são definidas nos arquivos `supabase/policies/*.sql`.
+
+### Políticas Principais
+- `Practitioners`: Os usuários só podem ver seus próprios dados, exceto administradores.
+- `Reviews`: Todos os usuários podem ver todas as reviews.
+- `CommunityPosts`: Todos os usuários podem ver todos os posts, mas apenas usuários autenticados podem criar, atualizar ou deletar seus próprios posts. Administradores podem deletar qualquer post.
+- `CommunityPost_Votes`: Usuários autenticados podem votar em posts.
+
+## 📡 API CONTRACT
+O aplicativo usa Edge Functions do Supabase para expor uma API REST. Os contratos da API são definidos em `docs/[DOC_5]_API_CONTRACT.md`.
+
+### Endpoints Principais
+- `get-community-page-data`: Retorna os dados para a página da comunidade (posts e sidebar).
+- `get-review-by-slug`: Retorna uma review pelo seu slug.
+- `create-community-post`: Cria um novo post na comunidade.
+- `moderate-community-post`: Executa ações de moderação em um post da comunidade (pin, hide, etc.).
+
+## 🧰 DATA FETCHING
+O aplicativo usa TanStack Query para gerenciamento de estado e cache de dados. Os hooks de data fetching são definidos na pasta `packages/hooks/`.
+
+### Hooks Principais
+- `useCommunityPageQuery`: Retorna os dados para a página da comunidade (posts e sidebar).
+- `useReviewBySlugQuery`: Retorna uma review pelo seu slug.
+- `useCreateCommunityPostMutation`: Cria um novo post na comunidade.
+- `usePostActionMutation`: Executa ações de moderação em um post da comunidade (pin, hide, etc.).
+
+## 🎨 VISUAL SYSTEM
+O aplicativo usa componentes do Shadcn UI para garantir consistência visual. Os estilos globais são definidos no arquivo `src/index.css`.
+
+### Componentes Principais
+- `Button`: Botão
+- `Card`: Cartão
+- `Input`: Input de texto
+- `Select`: Select (dropdown)
+- `Alert`: Alerta (mensagem de erro/sucesso)
+
+## 📱 MOBILE ADAPTATION
+O aplicativo usa um design responsivo para se adaptar a diferentes tamanhos de tela. O breakpoint para mobile é definido como `768px` no arquivo `src/hooks/use-mobile.tsx`.
+
+### Estratégias de Adaptação
+- **Layout:** O layout de duas colunas (feed + sidebar) é usado em telas maiores que `768px`. Em telas menores, o layout é de uma coluna, e a sidebar é omitida.
+- **Componentes:** Alguns componentes têm versões diferentes para mobile e desktop. Por exemplo, a bottom tab bar é usada apenas em mobile.
+- **Navegação:** A navegação principal é feita através da bottom tab bar em mobile e da sidebar em desktop.
+
+## 📊 STATUS ATUAL DO PROJETO
+
+### ✅ MÓDULOS IMPLEMENTADOS E FUNCIONAIS
+- **Autenticação Completa:** Login/Signup com Supabase Auth
+- **App Shell Responsivo:** Desktop sidebar + Mobile bottom tabs
+- **Homepage Feed:** Reviews recentes e sugestões
+- **Acervo Completo:** Filtros, busca, tags hierárquicas
+- **Review Detail:** Renderização de conteúdo estruturado
+- **Community Module (MILESTONE 3 COMPLETE):**
+  - Backend: Edge functions operacionais
+  - Frontend: Routing estabilizado
+  - **NEW: UI Padronizada com error boundaries e loading states**
+  - Desktop: Feed + Sidebar layout
+  - Mobile: Feed responsivo (sidebar omitida)
+
+### 🔧 FEATURES TÉCNICAS IMPLEMENTADAS
+- **Rate Limiting:** Todos os endpoints protegidos
+- **Error Boundaries:** Padronizados por módulo
+- **Loading States:** Componentes reutilizáveis
+- **Mobile-First Design:** Breakpoints padronizados
+- **Data Access Layer:** TanStack Query + hooks customizados
+
+## 🏛️ ARQUITETURA GERAL
+
+### Diagrama de Alto Nível
+```
+[Cliente] ↔ [App Shell] ↔ [Módulos] ↔ [Data Hooks] ↔ [Edge Functions] ↔ [Supabase DB]
+```
+
+### Fluxo de Dados Típico
+1.  O usuário interage com um componente na UI.
+2.  O componente chama um hook de data fetching (`use...Query` ou `use...Mutation`).
+3.  O hook chama uma Edge Function do Supabase.
+4.  A Edge Function executa uma query no banco de dados Supabase.
+5.  O banco de dados retorna os dados para a Edge Function.
+6.  A Edge Function retorna os dados para o hook.
+7.  O hook atualiza o estado do componente, que é re-renderizado.
+
+## 🧱 ARQUITETURA DE COMPONENTES (ATUALIZADA)
+
+### Padrão de Error Handling
+```
+CommunityErrorBoundary (por módulo)
+├── Fallback UI padronizado
+├── Reset de estado automático
+└── Logging centralizado
+```
+
+### Padrão de Loading States
+```
+CommunityLoadingState
+├── Variant: feed | sidebar | post | minimal
+├── Skeleton patterns consistentes
+└── Count configurável
+```
+
+### Hierarquia Mobile-First
+```
+CommunityFeedWithSidebar
+├── Desktop: Two-column (feed + sidebar)
+├── Mobile: Single column (feed only)
+└── Responsive breakpoints ([DOC_8])
+```
+
+## 🛡️ DIRETRIZES DE SEGURANÇA
+
+### [SEC.1] Autenticação e Autorização
+- Use o Supabase Auth para autenticação de usuários.
+- Use RLS para autorização e controle de acesso aos dados.
+- Valide os dados de entrada em todas as Edge Functions.
+- Implemente rate limiting para proteger contra ataques de negação de serviço.
+
+### [SEC.2] Moderação de Conteúdo
+- Implemente um sistema de moderação de conteúdo para a comunidade.
+- Permita que administradores e moderadores removam posts ofensivos ou spam.
+- Implemente um sistema de denúncia de posts.
+- Monitore a atividade da comunidade para identificar e remover conteúdo impróprio.
+
+## 🧪 DIRETRIZES DE TESTE
+
+### [T1] Testes Unitários
+- Escreva testes unitários para todos os componentes e funções utilitárias.
+- Use Jest e React Testing Library para testes unitários.
+- Garanta que todos os testes unitários passem antes de fazer commit do código.
+
+### [T2] Testes de Integração
+- Escreva testes de integração para garantir que os diferentes módulos do aplicativo funcionem juntos corretamente.
+- Use Cypress para testes de integração.
+- Garanta que todos os testes de integração passem antes de fazer deploy do aplicativo.
+
+## 🚀 DIRETRIZES DE DEPLOY
+
+### [D1] Ambiente de Produção
+- Use um ambiente de produção separado do ambiente de desenvolvimento.
+- Configure as variáveis de ambiente corretamente no ambiente de produção.
+- Use um certificado SSL para garantir a segurança das conexões HTTPS.
+- Monitore o desempenho do aplicativo em produção.
+
+### [D2] Continuous Integration/Continuous Deployment (CI/CD)
+- Use um sistema de CI/CD para automatizar o processo de deploy.
+- Configure o sistema de CI/CD para executar testes automatizados antes de fazer deploy do aplicativo.
+- Use um sistema de versionamento de código (Git) para gerenciar as alterações no código.
+
+## 📜 GLOSSÁRIO
+
+### Termos Comuns
+- **Review:** Avaliação de um artigo científico.
+- **Acervo:** Coleção de reviews.
+- **Comunidade:** Fórum de discussão.
+- **Post:** Mensagem em um fórum de discussão.
+- **Slug:** Identificador único de uma review (usado na URL).
+- **Edge Function:** Função serverless executada no Edge do Supabase.
+- **RLS:** Row Level Security (segurança em nível de linha).
 
 ---
-
-## 🔐 Segurança e RLS
-
-### **Row Level Security (RLS)**
-- **Status:** ✅ Implementado em todas as tabelas críticas
-- **Policies:** Baseadas em JWT claims (`role`, `subscription_tier`)
-- **Tabelas Protegidas:** `reviews`, `community_posts`, `user_profiles`, `suggestions`
-
-### **API Security**
-- **Rate Limiting:** Implementado em todas as Edge Functions
-- **CORS:** Configuração padronizada compartilhada
-- **Auth Guards:** Verificação JWT em endpoints sensíveis
-
----
-
-## 📱 Responsividade e PWA
-
-### **Mobile-First Design**
-- **Hook Principal:** `useIsMobile()` para detecção de dispositivo
-- **Layouts Adaptativos:** 
-  - Desktop: Sidebar + conteúdo principal
-  - Mobile: Bottom tabs + conteúdo fullscreen
-- **Componentes Específicos:** CollapsibleSidebar ↔ BottomTabBar
-
-### **PWA Features**
-- **Service Worker:** Configurado para cache offline
-- **Manifest:** Ícones e configurações de instalação
-- **Install Prompt:** Componente de sugestão de instalação
-
----
-
-## 🧪 Status de Testes
-
-### **Testes Implementados**
-- **Community Integration:** `src/components/community/__tests__/CommunityIntegration.test.tsx`
-
-### **Testes Pendentes**
-- Testes unitários para hooks de data fetching
-- Testes E2E para fluxos principais
-- Testes de performance para componentes pesados
-
----
-
-## 🚀 Próximos Passos Prioritários
-
-### **Imediato (Esta Sprint)**
-1. **Community Module Recovery:** Completar Milestones 3-5
-2. **Error Handling:** Implementar tratamento robusto de erros
-3. **Loading States:** Padronizar skeletons e loading UX
-
-### **Curto Prazo (Próximas 2-3 Sprints)**
-1. **Notifications System:** Implementar sistema de notificações
-2. **Analytics Integration:** Rastreamento de engajamento
-3. **Performance Optimization:** Lazy loading, code splitting
-
-### **Médio Prazo**
-1. **Content Management:** Interface de administração
-2. **Advanced Search:** Busca avançada cross-module
-3. **Social Features:** Comentários, menções, seguir usuários
-
----
-
-## 📚 Documentação de Referência
-
-### **Blueprints Ativos**
-- `[Blueprint 03]` Homepage - Sistema de módulos dinâmicos
-- `[Blueprint 06]` Community - Discussões e engajamento
-- `[Blueprint 02]` App Shell - Navegação e layout
-
-### **Documentos Técnicos**
-- `[DOC_2]` System Architecture - Arquitetura geral
-- `[DOC_4]` Row Level Security - Políticas de segurança
-- `[DOC_6]` Data Fetching Strategy - Padrões de dados
-- `[DOC_8]` Mobile Adaptation - Responsividade
-
----
-
-**Versão:** 5.2.1  
-**Mantido por:** Sistema EVIDENS  
-**Última Verificação:** 19 de junho de 2025
+**Última Atualização:** Milestone 3 - Padronização UI e Error Handling implementados
+**Próximo Marco:** Milestone 4 - Performance & Cache Optimization
