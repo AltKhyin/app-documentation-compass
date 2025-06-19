@@ -1,4 +1,3 @@
-
 # **📋 EVIDENS Technical Debt Elimination & Documentation Synchronization Plan**
 
 **Version:** 8.0 (Technical Debt Cleanup & Standardization)  
@@ -509,3 +508,181 @@ Execute safe removal of identified technical debt and validate system integrity.
 This technical debt elimination and documentation synchronization plan provides a systematic approach to creating a clean, maintainable, and well-documented codebase that serves as a solid foundation for future development while preserving all existing functionality.
 
 **Result**: **Strategic cleanup plan with comprehensive risk mitigation and clear success metrics defined.**
+
+---
+
+## **8. COMMUNITY FEATURE REFINEMENT PLAN**
+**Version**: 1.0  
+**Date**: 2025-01-19  
+**Status**: READY FOR IMPLEMENTATION  
+**Objective**: Execute comprehensive Community feature improvements addressing editor rendering, button functionality, user experience, and backend data architecture consolidation.
+
+### 8.1 Strategic Analysis
+
+**Primary Goal**: Transform the Community feature into a robust, efficient system through systematic fixes and architectural optimization.
+
+**Core Problems Identified**:
+1. **Rich Text Rendering Pipeline**: Missing typography styles, raw HTML display, poor editor button contrast
+2. **Interactive Elements**: Non-functional moderation actions, suboptimal voting UX, confusing placeholder buttons
+3. **Data Architecture**: Redundant API calls, cache invalidation complexity, inefficient network utilization
+
+**Solution Strategy**: Holistic system refinement prioritizing performance optimization and architectural integrity over incremental patches.
+
+### 8.2 Implementation Milestones
+
+#### MILESTONE 1: Rich Text & Rendering Fixes
+**Objective**: Enable proper formatted content display and editor visual feedback
+**Risk Level**: LOW
+**Dependencies**: None
+
+**Task 1.1: Enable Typography Plugin**
+- **File**: `tailwind.config.ts`
+- **Action**: Add `require('@tailwindcss/typography')` to plugins array
+- **Governing Directive**: [D3.1] - Filesystem & Naming
+- **Verification**: Headings, lists, blockquotes render with distinct styling
+
+**Task 1.2: Implement HTML Content Rendering**
+- **File**: `src/components/community/PostCard.tsx`
+- **Action**: Replace text rendering with `dangerouslySetInnerHTML` + prose classes
+- **Technical Spec**:
+  ```tsx
+  // Replace:
+  <p className="line-clamp-3">{post.content}</p>
+  // With:
+  <div
+    className="prose dark:prose-invert prose-sm max-w-none text-muted-foreground line-clamp-3"
+    dangerouslySetInnerHTML={{ __html: post.content }}
+  />
+  ```
+- **Governing Directive**: [D3.2] - Component Architecture
+- **Verification**: Formatted content displays correctly in feed
+
+**Task 1.3: Enhance Editor Button Contrast**
+- **File**: `src/components/community/TiptapEditor.tsx`
+- **Action**: Replace `bg-muted` with `bg-primary/20 text-primary` for active states
+- **Governing Directive**: [DOC_7] - Visual System compliance
+- **Verification**: Active editor buttons have clear visual distinction
+
+#### MILESTONE 2: Button Functionality & UX Refinement
+**Objective**: Activate all interactive elements and improve user feedback
+**Risk Level**: LOW
+**Dependencies**: None
+
+**Task 2.1: Fix Moderation Payload Mismatch**
+- **File**: `packages/hooks/usePostActionMutation.ts`
+- **Action**: Correct property names in mutation payload
+- **Technical Spec**:
+  ```typescript
+  // Change payload from:
+  body: { postId, action }
+  // To:
+  body: { post_id: postId, action_type: action }
+  ```
+- **Governing Directives**: [DAL.2], [SEC.3]
+- **Verification**: Pin/Hide actions execute successfully
+
+**Task 2.2: Implement Optimistic Voting Updates**
+- **File**: `packages/hooks/useCastCommunityVoteMutation.ts`
+- **Action**: Add onMutate/onError handlers for immediate UI feedback
+- **Technical Spec**: Follow pattern from suggestion voting with cache manipulation
+- **Governing Directive**: [DAL.4] - Cache Invalidation
+- **Verification**: Vote buttons respond instantly
+
+**Task 2.3: Refine Post Action Bar**
+- **File**: `src/components/community/PostActionBar.tsx`
+- **Action**: Remove Share button, ensure clear placeholder feedback
+- **Governing Directive**: [D3.2] - UI simplification
+- **Verification**: Streamlined action bar with informative toasts
+
+#### MILESTONE 3: Backend API Consolidation
+**Objective**: Create unified community page data endpoint
+**Risk Level**: MEDIUM
+**Dependencies**: None (creates foundation for M4)
+
+**Task 3.1: Develop Consolidated Edge Function**
+- **File**: `supabase/functions/get-community-page-data/index.ts`
+- **Action**: Merge logic from separate feed/sidebar endpoints
+- **Technical Architecture**:
+  1. Execute single `get_community_feed_with_details` RPC call
+  2. Derive trending discussions from feed results server-side
+  3. Fetch sidebar static data (rules, links, polls)
+  4. Return unified JSON payload: `{ posts: [], pagination: {}, sidebarData: {} }`
+- **Governing Directives**: [SEC.3], [M2.2] - System Architecture
+- **Verification**: New endpoint returns complete page data in single request
+
+#### MILESTONE 4: Frontend Data Layer Refactor
+**Objective**: Migrate to consolidated data fetching pattern
+**Risk Level**: LOW (dependent on M3 stability)
+**Dependencies**: M3 completion required
+
+**Task 4.1: Create Unified Data Hook**
+- **File**: `packages/hooks/useCommunityPageQuery.ts`
+- **Action**: Implement useInfiniteQuery consuming new endpoint
+- **Technical Spec**: Use select option to separate posts data from sidebar data
+- **Governing Directives**: [DAL.2], [DAL.3]
+- **Verification**: Hook successfully fetches from consolidated endpoint
+
+**Task 4.2: Refactor Component Data Flow**
+- **Files**: `src/pages/ComunidadePage.tsx`, `src/components/community/CommunityFeed.tsx`, `src/components/community/CommunitySidebar.tsx`
+- **Action**: Centralize data fetching in page component, pass data as props
+- **Governing Directive**: [D3.2] - Component Architecture
+- **Verification**: Single network request serves entire community page
+
+#### MILESTONE 5: Cleanup & Deprecation
+**Objective**: Remove obsolete code and maintain codebase cleanliness
+**Risk Level**: LOW
+**Dependencies**: M4 verification complete
+
+**Task 5.1: Remove Redundant Edge Functions**
+- **Files to Delete**: `supabase/functions/get-community-feed/`, `supabase/functions/get-community-sidebar-data/`
+- **Governing Directive**: [D3.1]
+- **Verification**: Application functions correctly without old endpoints
+
+**Task 5.2: Remove Obsolete Frontend Hooks**
+- **Files to Delete**: `packages/hooks/useCommunityFeedQuery.ts`, `packages/hooks/useCommunitySidebarQuery.ts`
+- **Governing Directive**: [DAL.2]
+- **Verification**: No lingering imports, successful build and runtime
+
+### 8.3 Risk Assessment & Mitigation
+
+**HIGH IMPACT RISKS**:
+- **Backend API Refactor (M3)**: New consolidated endpoint introduces potential data inconsistencies
+  - **Mitigation**: Thorough API testing before frontend integration, maintain old endpoints until M4 verification
+- **Data Flow Changes (M4)**: Component prop drilling could introduce bugs
+  - **Mitigation**: Incremental component updates with individual testing
+
+**PERFORMANCE GAINS EXPECTED**:
+- ~50% reduction in initial page load network requests
+- Elimination of cascading cache invalidation complexity
+- Improved user interaction responsiveness through optimistic updates
+
+### 8.4 Success Metrics
+
+**Functional Verification**:
+- [ ] Rich text content renders with proper formatting
+- [ ] All interactive buttons perform expected actions
+- [ ] Optimistic updates provide immediate user feedback
+- [ ] Single API call serves complete community page data
+- [ ] Zero obsolete code remains in codebase
+
+**Performance Verification**:
+- [ ] Initial page load network requests reduced from 2+ to 1
+- [ ] Vote interactions complete in <100ms perceived time
+- [ ] Cache invalidation events reduced by elimination of duplicate queries
+
+### 8.5 Implementation Flow
+
+```
+[M1: UI Fixes] ──┐
+                 ├── [Verification Gate] ──> [M3: Backend Consolidation]
+[M2: Button UX] ──┘                              │
+                                                 ▼
+                                        [M4: Frontend Refactor]
+                                                 │
+                                                 ▼
+                                        [M5: Cleanup & Deprecation]
+```
+
+**IMPLEMENTATION READY**: This plan provides complete technical specifications for systematic Community feature enhancement while maintaining architectural integrity and performance optimization principles.
+
+---
