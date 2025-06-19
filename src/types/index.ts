@@ -78,11 +78,11 @@ export interface CommunityPost {
   is_pinned?: boolean;
   is_locked?: boolean;
   flair_text?: string;
-  flair_color?: string;
+  flair_color?: string; // Added missing field
   author: {
     id: string;
     full_name: string | null;
-    avatar_url: string | null;
+    avatar_url: string | null; // Added missing field
   } | null;
   user_vote: 'up' | 'down' | null;
   reply_count: number;

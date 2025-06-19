@@ -20,6 +20,7 @@ export const RATE_LIMITS: Record<string, RateLimitConfig> = {
   'create-community-post': { requests: 5, window: 300 }, // 5 posts/5min per user
   'moderate-community-post': { requests: 10, window: 60 }, // 10 actions/min per moderator
   'get-personalized-recommendations': { requests: 10, window: 60 }, // 10 req/min per user
+  'get-community-page-data': { requests: 30, window: 60 }, // 30 req/min per user
 };
 
 export async function checkRateLimit(
@@ -46,8 +47,8 @@ export async function checkRateLimit(
   const windowStart = now - window;
 
   try {
-    // Check current request count in the time window
-    const { data: requests: requestHistory, error } = await supabase
+    // Check current request count in the time window - FIXED: Proper destructuring
+    const { data: requestHistory, error } = await supabase
       .from('rate_limit_log')
       .select('timestamp')
       .eq('key', key)

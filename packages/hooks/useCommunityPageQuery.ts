@@ -1,4 +1,3 @@
-
 // ABOUTME: Consolidated hook for fetching all community page data (posts + sidebar) in a single request.
 
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -16,8 +15,10 @@ export interface CommunityPost {
   is_pinned: boolean;
   is_locked: boolean;
   flair_text: string | null;
+  flair_color: string | null; // Added missing field
   author: {
     full_name: string | null;
+    avatar_url: string | null; // Added missing field
   } | null;
   user_vote: 'up' | 'down' | null;
   user_can_moderate: boolean;
