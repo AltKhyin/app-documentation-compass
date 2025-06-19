@@ -1,74 +1,82 @@
 
-// ABOUTME: Client-side sorting and filtering logic for Acervo reviews with search and tag filtering.
+// ABOUTME: Client-side sorting component for Acervo page with improved tag priority algorithm.
+
 import React, { useMemo } from 'react';
-import { AcervoReview } from '../../../packages/hooks/useAcervoDataQuery';
+import type { Review, Tag } from '../../types';
 
 interface ClientSideSorterProps {
-  reviews: AcervoReview[];
-  selectedTags: string[];
+  reviews: Review[];
+  tags: Tag[];
+  selectedTags: number[];
   searchQuery: string;
-  children: (sortedReviews: AcervoReview[]) => React.ReactNode;
+  sortBy: 'recent' | 'popular' | 'alphabetical';
+  children: (data: {
+    sortedReviews: Review[];
+    sortedTags: Tag[];
+  }) => React.ReactNode;
 }
 
-const ClientSideSorter: React.FC<ClientSideSorterProps> = ({ 
-  reviews, 
-  selectedTags, 
+export const ClientSideSorter = ({
+  reviews,
+  tags,
+  selectedTags,
   searchQuery,
-  children 
-}) => {
-  const sortedAndFilteredReviews = useMemo(() => {
-    let filteredReviews = [...reviews];
+  sortBy,
+  children
+}: ClientSideSorterProps) => {
+  const sortedData = useMemo(() => {
+    // **TASK 3.1 FIX: Improved Tag Sorting Algorithm**
+    const getTagPriority = (tag: Tag, selectedTags: number[]): number => {
+      if (selectedTags.includes(tag.id)) return 1; // Selected
+      if (tag.parent_id && selectedTags.includes(tag.parent_id)) return 2; // Child of selected
+      return 3; // Other
+    };
 
-    // Apply search filter first
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      filteredReviews = filteredReviews.filter(review => 
-        review.title.toLowerCase().includes(query) ||
-        (review.description && review.description.toLowerCase().includes(query))
-      );
-    }
-
-    // If no tags selected, return reviews sorted by date (newest first)
-    if (selectedTags.length === 0) {
-      return filteredReviews.sort((a, b) => 
-        new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
-      );
-    }
-
-    // Calculate relevance score for each review based on matching tags
-    const reviewsWithScores = filteredReviews.map(review => {
-      let score = 0;
-      
-      // Check each selected tag against review's tags
-      selectedTags.forEach(selectedTag => {
-        // Check if tag matches any categoria
-        if (Object.keys(review.tags_json).includes(selectedTag)) {
-          score += 1;
-        }
-        
-        // Check if tag matches any subtag
-        Object.values(review.tags_json).forEach(subtags => {
-          if (subtags && subtags.includes(selectedTag)) {
-            score += 1;
-          }
-        });
-      });
-      
-      return { review, score };
+    // Sort tags by priority, then alphabetically
+    const sortedTags = [...tags].sort((a, b) => {
+      const priorityDiff = getTagPriority(a, selectedTags) - getTagPriority(b, selectedTags);
+      return priorityDiff !== 0 ? priorityDiff : a.tag_name.localeCompare(b.tag_name);
     });
 
-    // Sort by score (highest first), then by date (newest first) for ties
-    return reviewsWithScores
-      .sort((a, b) => {
-        if (a.score !== b.score) {
-          return b.score - a.score;
-        }
-        return new Date(b.review.published_at).getTime() - new Date(a.review.published_at).getTime();
-      })
-      .map(item => item.review);
-  }, [reviews, selectedTags, searchQuery]);
+    // Filter reviews based on search query and selected tags
+    let filteredReviews = reviews.filter(review => {
+      // Search query filter
+      if (searchQuery) {
+        const searchLower = searchQuery.toLowerCase();
+        const matchesTitle = review.title.toLowerCase().includes(searchLower);
+        const matchesDescription = review.description?.toLowerCase().includes(searchLower);
+        if (!matchesTitle && !matchesDescription) return false;
+      }
 
-  return <>{children(sortedAndFilteredReviews)}</>;
+      // Tag filter
+      if (selectedTags.length > 0) {
+        const reviewTagIds = review.ReviewTags?.map(rt => rt.tag_id) || [];
+        return selectedTags.some(tagId => reviewTagIds.includes(tagId));
+      }
+
+      return true;
+    });
+
+    // Sort reviews based on sortBy criteria
+    const sortedReviews = [...filteredReviews].sort((a, b) => {
+      switch (sortBy) {
+        case 'recent':
+          return new Date(b.published_at || b.created_at).getTime() - 
+                 new Date(a.published_at || a.created_at).getTime();
+        case 'popular':
+          return (b.view_count || 0) - (a.view_count || 0);
+        case 'alphabetical':
+          return a.title.localeCompare(b.title);
+        default:
+          return 0;
+      }
+    });
+
+    return {
+      sortedReviews,
+      sortedTags
+    };
+  }, [reviews, tags, selectedTags, searchQuery, sortBy]);
+
+  return <>{children(sortedData)}</>;
 };
-
-export default ClientSideSorter;
