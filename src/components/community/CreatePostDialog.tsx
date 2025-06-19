@@ -41,10 +41,12 @@ export const CreatePostDialog = ({ open, onOpenChange, defaultCategory = 'genera
     }
 
     try {
+      // Fix: Include required post_type field
       await createPostMutation.mutateAsync({
         title: title.trim() || undefined,
         content: content.trim(),
-        category
+        category,
+        post_type: 'text' // Add the required post_type field
       });
       
       toast.success('Discussão criada com sucesso!');

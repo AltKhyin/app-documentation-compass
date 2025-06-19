@@ -1,13 +1,13 @@
 
-// ABOUTME: Mutation hook for community post actions (delete, pin, lock, etc.) with simple cache invalidation strategy.
+// ABOUTME: Mutation hook for post actions like pin/unpin, hide/unhide with proper type safety.
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '../../src/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface PostActionPayload {
+interface PostActionRequest {
   postId: number;
-  action: 'delete' | 'pin' | 'unpin' | 'lock' | 'unlock';
+  action: 'pin' | 'unpin' | 'hide' | 'unhide';
 }
 
 interface PostActionResponse {
@@ -16,36 +16,41 @@ interface PostActionResponse {
 }
 
 /**
- * Hook for executing post moderation actions.
+ * Hook for performing actions on community posts (pin/unpin, hide/unhide).
  * Follows [DAL.1-4] - encapsulates backend interaction, uses TanStack Query, invalidates cache.
- * Prioritizes simplicity over performance - no optimistic updates.
  */
 export const usePostActionMutation = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<PostActionResponse, Error, PostActionPayload>({
+  return useMutation<PostActionResponse, Error, PostActionRequest>({
     mutationFn: async ({ postId, action }) => {
-      const { data, error } = await supabase.rpc('handle_post_action', {
-        p_post_id: postId,
-        p_user_id: (await supabase.auth.getUser()).data.user?.id || '',
-        p_action_type: action
+      const { data, error } = await supabase.functions.invoke('moderate-community-post', {
+        body: { postId, action }
       });
 
       if (error) {
         throw new Error(error.message);
       }
 
-      return data as PostActionResponse;
+      if (data?.error) {
+        throw new Error(data.error.message || 'Failed to perform action');
+      }
+
+      // Ensure we return the correct type
+      return {
+        success: data?.success || true,
+        message: data?.message || 'Action completed successfully'
+      } as PostActionResponse;
     },
-    onSuccess: (data, variables) => {
-      // [DAL.4] - Mandatory cache invalidation for immediate UI updates
+    onSuccess: () => {
+      // [DAL.4] - Mandatory cache invalidation
       queryClient.invalidateQueries({ queryKey: ['community-feed'] });
+      queryClient.invalidateQueries({ queryKey: ['community-sidebar'] });
       
-      // Show success feedback
-      toast.success(data.message || 'Ação executada com sucesso');
+      toast.success('Ação realizada com sucesso!');
     },
     onError: (error) => {
-      toast.error(error.message || 'Erro ao executar ação. Tente novamente.');
+      toast.error(error.message || 'Erro ao realizar ação. Tente novamente.');
     }
   });
 };
