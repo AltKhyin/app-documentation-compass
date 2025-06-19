@@ -5,23 +5,40 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0'
 import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts'
 
-// CORS headers as mandated by [DOC_5] PRINCIPLE 5
+// CORS headers as mandated by [DOC_5] PRINCIPLE 5 - Complete CORS implementation
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 }
 
 serve(async (req) => {
   // Handle CORS preflight requests FIRST - [DOC_5] PRINCIPLE 5 compliance
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request');
     return new Response('ok', { 
       status: 200,
       headers: corsHeaders 
     });
   }
 
+  // Only allow POST requests for this endpoint
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({
+      error: { message: 'Method not allowed', code: 'METHOD_NOT_ALLOWED' }
+    }), {
+      status: 405,
+      headers: {
+        'Content-Type': 'application/json',
+        ...corsHeaders
+      }
+    });
+  }
+
   try {
+    console.log('Starting community page data fetch...');
+    
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -32,15 +49,21 @@ serve(async (req) => {
     let userId = '00000000-0000-0000-0000-000000000000'; // Default UUID for anonymous
     
     if (authHeader) {
-      const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-      if (user) {
-        userId = user.id;
+      try {
+        const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+        if (user) {
+          userId = user.id;
+          console.log(`Authenticated user: ${userId}`);
+        }
+      } catch (authError) {
+        console.warn('Auth verification failed, continuing as anonymous:', authError);
       }
     }
 
     // Check rate limit (30 requests per 60 seconds) - [DOC_5] PRINCIPLE 6 compliance
     const rateLimitResult = await checkRateLimit(supabase, 'get-community-page-data', userId);
     if (!rateLimitResult.allowed) {
+      console.log('Rate limit exceeded for user:', userId);
       return new Response(JSON.stringify({
         error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }
       }), {
@@ -60,15 +83,15 @@ serve(async (req) => {
       if (bodyText) {
         requestBody = JSON.parse(bodyText);
       }
-    } catch (e) {
-      console.warn('Failed to parse request body, using defaults:', e);
+    } catch (parseError) {
+      console.warn('Failed to parse request body, using defaults:', parseError);
     }
 
     const { page = 0, limit = 20 } = requestBody;
     const actualLimit = Math.min(limit, 50);
     const offset = page * actualLimit;
 
-    console.log(`Fetching consolidated community page data: page=${page}, limit=${actualLimit}, user=${userId}`);
+    console.log(`Fetching community page data: page=${page}, limit=${actualLimit}, user=${userId}`);
 
     // Fetch main feed posts using the optimized RPC
     const { data: posts, error: postsError } = await supabase.rpc('get_community_feed_with_details', {
