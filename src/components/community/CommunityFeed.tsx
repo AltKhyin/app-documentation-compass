@@ -1,14 +1,13 @@
-
 // ABOUTME: Main community feed component with infinite scroll and category filtering.
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 import { Loader2, Plus } from 'lucide-react';
 import { useCommunityFeedQuery } from '../../../packages/hooks/useCommunityFeedQuery';
 import { PostCard } from './PostCard';
-import { CreatePostDialog } from './CreatePostDialog';
 
 const CATEGORIES = [
   { value: 'all', label: 'Todas as Categorias' },
@@ -25,9 +24,9 @@ const SORT_OPTIONS = [
 ];
 
 export const CommunityFeed = () => {
+  const navigate = useNavigate();
   const [category, setCategory] = useState('all');
   const [sort, setSort] = useState<'recent' | 'popular' | 'trending'>('recent');
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const {
     data,
@@ -39,6 +38,10 @@ export const CommunityFeed = () => {
   } = useCommunityFeedQuery({ category, sort });
 
   const allPosts = data?.pages.flatMap(page => page.posts) || [];
+
+  const handleCreatePost = () => {
+    navigate('/community/submit');
+  };
 
   if (error) {
     return (
@@ -78,7 +81,7 @@ export const CommunityFeed = () => {
           </Tabs>
         </div>
 
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
+        <Button onClick={handleCreatePost}>
           <Plus className="w-4 h-4 mr-2" />
           Nova Discussão
         </Button>
@@ -98,7 +101,7 @@ export const CommunityFeed = () => {
             <Button 
               variant="outline" 
               className="mt-4"
-              onClick={() => setIsCreateDialogOpen(true)}
+              onClick={handleCreatePost}
             >
               Criar a primeira discussão
             </Button>
@@ -127,13 +130,6 @@ export const CommunityFeed = () => {
           </>
         )}
       </div>
-
-      {/* Create post dialog */}
-      <CreatePostDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        defaultCategory={category === 'all' ? 'general' : category}
-      />
     </div>
   );
 };

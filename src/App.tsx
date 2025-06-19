@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProviders } from './components/providers/AppProviders';
@@ -10,6 +9,7 @@ import AcervoPage from './pages/AcervoPage';
 import ReviewDetailPage from './pages/ReviewDetailPage';
 import ComunidadePage from './pages/ComunidadePage';
 import CommunityInfoPage from './pages/CommunityInfoPage';
+import { SubmitPage } from './pages/community/SubmitPage';
 
 function App() {
   return (
@@ -50,6 +50,16 @@ function App() {
               <CommunityInfoPage />
             </ProtectedAppRoute>
           } />
+          
+          {/* Community Submit Route - NEW */}
+          <Route 
+            path="/community/submit" 
+            element={
+              <ProtectedAppRoute>
+                <SubmitPage />
+              </ProtectedAppRoute>
+            } 
+          />
           
           {/* Default route */}
           <Route path="*" element={<Navigate to="/" />} />
