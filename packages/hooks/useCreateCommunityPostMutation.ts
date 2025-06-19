@@ -1,5 +1,5 @@
 
-// ABOUTME: Mutation hook for creating new community posts with rich text content and proper cache invalidation.
+// ABOUTME: Enhanced mutation hook for creating community posts with comprehensive error handling and logging.
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../src/integrations/supabase/client';
@@ -17,10 +17,11 @@ interface CreateCommunityPostPayload {
 interface CreateCommunityPostResponse {
   post_id: number;
   message: string;
+  success: boolean;
 }
 
 /**
- * Hook for creating new community posts.
+ * Enhanced hook for creating new community posts.
  * Follows [DAL.1-4] - encapsulates backend interaction, uses TanStack Query, invalidates cache.
  * Uses the create-community-post Edge Function as specified in [DOC_5].
  */
@@ -29,29 +30,57 @@ export const useCreateCommunityPostMutation = () => {
 
   return useMutation<CreateCommunityPostResponse, Error, CreateCommunityPostPayload>({
     mutationFn: async (payload) => {
-      const { data, error } = await supabase.functions.invoke('create-community-post', {
-        body: payload
-      });
+      console.log('Starting post creation mutation:', payload);
 
-      if (error) {
-        throw new Error(error.message);
+      try {
+        const { data, error } = await supabase.functions.invoke('create-community-post', {
+          body: payload
+        });
+
+        console.log('Edge function response:', { data, error });
+
+        if (error) {
+          console.error('Edge function error:', error);
+          throw new Error(error.message || 'Failed to create post');
+        }
+
+        if (data?.error) {
+          console.error('Data error:', data.error);
+          throw new Error(data.error.message || 'Failed to create post');
+        }
+
+        if (!data?.success) {
+          console.error('Unexpected response format:', data);
+          throw new Error('Unexpected response from server');
+        }
+
+        console.log('Post created successfully:', data);
+        return data as CreateCommunityPostResponse;
+
+      } catch (error) {
+        console.error('Mutation error:', error);
+        
+        // Re-throw with enhanced error information
+        if (error instanceof Error) {
+          throw error;
+        } else {
+          throw new Error('Unknown error occurred during post creation');
+        }
       }
-
-      if (data?.error) {
-        throw new Error(data.error.message || 'Failed to create post');
-      }
-
-      return data as CreateCommunityPostResponse;
     },
     onSuccess: (data) => {
+      console.log('Post creation successful, invalidating caches');
+      
       // [DAL.4] - Mandatory cache invalidation for immediate UI updates
       queryClient.invalidateQueries({ queryKey: ['community-feed'] });
+      queryClient.invalidateQueries({ queryKey: ['community-page-data'] });
       
-      // Show success feedback
-      toast.success('Discussão criada com sucesso!');
+      // Optional: Prefetch the new post data
+      console.log('Cache invalidation complete');
     },
     onError: (error) => {
-      toast.error(error.message || 'Erro ao criar discussão. Tente novamente.');
+      console.error('Post creation mutation failed:', error);
+      // Toast handling is done in the component for more specific error messages
     }
   });
 };
