@@ -5,9 +5,6 @@ const urlsToCache = [
   '/acervo',
   '/comunidade',
   '/perfil',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
-  '/lovable-uploads/9162a45a-bbb2-4b4c-90ad-2fc80a1b7b12.png',
   '/manifest.json'
 ];
 
