@@ -65,7 +65,7 @@ serve(async (req) => {
       });
     }
 
-    // Check rate limit (10 moderation actions per 60 seconds)
+    // Check rate limit (10 actions per 60 seconds)
     const rateLimitResult = await checkRateLimit(supabase, 'moderate-community-post', user.id, 10, 60);
     if (!rateLimitResult.allowed) {
       return new Response(JSON.stringify({
@@ -85,10 +85,10 @@ serve(async (req) => {
 
     console.log('Processing moderation action:', { post_id, action_type, moderator: user.id });
 
-    // Validate post exists
+    // Validate the post exists
     const { data: post, error: postError } = await supabase
       .from('CommunityPosts')
-      .select('id, title, is_pinned, is_locked')
+      .select('id')
       .eq('id', post_id)
       .single();
 
@@ -101,15 +101,14 @@ serve(async (req) => {
       });
     }
 
-    // Prepare update data based on action type
+    // Apply moderation action
     let updateData: any = {};
-    let metadata: any = {};
-
+    
     switch (action_type) {
       case 'pin':
         updateData.is_pinned = true;
         break;
-      case 'unpin': 
+      case 'unpin':
         updateData.is_pinned = false;
         break;
       case 'lock':
@@ -119,16 +118,12 @@ serve(async (req) => {
         updateData.is_locked = false;
         break;
       case 'flair':
-        if (flair_text) {
-          updateData.flair_text = flair_text;
-          updateData.flair_color = flair_color || '#6366f1';
-          metadata.flair_text = flair_text;
-          metadata.flair_color = flair_color || '#6366f1';
-        }
+        updateData.flair_text = flair_text;
+        updateData.flair_color = flair_color;
         break;
       case 'hide':
-        // For future implementation - could set a 'hidden' flag
-        metadata.hidden = true;
+        // For now, we'll use a special category to hide posts
+        updateData.category = 'hidden';
         break;
       default:
         return new Response(JSON.stringify({
@@ -139,22 +134,20 @@ serve(async (req) => {
         });
     }
 
-    // Update the post if there are changes to make
-    if (Object.keys(updateData).length > 0) {
-      const { error: updateError } = await supabase
-        .from('CommunityPosts')
-        .update(updateData)
-        .eq('id', post_id);
+    // Update the post
+    const { error: updateError } = await supabase
+      .from('CommunityPosts')
+      .update(updateData)
+      .eq('id', post_id);
 
-      if (updateError) {
-        console.error('Failed to update post:', updateError);
-        return new Response(JSON.stringify({
-          error: { message: 'Failed to update post', code: 'UPDATE_FAILED' }
-        }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders }
-        });
-      }
+    if (updateError) {
+      console.error('Failed to apply moderation action:', updateError);
+      return new Response(JSON.stringify({
+        error: { message: 'Failed to apply moderation action', code: 'UPDATE_FAILED' }
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
     }
 
     // Log the moderation action
@@ -165,19 +158,19 @@ serve(async (req) => {
         moderator_id: user.id,
         action_type,
         reason: reason || null,
-        metadata
+        metadata: { flair_text, flair_color }
       });
 
     if (logError) {
       console.error('Failed to log moderation action:', logError);
-      // Continue despite logging error - the main action succeeded
+      // Don't fail the request if logging fails
     }
 
-    console.log('Moderation action completed successfully');
+    console.log('Moderation action applied successfully');
 
     return new Response(JSON.stringify({
       success: true,
-      message: `Post ${action_type} action completed successfully`
+      message: 'Moderation action applied successfully'
     }), {
       headers: {
         'Content-Type': 'application/json',

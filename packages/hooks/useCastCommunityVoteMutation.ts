@@ -4,12 +4,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../src/integrations/supabase/client';
 
-interface VotePayload {
+interface CastVotePayload {
   post_id: number;
   vote_type: 'up' | 'down' | 'none';
 }
 
-interface VoteResponse {
+interface CastVoteResponse {
   success: boolean;
   message: string;
 }
@@ -17,7 +17,7 @@ interface VoteResponse {
 export const useCastCommunityVoteMutation = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<VoteResponse, Error, VotePayload>({
+  return useMutation<CastVoteResponse, Error, CastVotePayload>({
     mutationFn: async (payload) => {
       console.log('Casting community vote:', payload);
       
@@ -26,71 +26,33 @@ export const useCastCommunityVoteMutation = () => {
       });
 
       if (error) {
-        console.error('Vote casting error:', error);
+        console.error('Community vote error:', error);
         throw new Error(error.message || 'Failed to cast vote');
       }
 
       if (data?.error) {
-        console.error('Vote casting API error:', data.error);
+        console.error('Community vote API error:', data.error);
         throw new Error(data.error.message || 'Failed to cast vote');
       }
 
-      console.log('Vote cast successfully:', data);
+      console.log('Community vote cast successfully:', data);
       return data;
     },
-    onSuccess: (response, variables) => {
-      console.log('Vote casting successful, invalidating queries');
+    onSuccess: () => {
+      console.log('Community vote successful, invalidating queries');
       
-      // Invalidate community feed to refresh vote counts
+      // Invalidate community feed to reflect vote changes
       queryClient.invalidateQueries({ 
         queryKey: ['community-feed'] 
       });
-
-      // Optimistically update the post in cache
-      queryClient.setQueriesData(
-        { queryKey: ['community-feed'] },
-        (oldData: any) => {
-          if (!oldData) return oldData;
-          
-          const updatePost = (post: any) => {
-            if (post.id === variables.post_id) {
-              const updatedPost = { ...post };
-              
-              // Remove previous vote if any
-              if (post.user_vote === 'up') {
-                updatedPost.upvotes = Math.max(0, updatedPost.upvotes - 1);
-              } else if (post.user_vote === 'down') {
-                updatedPost.downvotes = Math.max(0, updatedPost.downvotes - 1);
-              }
-              
-              // Add new vote
-              if (variables.vote_type === 'up') {
-                updatedPost.upvotes += 1;
-                updatedPost.user_vote = 'up';
-              } else if (variables.vote_type === 'down') {
-                updatedPost.downvotes += 1;
-                updatedPost.user_vote = 'down';
-              } else {
-                updatedPost.user_vote = null;
-              }
-              
-              return updatedPost;
-            }
-            return post;
-          };
-
-          return {
-            ...oldData,
-            pages: oldData.pages.map((page: any) => ({
-              ...page,
-              posts: page.posts.map(updatePost)
-            }))
-          };
-        }
-      );
+      
+      // Invalidate sidebar trending discussions
+      queryClient.invalidateQueries({ 
+        queryKey: ['community-sidebar'] 
+      });
     },
     onError: (error) => {
-      console.error('Vote casting failed:', error);
+      console.error('Community vote failed:', error);
     }
   });
 };

@@ -46,8 +46,8 @@ serve(async (req) => {
       });
     }
 
-    // Check rate limit (5 poll votes per 60 seconds)
-    const rateLimitResult = await checkRateLimit(supabase, 'cast-poll-vote', user.id, 5, 60);
+    // Check rate limit (20 votes per 60 seconds)
+    const rateLimitResult = await checkRateLimit(supabase, 'cast-poll-vote', user.id, 20, 60);
     if (!rateLimitResult.allowed) {
       return new Response(JSON.stringify({
         error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }
@@ -61,21 +61,22 @@ serve(async (req) => {
       });
     }
 
-    const { poll_id, option_id }: PollVoteRequest = await req.json();
+    const requestBody: PollVoteRequest = await req.json();
+    const { poll_id, option_id } = requestBody;
 
     console.log('Processing poll vote:', { poll_id, option_id, user_id: user.id });
 
-    // Validate poll and option exist
-    const { data: pollOption, error: optionError } = await supabase
+    // Validate the poll and option exist
+    const { data: option, error: optionError } = await supabase
       .from('PollOptions')
       .select('id, poll_id')
       .eq('id', option_id)
       .eq('poll_id', poll_id)
       .single();
 
-    if (optionError || !pollOption) {
+    if (optionError || !option) {
       return new Response(JSON.stringify({
-        error: { message: 'Poll option not found', code: 'NOT_FOUND' }
+        error: { message: 'Invalid poll option', code: 'NOT_FOUND' }
       }), {
         status: 404,
         headers: { 'Content-Type': 'application/json', ...corsHeaders }
@@ -89,7 +90,7 @@ serve(async (req) => {
       .eq('id', poll_id)
       .single();
 
-    if (pollError || !poll) {
+    if (pollError) {
       return new Response(JSON.stringify({
         error: { message: 'Poll not found', code: 'NOT_FOUND' }
       }), {
@@ -107,7 +108,7 @@ serve(async (req) => {
       });
     }
 
-    // Upsert vote (insert or update)
+    // Insert or update vote
     const { error: upsertError } = await supabase
       .from('PollVotes')
       .upsert({
@@ -121,18 +122,18 @@ serve(async (req) => {
     if (upsertError) {
       console.error('Failed to cast poll vote:', upsertError);
       return new Response(JSON.stringify({
-        error: { message: 'Failed to cast poll vote', code: 'UPSERT_FAILED' }
+        error: { message: 'Failed to cast vote', code: 'UPSERT_FAILED' }
       }), {
         status: 500,
         headers: { 'Content-Type': 'application/json', ...corsHeaders }
       });
     }
 
-    console.log('Poll vote processed successfully');
+    console.log('Poll vote cast successfully');
 
     return new Response(JSON.stringify({
       success: true,
-      message: 'Poll vote processed successfully'
+      message: 'Vote cast successfully'
     }), {
       headers: {
         'Content-Type': 'application/json',
@@ -142,7 +143,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Poll vote error:', error);
+    console.error('Poll vote casting error:', error);
     
     return new Response(JSON.stringify({
       error: {
