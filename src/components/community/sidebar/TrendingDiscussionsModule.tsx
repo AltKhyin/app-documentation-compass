@@ -1,11 +1,16 @@
-// ABOUTME: Trending discussions module showing the most engaging community posts.
+
+// ABOUTME: Trending discussions module showing popular community posts with engagement metrics.
 
 import React from 'react';
-import { MessageCircle, TrendingUp, Pin } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { Badge } from '../../ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
+import { TrendingUp, MessageCircle, ArrowUp, Pin } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
+import { cn } from '../../../lib/utils';
 
-// Define local types for trending discussions
 interface TrendingDiscussion {
   id: number;
   title: string;
@@ -22,75 +27,118 @@ interface TrendingDiscussion {
 }
 
 interface TrendingDiscussionsModuleProps {
-  discussions: TrendingDiscussion[];
+  discussions?: TrendingDiscussion[];
 }
 
-export const TrendingDiscussionsModule = ({ discussions }: TrendingDiscussionsModuleProps) => {
+const CATEGORY_LABELS: Record<string, string> = {
+  general: 'Geral',
+  review_discussion: 'Review',
+  question: 'Pergunta',
+  announcement: 'Anúncio'
+};
+
+export const TrendingDiscussionsModule = ({ discussions = [] }: TrendingDiscussionsModuleProps) => {
+  const navigate = useNavigate();
+
+  const handleDiscussionClick = (discussionId: number) => {
+    navigate(`/comunidade/${discussionId}`);
+  };
+
+  if (discussions.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <TrendingUp className="w-5 h-5" />
+            Em Alta
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Nenhuma discussão em alta no momento.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <div className="bg-card border rounded-lg p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <TrendingUp className="w-4 h-4 text-orange-500" />
-        <h3 className="font-semibold text-foreground">Discussões em Alta</h3>
-      </div>
-      
-      <div className="space-y-4">
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <TrendingUp className="w-5 h-5" />
+          Em Alta
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
         {discussions.map((discussion, index) => (
-          <div key={discussion.id} className="group cursor-pointer">
-            <div className="flex items-start gap-3">
-              {/* Trending indicator */}
-              <div className="flex items-center justify-center w-6 h-6 bg-orange-100 rounded-full flex-shrink-0 mt-1">
-                <span className="text-xs font-bold text-orange-600">{index + 1}</span>
+          <div
+            key={discussion.id}
+            className={cn(
+              "p-3 rounded-lg border cursor-pointer transition-all hover:shadow-sm hover:border-primary/20",
+              discussion.is_pinned && "bg-primary/5 border-primary/20"
+            )}
+            onClick={() => handleDiscussionClick(discussion.id)}
+          >
+            {/* Header with ranking and metadata */}
+            <div className="flex items-start gap-3 mb-2">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-xs font-bold text-primary">#{index + 1}</span>
               </div>
               
               <div className="flex-1 min-w-0">
-                {/* Post title or content preview */}
-                <h4 className="font-medium text-sm text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight">
-                  {discussion.title || discussion.content}
-                </h4>
-                
-                {/* Post metadata */}
-                <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                  {discussion.is_pinned && (
-                    <div className="flex items-center gap-1 text-primary">
-                      <Pin className="w-3 h-3" />
-                      <span>Fixado</span>
-                    </div>
-                  )}
-                  
+                <div className="flex items-center gap-2 mb-1">
+                  {discussion.is_pinned && <Pin className="w-3 h-3 text-primary" />}
+                  <Badge variant="outline" className="text-xs">
+                    {CATEGORY_LABELS[discussion.category] || discussion.category}
+                  </Badge>
                   {discussion.flair_text && (
-                    <span className="px-1.5 py-0.5 bg-secondary text-secondary-foreground rounded text-xs">
+                    <Badge variant="secondary" className="text-xs">
                       {discussion.flair_text}
-                    </span>
+                    </Badge>
                   )}
-                  
-                  <div className="flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3" />
-                    <span>{discussion.upvotes} votos</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-1">
-                    <MessageCircle className="w-3 h-3" />
-                    <span>{discussion.reply_count}</span>
-                  </div>
                 </div>
                 
-                {/* Author info */}
-                {discussion.author?.full_name && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    por {discussion.author.full_name}
-                  </p>
-                )}
+                <h4 className="font-medium text-sm line-clamp-2 leading-tight mb-1">
+                  {discussion.title}
+                </h4>
+                
+                {/* Author and timestamp */}
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>por {discussion.author?.full_name || 'Anônimo'}</span>
+                  <span>•</span>
+                  <span>
+                    {formatDistanceToNow(new Date(discussion.created_at), {
+                      addSuffix: true,
+                      locale: ptBR
+                    })}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Engagement metrics */}
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                  <ArrowUp className="w-3 h-3" />
+                  <span>{discussion.upvotes}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <MessageCircle className="w-3 h-3" />
+                  <span>{discussion.reply_count}</span>
+                </div>
+              </div>
+              
+              {/* Trending indicator */}
+              <div className="flex items-center gap-1 text-orange-600">
+                <TrendingUp className="w-3 h-3" />
+                <span className="font-medium">Em alta</span>
               </div>
             </div>
           </div>
         ))}
-        
-        {discussions.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Nenhuma discussão em alta no momento
-          </p>
-        )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

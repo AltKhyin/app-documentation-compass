@@ -1,67 +1,69 @@
 
-// ABOUTME: Community rules module displaying guidelines and expandable rule list.
+// ABOUTME: Community rules module displaying guidelines and policies for community participation.
 
-import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, Shield } from 'lucide-react';
-import { Button } from '../../ui/button';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { Badge } from '../../ui/badge';
+import { ShieldCheck, AlertTriangle } from 'lucide-react';
 
 interface RulesModuleProps {
-  rules: string[];
+  rules?: string[];
 }
 
-export const RulesModule = ({ rules }: RulesModuleProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+const DEFAULT_RULES = [
+  "Seja respeitoso e profissional em todas as interações",
+  "Mantenha discussões relevantes ao tema científico",
+  "Não faça spam ou promoção excessiva",
+  "Cite fontes científicas quando possível",
+  "Respeite a privacidade e confidencialidade",
+  "Reporte conteúdo inadequado aos moderadores"
+];
 
-  // Show first 3 rules by default, rest when expanded
-  const visibleRules = isExpanded ? rules : rules.slice(0, 3);
-  const hasMoreRules = rules.length > 3;
-
+export const RulesModule = ({ rules = DEFAULT_RULES }: RulesModuleProps) => {
   return (
-    <div className="bg-card border rounded-lg p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <Shield className="w-4 h-4 text-blue-500" />
-        <h3 className="font-semibold text-foreground">Regras da Comunidade</h3>
-      </div>
-      
-      <div className="space-y-3">
-        {visibleRules.map((rule, index) => (
-          <div key={index} className="flex items-start gap-3">
-            <div className="flex items-center justify-center w-6 h-6 bg-blue-100 rounded-full flex-shrink-0 mt-0.5">
-              <span className="text-xs font-bold text-blue-600">{index + 1}</span>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <ShieldCheck className="w-5 h-5" />
+          Regras da Comunidade
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {/* Rules list */}
+        <div className="space-y-3">
+          {rules.map((rule, index) => (
+            <div key={index} className="flex gap-3">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center mt-0.5">
+                <span className="text-xs font-bold text-primary">{index + 1}</span>
+              </div>
+              <p className="text-sm text-foreground leading-relaxed">
+                {rule}
+              </p>
             </div>
-            <p className="text-sm text-foreground leading-relaxed">
-              {rule}
-            </p>
+          ))}
+        </div>
+
+        {/* Important notice */}
+        <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+            <div className="text-xs text-yellow-800 dark:text-yellow-200">
+              <p className="font-medium mb-1">Importante:</p>
+              <p>
+                O descumprimento das regras pode resultar em advertências ou suspensão da conta.
+                Para dúvidas, entre em contato com a moderação.
+              </p>
+            </div>
           </div>
-        ))}
-        
-        {hasMoreRules && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start text-xs h-8 mt-2"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
-            {isExpanded ? (
-              <>
-                <ChevronDown className="w-3 h-3 mr-1" />
-                Mostrar menos
-              </>
-            ) : (
-              <>
-                <ChevronRight className="w-3 h-3 mr-1" />
-                Ver todas ({rules.length})
-              </>
-            )}
-          </Button>
-        )}
-        
-        {rules.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Nenhuma regra configurada
-          </p>
-        )}
-      </div>
-    </div>
+        </div>
+
+        {/* Contact badge */}
+        <div className="pt-2">
+          <Badge variant="outline" className="text-xs">
+            Dúvidas? Contate os moderadores
+          </Badge>
+        </div>
+      </CardContent>
+    </Card>
   );
 };

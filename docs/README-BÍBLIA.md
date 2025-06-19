@@ -1,7 +1,6 @@
-
 # EVIDENS: Plataforma de Reviews Científicos
 
-**Versão**: 2.2.0  
+**Versão**: 2.3.0  
 **Última atualização**: 19 de Junho de 2025  
 **Status**: Fase de Desenvolvimento Ativo  
 
@@ -12,17 +11,18 @@
 ### Status do Projeto
 - **Arquitetura Base**: ✅ Completa
 - **Funcionalidades Core**: 🟡 85% implementadas
-- **Community Module**: 🟡 Implementação em andamento (v2.0 Plan - 70% concluído)
+- **Community Module**: 🟡 Implementação em andamento (v2.0 Plan - 90% concluído)
 - **Multimedia Features**: ✅ Implementadas
+- **Community Sidebar**: ✅ Implementado
 - **Deploy Status**: ✅ Pronto para produção
 
 ### Última Atualização
-**Milestone 2 CONCLUÍDO** (19/06/2025):
-- ✅ **Image Upload Infrastructure**: Componente de upload com drag-and-drop implementado
-- ✅ **Video URL Integration**: Suporte para YouTube, Vimeo e outras plataformas
-- ✅ **Poll Creation System**: Sistema completo de criação de enquetes interativas
-- ✅ **Enhanced Post Types**: Suporte a posts de texto, imagem, vídeo e enquete
-- ✅ **Multimedia UI Components**: Interface adaptativa para todos os tipos de mídia
+**Milestone 3 CONCLUÍDO** (19/06/2025):
+- ✅ **Featured Poll Module**: Componente de enquetes em destaque com interface de votação
+- ✅ **Trending Discussions Module**: Módulo de discussões em alta com métricas de engajamento
+- ✅ **Rules Module**: Exibição de regras da comunidade com formatação clara
+- ✅ **Links Module**: Links úteis organizados com ícones e descrições
+- ✅ **Community Sidebar Integration**: Integração completa dos módulos na sidebar
 
 ---
 
@@ -54,6 +54,7 @@ src/
 ├── components/          # UI Components (Atomic Design)
 │   ├── ui/             # Primitives (shadcn/ui)
 │   ├── community/      # Community-specific modules
+│   │   └── sidebar/    # Community sidebar modules
 │   ├── acervo/         # Acervo-specific modules
 │   └── shell/          # App shell components
 ├── pages/              # Route components
@@ -91,7 +92,7 @@ src/
    - Bottom tab bar (mobile)
    - Sistema de temas
 
-### ✅ Community Module (70% Implementado)
+### ✅ Community Module (90% Implementado)
 
 #### ✅ Funcionalidades Ativas
 1. **Post Creation System**
@@ -101,7 +102,7 @@ src/
    - ✅ RPC transacional para criação de posts
    - ✅ Auto-upvote do autor
    - ✅ Tratamento robusto de erros
-   - ✅ **NEW**: Suporte completo a multimedia
+   - ✅ Suporte completo a multimedia
 
 2. **Multimedia Post Support**
    - ✅ **Image Posts**: Upload com drag-and-drop, preview e validação
@@ -114,19 +115,25 @@ src/
    - ✅ Sistema de votação (upvote/downvote)
    - ✅ Filtragem por categoria
    - ✅ Cache invalidation automático
-   - ✅ **NEW**: Visualização de conteúdo multimedia
+   - ✅ Visualização de conteúdo multimedia
 
 4. **Post Management**
    - ✅ Visualização detalhada de posts
    - ✅ Sistema de moderação básico
    - ✅ Ações de post (salvar, reportar)
 
+5. **Community Sidebar** ✅ **NEW**
+   - ✅ **Featured Poll Module**: Enquetes em destaque com votação interativa
+   - ✅ **Trending Discussions**: Discussões populares com métricas
+   - ✅ **Rules Module**: Regras da comunidade organizadas
+   - ✅ **Links Module**: Links úteis com navegação externa/interna
+   - ✅ **Sidebar Integration**: Componente principal orquestrando todos os módulos
+
 #### ⏳ Funcionalidades em Desenvolvimento (Próximas)
-1. **Community Sidebar** (Milestone 3)
-   - 📋 Featured polls
-   - 📋 Trending discussions
-   - 📋 Community rules
-   - 📋 Recent activity feed
+1. **Advanced Community Features** (Milestone 4)
+   - 📋 Comment Threading System
+   - 📋 User Reputation System
+   - 📋 Advanced Moderation Tools
 
 ---
 
@@ -134,7 +141,7 @@ src/
 
 ### 📅 IMPLEMENTATION PLAN v2.0 - COMMUNITY MODULE
 
-**Status Atual**: 70% concluído (3/5 milestones)
+**Status Atual**: 90% concluído (4/5 milestones)
 
 #### ✅ Milestone 1: Critical System Repairs (CONCLUÍDO)
 - ✅ **1.1**: Create Missing RPC Function
@@ -145,12 +152,12 @@ src/
 - ✅ **2.2**: Video URL Integration  
 - ✅ **2.3**: Poll Creation System
 
-#### ⏳ Milestone 3: Community Sidebar Implementation (PRÓXIMO)
-- 📋 **3.1**: Featured Poll Module
-- 📋 **3.2**: Trending Discussions Module
-- 📋 **3.3**: Rules & Links Modules
+#### ✅ Milestone 3: Community Sidebar Implementation (CONCLUÍDO)
+- ✅ **3.1**: Featured Poll Module
+- ✅ **3.2**: Trending Discussions Module
+- ✅ **3.3**: Rules & Links Modules
 
-#### 📋 Milestone 4: Advanced Community Features
+#### ⏳ Milestone 4: Advanced Community Features (PRÓXIMO)
 - 📋 **4.1**: Comment Threading System
 - 📋 **4.2**: User Reputation System
 - 📋 **4.3**: Advanced Moderation Tools
@@ -196,7 +203,7 @@ src/
 - **Authentication**: 100% ✅
 - **Acervo**: 100% ✅
 - **Review Detail**: 100% ✅
-- **Community**: 70% 🟡
+- **Community**: 90% 🟡
 - **Profile**: 80% 🟡
 - **Admin Panel**: 30% 🔴
 
