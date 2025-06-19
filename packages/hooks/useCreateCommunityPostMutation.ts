@@ -1,22 +1,25 @@
 
-// ABOUTME: TanStack Query mutation hook for creating community posts with auto-upvote and contribution score updates.
+// ABOUTME: TanStack Query mutation hook for creating new community posts with proper validation and cache updates.
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../src/integrations/supabase/client';
-import type { CommunityPost } from './useCommunityFeedQuery';
 
 interface CreatePostPayload {
   title?: string;
   content: string;
   category: string;
-  review_id?: number;
-  parent_post_id?: number;
+}
+
+interface CreatePostResponse {
+  success: boolean;
+  post_id?: number;
+  message: string;
 }
 
 export const useCreateCommunityPostMutation = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<CommunityPost, Error, CreatePostPayload>({
+  return useMutation<CreatePostResponse, Error, CreatePostPayload>({
     mutationFn: async (payload) => {
       console.log('Creating community post:', payload);
       
@@ -37,34 +40,18 @@ export const useCreateCommunityPostMutation = () => {
       console.log('Post created successfully:', data);
       return data;
     },
-    onSuccess: (newPost) => {
+    onSuccess: () => {
       console.log('Post creation successful, invalidating queries');
       
-      // Invalidate and refetch community feed
+      // Invalidate community feed to show new post
       queryClient.invalidateQueries({ 
         queryKey: ['community-feed'] 
       });
-
-      // Add the new post to the cache optimistically
-      queryClient.setQueryData(
-        ['community-feed', newPost.category, 'recent'],
-        (oldData: any) => {
-          if (!oldData) return oldData;
-          
-          const newPages = [...oldData.pages];
-          if (newPages[0]) {
-            newPages[0] = {
-              ...newPages[0],
-              posts: [newPost, ...newPages[0].posts]
-            };
-          }
-          
-          return {
-            ...oldData,
-            pages: newPages
-          };
-        }
-      );
+      
+      // Invalidate sidebar data to update activity stats
+      queryClient.invalidateQueries({ 
+        queryKey: ['community-sidebar'] 
+      });
     },
     onError: (error) => {
       console.error('Post creation failed:', error);

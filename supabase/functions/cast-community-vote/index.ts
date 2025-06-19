@@ -46,8 +46,8 @@ serve(async (req) => {
       });
     }
 
-    // Check rate limit (10 votes per 60 seconds)
-    const rateLimitResult = await checkRateLimit(supabase, 'cast-community-vote', user.id, 10, 60);
+    // Check rate limit (30 votes per 60 seconds)
+    const rateLimitResult = await checkRateLimit(supabase, 'cast-community-vote', user.id, 30, 60);
     if (!rateLimitResult.allowed) {
       return new Response(JSON.stringify({
         error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }
@@ -61,11 +61,12 @@ serve(async (req) => {
       });
     }
 
-    const { post_id, vote_type }: VoteRequest = await req.json();
+    const requestBody: VoteRequest = await req.json();
+    const { post_id, vote_type } = requestBody;
 
     console.log('Processing community vote:', { post_id, vote_type, user_id: user.id });
 
-    // Validate post exists
+    // Validate the post exists
     const { data: post, error: postError } = await supabase
       .from('CommunityPosts')
       .select('id')
@@ -99,7 +100,7 @@ serve(async (req) => {
         });
       }
     } else {
-      // Upsert vote (insert or update)
+      // Insert or update vote
       const { error: upsertError } = await supabase
         .from('CommunityPost_Votes')
         .upsert({
@@ -121,11 +122,11 @@ serve(async (req) => {
       }
     }
 
-    console.log('Community vote processed successfully');
+    console.log('Community vote cast successfully');
 
     return new Response(JSON.stringify({
       success: true,
-      message: 'Vote processed successfully'
+      message: 'Vote cast successfully'
     }), {
       headers: {
         'Content-Type': 'application/json',
@@ -135,7 +136,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Community vote error:', error);
+    console.error('Community vote casting error:', error);
     
     return new Response(JSON.stringify({
       error: {

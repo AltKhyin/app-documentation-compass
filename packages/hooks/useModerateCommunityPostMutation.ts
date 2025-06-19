@@ -1,5 +1,5 @@
 
-// ABOUTME: TanStack Query mutation hook for community post moderation actions.
+// ABOUTME: TanStack Query mutation hook for moderating community posts (admin/editor actions).
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../src/integrations/supabase/client';
@@ -22,86 +22,40 @@ export const useModerateCommunityPostMutation = () => {
 
   return useMutation<ModerationResponse, Error, ModerationPayload>({
     mutationFn: async (payload) => {
-      console.log('Executing moderation action:', payload);
+      console.log('Moderating community post:', payload);
       
       const { data, error } = await supabase.functions.invoke('moderate-community-post', {
         body: payload
       });
 
       if (error) {
-        console.error('Moderation action error:', error);
-        throw new Error(error.message || 'Failed to execute moderation action');
+        console.error('Post moderation error:', error);
+        throw new Error(error.message || 'Failed to moderate post');
       }
 
       if (data?.error) {
-        console.error('Moderation action API error:', data.error);
-        throw new Error(data.error.message || 'Failed to execute moderation action');
+        console.error('Post moderation API error:', data.error);
+        throw new Error(data.error.message || 'Failed to moderate post');
       }
 
-      console.log('Moderation action completed successfully:', data);
+      console.log('Post moderated successfully:', data);
       return data;
     },
-    onSuccess: (response, variables) => {
-      console.log('Moderation action successful, invalidating queries');
+    onSuccess: () => {
+      console.log('Post moderation successful, invalidating queries');
       
-      // Invalidate community feed to refresh post states
+      // Invalidate community feed to reflect moderation changes
       queryClient.invalidateQueries({ 
         queryKey: ['community-feed'] 
       });
-
-      // Invalidate sidebar data to refresh trending discussions
+      
+      // Invalidate sidebar data to update trending discussions
       queryClient.invalidateQueries({ 
         queryKey: ['community-sidebar'] 
       });
-
-      // Optimistically update the specific post in cache if possible
-      queryClient.setQueriesData(
-        { queryKey: ['community-feed'] },
-        (oldData: any) => {
-          if (!oldData) return oldData;
-          
-          const updatePost = (post: any) => {
-            if (post.id === variables.post_id) {
-              const updatedPost = { ...post };
-              
-              switch (variables.action_type) {
-                case 'pin':
-                  updatedPost.is_pinned = true;
-                  break;
-                case 'unpin':
-                  updatedPost.is_pinned = false;  
-                  break;
-                case 'lock':
-                  updatedPost.is_locked = true;
-                  break;
-                case 'unlock':
-                  updatedPost.is_locked = false;
-                  break;
-                case 'flair':
-                  if (variables.flair_text) {
-                    updatedPost.flair_text = variables.flair_text;
-                    updatedPost.flair_color = variables.flair_color || '#6366f1';
-                  }
-                  break;
-              }
-              
-              return updatedPost;
-            }
-            return post;
-          };
-
-          return {
-            ...oldData,
-            pages: oldData.pages.map((page: any) => ({
-              ...page,
-              posts: page.posts.map(updatePost)
-            }))
-          };
-        }
-      );
     },
     onError: (error) => {
-      console.error('Moderation action failed:', error);
+      console.error('Post moderation failed:', error);
     }
   });
 };
