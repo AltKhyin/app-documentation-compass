@@ -5,7 +5,7 @@ import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AppShell } from '../components/shell/AppShell';
 import { ProtectedAppRoute } from '../components/routes/ProtectedAppRoute';
-import HomePage from '../pages/HomePage';
+import Index from '../pages/Index';
 import AcervoPage from '../pages/AcervoPage';
 import CommunityPage from '../pages/CommunityPage';
 import CommunityPostPage from '../pages/CommunityPostPage';
@@ -32,7 +32,7 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <HomePage />
+        element: <Index />
       },
       {
         path: 'acervo',
