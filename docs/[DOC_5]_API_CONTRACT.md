@@ -1,16 +1,14 @@
-
 # **[DOC_5] EVIDENS API Contract**
 
-**Version:** 3.3  
-**Date:** June 16, 2025
+**Version:** 3.4  
+**Date:** June 19, 2025
 
 **Purpose:** This document defines the canonical contract for all server‑side business logic within the EVIDENS ecosystem. It specifies when to use Supabase's auto‑generated API and provides the definitive blueprint for all custom Supabase Edge Functions. The AI developer must adhere to this specification to ensure all backend interactions are secure, transactional, and predictable.
 
-**CHANGELOG (v3.3):**
-- Added comprehensive rate limiting implementation across all Edge Functions
-- Standardized rate limiting utility in `supabase/functions/_shared/rate-limit.ts`
-- Created `rate_limit_log` table with automatic cleanup
-- Defined rate limits for all existing functions
+**CHANGELOG (v3.4):**
+- Added `save-post` and `get-saved-posts` Edge Functions for post bookmarking
+- Updated rate limiting table with new function limits
+- Enhanced multimedia post support documentation
 
 ---
 
@@ -53,6 +51,8 @@ Every Edge Function MUST implement rate limiting using the centralized utility i
 | `cast-suggestion-vote` | 10 requests | 60 seconds | Limit voting frequency |
 | `cast-vote` | 20 requests | 60 seconds | Community voting protection |
 | `get-personalized-recommendations` | 10 requests | 60 seconds | Expensive computation protection |
+| `save-post` | 30 requests | 60 seconds | Prevent save/unsave spam |
+| `get-saved-posts` | 20 requests | 60 seconds | Limit saved posts retrieval |
 
 **Rate Limiting Implementation:**
 
@@ -289,6 +289,98 @@ const PublishReview = z.object({ review_id: z.number().int() });
 4. Aggregate counts (DAU, page views).
 5. UPSERT into `Summary_*` tables.
 6. Record new last‑processed timestamp.
+
+---
+
+### **4.6 Function: `save-post`**
+
+* **Trigger:** `POST /functions/v1/save-post`
+* **Purpose:** Save or unsave a community post for the authenticated user.
+* **Auth:** Required (authenticated).
+* **Rate Limit:** 30 requests per minute per user
+
+**Request Body Schema (Zod):**
+
+```typescript
+import { z } from 'zod';
+
+const SavePost = z.object({
+  post_id: z.number().int().positive(),
+  is_saved: z.boolean().optional(), // If not provided, toggles current status
+});
+```
+
+**Business Logic:**
+
+1. Handle CORS preflight request.
+2. Check rate limit; return 429 if exceeded.
+3. Extract `practitioner_id` from JWT.
+4. Validate input; else 400.
+5. Check if post exists and is accessible.
+6. Determine current save status if `is_saved` not provided.
+7. Insert/delete from `SavedPosts` table based on desired action.
+
+**Success Response:** `200 OK`
+
+```json
+{
+  "success": true,
+  "is_saved": true,
+  "message": "Post saved successfully"
+}
+```
+
+---
+
+### **4.7 Function: `get-saved-posts`**
+
+* **Trigger:** `GET /functions/v1/get-saved-posts?page=0&limit=20`
+* **Purpose:** Retrieve authenticated user's saved posts with pagination.
+* **Auth:** Required (authenticated).
+* **Rate Limit:** 20 requests per minute per user
+
+**Query Parameters:**
+
+- `page` (optional): Page number, 0-based (default: 0)
+- `limit` (optional): Posts per page, max 50 (default: 20)
+
+**Business Logic:**
+
+1. Handle CORS preflight request.
+2. Check rate limit; return 429 if exceeded.
+3. Extract `practitioner_id` from JWT.
+4. Parse and validate query parameters.
+5. Fetch saved posts with full post data and author info.
+6. Return paginated results with metadata.
+
+**Success Response:** `200 OK`
+
+```json
+{
+  "posts": [
+    {
+      "id": 123,
+      "title": "Post title",
+      "content": "Post content",
+      "author": {
+        "id": "uuid",
+        "full_name": "Author Name",
+        "avatar_url": "url"
+      },
+      "is_saved": true,
+      // ... other post fields
+    }
+  ],
+  "pagination": {
+    "page": 0,
+    "limit": 20,
+    "total_count": 45,
+    "total_pages": 3,
+    "has_next": true,
+    "has_previous": false
+  }
+}
+```
 
 ---
 
