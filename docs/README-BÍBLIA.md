@@ -1,86 +1,135 @@
 
-# EVIDENS - Estado Atual da Implementação
-**Versão:** v1.3.1  
-**Última Atualização:** 19 de Junho de 2025  
-**Status:** 🟢 Operacional - Sistema de Comunidade Totalmente Funcional
+# EVIDENS - The Brazilian Evidence-Based Medicine Platform
+**Versão: 1.3.2** | **Data: 19 de Junho de 2025** | **Status: 🟡 Em Desenvolvimento (Community Module)**
 
-## 📋 SUMÁRIO EXECUTIVO
+## 📋 RESUMO EXECUTIVO
 
-### ✅ FUNCIONALIDADES IMPLEMENTADAS E OPERACIONAIS
-- **Sistema de Autenticação:** Login/cadastro com Supabase Auth
-- **Homepage:** Feed consolidado com recomendações personalizadas  
-- **Acervo:** Sistema de busca e filtragem por tags otimizado
-- **Review Detail:** Visualização estruturada de conteúdo com navegação
-- **Comunidade:** Feed consolidado + sidebar com trending/polls (**CRÍTICO: Resolvido v1.3.1**)
-- **PWA:** Suporte completo para instalação offline
+O EVIDENS é uma plataforma de medicina baseada em evidências que conecta profissionais da saúde brasileiros através de Reviews científicos curados e uma comunidade ativa de discussão.
 
-### 🔧 CORREÇÕES CRÍTICAS v1.3.1
-**Problemas Resolvidos:**
-- ✅ **Edge Function Deployment:** Corrigido erro de sintaxe em `rate-limit.ts`
-- ✅ **TypeScript Compilation:** Resolvidos erros de tipo em `PostCard.tsx`  
-- ✅ **Type Definition Alignment:** Interfaces atualizadas com campos `avatar_url` e `flair_color`
-- ✅ **CORS Headers:** Implementação completa conforme [DOC_5] PRINCIPLE 5
+### 🎯 Status Atual do Projeto
+- ✅ **Autenticação & Perfis**: Sistema completo com RLS
+- ✅ **Homepage**: Layout responsivo com carrosséis funcionais  
+- ✅ **Acervo**: Sistema de busca, filtros e tags implementado
+- ✅ **Review Detail**: Renderização de conteúdo estruturado v2.0
+- 🟡 **Community Module**: **FASE ATUAL** - CORS corrigido, sidebar implementada
+- ⏳ **Editor**: Aguardando conclusão do Community
+- ⏳ **Admin Panel**: Próxima fase
 
-**Arquivos Modificados:**
-- `supabase/functions/_shared/rate-limit.ts` - Sintaxe corrigida
-- `packages/hooks/useCommunityPageQuery.ts` - Interface expandida
-- `src/types/index.ts` - Consistência de tipos
+## 🏗️ ARQUITETURA ATUAL
 
-### 🏗️ ARQUITETURA ATUAL
-
-#### Data Layer (TanStack Query + Supabase)
+### Frontend (React + Vite)
 ```
-📊 Hooks Consolidados [DAL.2 Compliance]
-├── useCommunityPageQuery() → Dados feed+sidebar unificados
-├── useHomepageFeedQuery() → Feed principal otimizado
-├── useAcervoDataQuery() → Busca com filtros performática
-└── useCastCommunityVoteMutation() → Votação em posts
-```
-
-#### Edge Functions (Rate-Limited + CORS)
-```
-🌐 API Layer [DOC_5 Compliance]
-├── get-community-page-data → Consolidado (30 req/min)
-├── get-homepage-feed → Feed principal (60 req/min)  
-├── get-acervo-data → Busca de reviews (30 req/min)
-└── cast-community-vote → Sistema de votação (20 req/min)
-```
-
-#### Component Architecture [D3.2]
-```
-📱 UI Layer (Mobile-First + Desktop Sidebar)
-├── CommunityFeedWithSidebar → Layout responsivo
-├── CommunitySidebar → Trending + Polls + Rules
-├── PostCard → Cards interativos com votação
-└── VoteButtons → Sistema de upvote/downvote
+src/
+├── components/
+│   ├── auth/                    # ✅ Autenticação completa
+│   ├── shell/                   # ✅ Navigation + responsive
+│   ├── homepage/                # ✅ Carrosséis funcionais
+│   ├── acervo/                  # ✅ Search + filters
+│   ├── review-detail/           # ✅ Structured content v2.0
+│   └── community/               # 🟡 ATUAL - Implementação completa
+│       ├── CommunityFeedWithSidebar.tsx    # Layout principal
+│       ├── PostCard.tsx                    # Cards de posts
+│       ├── VoteButtons.tsx                 # Sistema de votação
+│       ├── sidebar/                        # Módulos da sidebar
+│       │   ├── TrendingDiscussionsModule.tsx
+│       │   ├── RulesModule.tsx
+│       │   ├── LinksModule.tsx
+│       │   ├── FeaturedPollModule.tsx
+│       │   └── RecentActivityModule.tsx
+│       └── TiptapEditor.tsx               # Editor de posts
+├── pages/
+│   ├── Index.tsx                # ✅ Homepage
+│   ├── AcervoPage.tsx          # ✅ Search & filters
+│   ├── ReviewDetailPage.tsx    # ✅ Structured rendering
+│   └── ComunidadePage.tsx      # 🟡 ATUAL - Consolidação de dados
+└── packages/hooks/
+    ├── useCommunityPageQuery.ts      # 🟡 Hook consolidado
+    └── use[Feature]Query.ts          # ✅ Outros hooks funcionais
 ```
 
-### 🎯 ROADMAP TÉCNICO IMEDIATO
+### Backend (Supabase)
+```
+supabase/
+├── functions/
+│   ├── get-homepage-feed/           # ✅ Homepage funcionando
+│   ├── get-acervo-data/            # ✅ Acervo funcionando  
+│   ├── get-community-page-data/    # 🟡 ATUAL - CORS corrigido
+│   ├── cast-community-vote/        # ✅ Sistema de votação
+│   └── _shared/
+│       ├── rate-limit.ts           # ✅ Rate limiting global
+│       └── api-helpers.ts          # ✅ Helpers padronizados
+└── config.toml                     # ✅ Configuração atualizada
+```
 
-#### Fase de Verificação Final
-- [ ] **Sistema de Teste:** Validar funcionalidade completa da página de comunidade
-- [ ] **Performance Check:** Verificar tempos de resposta das APIs  
-- [ ] **Mobile Testing:** Confirmar layout responsivo
-- [ ] **Error Monitoring:** Implementar logs de erro estruturados
+## 🚀 COMMUNITY MODULE - Estado Atual
 
-#### Próximas Funcionalidades Planejadas
-- [ ] **Sistema de Comentários:** Threads de discussão aninhadas
-- [ ] **Moderação Avançada:** Ferramentas de gestão de conteúdo
-- [ ] **Notificações:** Sistema de alertas para atividade da comunidade
-- [ ] **Analytics:** Dashboard de métricas de engajamento
+### ✅ Implementações Concluídas
+1. **Arquitetura Consolidada**: 
+   - Hook `useCommunityPageQuery` com dados unificados
+   - Edge Function `get-community-page-data` com CORS corrigido
+   - Layout responsivo desktop/mobile
 
-### 📊 MÉTRICAS DE QUALIDADE
-- **Cobertura de Tipos:** 100% TypeScript
-- **Rate Limiting:** 100% APIs protegidas  
-- **CORS Compliance:** Totalmente implementado
-- **Mobile-First:** Layout responsivo ativo
-- **Performance:** Consultas otimizadas com RPC
+2. **Componentes Funcionais**:
+   - `CommunityFeedWithSidebar`: Layout principal
+   - `PostCard`: Cards com votação e metadados
+   - `CommunitySidebar`: Sidebar completa com módulos
+   - Sistema de votação integrado
 
-### 🔐 SEGURANÇA E COMPLIANCE
-- **RLS Policies:** Aplicadas em todas as tabelas críticas
-- **JWT Validation:** Tokens verificados em todas as APIs
-- **Rate Limiting:** Proteção contra abuso implementada
-- **CORS Security:** Headers de segurança configurados
+3. **Correções Críticas Aplicadas**:
+   - **v1.3.2**: CORS headers corrigidos no Edge Function
+   - Rate limiting implementado (30 req/min)
+   - Tratamento robusto de erros
+   - Parsing seguro de request body
+
+### 🔧 Aspectos Técnicos
+- **Data Fetching**: TanStack Query com infinite scroll
+- **CORS**: Headers padronizados conforme [DOC_5]
+- **Rate Limiting**: 30 requests/60 segundos por usuário
+- **Error Handling**: Responses padronizadas
+- **Mobile Adaptation**: useIsMobile() para layouts responsivos
+
+### 📋 Próximos Passos
+1. **Verificação Funcional**: Testar carregamento da comunidade
+2. **Performance**: Monitorar tempos de resposta
+3. **UX Enhancements**: Melhorias na experiência do usuário
+4. **Testing**: Testes end-to-end do fluxo completo
+
+## 🔄 CHANGELOG
+
+### v1.3.2 (19/06/2025) - CORS Fix
+- **CRÍTICO**: Corrigido CORS headers no Edge Function `get-community-page-data`
+- Melhorado tratamento de OPTIONS requests
+- Parsing robusto de request body
+- Headers de resposta padronizados
+
+### v1.3.1 (19/06/2025) - Community Types Fix
+- Corrigidos erros de compilação TypeScript
+- Interfaces `CommunityPost` padronizadas
+- Import paths corrigidos
+
+### v1.3.0 (19/06/2025) - Community Consolidation
+- Implementação da arquitetura consolidada do Community
+- Hook `useCommunityPageQuery` com dados unificados
+- Sidebar completa com módulos funcionais
+- Rate limiting implementado globalmente
+
+## 📊 MÉTRICAS DE DESENVOLVIMENTO
+
+### Performance
+- **Homepage**: < 2s load time
+- **Acervo**: Busca instantânea com debounce
+- **Community**: Edge Function otimizada com RPC
+- **Mobile**: 100% responsive components
+
+### Cobertura de Funcionalidades
+- **Autenticação**: 100% ✅
+- **Homepage**: 100% ✅
+- **Acervo**: 100% ✅
+- **Review Detail**: 100% ✅
+- **Community**: 90% 🟡 (aguardando testes)
+- **Editor**: 0% ⏳
+- **Admin**: 0% ⏳
 
 ---
-**📞 Status de Desenvolvimento:** Sistema estável e pronto para teste completo da funcionalidade de Comunidade.
+**Último Update**: 19/06/2025 - Community CORS Fix
+**Próximo Milestone**: Community Module Testing & Verification

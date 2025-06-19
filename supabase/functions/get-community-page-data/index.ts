@@ -4,12 +4,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0'
 import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts'
-import { 
-  createErrorResponse, 
-  createSuccessResponse, 
-  handleCorsPreflightRequest,
-  RateLimitError 
-} from '../_shared/api-helpers.ts'
 
 // CORS headers as mandated by [DOC_5] PRINCIPLE 5
 const corsHeaders = {
@@ -19,9 +13,9 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests - [DOC_5] PRINCIPLE 5 compliance
+  // Handle CORS preflight requests FIRST - [DOC_5] PRINCIPLE 5 compliance
   if (req.method === 'OPTIONS') {
-    return new Response(null, { 
+    return new Response('ok', { 
       status: 200,
       headers: corsHeaders 
     });
@@ -45,7 +39,7 @@ serve(async (req) => {
     }
 
     // Check rate limit (30 requests per 60 seconds) - [DOC_5] PRINCIPLE 6 compliance
-    const rateLimitResult = await checkRateLimit(supabase, 'get-community-page-data', userId, 30, 60);
+    const rateLimitResult = await checkRateLimit(supabase, 'get-community-page-data', userId);
     if (!rateLimitResult.allowed) {
       return new Response(JSON.stringify({
         error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }
@@ -59,8 +53,18 @@ serve(async (req) => {
       });
     }
 
-    // Parse query parameters
-    const { page = 0, limit = 20 } = await req.json().catch(() => ({}));
+    // Parse request body safely
+    let requestBody = {};
+    try {
+      const bodyText = await req.text();
+      if (bodyText) {
+        requestBody = JSON.parse(bodyText);
+      }
+    } catch (e) {
+      console.warn('Failed to parse request body, using defaults:', e);
+    }
+
+    const { page = 0, limit = 20 } = requestBody;
     const actualLimit = Math.min(limit, 50);
     const offset = page * actualLimit;
 
