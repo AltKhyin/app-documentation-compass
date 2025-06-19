@@ -3,8 +3,8 @@
 
 import React from 'react';
 import { useIsMobile } from '../../hooks/use-mobile';
-import { DesktopShell } from '../shell/DesktopShell';
-import { MobileShell } from '../shell/MobileShell';
+import DesktopShell from '../shell/DesktopShell';
+import MobileShell from '../shell/MobileShell';
 
 interface AppShellProps {
   children: React.ReactNode;

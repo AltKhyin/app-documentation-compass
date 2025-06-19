@@ -77,3 +77,6 @@ export const useConsolidatedHomepageFeedQuery = () => {
     },
   });
 };
+
+// Export the primary hook with both names for compatibility
+export const useHomepageFeedQuery = useConsolidatedHomepageFeedQuery;

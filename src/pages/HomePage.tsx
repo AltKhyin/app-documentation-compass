@@ -2,15 +2,15 @@
 // ABOUTME: Homepage component that displays consolidated feed data
 
 import React from 'react';
-import { useHomepageFeedQuery } from '../../packages/hooks/useHomepageFeedQuery';
-import { FeaturedReview } from '../components/homepage/FeaturedReview';
-import { ReviewCarousel } from '../components/homepage/ReviewCarousel';
-import { SuggestionPollItem } from '../components/homepage/SuggestionPollItem';
+import { useConsolidatedHomepageFeedQuery } from '../../packages/hooks/useHomepageFeedQuery';
+import FeaturedReview from '../components/homepage/FeaturedReview';
+import ReviewCarousel from '../components/homepage/ReviewCarousel';
+import SuggestionPollItem from '../components/homepage/SuggestionPollItem';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Skeleton } from '../components/ui/skeleton';
 
 const HomePage = () => {
-  const { data, isLoading, error } = useHomepageFeedQuery();
+  const { data, isLoading, error } = useConsolidatedHomepageFeedQuery();
 
   if (isLoading) {
     return (

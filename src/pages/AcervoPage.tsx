@@ -4,10 +4,10 @@
 import React, { useState } from 'react';
 import { useAcervoDataQuery } from '../../packages/hooks/useAcervoDataQuery';
 import { ClientSideSorter } from '../components/acervo/ClientSideSorter';
-import { SearchInput } from '../components/acervo/SearchInput';
-import { TagsPanel } from '../components/acervo/TagsPanel';
-import { MasonryGrid } from '../components/acervo/MasonryGrid';
-import { MobileTagsModal } from '../components/acervo/MobileTagsModal';
+import SearchInput from '../components/acervo/SearchInput';
+import TagsPanel from '../components/acervo/TagsPanel';
+import MasonryGrid from '../components/acervo/MasonryGrid';
+import MobileTagsModal from '../components/acervo/MobileTagsModal';
 import { useIsMobile } from '../hooks/use-mobile';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Skeleton } from '../components/ui/skeleton';
@@ -80,9 +80,8 @@ const AcervoPage = () => {
         <div className="flex gap-4">
           <div className="flex-1">
             <SearchInput 
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder="Buscar reviews, temas, assuntos..."
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
             />
           </div>
           {isMobile && (
@@ -111,19 +110,18 @@ const AcervoPage = () => {
               {!isMobile && (
                 <div className="lg:col-span-1">
                   <TagsPanel
-                    tags={tags}
-                    selectedTags={selectedTags}
-                    onTagToggle={(tagId) => {
-                      setSelectedTags(prev => 
-                        prev.includes(tagId) 
-                          ? prev.filter(id => id !== tagId)
-                          : [...prev, tagId]
-                      );
+                    allTags={tags}
+                    selectedTags={selectedTags.map(id => tags.find(t => t.id === id)?.tag_name || '').filter(Boolean)}
+                    onTagSelect={(tagName) => {
+                      const tag = tags.find(t => t.tag_name === tagName);
+                      if (tag) {
+                        setSelectedTags(prev => 
+                          prev.includes(tag.id) 
+                            ? prev.filter(id => id !== tag.id)
+                            : [...prev, tag.id]
+                        );
+                      }
                     }}
-                    onClearAll={() => setSelectedTags([])}
-                    sortBy={sortBy}
-                    onSortChange={setSortBy}
-                    totalReviews={stats.totalReviews}
                   />
                 </div>
               )}
