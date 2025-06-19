@@ -1,5 +1,5 @@
 
-// ABOUTME: PWA provider for managing installation state and lifecycle with improved error handling.
+// ABOUTME: PWA provider for managing installation state and lifecycle.
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { usePWA } from '@/hooks/usePWA';
@@ -29,61 +29,30 @@ interface PWAProviderProps {
 const PWAProvider: React.FC<PWAProviderProps> = ({ children }) => {
   const { isInstalled, isInstallable, isStandalone } = usePWA();
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
-  const [swRegistered, setSwRegistered] = useState(false);
 
   useEffect(() => {
-    // Register service worker with better error handling
-    if ('serviceWorker' in navigator && !swRegistered) {
+    // Register service worker
+    if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
           .then((registration) => {
-            console.log('SW registered successfully:', registration);
-            setSwRegistered(true);
-            
-            // Handle updates
-            registration.addEventListener('updatefound', () => {
-              const newWorker = registration.installing;
-              if (newWorker) {
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    console.log('New service worker available');
-                    // Optionally notify user about update
-                  }
-                });
-              }
-            });
+            console.log('SW registered: ', registration);
           })
           .catch((registrationError) => {
-            console.error('SW registration failed:', registrationError);
-            // Continue without service worker
+            console.log('SW registration failed: ', registrationError);
           });
       });
     }
 
-    // Show install prompt after a delay if conditions are met
-    if (!isInstalled && !isStandalone && isInstallable && !showInstallPrompt) {
+    // Show install prompt after a delay if not installed and installable
+    if (!isInstalled && !isStandalone && isInstallable) {
       const timer = setTimeout(() => {
         setShowInstallPrompt(true);
-      }, 15000); // Increased to 15 seconds to avoid being too aggressive
+      }, 10000); // Show after 10 seconds
 
       return () => clearTimeout(timer);
     }
-  }, [isInstalled, isStandalone, isInstallable, showInstallPrompt, swRegistered]);
-
-  // Handle beforeinstallprompt event more robustly
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e: Event) => {
-      console.log('beforeinstallprompt event fired');
-      e.preventDefault();
-      // The event will be handled by the usePWA hook
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
-  }, []);
+  }, [isInstalled, isStandalone, isInstallable]);
 
   const contextValue: PWAContextType = {
     showInstallPrompt,
@@ -95,7 +64,7 @@ const PWAProvider: React.FC<PWAProviderProps> = ({ children }) => {
   return (
     <PWAContext.Provider value={contextValue}>
       {children}
-      {showInstallPrompt && !isInstalled && (
+      {showInstallPrompt && (
         <PWAInstallPrompt 
           onDismiss={() => setShowInstallPrompt(false)} 
         />

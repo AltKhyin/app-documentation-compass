@@ -9,16 +9,11 @@ const AuthSessionProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     console.log('AuthSessionProvider: Initializing auth...');
     try {
-      initialize();
+      const unsubscribe = initialize();
       console.log('AuthSessionProvider: Auth initialized successfully');
-      
       return () => {
         console.log('AuthSessionProvider: Cleaning up auth listener');
-        // Clean up the global auth subscription if it exists
-        if ((window as any).__authCleanup) {
-          (window as any).__authCleanup();
-          delete (window as any).__authCleanup;
-        }
+        unsubscribe();
       };
     } catch (error) {
       console.error('AuthSessionProvider: Failed to initialize auth:', error);

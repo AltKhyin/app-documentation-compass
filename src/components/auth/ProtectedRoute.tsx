@@ -1,9 +1,8 @@
 
-// ABOUTME: Enhanced component to protect routes with authentication and role-based access control with timeout handling.
-import { useAuthStore } from '../../store/auth';
+// ABOUTME: Enhanced component to protect routes with authentication and role-based access control.
+import { useAuthStore } from '@/store/auth';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import type { UserProfile } from '../../types';
+import type { UserProfile } from '@/types';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -25,36 +24,15 @@ const checkRolePermission = (userRole: UserProfile['role'], requiredRole: UserPr
 const ProtectedRoute = ({ children, requiredRole = 'practitioner' }: ProtectedRouteProps) => {
   const { session, isLoading } = useAuthStore();
   const location = useLocation();
-  const [hasTimedOut, setHasTimedOut] = useState(false);
-
-  // Implement timeout to prevent infinite loading states
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (isLoading && !session) {
-        console.warn('Authentication timeout - redirecting to login');
-        setHasTimedOut(true);
-      }
-    }, 10000); // 10 second timeout
-
-    return () => clearTimeout(timeout);
-  }, [isLoading, session]);
 
   console.log('ProtectedRoute state:', { 
     session: !!session, 
     isLoading, 
-    hasTimedOut,
     requiredRole,
     userRole: session?.user?.app_metadata?.role 
   });
 
-  // Handle timeout case
-  if (hasTimedOut || (!isLoading && !session)) {
-    console.log('No session or timeout, redirecting to login');
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  // Show loading state with timeout protection
-  if (isLoading && !hasTimedOut) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center space-y-4">
@@ -65,9 +43,8 @@ const ProtectedRoute = ({ children, requiredRole = 'practitioner' }: ProtectedRo
     );
   }
 
-  // At this point we should have a session
   if (!session) {
-    console.log('Unexpected: no session after loading complete');
+    console.log('No session, redirecting to login');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

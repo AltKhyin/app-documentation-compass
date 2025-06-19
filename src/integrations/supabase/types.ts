@@ -9,36 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      Communities: {
-        Row: {
-          avatar_url: string | null
-          banner_url: string | null
-          created_at: string
-          description: string | null
-          id: string
-          member_count: number | null
-          name: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          banner_url?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          member_count?: number | null
-          name: string
-        }
-        Update: {
-          avatar_url?: string | null
-          banner_url?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          member_count?: number | null
-          name?: string
-        }
-        Relationships: []
-      }
       CommunityModerationActions: {
         Row: {
           action_type: string
@@ -127,7 +97,6 @@ export type Database = {
         Row: {
           author_id: string | null
           category: string
-          community_id: string | null
           content: string
           created_at: string | null
           downvotes: number | null
@@ -137,16 +106,13 @@ export type Database = {
           is_locked: boolean | null
           is_pinned: boolean | null
           parent_post_id: number | null
-          post_type: string
           review_id: number | null
-          structured_content: Json | null
           title: string | null
           upvotes: number | null
         }
         Insert: {
           author_id?: string | null
           category?: string
-          community_id?: string | null
           content: string
           created_at?: string | null
           downvotes?: number | null
@@ -156,16 +122,13 @@ export type Database = {
           is_locked?: boolean | null
           is_pinned?: boolean | null
           parent_post_id?: number | null
-          post_type?: string
           review_id?: number | null
-          structured_content?: Json | null
           title?: string | null
           upvotes?: number | null
         }
         Update: {
           author_id?: string | null
           category?: string
-          community_id?: string | null
           content?: string
           created_at?: string | null
           downvotes?: number | null
@@ -175,9 +138,7 @@ export type Database = {
           is_locked?: boolean | null
           is_pinned?: boolean | null
           parent_post_id?: number | null
-          post_type?: string
           review_id?: number | null
-          structured_content?: Json | null
           title?: string | null
           upvotes?: number | null
         }
@@ -187,13 +148,6 @@ export type Database = {
             columns: ["author_id"]
             isOneToOne: false
             referencedRelation: "Practitioners"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "CommunityPosts_community_id_fkey"
-            columns: ["community_id"]
-            isOneToOne: false
-            referencedRelation: "Communities"
             referencedColumns: ["id"]
           },
           {
@@ -746,10 +700,6 @@ export type Database = {
       get_my_claim: {
         Args: { claim: string }
         Returns: string
-      }
-      handle_post_action: {
-        Args: { p_post_id: number; p_user_id: string; p_action_type: string }
-        Returns: Json
       }
       update_community_stats: {
         Args: Record<PropertyKey, never>

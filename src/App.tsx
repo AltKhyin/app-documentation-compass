@@ -1,69 +1,62 @@
 
-// ABOUTME: Updated App component with proper provider hierarchy and consistent routing
-
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProviders } from './components/providers/AppProviders';
-import { Toaster } from './components/ui/toaster';
-
-// Pages
-import HomePage from './pages/HomePage';
+import { ProtectedAppRoute } from './components/routes/ProtectedAppRoute';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import Index from './pages/Index';
+import AcervoPage from './pages/AcervoPage';
+import ReviewDetailPage from './pages/ReviewDetailPage';
 import ComunidadePage from './pages/ComunidadePage';
 import CommunityInfoPage from './pages/CommunityInfoPage';
-import SubmitPage from './pages/community/SubmitPage';
-import AcervoPage from './pages/AcervoPage';
-import LoginPage from './pages/LoginPage';
-import PerfilPage from './pages/PerfilPage';
 
-// Protected Route Wrapper
-import { ProtectedAppRoute } from './components/routes/ProtectedAppRoute';
-
-const App = () => {
+function App() {
   return (
     <AppProviders>
-      <Router>
-        <div className="min-h-screen bg-background">
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/login" element={<LoginPage />} />
-            
-            {/* Protected Routes - All wrapped with ProtectedAppRoute */}
-            <Route path="/" element={
-              <ProtectedAppRoute>
-                <HomePage />
-              </ProtectedAppRoute>
-            } />
-            <Route path="/comunidade" element={
-              <ProtectedAppRoute>
-                <ComunidadePage />
-              </ProtectedAppRoute>
-            } />
-            <Route path="/comunidade/info" element={
-              <ProtectedAppRoute>
-                <CommunityInfoPage />
-              </ProtectedAppRoute>
-            } />
-            <Route path="/community/submit" element={
-              <ProtectedAppRoute>
-                <SubmitPage />
-              </ProtectedAppRoute>
-            } />
-            <Route path="/acervo" element={
-              <ProtectedAppRoute>
-                <AcervoPage />
-              </ProtectedAppRoute>
-            } />
-            <Route path="/perfil" element={
-              <ProtectedAppRoute>
-                <PerfilPage />
-              </ProtectedAppRoute>
-            } />
-          </Routes>
-        </div>
-      </Router>
-      <Toaster />
+      <BrowserRouter>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<SignupPage />} />
+
+          {/* Protected routes */}
+          <Route path="/" element={
+            <ProtectedAppRoute>
+              <Index />
+            </ProtectedAppRoute>
+          } />
+          
+          <Route path="/acervo" element={
+            <ProtectedAppRoute>
+              <AcervoPage />
+            </ProtectedAppRoute>
+          } />
+          
+          <Route path="/reviews/:id" element={
+            <ProtectedAppRoute>
+              <ReviewDetailPage />
+            </ProtectedAppRoute>
+          } />
+          
+          <Route path="/comunidade" element={
+            <ProtectedAppRoute>
+              <ComunidadePage />
+            </ProtectedAppRoute>
+          } />
+          
+          <Route path="/comunidade/info" element={
+            <ProtectedAppRoute>
+              <CommunityInfoPage />
+            </ProtectedAppRoute>
+          } />
+          
+          {/* Default route */}
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </BrowserRouter>
     </AppProviders>
   );
-};
+}
 
 export default App;

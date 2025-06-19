@@ -1,122 +1,74 @@
 
-// ABOUTME: Client-side sorting and filtering logic for the Acervo page with AcervoReview types
-
+// ABOUTME: Client-side sorting and filtering logic for Acervo reviews with search and tag filtering.
 import React, { useMemo } from 'react';
-import type { AcervoReview, AcervoTag } from '../../../packages/hooks/useAcervoDataQuery';
+import { AcervoReview } from '../../../packages/hooks/useAcervoDataQuery';
 
 interface ClientSideSorterProps {
   reviews: AcervoReview[];
-  selectedTags: number[];
-  sortBy: 'newest' | 'oldest' | 'most_viewed';
+  selectedTags: string[];
   searchQuery: string;
-  allTags: AcervoTag[];
-  children: (sortedData: { 
-    reviews: AcervoReview[]; 
-    tags: AcervoTag[]; 
-    stats: { totalReviews: number; totalTags: number } 
-  }) => React.ReactNode;
+  children: (sortedReviews: AcervoReview[]) => React.ReactNode;
 }
 
-export const ClientSideSorter = ({
-  reviews,
-  selectedTags,
-  sortBy,
+const ClientSideSorter: React.FC<ClientSideSorterProps> = ({ 
+  reviews, 
+  selectedTags, 
   searchQuery,
-  allTags,
-  children
-}: ClientSideSorterProps) => {
-  const sortedData = useMemo(() => {
-    // Filter reviews based on selected tags and search query
-    let filteredReviews = reviews.filter(review => {
-      // Tag filtering
-      if (selectedTags.length > 0) {
-        const reviewTagNames = Object.keys(review.tags_json).concat(
-          Object.values(review.tags_json).flat()
-        );
-        const hasSelectedTag = selectedTags.some(tagId => {
-          const tag = allTags.find(t => t.id === tagId);
-          return tag && reviewTagNames.includes(tag.tag_name);
-        });
-        if (!hasSelectedTag) return false;
-      }
+  children 
+}) => {
+  const sortedAndFilteredReviews = useMemo(() => {
+    let filteredReviews = [...reviews];
 
-      // Search filtering
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
-        const matchesTitle = review.title.toLowerCase().includes(query);
-        const matchesDescription = review.description?.toLowerCase().includes(query);
-        const matchesTags = Object.keys(review.tags_json).some(tag => 
-          tag.toLowerCase().includes(query)
-        ) || Object.values(review.tags_json).flat().some(tag =>
-          tag.toLowerCase().includes(query)
-        );
-        
-        if (!matchesTitle && !matchesDescription && !matchesTags) {
-          return false;
-        }
-      }
+    // Apply search filter first
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filteredReviews = filteredReviews.filter(review => 
+        review.title.toLowerCase().includes(query) ||
+        (review.description && review.description.toLowerCase().includes(query))
+      );
+    }
 
-      return true;
-    });
+    // If no tags selected, return reviews sorted by date (newest first)
+    if (selectedTags.length === 0) {
+      return filteredReviews.sort((a, b) => 
+        new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
+      );
+    }
 
-    // Sort reviews
-    filteredReviews.sort((a, b) => {
-      switch (sortBy) {
-        case 'newest':
-          return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
-        case 'oldest':
-          return new Date(a.published_at).getTime() - new Date(b.published_at).getTime();
-        case 'most_viewed':
-          // For AcervoReview, we don't have view_count, so maintain order
-          return 0;
-        default:
-          return 0;
-      }
-    });
-
-    // Enhanced tag sorting with corrected priority algorithm
-    const getTagPriority = (tag: AcervoTag): number => {
-      // Priority 1: Selected tags (highest priority)
-      if (selectedTags.includes(tag.id)) {
-        return 1;
-      }
+    // Calculate relevance score for each review based on matching tags
+    const reviewsWithScores = filteredReviews.map(review => {
+      let score = 0;
       
-      // Priority 2: Highlighted tags (children of selected parent tags)
-      const isHighlighted = selectedTags.some(selectedTagId => {
-        const selectedTag = allTags.find(t => t.id === selectedTagId);
-        return selectedTag && tag.parent_id === selectedTag.id;
+      // Check each selected tag against review's tags
+      selectedTags.forEach(selectedTag => {
+        // Check if tag matches any categoria
+        if (Object.keys(review.tags_json).includes(selectedTag)) {
+          score += 1;
+        }
+        
+        // Check if tag matches any subtag
+        Object.values(review.tags_json).forEach(subtags => {
+          if (subtags && subtags.includes(selectedTag)) {
+            score += 1;
+          }
+        });
       });
       
-      if (isHighlighted) {
-        return 2;
-      }
-      
-      // Priority 3: All other tags (lowest priority)
-      return 3;
-    };
-
-    const sortedTags = [...allTags].sort((a, b) => {
-      const priorityA = getTagPriority(a);
-      const priorityB = getTagPriority(b);
-      
-      // First, sort by priority
-      if (priorityA !== priorityB) {
-        return priorityA - priorityB;
-      }
-      
-      // If same priority, sort alphabetically
-      return a.tag_name.localeCompare(b.tag_name, 'pt-BR');
+      return { review, score };
     });
 
-    return {
-      reviews: filteredReviews,
-      tags: sortedTags,
-      stats: {
-        totalReviews: filteredReviews.length,
-        totalTags: sortedTags.length
-      }
-    };
-  }, [reviews, selectedTags, sortBy, searchQuery, allTags]);
+    // Sort by score (highest first), then by date (newest first) for ties
+    return reviewsWithScores
+      .sort((a, b) => {
+        if (a.score !== b.score) {
+          return b.score - a.score;
+        }
+        return new Date(b.review.published_at).getTime() - new Date(a.review.published_at).getTime();
+      })
+      .map(item => item.review);
+  }, [reviews, selectedTags, searchQuery]);
 
-  return <>{children(sortedData)}</>;
+  return <>{children(sortedAndFilteredReviews)}</>;
 };
+
+export default ClientSideSorter;
