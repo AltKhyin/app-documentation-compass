@@ -15,9 +15,16 @@ interface CommunitySidebarProps {
   trendingDiscussions: Array<{
     id: number;
     title: string;
+    content: string;
+    category: string;
     reply_count: number;
     upvotes: number;
     created_at: string;
+    author: {
+      full_name: string | null;
+    } | null;
+    flair_text?: string;
+    is_pinned?: boolean;
   }>;
   featuredPoll?: any;
   recentActivity: Array<{
@@ -55,9 +62,15 @@ export const CommunitySidebar = ({
         <LinksModule links={links} />
       )}
 
-      {/* Recent Activity */}
+      {/* Recent Activity - Fix the prop name from activities to activity */}
       {recentActivity.length > 0 && (
-        <RecentActivityModule activities={recentActivity} />
+        <RecentActivityModule activity={{
+          onlineUsers: recentActivity.length, // Use array length as active authors proxy
+          todayPosts: recentActivity.filter(post => 
+            new Date(post.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+          ).length,
+          totalDiscussions: recentActivity.length
+        }} />
       )}
     </div>
   );

@@ -41,17 +41,16 @@ serve(async (req) => {
     }
 
     // Parse query parameters
-    const url = new URL(req.url);
-    const page = parseInt(url.searchParams.get('page') || '0', 10);
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 50);
-    const offset = page * limit;
+    const { page = 0, limit = 20 } = await req.json().catch(() => ({}));
+    const actualLimit = Math.min(limit, 50);
+    const offset = page * actualLimit;
 
-    console.log(`Fetching consolidated community page data: page=${page}, limit=${limit}, user=${userId}`);
+    console.log(`Fetching consolidated community page data: page=${page}, limit=${actualLimit}, user=${userId}`);
 
     // Fetch main feed posts using the optimized RPC
     const { data: posts, error: postsError } = await supabase.rpc('get_community_feed_with_details', {
       p_user_id: userId,
-      p_limit: limit,
+      p_limit: actualLimit,
       p_offset: offset,
     });
         
@@ -74,17 +73,22 @@ serve(async (req) => {
       .slice(0, 5) // Top 5 trending
       .map(post => ({
         id: post.id,
-        title: post.title,
-        reply_count: post.reply_count,
-        upvotes: post.upvotes,
-        created_at: post.created_at
+        title: post.title || 'Untitled Post',
+        content: post.content || '',
+        category: post.category || 'general',
+        reply_count: post.reply_count || 0,
+        upvotes: post.upvotes || 0,
+        created_at: post.created_at,
+        author: post.author || null,
+        flair_text: post.flair_text || undefined,
+        is_pinned: post.is_pinned || false
       }));
 
     // Fetch sidebar configuration from site settings
     const { data: sidebarSettings, error: settingsError } = await supabase
-      .from('Site_Settings')
-      .select('setting_value')
-      .eq('setting_key', 'community_sidebar_settings')
+      .from('SiteSettings')
+      .select('value')
+      .eq('key', 'community_sidebar_settings')
       .single();
 
     let sidebarConfig = {
@@ -101,9 +105,9 @@ serve(async (req) => {
       featuredPollId: null
     };
 
-    if (!settingsError && sidebarSettings?.setting_value) {
+    if (!settingsError && sidebarSettings?.value) {
       try {
-        sidebarConfig = { ...sidebarConfig, ...JSON.parse(sidebarSettings.setting_value) };
+        sidebarConfig = { ...sidebarConfig, ...JSON.parse(JSON.stringify(sidebarSettings.value)) };
       } catch (e) {
         console.warn('Failed to parse sidebar settings, using defaults');
       }
@@ -149,8 +153,8 @@ serve(async (req) => {
       posts: posts || [],
       pagination: {
         page,
-        limit,
-        hasMore: (posts || []).length === limit
+        limit: actualLimit,
+        hasMore: (posts || []).length === actualLimit
       },
       sidebarData: {
         rules: sidebarConfig.rules,

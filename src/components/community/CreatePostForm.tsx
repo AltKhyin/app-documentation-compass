@@ -134,7 +134,7 @@ export const CreatePostForm = () => {
               )}
             />
 
-            {/* Rich Text Content Field */}
+            {/* Rich Text Content Field - Remove className prop */}
             <FormField
               control={form.control}
               name="content"
@@ -156,7 +156,6 @@ export const CreatePostForm = () => {
                       content={field.value}
                       onChange={field.onChange}
                       placeholder="Escreva o conteúdo da sua discussão aqui..."
-                      className="min-h-[300px]"
                     />
                   </FormControl>
                   <FormMessage />
