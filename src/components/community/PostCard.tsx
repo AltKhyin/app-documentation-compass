@@ -13,12 +13,7 @@ import { MessageCircle, Pin, Lock } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface PostCardProps {
-  post: CommunityPost & {
-    is_pinned?: boolean;
-    is_locked?: boolean;
-    flair_text?: string;
-    flair_color?: string;
-  };
+  post: CommunityPost;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {

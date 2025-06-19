@@ -9,6 +9,51 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      CommunityModerationActions: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          moderator_id: string | null
+          post_id: number | null
+          reason: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          moderator_id?: string | null
+          post_id?: number | null
+          reason?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          moderator_id?: string | null
+          post_id?: number | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "CommunityModerationActions_moderator_id_fkey"
+            columns: ["moderator_id"]
+            isOneToOne: false
+            referencedRelation: "Practitioners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "CommunityModerationActions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "CommunityPosts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       CommunityPost_Votes: {
         Row: {
           created_at: string | null
@@ -55,7 +100,11 @@ export type Database = {
           content: string
           created_at: string | null
           downvotes: number | null
+          flair_color: string | null
+          flair_text: string | null
           id: number
+          is_locked: boolean | null
+          is_pinned: boolean | null
           parent_post_id: number | null
           review_id: number | null
           title: string | null
@@ -67,7 +116,11 @@ export type Database = {
           content: string
           created_at?: string | null
           downvotes?: number | null
+          flair_color?: string | null
+          flair_text?: string | null
           id?: number
+          is_locked?: boolean | null
+          is_pinned?: boolean | null
           parent_post_id?: number | null
           review_id?: number | null
           title?: string | null
@@ -79,7 +132,11 @@ export type Database = {
           content?: string
           created_at?: string | null
           downvotes?: number | null
+          flair_color?: string | null
+          flair_text?: string | null
           id?: number
+          is_locked?: boolean | null
+          is_pinned?: boolean | null
           parent_post_id?: number | null
           review_id?: number | null
           title?: string | null
@@ -108,6 +165,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      CommunityStats: {
+        Row: {
+          id: string
+          stat_key: string
+          stat_value: Json
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          stat_key: string
+          stat_value: Json
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          stat_key?: string
+          stat_value?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       Notifications: {
         Row: {
@@ -622,6 +700,10 @@ export type Database = {
       get_my_claim: {
         Args: { claim: string }
         Returns: string
+      }
+      update_community_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {
