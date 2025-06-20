@@ -3,7 +3,7 @@
 
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '../../src/integrations/supabase/client';
-import type { CommunityPageResponse } from '../../src/types/community';
+import type { CommunityPageResponse, CommunityPost, SidebarData } from '../../src/types/community';
 
 export const useCommunityPageQuery = () => {
   return useInfiniteQuery({
@@ -43,5 +43,5 @@ export const useCommunityPageQuery = () => {
   });
 };
 
-// Re-export types for backwards compatibility
-export type { CommunityPageResponse, CommunityPost, SidebarData } from '../../src/types/community';
+// Clean type re-exports for backwards compatibility
+export type { CommunityPageResponse, CommunityPost, SidebarData };

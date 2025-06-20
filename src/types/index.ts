@@ -1,269 +1,52 @@
 
-// ABOUTME: Central TypeScript type definitions for the EVIDENS application.
+// ABOUTME: Central type exports for the EVIDENS application
 
-// Core entity types matching database schema
-export interface Review {
-  id: number;
-  title: string;
-  description: string | null;
-  cover_image_url: string | null;
-  published_at: string | null;
-  view_count: number;
-  status: 'draft' | 'published' | 'archived';
-  access_level: 'public' | 'free' | 'premium'; // Fixed: aligned with documentation
-  structured_content: Record<string, any>;
-  author_id: string | null;
-  community_post_id: number | null;
-  created_at: string;
-  ReviewTags?: ReviewTag[];
-}
+// Re-export auth types
+export type { UserProfile } from './auth';
 
-// Add missing Tag interface for Acervo functionality
-export interface Tag {
-  id: number;
-  tag_name: string;
-  parent_id: number | null;
-  created_at: string;
-}
-
-// Add ReviewTag interface for the relationship
-export interface ReviewTag {
-  id: number;
-  review_id: number;
-  tag_id: number;
-  created_at: string;
-}
-
-export interface Suggestion {
-  id: number;
-  title: string;
-  description: string | null;
-  upvotes: number;
-  status: 'pending' | 'approved' | 'rejected';
-  created_at: string;
-  submitted_by: string | null;
-  Practitioners: { full_name: string } | null;
-  user_has_voted?: boolean;
-}
-
-export interface UserProfile {
+// Re-export general types
+export interface BaseEntity {
   id: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  role: 'practitioner' | 'moderator' | 'admin' | 'editor';
-  subscription_tier: 'free' | 'premium' | 'professional';
-  contribution_score: number;
-  profession_flair: string | null;
-  display_hover_card: boolean;
   created_at: string;
+  updated_at: string;
 }
 
-export interface Notification {
-  id: string;
-  practitioner_id: string;
-  content: string;
-  link: string | null;
-  is_read: boolean;
-  created_at: string;
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
 }
 
-// NEW: SavedPosts interface for bookmarking functionality
-export interface SavedPost {
-  id: string;
-  practitioner_id: string;
-  post_id: number;
-  created_at: string;
-}
-
-export interface Poll {
-  id: number;
-  question: string;
-  options: PollOption[];
-  total_votes: number;
-  expires_at: string | null;
-  is_featured: boolean;
-  created_at: string;
-}
-
-export interface PollOption {
-  id: number;
-  option_text: string;
-  vote_count: number;
-  poll_id: number;
-}
-
-export interface PollVote {
-  id: string;
-  poll_id: number;
-  option_id: number;
-  practitioner_id: string;
-  created_at: string;
-}
-
-// API Response types
-export interface ConsolidatedHomepageData {
-  layout: string[];
-  featured: Review | null;
-  recent: Review[];
-  popular: Review[];
-  recommendations: Review[];
-  suggestions: Suggestion[];
-  userProfile: UserProfile | null;
-  notificationCount: number;
-}
-
-export interface AcervoData {
-  reviews: Review[];
-  tags: string[];
-  total_count: number;
+export interface PaginationResponse<T> {
+  data: T[];
   pagination: {
     page: number;
     limit: number;
-    total_pages: number;
+    hasMore: boolean;
+    total?: number;
   };
 }
 
-// UI Component types
-export interface NavigationItem {
-  icon: React.ElementType;
-  label: string;
-  path: string;
-  mobileLabel?: string;
-  requiredRole?: UserProfile['role'];
+// API Response types
+export interface ApiResponse<T = any> {
+  data?: T;
+  error?: {
+    message: string;
+    code?: string;
+    details?: any;
+  };
+  success: boolean;
 }
 
 // Form types
-export interface LoginFormData {
-  email: string;
-  password: string;
-}
-
-export interface SignupFormData {
-  email: string;
-  password: string;
-  full_name: string;
-}
-
-export interface SuggestionFormData {
-  title: string;
-  description: string;
-}
-
-export interface CreatePostFormData {
-  title?: string;
-  content: string;
-  category: string;
-  // Enhanced multimedia post creation support
-  post_type?: 'text' | 'image' | 'video' | 'poll';
-  image_url?: string;
-  video_url?: string;
-  poll_data?: {
-    question: string;
-    options: string[];
-    expires_at?: string;
-  };
-}
-
-// API Error types
-export interface APIError {
+export interface FormFieldError {
+  field: string;
   message: string;
-  code?: string;
-  details?: Record<string, any>;
 }
 
-export interface StandardizedAPIError {
-  error: {
-    message: string;
-    code: string;
-  };
+export interface FormValidationResult {
+  isValid: boolean;
+  errors: FormFieldError[];
 }
 
-// Auth types
-export interface AuthSession {
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
-  token_type: string;
-  user: {
-    id: string;
-    email: string;
-    app_metadata: {
-      role: UserProfile['role'];
-      subscription_tier: UserProfile['subscription_tier'];
-    };
-  };
-}
-
-// Editor types (for future implementation)
-export interface EditorState {
-  currentReview: Review | null;
-  selectedElements: string[];
-  canvasState: Record<string, any>;
-  undoStack: any[];
-  redoStack: any[];
-}
-
-export interface CanvasElement {
-  id: string;
-  type: 'text' | 'image' | 'chart' | 'reference';
-  position: { x: number; y: number };
-  size: { width: number; height: number };
-  properties: Record<string, any>;
-}
-
-// Rate limiting types
-export interface RateLimitResponse {
-  allowed: boolean;
-  remaining?: number;
-  resetTime?: number;
-}
-
-// Moderation types
-export interface ModerationAction {
-  id: string;
-  post_id: number;
-  moderator_id: string;
-  action_type: 'pin' | 'unpin' | 'lock' | 'unlock' | 'flair' | 'hide';
-  reason: string | null;
-  metadata: Record<string, any>;
-  created_at: string;
-}
-
-// Community activity metrics interface to match backend data structure
-export interface ActivityMetrics {
-  active_authors_24h: number;
-  today_posts: number;
-  total_discussions: number;
-}
-
-// NEW: Save post mutation types
-export interface SavePostMutationData {
-  post_id: number;
-  is_saved?: boolean;
-}
-
-export interface SavePostResponse {
-  success: boolean;
-  is_saved: boolean;
-  message?: string;
-}
-
-// NEW: Multimedia upload types
-export interface MediaUploadData {
-  file: File;
-  upload_type: 'image' | 'video';
-}
-
-export interface MediaUploadResponse {
-  success: boolean;
-  url: string;
-  file_name: string;
-  file_size: number;
-}
-
-// Community types - Import from dedicated community types file
-export type {
-  CommunityPost,
-  SidebarData,
-  CommunityPageResponse
-} from './community';
+// NOTE: CommunityPost and related community types are exported from src/types/community.ts
+// This resolves the duplicate export conflict identified in the audit
