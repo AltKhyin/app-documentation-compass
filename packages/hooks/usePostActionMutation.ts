@@ -1,19 +1,15 @@
 
-// ABOUTME: TanStack Query mutation hook for performing moderation actions on community posts.
+// ABOUTME: TanStack Query mutation hook for performing moderation actions on community posts - improved type safety.
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../src/integrations/supabase/client';
 import { toast } from 'sonner';
+import type { PostActionParams, ModerationAction } from '../../src/types/community';
+import type { ApiResponse } from '../../src/types/api';
 
-interface PostActionParams {
-  postId: number;
-  action: 'pin' | 'unpin' | 'lock' | 'unlock' | 'hide' | 'delete';
-}
-
-const executePostAction = async ({ postId, action }: PostActionParams) => {
+const executePostAction = async ({ postId, action }: PostActionParams): Promise<ApiResponse> => {
   console.log('Executing post action:', { postId, action });
   
-  // TASK 2.1: Fix payload property names to match backend expectation
   const { data, error } = await supabase.functions.invoke('moderate-community-post', {
     body: { 
       post_id: postId, 
@@ -32,7 +28,7 @@ const executePostAction = async ({ postId, action }: PostActionParams) => {
   }
 
   console.log('Post action executed successfully');
-  return data;
+  return data as ApiResponse;
 };
 
 export const usePostActionMutation = () => {
@@ -42,10 +38,10 @@ export const usePostActionMutation = () => {
     mutationFn: executePostAction,
     onSuccess: (data, variables) => {
       // Invalidate community feed to show updated post status
-      queryClient.invalidateQueries({ queryKey: ['community-feed'] });
+      queryClient.invalidateQueries({ queryKey: ['community-page-data'] });
       
-      // Show success toast
-      const actionLabels = {
+      // Show success toast with proper typing
+      const actionLabels: Record<ModerationAction, string> = {
         pin: 'fixado',
         unpin: 'desfixado',
         lock: 'bloqueado',
@@ -56,7 +52,7 @@ export const usePostActionMutation = () => {
       
       toast.success(`Post ${actionLabels[variables.action]} com sucesso`);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('Post action mutation error:', error);
       toast.error(error.message || 'Erro ao executar ação');
     },

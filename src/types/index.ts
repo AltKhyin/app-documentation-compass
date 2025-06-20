@@ -1,52 +1,36 @@
 
-// ABOUTME: Central type exports for the EVIDENS application
+// ABOUTME: Central type exports for the EVIDENS application - optimized and consolidated
 
 // Re-export auth types
 export type { UserProfile } from './auth';
 
-// Re-export general types
+// Re-export API types - new consolidated API types
+export type { 
+  ApiResponse, 
+  ApiError, 
+  FormFieldError, 
+  FormValidationResult,
+  PaginationParams,
+  PaginationResponse,
+  HttpMethod,
+  QueryParams
+} from './api';
+
+// Base entity interface for database entities
 export interface BaseEntity {
   id: string;
   created_at: string;
   updated_at: string;
 }
 
-export interface PaginationParams {
-  page?: number;
-  limit?: number;
-}
+// Utility types for better type safety
+export type Maybe<T> = T | null | undefined;
+export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+export type RequiredFields<T, K extends keyof T> = T & Required<Pick<T, K>>;
 
-export interface PaginationResponse<T> {
-  data: T[];
-  pagination: {
-    page: number;
-    limit: number;
-    hasMore: boolean;
-    total?: number;
-  };
-}
+// Status and state enums for consistency
+export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
+export type ThemeMode = 'light' | 'dark' | 'system';
 
-// API Response types
-export interface ApiResponse<T = any> {
-  data?: T;
-  error?: {
-    message: string;
-    code?: string;
-    details?: any;
-  };
-  success: boolean;
-}
-
-// Form types
-export interface FormFieldError {
-  field: string;
-  message: string;
-}
-
-export interface FormValidationResult {
-  isValid: boolean;
-  errors: FormFieldError[];
-}
-
-// NOTE: CommunityPost and related community types are exported from src/types/community.ts
-// This resolves the duplicate export conflict identified in the audit
+// NOTE: Community types are exported from src/types/community.ts
+// This maintains clean separation of concerns and prevents circular dependencies

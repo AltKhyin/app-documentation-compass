@@ -1,14 +1,15 @@
 
-// ABOUTME: Hook for fetching individual community post details with comments and interactions.
+// ABOUTME: Hook for fetching individual community post details with comments and interactions - improved type safety.
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../src/integrations/supabase/client';
 import type { CommunityPost } from '../../src/types/community';
+import type { ApiResponse } from '../../src/types/api';
 
 export const usePostDetailQuery = (postId: number) => {
   return useQuery({
     queryKey: ['community-post-detail', postId],
-    queryFn: async () => {
+    queryFn: async (): Promise<CommunityPost> => {
       console.log('Fetching post detail for ID:', postId);
       
       const { data, error } = await supabase.functions.invoke('get-community-post-detail', {
@@ -24,6 +25,6 @@ export const usePostDetailQuery = (postId: number) => {
       return data as CommunityPost;
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
-    enabled: !!postId && !isNaN(postId),
+    enabled: !!postId && !isNaN(postId) && postId > 0,
   });
 };

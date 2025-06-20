@@ -1,5 +1,5 @@
 
-// ABOUTME: Main community sidebar component that orchestrates all sidebar modules per Blueprint 06.
+// ABOUTME: Main community sidebar component that orchestrates all sidebar modules per Blueprint 06 - improved type safety.
 
 import React from 'react';
 import { RulesModule } from './sidebar/RulesModule';
@@ -7,14 +7,14 @@ import { LinksModule } from './sidebar/LinksModule';
 import { TrendingDiscussionsModule } from './sidebar/TrendingDiscussionsModule';
 import { FeaturedPollModule } from './sidebar/FeaturedPollModule';
 import { RecentActivityModule } from './sidebar/RecentActivityModule';
-import type { CommunityPageResponse } from '../../../packages/hooks/useCommunityPageQuery';
+import type { SidebarData } from '../../types/community';
 
 interface CommunitySidebarProps {
-  rules: string[];
-  links: Array<{ title: string; url: string }>;
-  trendingDiscussions: CommunityPageResponse['sidebarData']['trendingDiscussions'];
-  featuredPoll?: any;
-  recentActivity: CommunityPageResponse['sidebarData']['recentActivity'];
+  rules: SidebarData['rules'];
+  links: SidebarData['links'];
+  trendingDiscussions: SidebarData['trendingDiscussions'];
+  featuredPoll?: SidebarData['featuredPoll'];
+  recentActivity: SidebarData['recentActivity'];
 }
 
 export const CommunitySidebar = ({

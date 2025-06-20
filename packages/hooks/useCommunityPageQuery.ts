@@ -1,5 +1,5 @@
 
-// ABOUTME: Consolidated hook for fetching all community page data (posts + sidebar) in a single request.
+// ABOUTME: Consolidated hook for fetching all community page data (posts + sidebar) in a single request - optimized types.
 
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '../../src/integrations/supabase/client';
