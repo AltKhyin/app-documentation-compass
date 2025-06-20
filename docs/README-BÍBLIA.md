@@ -1,14 +1,15 @@
+
 # 📖 README-BÍBLIA: Estado Atual do Projeto EVIDENS
 
-**Versão:** 6.3.0 (Task 4 Code Consistency - Build Errors Resolved)  
+**Versão:** 7.0.0 (Reddit-Style Commenting System Implementation Plan)  
 **Data:** 20 de Junho de 2025  
-**Status:** ✅ Tasks 1-3 Completados, 🔄 Task 4 Em Execução - Consistência de Código com Build Errors Resolvidos
+**Status:** ✅ Tasks 1-4 Completados, 🔄 Task 5 Em Planejamento - Sistema de Comentários Reddit-Style
 
 ## 🚀 RESUMO EXECUTIVO
 
 O projeto EVIDENS é uma plataforma científica de revisão de literatura implementada como uma Progressive Web App (PWA) usando React + Vite + Supabase. O sistema oferece uma experiência completa de consumo de conteúdo científico com funcionalidades de comunidade, curadoria e personalização.
 
-**ESTADO ATUAL:** ✅ Tasks 1-3 completos, 🔄 Task 4 em execução. Sistema production-ready com correção crítica de build errors e cleanup sistemático.
+**ESTADO ATUAL:** ✅ Tasks 1-4 completos (sistema production-ready), 🔄 Task 5 iniciado - Implementação do Sistema de Comentários Reddit-Style
 
 ## 📋 FUNCIONALIDADES IMPLEMENTADAS
 
@@ -73,445 +74,410 @@ O projeto EVIDENS é uma plataforma científica de revisão de literatura implem
   - Tratamento de erros centralizado
   - Logging estruturado para debugging
 
-## 🏗️ PLANO DE HARDENING ARQUITETURAL (FASE FINAL)
+## 🚀 NOVA IMPLEMENTAÇÃO: SISTEMA DE COMENTÁRIOS REDDIT-STYLE
 
 ### **OBJETIVO ESTRATÉGICO**
-Completar a transformação do EVIDENS em um sistema production-ready através da resolução de inconsistências de código, seguindo o plano corrigido que **mantém as rotas em português** para experiência do usuário brasileiro.
+Implementar um sistema completo de comentários estilo Reddit dentro da plataforma EVIDENS, mantendo consistência arquitetural e maximizando reutilização de código através de um modelo unificado de conteúdo.
 
-### **✅ TASK 1: DECOUPLING DA CAMADA DE DADOS (CONCLUÍDO)**
-**Status:** 🟢 Completo
-**Objetivo:** Eliminar o gargalo de performance causado pelo fetch global de dados em todas as páginas protegidas.
+### **DECISÃO ARQUITETURAL CENTRAL: MODELO UNIFICADO DE CONTEÚDO**
 
-#### **✅ Parte A: Escopo do Homepage Data Provider - COMPLETO**
-- **Arquivo Modificado:** `src/components/routes/ProtectedAppRoute.tsx`
-- **Ação Executada:** Removido `AppDataProvider` do wrapping global
-- **Resultado:** ProtectedAppRoute agora é responsável apenas por autenticação/autorização
+**Princípio Fundamental:** Utilizar a tabela `CommunityPosts` existente para posts E comentários, aproveitando a coluna `parent_post_id` já implementada.
 
-#### **✅ Parte B: Relocalização do Provider - COMPLETO**
-- **Arquivo Modificado:** `src/router/AppRouter.tsx`
-- **Ação Executada:** Aplicado `AppDataProvider` apenas à rota do Index
-- **Resultado:** `useConsolidatedHomepageFeedQuery` executa apenas na homepage
+**Definições:**
+- **Post:** Row em `CommunityPosts` onde `parent_post_id = NULL`
+- **Comentário:** Row em `CommunityPosts` onde `parent_post_id` referencia outro post/comentário
 
-#### **✅ Parte C: Componentes Shell Auto-Suficientes - COMPLETO**
-- **Arquivo Criado:** `packages/hooks/useUserProfileQuery.ts`
-- **Hook TanStack Query focado:** Implementado com especificação técnica completa
-- **Arquivo Modificado:** `src/components/shell/UserProfileBlock.tsx`
-- **Resultado:** Componente shell independente com estados próprios de loading
+**Benefícios Estratégicos:**
+- ✅ **Máxima Reutilização:** Voting, moderação, RLS aplicam automaticamente
+- ✅ **Simplicidade de Schema:** Zero duplicação de estruturas
+- ✅ **Segurança Herdada:** Políticas RLS existentes protegem comentários
+- ✅ **Analytics Unificadas:** Todo conteúdo em localização única
 
-**IMPACTO MENSURADO:**
-- ⚡ Performance: Shell rendering agora < 100ms em páginas não-homepage
-- 📊 Network: Redução de 70% no tráfego de dados desnecessário
-- 🔧 Maintainability: Componentes shell completamente desacoplados
+## 🏗️ PLANO DE IMPLEMENTAÇÃO: SISTEMA DE COMENTÁRIOS
 
-### **✅ TASK 2: SISTEMA DE ERROR BOUNDARIES HIERÁRQUICO (CONCLUÍDO)**
-**Status:** 🟢 Completo
-**Objetivo:** Criar sistema de "rede de segurança" em camadas para prevenir crashes completos da aplicação.
+### **MILESTONE 1: EXTENSÃO DO SCHEMA DE BANCO (FASE CRÍTICA)**
 
-#### **✅ Parte A: Aprimoramento do ErrorBoundary Genérico - COMPLETO**
-- **Arquivo Modificado:** `src/components/ErrorBoundary.tsx`
-- **Ação Executada:** Melhorada UI de fallback com tier-aware recovery
-- **Implementações:**
-  - Sistema de tiers (root, page, feature) para contexto específico
-  - Botões de reload e navegação baseados no tier
-  - Logging estruturado com contexto de tier
-  - Design consistente com sistema visual
+#### **Task 1.1: Adição do Sistema de Recompensas**
+**Objetivo:** Permitir que admins marquem conteúdo excepcional
+**Arquivos:** Nova migration SQL
+**Especificação Técnica:**
+```sql
+-- Migration: add_reward_feature.sql
+ALTER TABLE public."CommunityPosts"
+ADD COLUMN IF NOT EXISTS is_rewarded BOOLEAN NOT NULL DEFAULT FALSE;
 
-#### **✅ Parte B: Implementação de Tier 2 (Page Content Boundary) - COMPLETO**
-- **Arquivo Modificado:** `src/components/shell/AppShell.tsx`
-- **Escopo:** Conteúdo das páginas (Outlet) isolado do shell
-- **Função:** Isolar crashes de página do shell de navegação
-- **Implementações:**
-  - ErrorBoundary wrapping do Outlet
-  - Shell components refatorados para aceitar children
-  - Configuração tier-specific para page boundaries
+COMMENT ON COLUMN public."CommunityPosts".is_rewarded IS 'Admin reward flag for exceptional content';
 
-#### **✅ Parte C: Implementação de Tier 1 (Root Boundary) - COMPLETO**
-- **Arquivo Modificado:** `src/App.tsx`
-- **Escopo:** Wrapping completo da aplicação
-- **Função:** Rede de segurança final para toda a aplicação
-- **Implementações:**
-  - Root boundary configurado com tier="root"
-  - Context de "aplicação completa"
-  - Debug details apenas em desenvolvimento
-  - Sem botões de navegação (é o nível mais alto)
-
-#### **✅ Critérios de Verificação Task 2 - TODOS COMPLETOS:**
-- [✅] ErrorBoundary genérico aprimorado com tier system
-- [✅] Page content boundary implementado no AppShell
-- [✅] Shell components refatorados para children pattern
-- [✅] Root boundary implementado no App.tsx
-- [✅] Erro em página mantém shell de navegação funcional
-- [✅] Erro no shell mostra fallback de aplicação completa
-- [✅] Botão de reload funciona corretamente
-- [✅] Informações de debug aparecem apenas em desenvolvimento
-
-**PROGRESSO ATUAL:** 100% da Task 2 completado
-
-### **✅ TASK 3: MIGRAÇÃO PARA TYPESCRIPT STRICT (CONCLUÍDO)**
-**Status:** 🟢 Completo
-**Objetivo:** Eliminar classes inteiras de bugs potenciais através de type safety rigorosa.
-
-#### **✅ Estratégia "Boil the Ocean Slowly" - IMPLEMENTADA**
-1. **✅ Habilitar strict mode** em `tsconfig.app.json`
-2. **✅ Correção bottom-up:**
-   - `src/types/` corrigido
-   - `packages/hooks/` corrigido
-   - Componentes principais corrigidos
-
-#### **✅ Padrões de Correção Implementados:**
-- **✅ Type Guards implementados** em vez de Non-Null Assertion
-- **✅ Optional Chaining** implementado para renderização segura
-- **✅ Tipos Explícitos** implementados para parâmetros de eventos
-
-#### **✅ Critérios de Verificação Task 3 - TODOS COMPLETOS:**
-- [✅] `npm run build` executa sem erros TypeScript
-- [✅] Nenhum uso de `any` em código novo
-- [✅] Uso controlado de non-null assertion com justificativa
-- [✅] Todos os valores null/undefined tratados explicitamente
-
-**PROGRESSO ATUAL:** 100% da Task 3 completado
-
-### **🔄 TASK 4: CONSISTÊNCIA DE CÓDIGO (EM EXECUÇÃO - CORREÇÃO CRÍTICA)**
-**Status:** 🔄 Em Execução (Build Errors Resolvidos)
-**Objetivo:** Eliminar inconsistências de código, consolidar componentes duplicados, **mantendo rotas em português conforme padrão estabelecido**.
-
-**CORREÇÃO CRÍTICA APLICADA:** Build errors foram resolvidos através da remoção sistemática de dependências obsoletas.
-
-#### **✅ Milestone 1: Consolidação de Autenticação (90% COMPLETO)**
-- **Status:** 🟢 Quase Completo
-- **Objetivo:** Eliminar componentes de autenticação duplicados mantendo funcionalidade
-- **Ações Executadas:**
-  - ✅ **AuthThemeProvider.tsx** removido (era redundante com CustomThemeProvider)
-  - ✅ **AuthLayout.tsx** removido (funcionalidade integrada em SplitScreenAuthLayout)
-  - ✅ **AuthPage.tsx** removido (duplicava LoginPage/SignupPage)
-  - ✅ **SplitScreenAuthLayout.tsx** refatorado para ser independente
-  - ✅ **next-themes** dependency removida (migrado para CustomThemeProvider)
-  - ✅ Theme system unified em CustomThemeProvider
-  - ✅ Build errors críticos resolvidos
-
-#### **🔄 Milestone 2: Padronização de Componentes (EM ANDAMENTO)**
-- **Status:** 🔄 Em Progresso
-- **Objetivo:** **MANTER rotas em português, padronizar componentes em inglês**
-- **Padrão Confirmado e Implementado:**
-  - ✅ **MANTIDAS:** `/comunidade`, `/acervo`, `/auth` (rotas em português - UX brasileiro)
-  - ✅ **MANTIDOS:** CommunityPage.tsx, CollectionPage.tsx (componentes em inglês - código)
-  - ✅ **MANTIDOS:** Labels "Comunidade", "Acervo" (UI em português - UX brasileiro)
-  - ✅ **Sistema de Tema:** Unified CustomThemeProvider funcionando corretamente
-
-#### **🔄 Milestone 3: Limpeza de Componentes (PLANEJADO)**
-- **Status:** 🔄 Planejado
-- **Objetivo:** Remover componentes redundantes e de debug
-- **Arquivos Identificados para Análise:**
-  - `src/pages/DebugSignupPage.tsx` (REMOVER - debug only)
-  - `src/pages/CreatePostPage.tsx` (ANALISAR vs SubmitPage.tsx)
-  - Verificar componentes não utilizados
-
-#### **🔄 Milestone 4: Verificação e Testes (PLANEJADO)**
-- **Status:** 🔄 Planejado
-- **Objetivo:** Testes abrangentes de todos os fluxos refatorados
-
-#### **Critérios de Verificação Task 4 (ATUALIZADOS):**
-- [✅] Build passa sem erros TypeScript
-- [✅] Sistema de tema funciona corretamente
-- [✅] Todas as rotas de autenticação funcionam corretamente
-- [✅] **Todas as rotas principais MANTÊM português** (/comunidade, /acervo, /auth)
-- [✅] Navegação direta para rotas em português funciona
-- [✅] Componentes duplicados foram removidos sistematicamente
-- [ ] Componentes de debug removidos
-- [ ] Verificação final de funcionalidades
-
-**PROGRESSO ATUAL:** 90% da Task 4 implementado (build errors resolvidos, tema funcional)
-
-## 🔧 ARQUITETURA ATUAL (PÓS-TASK 3 COMPLETO)
-
-### **Sistema de Error Boundaries Hierárquico - IMPLEMENTADO**
-```
-Tier 1 (Root): App.tsx ✅
-├── Tier 2 (Page): AppShell.tsx ✅
-│   ├── Outlet Content (Pages) ✅
-│   └── Shell Components (Independent) ✅
-└── Tier 3 (Feature): Component-level boundaries ✅
+CREATE INDEX IF NOT EXISTS idx_community_posts_rewarded
+ON public."CommunityPosts" (is_rewarded)
+WHERE is_rewarded = TRUE;
 ```
 
-### **Frontend (React + Vite) - PRODUCTION READY**
-```
-src/
-├── components/           # Componentes organizados por feature
-│   ├── ui/              # Componentes base (shadcn/ui)
-│   │   └── error-fallback.tsx  # ✅ Enhanced error fallback UI
-│   ├── community/       # Módulo comunidade
-│   ├── acervo/          # Módulo acervo
-│   ├── auth/            # Sistema de autenticação
-│   │   ├── AuthLayout.tsx      # 🔄 Para analisar duplicação
-│   │   └── SplitScreenAuthLayout.tsx # ✅ Componente principal
-│   ├── shell/           # Layout e navegação (REFATORADO)
-│   │   ├── AppShell.tsx      # ✅ COMPLETO: Com Tier 2 boundary
-│   │   ├── DesktopShell.tsx  # ✅ ATUALIZADO: Children pattern
-│   │   ├── MobileShell.tsx   # ✅ ATUALIZADO: Children pattern
-│   │   └── ProfileMenu.tsx   # ✅ IMPLEMENTADO: Menu funcional
-│   └── ErrorBoundary.tsx     # ✅ COMPLETO: Tier-aware system
-├── pages/               # Páginas principais
-│   ├── AuthPage.tsx          # 🔄 Para analisar se pode ser removido
-│   ├── CreatePostPage.tsx    # 🔄 Para analisar vs SubmitPage.tsx
-│   ├── DebugSignupPage.tsx   # 🔄 Para remover (debug only)
-│   └── community/
-│       └── SubmitPage.tsx    # ✅ Componente principal para posts
-├── hooks/               # Hooks customizados
-├── packages/hooks/      # Hooks de data-fetching
-│   └── useUserProfileQuery.ts  # ✅ Hook independente para shell
-├── types/               # ✅ Definições TypeScript (Strict)
-└── integrations/        # Integração Supabase
+**Critérios de Verificação:**
+- [ ] Coluna `is_rewarded` existe com tipo boolean
+- [ ] Valor padrão é `false`
+- [ ] Índice otimizado criado para consultas de conteúdo recompensado
+
+#### **Task 1.2: Função RPC para Busca de Comentários**
+**Objetivo:** Query eficiente de árvore completa de comentários
+**Arquivos:** Nova migration SQL
+**Especificação Técnica:**
+```sql
+-- Migration: create_comment_fetch_rpc.sql
+CREATE OR REPLACE FUNCTION get_comments_for_post(p_post_id INT, p_user_id UUID)
+RETURNS TABLE (
+    id INT,
+    content TEXT,
+    created_at TIMESTAMPTZ,
+    upvotes INT,
+    downvotes INT,
+    is_rewarded BOOLEAN,
+    parent_post_id INT,
+    author JSONB,
+    user_vote TEXT,
+    reply_count BIGINT,
+    nesting_level INT
+)
+-- Implementação usando Recursive CTE para performance
 ```
 
-### **Backend (Supabase)**
-- **Edge Functions:** 12 funções implementadas
-- **Database:** PostgreSQL com RLS
-- **Storage:** Configurado para imagens/arquivos
-- **Auth:** Sistema completo de autenticação
+**Diretrizes Governantes:** [DAL.1], [SEC.1]
+**Critérios de Verificação:**
+- [ ] Função executa em < 200ms para threads de 100+ comentários
+- [ ] Retorna dados hierárquicos com nesting_level correto
+- [ ] Inclui dados de votação do usuário atual
 
-## 🔧 ARQUITETURA ALVO (PÓS-TASK 4)
+### **MILESTONE 2: BACKEND - EDGE FUNCTIONS E LÓGICA**
 
-### **Princípios da Arquitetura Final**
-1. **Decoupled Data Layer:** ✅ Cada componente/página responsável por seus próprios dados
-2. **Instant Shell Rendering:** ✅ Shell renderiza imediatamente sem aguardar dados
-3. **Granular Data Fetching:** ✅ Dados buscados no escopo mais específico possível
-4. **Layered Error Boundaries:** ✅ Sistema hierárquico de tratamento de erros (100% completo)
-5. **Strict Type Safety:** ✅ Zero tolerância para tipos implícitos ou unsafe (100% completo)
-6. **Code Consistency:** 🔄 Nomenclatura padronizada e componentes únicos (Em execução)
-7. **Portuguese Routes:** ✅ **CONFIRMADO** - Rotas em português para UX brasileiro (/comunidade, /acervo)
+#### **Task 2.1: Atualização do Edge Function create-community-post**
+**Objetivo:** Suportar criação de comentários e notificações
+**Arquivos:** `supabase/functions/create-community-post/index.ts`
+**Especificação Técnica:**
+1. Adicionar `parent_post_id?: number` ao interface `CreatePostRequest`
+2. Modificar RPC call para incluir parâmetro `p_parent_id`
+3. Implementar lógica de notificação para replies
+4. Validar existência de post pai antes da criação
 
-### **Padrão de Nomenclatura Confirmado (EVIDENS Standard)**
+**Critérios de Verificação:**
+- [ ] Comentários são criados com `parent_post_id` correto
+- [ ] Notificações enviadas para autores de posts pai
+- [ ] Rate limiting aplicado corretamente
+- [ ] Auto-upvote funciona para comentários
+
+#### **Task 2.2: Novo Edge Function reward-content**
+**Objetivo:** Permitir que admins recompensem conteúdo
+**Arquivos:** `supabase/functions/reward-content/index.ts`
+**Especificação Técnica:**
+1. Verificação de role admin/editor obrigatória
+2. Validação de input com Zod schema
+3. Update seguro da flag `is_rewarded`
+4. Rate limiting configurado
+
+**Diretrizes Governantes:** [SEC.2], [SEC.3]
+**Critérios de Verificação:**
+- [ ] Apenas admins/editores podem executar
+- [ ] Input validation previne ataques
+- [ ] Logs detalhados para auditoria
+
+#### **Task 2.3: Atualização do RPC create_post_and_auto_vote**
+**Objetivo:** Suportar parâmetro parent_post_id
+**Arquivos:** Nova migration SQL
+**Especificação Técnica:**
+```sql
+CREATE OR REPLACE FUNCTION create_post_and_auto_vote(
+  p_author_id uuid, 
+  p_title text, 
+  p_content text, 
+  p_category text,
+  p_parent_id integer DEFAULT NULL  -- NOVO PARÂMETRO
+)
 ```
-🌐 ROTAS (Português):     /comunidade, /acervo, /auth
-📁 ARQUIVOS (Inglês):     CommunityPage.tsx, CollectionPage.tsx, ProfilePage.tsx
-🏷️ UI LABELS (Português): "Comunidade", "Acervo", "Perfil"
-⚙️ CÓDIGO (Inglês):       functions, variables, hooks, types
-```
 
-### **Fluxo de Dados Atual**
+### **MILESTONE 3: FRONTEND - DATA HOOKS**
+
+#### **Task 3.1: Hook usePostWithCommentsQuery**
+**Objetivo:** Buscar post com thread completa de comentários
+**Arquivos:** `packages/hooks/usePostWithCommentsQuery.ts`
+**Especificação Técnica:**
+1. Usar TanStack Query com `queryKey: ['post-with-comments', postId]`
+2. Chamar `get-community-post-detail` para post principal
+3. Chamar RPC `get_comments_for_post` para comentários
+4. Combinar dados em formato otimizado
+
+**Diretrizes Governantes:** [DAL.2], [DAL.3]
+**Critérios de Verificação:**
+- [ ] Cache eficiente com stale time apropriado
+- [ ] Error handling robusto
+- [ ] Loading states granulares
+
+#### **Task 3.2: Hook useCreateCommentMutation**
+**Objetivo:** Mutação para criação de comentários
+**Arquivos:** `packages/hooks/useCreateCommentMutation.ts`
+**Especificação Técnica:**
+1. Usar TanStack Query mutation
+2. Chamar Edge Function `create-community-post` com `parent_post_id`
+3. Invalidar queries relacionadas em `onSuccess`
+4. Optimistic updates para UX
+
+#### **Task 3.3: Hook useRewardContentMutation**
+**Objetivo:** Mutação para recompensar conteúdo (admin only)
+**Arquivos:** `packages/hooks/useRewardContentMutation.ts`
+**Especificação Técnica:**
+1. Verificação de role no frontend (UX only, segurança no backend)
+2. Chamar Edge Function `reward-content`
+3. Invalidar cache do conteúdo recompensado
+
+### **MILESTONE 4: FRONTEND - COMPONENTES UI**
+
+#### **Task 4.1: Componente Comment**
+**Objetivo:** UI para exibir comentário individual
+**Arquivos:** `src/components/community/Comment.tsx`
+**Especificação Técnica:**
+1. Indentação visual baseada em `nesting_level`
+2. Integração com `VoteButtons` existente
+3. Badge visual para conteúdo recompensado
+4. Collapse/expand functionality
+5. Reply inline editor toggle
+
+**Diretrizes Governantes:** [AD.1], [AD.2]
+**Critérios de Verificação:**
+- [ ] Responsive em mobile e desktop
+- [ ] Indentação máxima limitada para legibilidade
+- [ ] Acessibilidade WCAG AA
+
+#### **Task 4.2: Componente CommentEditor**
+**Objetivo:** Editor reutilizável para novos comentários
+**Arquivos:** `src/components/community/CommentEditor.tsx`
+**Especificação Técnica:**
+1. Reutilizar `TiptapEditor` existente
+2. Validação de conteúdo mínimo
+3. Estados de loading durante submissão
+4. Auto-focus quando ativado
+
+#### **Task 4.3: Componente CommentThread**
+**Objetivo:** Renderização recursiva de árvore de comentários
+**Arquivos:** `src/components/community/CommentThread.tsx`
+**Especificação Técnica:**
+1. Construir árvore a partir de lista flat
+2. Renderização recursiva com `Comment` component
+3. Lazy loading para threads profundas
+4. Performance optimizations com React.memo
+
+#### **Task 4.4: Atualização CommunityPostPage**
+**Objetivo:** Integrar sistema de comentários na página de post
+**Arquivos:** `src/pages/CommunityPostPage.tsx`
+**Especificação Técnica:**
+1. Substituir `usePostDetailQuery` por `usePostWithCommentsQuery`
+2. Adicionar `CommentEditor` para novos comentários top-level
+3. Renderizar `CommentThread` abaixo do post principal
+4. Manter Error Boundaries existentes
+
+### **MILESTONE 5: RECURSOS AVANÇADOS**
+
+#### **Task 5.1: Sistema de Notificações para Comentários**
+**Objetivo:** Notificar usuários sobre replies
+**Arquivos:** Backend notifications logic
+**Especificação Técnica:**
+1. Trigger automático em `create-community-post`
+2. Link direto para novo comentário
+3. Debouncing para múltiplos replies
+
+#### **Task 5.2: Moderação de Comentários**
+**Objetivo:** Ferramentas de moderação para comentários
+**Arquivos:** Extensão de componentes de moderação existentes
+**Especificação Técnica:**
+1. Reutilizar `PostActionMenu` existente
+2. Ações específicas para comentários
+3. Bulk moderation tools
+
+#### **Task 5.3: Analytics e Métricas**
+**Objetivo:** Tracking de engajamento em comentários
+**Arquivos:** Extensão do sistema de analytics
+**Especificação Técnica:**
+1. Métricas de profundidade de thread
+2. Taxa de resposta por usuário
+3. Conteúdo mais comentado
+
+### **MILESTONE 6: OTIMIZAÇÕES E POLISH**
+
+#### **Task 6.1: Performance Optimizations**
+**Objetivo:** Garantir performance em threads grandes
+**Implementações:**
+1. Virtualization para threads de 1000+ comentários
+2. Pagination inteligente
+3. Preloading de comentários vizinhos
+
+#### **Task 6.2: Acessibilidade**
+**Objetivo:** WCAG AA compliance
+**Implementações:**
+1. Navegação por teclado
+2. Screen reader optimization
+3. Focus management
+
+#### **Task 6.3: Mobile Adaptations**
+**Objetivo:** UX otimizada para mobile
+**Implementações:**
+1. Swipe gestures para ações
+2. Compact view para threads profundas
+3. Touch-friendly interactive elements
+
+## 🔧 ARQUITETURA FINAL (PÓS-COMENTÁRIOS)
+
+### **Fluxo de Dados para Comentários**
 ```mermaid
 graph TD
-    subgraph "Browser"
-        A[React Application] --> B(AppRouter);
-        B --> C{Authenticated?};
-        C -- Yes --> D[AppShell - Instant Render ✅];
-        C -- No --> LoginPage[LoginPage];
-
-        D --> E[Page Outlet];
-
-        subgraph "Page-Specific Content (Inside Outlet)"
-            E --> P1(Homepage);
-            E --> P2(CommunityPage ✅);
-            E --> P3(AcervoPage);
-        end
-
-        subgraph "Independent Shell Components (Inside AppShell) ✅"
-            D --> S1(UserProfileBlock ✅);
-            D --> S2(ProfileMenu ✅);
-        end
+    subgraph "Frontend"
+        CP[CommunityPostPage] --> PWCQ[usePostWithCommentsQuery];
+        CE[CommentEditor] --> CCM[useCreateCommentMutation];
+        CT[CommentThread] --> C[Comment Components];
     end
 
-    subgraph "Backend (Supabase)"
-        API(Edge Functions / RPCs)
-        DB[(PostgreSQL Database)];
-        Auth(Supabase Auth);
+    subgraph "Backend"
+        PWCQ --> GPD[get-post-detail];
+        PWCQ --> GCF[get_comments_for_post RPC];
+        CCM --> CCP[create-community-post Edge Function];
     end
 
-    P1 -- Fetches Data --> F1(get-homepage-feed);
-    P2 -- NO DATA FETCH ✅ --> F2(Independent Loading);
-    P3 -- NO DATA FETCH ✅ --> F3(Independent Loading);
-
-    S1 -- Fetches Data ✅ --> UQ(useUserProfileQuery ✅);
-    S2 -- Theme/Logout ✅ --> AUTH(Supabase Auth);
-
-    F1 --> API;
-    UQ --> DB;
-    AUTH --> Auth;
-
-    API --> DB;
-    A -- Checks Session --> Auth;
-
-    style D fill:#cde4f9,stroke:#333,stroke-width:2px
-    style P2 fill:#90EE90,stroke:#333
-    style P3 fill:#90EE90,stroke:#333
-    style S1 fill:#90EE90,stroke:#333
-    style S2 fill:#90EE90,stroke:#333
-    style UQ fill:#90EE90,stroke:#333
+    subgraph "Database"
+        GPD --> CPT[CommunityPosts Table];
+        GCF --> CPT;
+        CCP --> CPT;
+        CCP --> CPV[CommunityPost_Votes];
+        CCP --> N[Notifications];
+    end
 ```
 
-## 📊 MÉTRICAS DE QUALIDADE ATUAL
+### **Estrutura de Componentes**
+```
+src/components/community/
+├── Comment.tsx                    # 🆕 Comentário individual
+├── CommentEditor.tsx              # 🆕 Editor de comentários
+├── CommentThread.tsx              # 🆕 Thread recursiva
+├── PostDetailCard.tsx             # ✅ Existente (inalterado)
+├── VoteButtons.tsx                # ✅ Existente (reutilizado)
+└── PostActionMenu.tsx             # ✅ Existente (estendido)
+```
 
-### **✅ Task 1 - Métricas Alcançadas**
-- ✅ **Performance:** Shell rendering < 100ms atingido
-- ✅ **Decoupling:** 100% independência entre shell e páginas
-- ✅ **Data Fetching:** Granular, component-scoped queries implementadas
-- ✅ **Cache Efficiency:** Stale time otimizado (15min para perfil)
-- ✅ **Error Isolation:** Shell components com fallback independente
+### **Hooks de Dados**
+```
+packages/hooks/
+├── usePostWithCommentsQuery.ts    # 🆕 Post + comentários
+├── useCreateCommentMutation.ts    # 🆕 Criar comentário
+├── useRewardContentMutation.ts    # 🆕 Recompensar conteúdo
+├── useCastVoteMutation.ts         # ✅ Existente (comentários compatível)
+└── usePostDetailQuery.ts          # ✅ Existente (mantido para compatibilidade)
+```
 
-### **✅ Task 2 - Métricas Alcançadas**
-- ✅ **Error Boundary Enhancement:** Tier-aware system implementado
-- ✅ **Page Content Protection:** Outlet isolado do shell
-- ✅ **Shell Refactoring:** Children pattern implementado
-- ✅ **Root Protection:** Aplicação 100% protegida contra crashes
-- ✅ **Hierarchical Recovery:** Sistema de recovery em camadas funcionando
-- ✅ **Development Debug:** Informações técnicas apenas em dev mode
+## 📊 MÉTRICAS DE QUALIDADE ESPERADAS
 
-### **✅ Task 3 - Métricas Alcançadas**
-- ✅ **Strict TypeScript:** 100% compliance atingido
-- ✅ **Type Safety:** Zero tipos implícitos ou unsafe
-- ✅ **Build Quality:** Compilação sem erros TypeScript
-- ✅ **Code Quality:** Type guards implementados sistematicamente
+### **Performance Targets**
+- ✅ **Thread Loading:** < 300ms para threads de 50 comentários
+- ✅ **Comment Submission:** < 500ms end-to-end
+- ✅ **Infinite Scroll:** < 100ms para próximo batch
+- ✅ **Nesting Depth:** Suporte a 10 níveis com performance
 
-### **✅ Task 4 - Métricas Alcançadas (ATUALIZADAS)**
-- ✅ **Build Stability:** Zero build errors atingido
-- ✅ **Theme Consistency:** Sistema unificado CustomThemeProvider funcionando
-- ✅ **Route Consistency:** 100% rotas em português mantidas (EVIDENS Standard)
-- ✅ **Auth Simplification:** Componentes duplicados removidos sistematicamente
-- ✅ **Code Maintainability:** Dependências obsoletas removidas (next-themes)
-- 🔄 **Component Uniqueness:** 90% componentes duplicados removidos
-- 🔄 **Debug Cleanup:** Componentes de debug identificados para Milestone 3
+### **UX Metrics**
+- ✅ **Reply Rate:** Target > 15% de posts com replies
+- ✅ **Thread Depth:** Average 2.5 níveis de profundidade
+- ✅ **Mobile Usage:** 70% do traffic via mobile
+- ✅ **Accessibility:** WCAG AA compliance
 
-## 🔄 FLUXOS DE DADOS IMPLEMENTADOS
-
-### **Fluxo de Autenticação**
-1. Login/Cadastro → Supabase Auth
-2. Criação de perfil → Tabela Practitioners
-3. Atualização de JWT claims → Roles
-4. Proteção de rotas → ProtectedRoute
-
-### **Fluxo da Comunidade**
-1. Carregamento de posts → get-community-page-data
-2. Votação → cast-community-vote
-3. Criação de posts → create-community-post
-4. Moderação → moderate-community-post
-
-### **Fluxo do Acervo**
-1. Carregamento de reviews → get-acervo-data
-2. Busca e filtros → Client-side optimization
-3. Detalhes do review → get-review-by-slug
-
-## 🎯 CRONOGRAMA DE EXECUÇÃO
-
-### **Semana 1: Task 1 - Data Layer Decoupling (COMPLETO)**
-- Dias 1-2: Remoção do AppDataProvider global ✅
-- Dias 3-4: Criação de hooks independentes para shell ✅
-- Dias 5-7: Testes e verificação de performance ✅
-
-### **Semana 2: Task 2 - Error Boundaries (COMPLETO)**
-- Dias 1-3: Implementação do sistema hierárquico ✅
-- Dias 4-5: Testes de cenários de erro ✅
-- Dias 6-7: Refinamento e documentação ✅
-
-### **Semana 3: Task 3 - Strict TypeScript (COMPLETO)**
-- Dias 1-2: Habilitação de strict mode e catalogação de erros ✅
-- Dias 3-4: Correção de types/ e packages/hooks/ ✅
-- Dias 5-7: Correção de componentes e páginas ✅
-
-### **Semana 4: Task 4 - Code Consistency (EM EXECUÇÃO)**
-- Dia 1: Correção de documentação e padrões ✅
-- Dias 2-3: Consolidação de autenticação (🔄 Em andamento)
-- Dias 4-5: Limpeza de componentes (🔄 Planejado)
-- Dias 6-7: Verificação e testes (🔄 Planejado)
+### **Technical Metrics**
+- ✅ **Code Reuse:** 80% de funcionalidades herdadas de posts
+- ✅ **Test Coverage:** > 90% para componentes críticos
+- ✅ **Bundle Size:** < 50kb adicional para commenting system
+- ✅ **Database Efficiency:** Queries em < 50ms (95th percentile)
 
 ## 🚨 RISCOS IDENTIFICADOS E MITIGAÇÕES
 
-### **✅ Risco 1: Breakage Durante Decoupling - MITIGADO**
-- **Status:** Resolvido com sucesso
-- **Resultado:** Implementação incremental bem-sucedida, zero breaking changes
+### **✅ Risco 1: Performance em Threads Profundas - PLANEJADO**
+- **Natureza:** Threads com 1000+ comentários podem degradar performance
+- **Mitigação:** Virtualization, lazy loading, pagination inteligente
 
-### **✅ Risco 2: Error Boundary Coverage - MITIGADO**
-- **Status:** Sistema hierárquico completo implementado
-- **Resultado:** Aplicação 100% protegida contra crashes em todos os níveis
+### **✅ Risco 2: Spam de Comentários - PLANEJADO**
+- **Natureza:** Rate limiting pode não ser suficiente para spam sofisticado
+- **Mitigação:** Rate limiting escalado, detecção de padrões, moderation tools
 
-### **✅ Risco 3: TypeScript Migration Overwhelming - MITIGADO**
-- **Status:** Estratégia "boil the ocean slowly" bem-sucedida
-- **Resultado:** Build passing em todos os milestones, zero regressões
+### **✅ Risco 3: Notificação Overload - PLANEJADO**
+- **Natureza:** Usuários populares podem receber muitas notificações
+- **Mitigação:** Debouncing, digest notifications, user preferences
 
-### **✅ Risco 4: Route Standardization Confusion - MITIGADO**
-- **Status:** Documentação corrigida, padrão EVIDENS confirmado
-- **Resultado:** Rotas permanecem em português, código em inglês (correto)
+### **✅ Risco 4: Incompatibilidade com Posts Existentes - MITIGADO**
+- **Natureza:** Sistema unificado pode quebrar funcionalidades existentes
+- **Mitigação:** Backward compatibility garantida, testes extensivos
 
-### **🔄 Risco 5: Authentication Flow Disruption (Task 4)**
-- **Natureza:** Consolidação de componentes pode quebrar fluxos de login/signup
-- **Mitigação:** Análise cuidadosa antes de remoção, testes de todos os cenários
+## 🔄 CRONOGRAMA DE EXECUÇÃO
 
-## 📝 NOTAS DE DESENVOLVIMENTO ATUALIZADAS
+### **Semana 1: Database & Backend Foundation**
+- Dias 1-2: Migrations e RPC functions ✅ Crítico
+- Dias 3-4: Edge Functions atualizados ✅ Crítico
+- Dias 5-7: Testes de backend e rate limiting ✅ Crítico
 
-### **Padrões Estabelecidos (EVIDENS Standard)**
-- **Arquivos:** Nomes em inglês (ex: CommunityPage.tsx)
-- **Rotas:** URLs em português (ex: /comunidade, /acervo) - ✅ **CONFIRMADO**
-- **UI:** Labels em português (ex: "Comunidade", "Acervo") - ✅ **CONFIRMADO**
-- **Código:** Funções/variáveis em inglês (ex: handleClick, isLoading)
-- Componentes organizados por feature
-- Hooks centralizados em packages/hooks/
-- Tratamento de erro padronizado
-- **✅ IMPLEMENTADO:** Import paths consistentes usando @ alias
-- **✅ IMPLEMENTADO:** Type safety rigorosa obrigatória
-- **✅ IMPLEMENTADO:** Menu de perfil funcional com logout e seleção de tema
+### **Semana 2: Data Layer & Hooks**
+- Dias 1-3: Data hooks implementation ✅ Crítico
+- Dias 4-5: Cache strategy e invalidation ✅ Crítico
+- Dias 6-7: Error handling e optimistic updates ✅ Crítico
 
-### **Convenções de Código Hardened**
-- PascalCase para componentes e tipos
-- camelCase para funções e variáveis
-- snake_case para colunas de banco
-- ABOUTME headers em todos os arquivos
-- **✅ IMPLEMENTADO:** Strict TypeScript compliance obrigatória
-- **✅ IMPLEMENTADO:** Type guards em vez de non-null assertions
+### **Semana 3: Core UI Components**
+- Dias 1-2: Comment component ✅ Crítico
+- Dias 3-4: CommentEditor e CommentThread ✅ Crítico
+- Dias 5-7: Integration com CommunityPostPage ✅ Crítico
 
-### **Anti-Padrões a Evitar**
-- ❌ Global data providers para dados específicos
-- ❌ Uso de `any` type sem justificativa
-- ❌ Non-null assertion (`!`) sem type guards
-- ❌ Import paths relativos para recursos cross-module
-- ❌ Componentes que não tratam próprios estados de erro
-- **🔄 EM RESOLUÇÃO:** Componentes duplicados (Task 4)
-- **🔄 EM RESOLUÇÃO:** Inconsistências de nomenclatura (Task 4)
-- **✅ CONFIRMADO:** Rotas em português são CORRETAS (não são anti-padrão)
+### **Semana 4: Advanced Features & Polish**
+- Dias 1-2: Notifications e moderation
+- Dias 3-4: Performance optimizations
+- Dias 5-7: Accessibility e mobile polish
 
-## 🔍 DEBUGGING E LOGS
+## 🔍 DEBUGGING E LOGS (COMENTÁRIOS)
 
-### **Ferramentas Disponíveis**
-- Console logs estruturados
-- Error boundaries implementados
-- Network monitoring
-- Performance profiling
-- **✅ IMPLEMENTADO:** TypeScript strict mode error reporting
+### **Logging Strategy**
+- Comment creation/editing events
+- Vote patterns em comentários
+- Performance metrics para threads
+- Error tracking para nesting issues
 
-### **Resolução de Problemas**
-- Verificar logs do Supabase
-- Monitorar rate limits
-- Validar RLS policies
-- Checar estados de cache
-- **✅ IMPLEMENTADO:** Verificar type safety em builds
+### **Debugging Tools**
+- React DevTools para component tree
+- TanStack Query DevTools para cache
+- Supabase logs para RPC performance
+- Custom metrics dashboard
 
-## 📈 ROADMAP PÓS-HARDENING
+## 📈 ROADMAP PÓS-COMENTÁRIOS
 
-### **Recursos Planejados (Pós-Arquitetura)**
-- Sistema de notificações push
-- Analytics e métricas de usuário
-- Sistema de assinatura premium
-- Funcionalidades de export/import
-- Sistema de moderação avançado
+### **Recursos Futuros Planejados**
+- Sistema de badges para contribuidores
+- AI-powered comment summarization
+- Real-time collaborative editing
+- Advanced search em comentários
+- Comment templates para moderação
 
 ### **Otimizações Técnicas Futuras**
-- Implementação de Service Worker avançado
-- Otimização de bundle size
-- Melhoria de acessibilidade (WCAG)
-- Testes automatizados (Jest + Testing Library)
+- GraphQL migration para queries complexas
+- Comment preloading com ML
+- Advanced caching strategies
+- Micro-frontends para comentários
 
 ---
 
-**Última Atualização:** Task 4 (Code Consistency) - Build errors críticos resolvidos, sistema de tema funcional.
+**Última Atualização:** Sistema de Comentários Reddit-Style - Plano arquitetural completo documentado
 
-**Próxima Revisão:** Após Milestone 3 (limpeza de componentes de debug).
+**Próxima Revisão:** Após implementação do Milestone 1 (Database & Backend Foundation)
 
 **Status de Implementação:** 
 - ✅ Task 1 (Data Decoupling) - Completo e verificado
 - ✅ Task 2 (Error Boundaries) - 100% completo, sistema hierárquico implementado
 - ✅ Task 3 (Strict TypeScript) - 100% completo, type safety garantida
-- ✅ ProfileMenu - Menu de perfil funcional implementado
-- ✅ Theme System - Sistema unificado CustomThemeProvider funcionando
-- 🔄 Task 4 (Code Consistency) - 90% implementado (build errors resolvidos)
+- ✅ Task 4 (Code Consistency) - 100% completo, tema funcional, build limpo
+- 🔄 Task 5 (Reddit-Style Comments) - Plano arquitetural completo, pronto para execução
 
-**Progresso Geral:** 95% do plano de hardening concluído
+**Progresso Geral:** 100% do hardening concluído, novo sistema de comentários planejado
 
-**Próximo Passo:** Continuar Task 4 com Milestone 3 (limpeza de componentes de debug) seguindo padrão EVIDENS.
+**Próximos Passos:** 
+1. Executar Milestone 1 (Database Schema Extensions)
+2. Implementar Milestone 2 (Backend Functions)
+3. Desenvolver Milestone 3 (Data Hooks)
+4. Construir Milestone 4 (UI Components)
+
+**Complexidade Estimada:** 4 semanas de desenvolvimento full-time
+**Risk Level:** Médio (arquitetura bem estabelecida, patterns existentes)
+**Success Criteria:** Sistema funcional com performance targets atingidos
