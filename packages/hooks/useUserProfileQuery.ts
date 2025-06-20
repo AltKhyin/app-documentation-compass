@@ -1,3 +1,4 @@
+
 // ABOUTME: Focused TanStack Query hook for fetching user profile data for shell components.
 
 import { useQuery } from '@tanstack/react-query';
@@ -5,11 +6,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/store/auth';
 import type { UserProfile } from '@/types';
 
-// Focused function to fetch only the essential profile data for shell components
+// Focused function to fetch the complete profile data matching UserProfile type
 const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
   const { data, error } = await supabase
     .from('Practitioners')
-    .select('id, full_name, avatar_url, role, subscription_tier')
+    .select('*') // Select all columns to match UserProfile type completely
     .eq('id', userId)
     .single();
 

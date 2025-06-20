@@ -1,10 +1,9 @@
-
 // ABOUTME: The main sidebar navigation for desktop views with collapsible functionality.
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../ui/button';
 import NavItem from './NavItem';
-import UserProfileBlock from './UserProfileBlock';
+import { UserProfileBlock } from './UserProfileBlock'; // Fixed: Using named import
 import { navigationItems, adminNavigationItems, getVisibleNavigationItems } from '@/config/navigation';
 import { useAuthStore } from '@/store/auth';
 
