@@ -13,23 +13,25 @@ const AppShell = () => {
 
   console.log('AppShell render state:', { isMobile });
 
-  // Shell Component Factory - AppShell is now data-independent
-  const ShellComponent = isMobile ? MobileShell : DesktopShell;
-  
-  return (
-    <ShellComponent>
-      {/* Tier 2: Page Content Error Boundary - Isolates page crashes from shell */}
-      <ErrorBoundary 
-        tier="page"
-        context="conteúdo da página"
-        showDetails={false}
-        showHomeButton={true}
-        showBackButton={true}
-      >
-        <Outlet />
-      </ErrorBoundary>
-    </ShellComponent>
+  // Tier 2: Page Content Error Boundary - Isolates page crashes from shell
+  const PageContent = (
+    <ErrorBoundary 
+      tier="page"
+      context="conteúdo da página"
+      showDetails={false}
+      showHomeButton={true}
+      showBackButton={true}
+    >
+      <Outlet />
+    </ErrorBoundary>
   );
+
+  // Shell Component Factory - AppShell is now data-independent
+  if (isMobile) {
+    return <MobileShell>{PageContent}</MobileShell>;
+  }
+
+  return <DesktopShell>{PageContent}</DesktopShell>;
 };
 
 export default AppShell;

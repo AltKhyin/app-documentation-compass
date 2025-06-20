@@ -3,7 +3,7 @@ import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../ui/button';
 import NavItem from './NavItem';
-import { UserProfileBlock } from './UserProfileBlock'; // Fixed: Using named import
+import { UserProfileBlock } from './UserProfileBlock';
 import { navigationItems, adminNavigationItems, getVisibleNavigationItems } from '@/config/navigation';
 import { useAuthStore } from '@/store/auth';
 
@@ -22,7 +22,7 @@ const CollapsibleSidebar = ({ isCollapsed, onToggle }: CollapsibleSidebarProps) 
 
   return (
     <aside className={`fixed left-0 top-0 z-40 h-screen bg-background border-r border-border transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-60'} hidden md:flex flex-col`}>
-      {/* Header with logo - matching notification header height of 64px */}
+      {/* Header with logo - fixed height to match main header */}
       <div className={`flex items-center border-b border-border h-16 ${isCollapsed ? 'justify-center px-2' : 'justify-center px-4'}`}>
         {!isCollapsed ? (
           <h1 className="font-serif font-medium tracking-tight text-3xl text-foreground">
