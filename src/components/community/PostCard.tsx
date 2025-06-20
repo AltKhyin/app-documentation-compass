@@ -1,17 +1,17 @@
 
-// ABOUTME: Individual post card component for community feed display with voting, engagement metrics and mobile-first design.
+// ABOUTME: Individual post card component for community feed display with voting, metadata, and actions.
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '../ui/card';
-import { Badge } from '../ui/badge';
-import { Button } from '../ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { ArrowUp, ArrowDown, MessageCircle, Share2, Bookmark, Pin } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useIsMobile } from '../../hooks/use-mobile';
-import type { CommunityPost } from '../../../packages/hooks/useCommunityPageQuery';
+import { MessageCircle, Pin, Lock } from 'lucide-react';
+import { Card, CardContent } from '../ui/card';
+import { Badge } from '../ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { VoteButtons } from './VoteButtons';
+import { PostActionMenu } from './PostActionMenu';
+import type { CommunityPost } from '../../types/community';
 
 interface PostCardProps {
   post: CommunityPost;
@@ -19,172 +19,147 @@ interface PostCardProps {
 
 export const PostCard = ({ post }: PostCardProps) => {
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
 
   const handlePostClick = () => {
     navigate(`/comunidade/${post.id}`);
   };
 
-  const handleVote = (voteType: 'up' | 'down', e: React.MouseEvent) => {
-    e.stopPropagation();
-    // TODO: Implement voting functionality in next milestone
-    console.log(`Vote ${voteType} on post ${post.id}`);
+  const getCategoryLabel = (category: string) => {
+    const labels: Record<string, string> = {
+      'general': 'Geral',
+      'review_discussion': 'Discussão de Review',
+      'question': 'Pergunta',
+      'announcement': 'Anúncio'
+    };
+    return labels[category] || category;
   };
 
-  const netScore = (post.upvotes || 0) - (post.downvotes || 0);
+  const getFlairColor = (color?: string) => {
+    if (!color) return 'bg-gray-100 text-gray-800';
+    
+    const colorMap: Record<string, string> = {
+      'blue': 'bg-blue-100 text-blue-800',
+      'green': 'bg-green-100 text-green-800',
+      'red': 'bg-red-100 text-red-800',
+      'yellow': 'bg-yellow-100 text-yellow-800',
+      'purple': 'bg-purple-100 text-purple-800',
+    };
+    
+    return colorMap[color] || 'bg-gray-100 text-gray-800';
+  };
 
   return (
-    <Card 
-      className="cursor-pointer hover:shadow-md transition-shadow"
-      onClick={handlePostClick}
-    >
+    <Card className="hover:shadow-md transition-shadow cursor-pointer">
       <CardContent className="p-4">
         <div className="flex gap-3">
-          {/* Vote buttons - Desktop: Left side, Mobile: Integrated */}
-          {!isMobile && (
-            <div className="flex flex-col items-center gap-1 flex-shrink-0">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 hover:bg-orange-50 hover:text-orange-600"
-                onClick={(e) => handleVote('up', e)}
-              >
-                <ArrowUp className="w-4 h-4" />
-              </Button>
-              <span className="text-sm font-medium text-muted-foreground">
-                {netScore}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
-                onClick={(e) => handleVote('down', e)}
-              >
-                <ArrowDown className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
+          {/* Vote buttons */}
+          <div className="flex-shrink-0">
+            <VoteButtons
+              postId={post.id}
+              upvotes={post.upvotes}
+              downvotes={post.downvotes}
+              userVote={post.user_vote}
+            />
+          </div>
 
           {/* Main content */}
-          <div className="flex-1 min-w-0">
-            {/* Header with author and metadata */}
-            <div className="flex items-center gap-2 mb-2">
-              <Avatar className="w-6 h-6">
-                <AvatarImage src={post.author?.avatar_url || ''} />
-                <AvatarFallback className="text-xs">
-                  {post.author?.full_name?.charAt(0) || 'U'}
-                </AvatarFallback>
-              </Avatar>
-              
-              <span className="text-sm text-muted-foreground">
-                {post.author?.full_name || 'Usuário'}
-              </span>
-              
-              <span className="text-sm text-muted-foreground">•</span>
-              
-              <span className="text-sm text-muted-foreground">
-                {formatDistanceToNow(new Date(post.created_at), {
-                  addSuffix: true,
-                  locale: ptBR
-                })}
-              </span>
-
-              {/* Post status badges */}
-              {post.is_pinned && (
-                <Badge variant="secondary" className="text-xs">
-                  <Pin className="w-3 h-3 mr-1" />
-                  Fixado
+          <div className="flex-1 min-w-0" onClick={handlePostClick}>
+            {/* Header with badges and status indicators */}
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline" className="text-xs">
+                  {getCategoryLabel(post.category)}
                 </Badge>
-              )}
+                
+                {post.flair_text && (
+                  <Badge className={`text-xs ${getFlairColor(post.flair_color)}`}>
+                    {post.flair_text}
+                  </Badge>
+                )}
+                
+                {post.is_pinned && (
+                  <div className="flex items-center text-green-600">
+                    <Pin className="w-3 h-3 mr-1" />
+                    <span className="text-xs">Fixado</span>
+                  </div>
+                )}
+                
+                {post.is_locked && (
+                  <div className="flex items-center text-orange-600">
+                    <Lock className="w-3 h-3 mr-1" />
+                    <span className="text-xs">Bloqueado</span>
+                  </div>
+                )}
+              </div>
+
+              <PostActionMenu post={post} />
             </div>
 
             {/* Title */}
-            <h3 className="font-semibold text-foreground mb-2 line-clamp-2">
-              {post.title || 'Post sem título'}
-            </h3>
-
-            {/* Content preview */}
-            {post.content && (
-              <p className="text-sm text-muted-foreground mb-3 line-clamp-3">
-                {post.content}
-              </p>
+            {post.title && (
+              <h3 className="font-semibold text-lg mb-2 text-foreground line-clamp-2">
+                {post.title}
+              </h3>
             )}
 
-            {/* Category and flair */}
-            <div className="flex items-center gap-2 mb-3">
-              <Badge variant="outline" className="text-xs">
-                {post.category || 'geral'}
-              </Badge>
-              
-              {post.flair_text && (
-                <Badge 
-                  variant="secondary" 
-                  className="text-xs"
-                  style={{ backgroundColor: post.flair_color || undefined }}
-                >
-                  {post.flair_text}
-                </Badge>
-              )}
-            </div>
+            {/* Content preview */}
+            <div 
+              className="text-muted-foreground text-sm mb-3 line-clamp-3"
+              dangerouslySetInnerHTML={{ 
+                __html: post.content.length > 300 
+                  ? `${post.content.substring(0, 300)}...` 
+                  : post.content 
+              }}
+            />
 
-            {/* Engagement bar */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                {/* Mobile vote buttons */}
-                {isMobile && (
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 px-2 hover:bg-orange-50 hover:text-orange-600"
-                      onClick={(e) => handleVote('up', e)}
-                    >
-                      <ArrowUp className="w-4 h-4 mr-1" />
-                      {netScore}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
-                      onClick={(e) => handleVote('down', e)}
-                    >
-                      <ArrowDown className="w-4 h-4" />
-                    </Button>
-                  </div>
-                )}
+            {/* Multimedia content indicators */}
+            {post.post_type === 'image' && post.image_url && (
+              <div className="mb-3">
+                <img 
+                  src={post.image_url} 
+                  alt="Post image" 
+                  className="max-h-48 w-auto rounded border"
+                  loading="lazy"
+                />
+              </div>
+            )}
 
-                {/* Comments count */}
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <MessageCircle className="w-4 h-4" />
-                  <span>{post.reply_count || 0}</span>
+            {post.post_type === 'poll' && post.poll_data && (
+              <div className="mb-3 p-3 bg-blue-50 rounded border">
+                <div className="text-sm font-medium text-blue-900">
+                  📊 Enquete: {post.poll_data.question || 'Clique para votar'}
                 </div>
               </div>
+            )}
 
-              {/* Action buttons */}
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // TODO: Implement share functionality
-                  }}
-                >
-                  <Share2 className="w-4 h-4" />
-                </Button>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // TODO: Implement save functionality
-                  }}
-                >
-                  <Bookmark className="w-4 h-4" />
-                </Button>
+            {/* Footer with author and engagement stats */}
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-2">
+                {post.author && (
+                  <>
+                    <Avatar className="w-5 h-5">
+                      <AvatarImage src={post.author.avatar_url || undefined} />
+                      <AvatarFallback className="text-xs">
+                        {post.author.full_name?.charAt(0) || 'A'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span>{post.author.full_name || 'Anônimo'}</span>
+                    <span>•</span>
+                  </>
+                )}
+                <span>
+                  {formatDistanceToNow(new Date(post.created_at), { 
+                    addSuffix: true, 
+                    locale: ptBR 
+                  })}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                  <MessageCircle className="w-3 h-3" />
+                  <span>{post.reply_count || 0}</span>
+                </div>
               </div>
             </div>
           </div>

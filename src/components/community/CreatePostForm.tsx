@@ -46,7 +46,11 @@ interface PollData {
   expiresAt?: string;
 }
 
-export const CreatePostForm = () => {
+interface CreatePostFormProps {
+  onPostCreated?: (postId: number) => void;
+}
+
+export const CreatePostForm = ({ onPostCreated }: CreatePostFormProps) => {
   const navigate = useNavigate();
   const createPostMutation = useCreateCommunityPostMutation();
   
@@ -209,7 +213,12 @@ export const CreatePostForm = () => {
       setVideoUrl('');
       setPollData(null);
       
-      navigate('/comunidade');
+      // Call onPostCreated callback if provided
+      if (onPostCreated && result?.id) {
+        onPostCreated(result.id);
+      } else {
+        navigate('/comunidade');
+      }
       
     } catch (error) {
       console.error('Post creation failed:', error);

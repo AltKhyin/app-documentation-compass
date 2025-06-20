@@ -1,3 +1,4 @@
+
 // ABOUTME: Central TypeScript type definitions for the EVIDENS application.
 
 // Core entity types matching database schema
@@ -64,37 +65,6 @@ export interface Notification {
   link: string | null;
   is_read: boolean;
   created_at: string;
-}
-
-// CONSOLIDATED CommunityPost interface - SINGLE SOURCE OF TRUTH
-export interface CommunityPost {
-  id: number;
-  title: string | null;
-  content: string;
-  category: string;
-  upvotes: number;
-  downvotes: number;
-  created_at: string;
-  is_pinned?: boolean;
-  is_locked?: boolean;
-  flair_text?: string;
-  flair_color?: string;
-  // MULTIMEDIA SUPPORT FIELDS
-  image_url?: string | null;
-  video_url?: string | null;
-  poll_data?: Record<string, any> | null;
-  post_type?: 'text' | 'image' | 'video' | 'poll';
-  author: {
-    id: string;
-    full_name: string | null;
-    avatar_url: string | null;
-  } | null;
-  user_vote: 'up' | 'down' | null;
-  reply_count: number;
-  // SAVED POST STATUS
-  is_saved?: boolean;
-  // MODERATION FIELDS
-  user_can_moderate?: boolean;
 }
 
 // NEW: SavedPosts interface for bookmarking functionality
@@ -291,7 +261,7 @@ export interface MediaUploadResponse {
   file_size: number;
 }
 
-// Community types
+// Community types - Import from dedicated community types file
 export type {
   CommunityPost,
   SidebarData,

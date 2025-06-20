@@ -3,9 +3,9 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
-import { AuthSessionProvider } from './components/auth/AuthSessionProvider';
-import { AuthThemeProvider } from './components/auth/AuthThemeProvider';
-import { PWAProvider } from './components/pwa/PWAProvider';
+import AuthSessionProvider from './components/auth/AuthSessionProvider';
+import AuthThemeProvider from './components/auth/AuthThemeProvider';
+import PWAProvider from './components/pwa/PWAProvider';
 import { Toaster } from './components/ui/sonner';
 import { AppRouter } from './router/AppRouter';
 import { AppProviders } from './components/providers/AppProviders';

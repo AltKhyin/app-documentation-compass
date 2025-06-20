@@ -44,4 +44,4 @@ export const useCommunityPageQuery = () => {
 };
 
 // Re-export types for backwards compatibility
-export type { CommunityPageResponse } from '../../src/types/community';
+export type { CommunityPageResponse, CommunityPost, SidebarData } from '../../src/types/community';

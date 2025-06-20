@@ -3,14 +3,14 @@
 
 import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { AppShell } from '../components/shell/AppShell';
+import AppShell from '../components/shell/AppShell';
 import { ProtectedAppRoute } from '../components/routes/ProtectedAppRoute';
 import Index from '../pages/Index';
 import AcervoPage from '../pages/AcervoPage';
 import ComunidadePage from '../pages/ComunidadePage';
 import CommunityPostPage from '../pages/CommunityPostPage';
 import CreatePostPage from '../pages/CreatePostPage';
-import PerfilPage from '../pages/PerfilPage'; // FIXED: Use correct file name
+import PerfilPage from '../pages/PerfilPage';
 import ReviewDetailPage from '../pages/ReviewDetailPage';
 import AuthPage from '../pages/AuthPage';
 import { ErrorBoundary } from '../components/ErrorBoundary';
@@ -19,7 +19,7 @@ const router = createBrowserRouter([
   {
     path: '/auth',
     element: <AuthPage />,
-    errorElement: <ErrorBoundary />
+    errorElement: <ErrorBoundary><div>Authentication Error</div></ErrorBoundary>
   },
   {
     path: '/',
@@ -28,7 +28,7 @@ const router = createBrowserRouter([
         <AppShell />
       </ProtectedAppRoute>
     ),
-    errorElement: <ErrorBoundary />,
+    errorElement: <ErrorBoundary><div>Application Error</div></ErrorBoundary>,
     children: [
       {
         index: true,
@@ -57,7 +57,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'profile',
-        element: <PerfilPage /> // FIXED: Use correct component name
+        element: <PerfilPage />
       },
       {
         path: 'reviews/:slug',
