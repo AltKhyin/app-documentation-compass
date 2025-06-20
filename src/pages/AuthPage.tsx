@@ -3,9 +3,9 @@
 
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { LoginForm } from '../components/auth/LoginForm';
-import { SignupForm } from '../components/auth/SignupForm';
-import { SplitScreenAuthLayout } from '../components/auth/SplitScreenAuthLayout';
+import LoginForm from '../components/auth/LoginForm';
+import SignupForm from '../components/auth/SignupForm';
+import SplitScreenAuthLayout from '../components/auth/SplitScreenAuthLayout';
 import { useAuthStore } from '../store/auth';
 import { Button } from '../components/ui/button';
 

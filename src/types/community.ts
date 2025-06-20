@@ -11,6 +11,20 @@ export interface CommunityPost {
   created_at: string;
   is_pinned?: boolean;
   is_locked?: boolean;
+  is_saved?: boolean;
+  user_can_moderate?: boolean;
+  post_type?: 'text' | 'image' | 'poll' | 'video';
+  image_url?: string | null;
+  video_url?: string | null;
+  poll_data?: {
+    question: string;
+    options: Array<{
+      id: number;
+      text: string;
+      votes: number;
+    }>;
+    total_votes: number;
+  };
   flair_text?: string;
   flair_color?: string;
   author: {
@@ -20,6 +34,12 @@ export interface CommunityPost {
   } | null;
   user_vote?: 'up' | 'down' | null;
   reply_count: number;
+}
+
+export interface CreateCommunityPostResponse {
+  id: number;
+  success: boolean;
+  message?: string;
 }
 
 export interface SidebarData {
