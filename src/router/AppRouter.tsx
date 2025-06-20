@@ -35,7 +35,21 @@ export default function AppRouter() {
             path="/*" 
             element={
               <ProtectedRoute requiredRole="practitioner">
-                <AppShell />
+                <AppShell>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/comunidade" element={<CommunityPage />} />
+                    <Route path="/comunidade/:postId" element={<CommunityPostPage />} />
+                    <Route path="/comunidade/criar" element={<CreatePostPage />} />
+                    <Route path="/acervo" element={<CollectionPage />} />
+                    <Route path="/review/:slug" element={<ReviewDetailPage />} />
+                    <Route path="/salvos" element={<SavedPostsPage />} />
+                    <Route path="/perfil" element={<ProfilePage />} />
+                    <Route path="/comunidade/sobre" element={<CommunityInfoPage />} />
+                    <Route path="/404" element={<NotFound />} />
+                    <Route path="*" element={<Navigate to="/404" replace />} />
+                  </Routes>
+                </AppShell>
               </ProtectedRoute>
             }
           />
@@ -44,20 +58,3 @@ export default function AppRouter() {
     </Router>
   );
 }
-
-// Define protected routes that will be rendered inside AppShell
-export const protectedRoutes = (
-  <Routes>
-    <Route path="/" element={<Index />} />
-    <Route path="/comunidade" element={<CommunityPage />} />
-    <Route path="/comunidade/:postId" element={<CommunityPostPage />} />
-    <Route path="/comunidade/criar" element={<CreatePostPage />} />
-    <Route path="/acervo" element={<CollectionPage />} />
-    <Route path="/review/:slug" element={<ReviewDetailPage />} />
-    <Route path="/salvos" element={<SavedPostsPage />} />
-    <Route path="/perfil" element={<ProfilePage />} />
-    <Route path="/comunidade/sobre" element={<CommunityInfoPage />} />
-    <Route path="/404" element={<NotFound />} />
-    <Route path="*" element={<Navigate to="/404" replace />} />
-  </Routes>
-);

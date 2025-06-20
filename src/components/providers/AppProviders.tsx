@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AuthSessionProvider from '../auth/AuthSessionProvider';
 import { CustomThemeProvider } from '../theme/CustomThemeProvider';
 import PWAProvider from '../pwa/PWAProvider';
+import { AppDataProvider } from '../../contexts/AppDataContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,7 +27,9 @@ export const AppProviders = ({ children }: AppProvidersProps) => {
       <AuthSessionProvider>
         <CustomThemeProvider defaultTheme="dark" storageKey="evidens-theme">
           <PWAProvider>
-            {children}
+            <AppDataProvider>
+              {children}
+            </AppDataProvider>
           </PWAProvider>
         </CustomThemeProvider>
       </AuthSessionProvider>

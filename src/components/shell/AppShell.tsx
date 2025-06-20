@@ -6,9 +6,8 @@ import { useAppData } from '@/contexts/AppDataContext';
 import DesktopShell from './DesktopShell';
 import MobileShell from './MobileShell';
 import { Skeleton } from '@/components/ui/skeleton';
-import { protectedRoutes } from '../../router/AppRouter';
 
-const AppShell = () => {
+const AppShell = ({ children }: { children: React.ReactNode }) => {
   const isMobile = useIsMobile();
   const { isLoading: isAppDataLoading, isError, error } = useAppData();
 
@@ -78,14 +77,14 @@ const AppShell = () => {
   if (isMobile) {
     return (
       <MobileShell>
-        {protectedRoutes}
+        {children}
       </MobileShell>
     );
   }
 
   return (
     <DesktopShell>
-      {protectedRoutes}
+      {children}
     </DesktopShell>
   );
 };

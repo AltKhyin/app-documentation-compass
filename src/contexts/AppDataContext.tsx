@@ -1,7 +1,8 @@
 
 // ABOUTME: Global app data context provider for consolidated homepage data.
 import React, { createContext, useContext } from 'react';
-import { useConsolidatedHomepageFeedQuery, type ConsolidatedHomepageData, type UserProfile } from '../../packages/hooks/useHomepageFeedQuery';
+import { useConsolidatedHomepageFeedQuery } from '../../packages/hooks/useHomepageFeedQuery';
+import type { ConsolidatedHomepageData, UserProfile } from '../../packages/hooks/useHomepageFeedQuery';
 
 interface AppDataContextType {
   data: ConsolidatedHomepageData | undefined;
