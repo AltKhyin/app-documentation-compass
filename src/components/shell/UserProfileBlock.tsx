@@ -11,10 +11,17 @@ interface UserProfileBlockProps {
 }
 
 export const UserProfileBlock = ({ isCollapsed }: UserProfileBlockProps) => {
-  // Independent data fetching - no dependency on global providers
+  // Independent data fetching - completely decoupled from any global context
   const { data: userProfile, isLoading, isError } = useUserProfileQuery();
 
-  // Independent loading state
+  console.log('UserProfileBlock state:', { 
+    isLoading, 
+    isError, 
+    hasProfile: !!userProfile,
+    isCollapsed 
+  });
+
+  // Independent loading state - shows skeleton while data loads
   if (isLoading) {
     return (
       <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center p-2' : 'p-3'}`}>
@@ -24,7 +31,7 @@ export const UserProfileBlock = ({ isCollapsed }: UserProfileBlockProps) => {
     );
   }
 
-  // Error state handling
+  // Error state handling - graceful degradation
   if (isError || !userProfile) {
     return (
       <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center p-2' : 'p-3'}`}>
@@ -36,7 +43,7 @@ export const UserProfileBlock = ({ isCollapsed }: UserProfileBlockProps) => {
     );
   }
 
-  // Success state - render user profile
+  // Success state - render user profile data
   const initials = userProfile.full_name
     ?.split(' ')
     .map(name => name[0])

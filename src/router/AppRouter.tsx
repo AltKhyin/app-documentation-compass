@@ -3,9 +3,9 @@
 
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import AuthSessionProvider from '@/components/auth/AuthSessionProvider'; // Fixed: Using default import
+import AuthSessionProvider from '@/components/auth/AuthSessionProvider';
 import { ProtectedAppRoute } from '@/components/routes/ProtectedAppRoute';
-import AppShell from '@/components/shell/AppShell'; // Fixed: Using default import
+import AppShell from '@/components/shell/AppShell';
 import { AppDataProvider } from '@/contexts/AppDataContext';
 
 // Pages
