@@ -1,30 +1,26 @@
 
-// ABOUTME: The main application shell controller with independent rendering.
-import React from 'react';
+// ABOUTME: The main application shell controller with enhanced stability and persistence.
+import React, { useMemo } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import DesktopShell from './DesktopShell';
 import MobileShell from './MobileShell';
-import { Skeleton } from '@/components/ui/skeleton';
 
 const AppShell = ({ children }: { children: React.ReactNode }) => {
   const isMobile = useIsMobile();
 
   console.log('AppShell render state:', { isMobile });
 
-  // Shell renders immediately - no data dependencies
-  // Individual components handle their own loading states
-  if (isMobile) {
-    return (
-      <MobileShell>
-        {children}
-      </MobileShell>
-    );
-  }
+  // Memoize shell selection to prevent unnecessary re-renders during navigation
+  const ShellComponent = useMemo(() => {
+    return isMobile ? MobileShell : DesktopShell;
+  }, [isMobile]);
 
+  // Shell renders immediately with stable component selection
+  // Individual pages handle their own loading states within the shell
   return (
-    <DesktopShell>
+    <ShellComponent>
       {children}
-    </DesktopShell>
+    </ShellComponent>
   );
 };
 

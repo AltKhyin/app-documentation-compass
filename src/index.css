@@ -136,18 +136,32 @@
   }
 }
 
-/* Shell Layout Fixes - Ensure content respects shell structure */
+/* Enhanced Shell Layout System - Ensures proper "page within screen" containment */
 @media (min-width: 768px) {
-  /* Desktop: Ensure main content areas don't overflow under sidebar */
+  /* Desktop: Enhanced main content areas with proper boundaries */
   .desktop-main-content {
     min-height: 100vh;
     overflow-x: hidden;
   }
   
-  /* Prevent content from bleeding under fixed sidebar */
+  /* Content area constraints - creates the "page within screen" feeling */
+  .page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+    min-height: calc(100vh - 4rem);
+  }
+  
+  /* Sidebar-aware content with proper spacing */
   .sidebar-aware-content {
-    padding-left: 0; /* DesktopShell handles margin via ml-* classes */
     width: 100%;
+    max-width: none;
+  }
+
+  /* Enhanced shell stability - prevents layout shift during navigation */
+  .shell-stable {
+    position: relative;
+    contain: layout style;
   }
 }
 
@@ -167,9 +181,15 @@
   main {
     padding-bottom: 80px; /* Account for bottom navigation */
   }
+  
+  /* Mobile page container */
+  .page-container {
+    padding: 1rem;
+    min-height: calc(100vh - 2rem);
+  }
 }
 
-/* Custom utilities for homepage components */
+/* Custom utilities for content containment */
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;
@@ -208,5 +228,19 @@
 
   .mobile-carousel-hint > * {
     scroll-snap-align: start;
+  }
+
+  /* Content boundary utilities */
+  .content-boundary {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  /* Shell persistence utilities */
+  .shell-persistent {
+    position: relative;
+    z-index: 1;
+    contain: layout;
   }
 }
