@@ -1,53 +1,20 @@
 
-// ABOUTME: Displays user avatar/name, with loading state and logout action using consolidated data.
+// ABOUTME: Self-contained user profile block component with independent data fetching for the application shell.
+
 import React from 'react';
-import { LogOut, Sun, Moon, Monitor, Download } from 'lucide-react';
-import { useAppData } from '@/contexts/AppDataContext';
-import { useTheme } from '@/components/theme/CustomThemeProvider';
-import { usePWA } from '@/hooks/usePWA';
-import { usePWAContext } from '@/components/pwa/PWAProvider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { useUserProfileQuery } from '../../../packages/hooks/useUserProfileQuery';
 
-type UserProfileBlockProps = {
-  isCollapsed?: boolean;
-};
+interface UserProfileBlockProps {
+  isCollapsed: boolean;
+}
 
-const UserProfileBlock = ({ isCollapsed = false }: UserProfileBlockProps) => {
-  const { userProfile, isLoading } = useAppData();
-  const { theme, setTheme } = useTheme();
-  const { isInstallable, isStandalone, showInstallPrompt } = usePWA();
-  const { setShowInstallPrompt } = usePWAContext();
-  const queryClient = useQueryClient();
+export const UserProfileBlock = ({ isCollapsed }: UserProfileBlockProps) => {
+  // Independent data fetching - no dependency on global providers
+  const { data: userProfile, isLoading, isError } = useUserProfileQuery();
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    queryClient.clear(); // Clears all query cache on logout
-  };
-
-  const handleInstallApp = async () => {
-    try {
-      await showInstallPrompt();
-    } catch (error) {
-      // Fallback to showing our custom prompt
-      setShowInstallPrompt(true);
-    }
-  };
-
+  // Independent loading state
   if (isLoading) {
     return (
       <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center p-2' : 'p-3'}`}>
@@ -57,105 +24,46 @@ const UserProfileBlock = ({ isCollapsed = false }: UserProfileBlockProps) => {
     );
   }
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .slice(0, 2)
-      .join('');
-  };
+  // Error state handling
+  if (isError || !userProfile) {
+    return (
+      <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center p-2' : 'p-3'}`}>
+        <div className="h-9 w-9 rounded-full bg-muted" />
+        {!isCollapsed && (
+          <span className="text-sm text-muted-foreground">Error loading profile</span>
+        )}
+      </div>
+    );
+  }
 
-  const getThemeIcon = () => {
-    switch (theme) {
-      case 'light':
-        return <Sun className="mr-2 h-4 w-4" />;
-      case 'dark':
-        return <Moon className="mr-2 h-4 w-4" />;
-      case 'system':
-        return <Monitor className="mr-2 h-4 w-4" />;
-      default:
-        return <Monitor className="mr-2 h-4 w-4" />;
-    }
-  };
+  // Success state - render user profile
+  const initials = userProfile.full_name
+    ?.split(' ')
+    .map(name => name[0])
+    .join('')
+    .toUpperCase() || '??';
 
   return (
-    <div className="mt-auto">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            variant="ghost" 
-            className={`w-full h-auto ${isCollapsed ? 'justify-center p-2' : 'justify-start gap-3 p-2'}`}
-          >
-             <Avatar className="h-9 w-9">
-              <AvatarImage src={userProfile?.avatar_url ?? undefined} alt={userProfile?.full_name ?? 'User'} />
-              <AvatarFallback>
-                {userProfile?.full_name ? getInitials(userProfile.full_name) : 'U'}
-              </AvatarFallback>
-            </Avatar>
-            {!isCollapsed && (
-              <div className="flex flex-col items-start">
-                <span className="text-sm font-semibold truncate">
-                  {userProfile?.full_name ?? 'Usuário'}
-                </span>
-                 <span className="text-xs text-muted-foreground -mt-1">
-                  {userProfile?.role ?? 'practitioner'}
-                </span>
-              </div>
-            )}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56" align="end" forceMount>
-          <DropdownMenuLabel className="font-normal">
-            <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">{userProfile?.full_name}</p>
-              <p className="text-xs leading-none text-muted-foreground">
-                {userProfile?.subscription_tier} tier
-              </p>
-            </div>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          
-          {/* PWA Install Option - only show if installable and not standalone */}
-          {isInstallable && !isStandalone && (
-            <>
-              <DropdownMenuItem onClick={handleInstallApp}>
-                <Download className="mr-2 h-4 w-4" />
-                <span>Instalar App</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-            </>
+    <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center p-2' : 'p-3'}`}>
+      <Avatar className={isCollapsed ? 'h-9 w-9' : 'h-9 w-9'}>
+        <AvatarImage src={userProfile.avatar_url || ''} alt={userProfile.full_name || 'User'} />
+        <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+          {initials}
+        </AvatarFallback>
+      </Avatar>
+      
+      {!isCollapsed && (
+        <div className="flex flex-col min-w-0 flex-1">
+          <span className="text-sm font-medium text-foreground truncate">
+            {userProfile.full_name || 'Unnamed User'}
+          </span>
+          {userProfile.role && userProfile.role !== 'practitioner' && (
+            <span className="text-xs text-muted-foreground capitalize">
+              {userProfile.role}
+            </span>
           )}
-          
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
-              {getThemeIcon()}
-              <span>Tema</span>
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              <DropdownMenuItem onClick={() => setTheme('light')}>
-                <Sun className="mr-2 h-4 w-4" />
-                <span>Claro</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme('dark')}>
-                <Moon className="mr-2 h-4 w-4" />
-                <span>Escuro</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme('system')}>
-                <Monitor className="mr-2 h-4 w-4" />
-                <span>Sistema</span>
-              </DropdownMenuItem>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-          
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>Sair</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        </div>
+      )}
     </div>
   );
 };
-
-export default UserProfileBlock;

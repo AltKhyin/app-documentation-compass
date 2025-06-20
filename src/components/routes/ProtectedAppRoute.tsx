@@ -1,22 +1,18 @@
 
-// ABOUTME: Wrapper component for protected routes with consistent app shell and data provider structure.
+// ABOUTME: Protected route wrapper that handles authentication and authorization without global data dependencies.
 
 import React from 'react';
-import ProtectedRoute from '../auth/ProtectedRoute';
-import { AppDataProvider } from '../../contexts/AppDataContext';
-import type { UserProfile } from '../../types';
+import { ProtectedRoute } from '../auth/ProtectedRoute';
 
 interface ProtectedAppRouteProps {
   children: React.ReactNode;
-  requiredRole?: UserProfile['role'];
+  requiredRole?: 'practitioner' | 'editor' | 'admin';
 }
 
 export const ProtectedAppRoute = ({ children, requiredRole = 'practitioner' }: ProtectedAppRouteProps) => {
   return (
     <ProtectedRoute requiredRole={requiredRole}>
-      <AppDataProvider>
-        {children}
-      </AppDataProvider>
+      {children}
     </ProtectedRoute>
   );
 };

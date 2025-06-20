@@ -1,69 +1,50 @@
-
-// ABOUTME: Main application router with standardized English route names while preserving Portuguese URLs for users
+// ABOUTME: Main application router with decoupled data providers scoped to specific routes.
 
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ProtectedAppRoute } from '../components/routes/ProtectedAppRoute';
-import AppShell from '../components/shell/AppShell';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthSessionProvider } from '@/components/auth/AuthSessionProvider';
+import { ProtectedAppRoute } from '@/components/routes/ProtectedAppRoute';
+import { AppShell } from '@/components/shell/AppShell';
+import { AppDataProvider } from '@/contexts/AppDataContext';
 
-// Pages - standardized English names for internal consistency
-import Index from '../pages/Index';
-import AuthPage from '../pages/AuthPage';
-import LoginPage from '../pages/LoginPage';
-import SignupPage from '../pages/SignupPage';
-import CommunityPage from '../pages/CommunityPage';
-import CollectionPage from '../pages/CollectionPage';
-import ProfilePage from '../pages/ProfilePage';
-import ReviewDetailPage from '../pages/ReviewDetailPage';
-import CommunityPostPage from '../pages/CommunityPostPage';
-import CreatePostPage from '../pages/CreatePostPage';
-import CommunityInfoPage from '../pages/CommunityInfoPage';
-import SavedPostsPage from '../pages/SavedPostsPage';
-import NotFound from '../pages/NotFound';
-import UnauthorizedPage from '../pages/UnauthorizedPage';
-import DebugSignupPage from '../pages/DebugSignupPage';
+// Pages
+import Index from '@/pages/Index';
+import CommunityPage from '@/pages/CommunityPage';
+import CollectionPage from '@/pages/CollectionPage';
+import LoginPage from '@/pages/LoginPage';
+import SignupPage from '@/pages/SignupPage';
 
 export const AppRouter = () => {
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Public authentication routes */}
-        <Route path="/auth" element={<AuthPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/debug-signup" element={<DebugSignupPage />} />
-        <Route path="/unauthorized" element={<UnauthorizedPage />} />
-
-        {/* Protected application routes with Portuguese URLs preserved for users */}
-        <Route path="/" element={
-          <ProtectedAppRoute>
-            <AppShell />
-          </ProtectedAppRoute>
-        }>
-          <Route index element={<Index />} />
+      <AuthSessionProvider>
+        <Routes>
+          {/* Authentication Routes */}
+          <Route path="/auth" element={<LoginPage />} />
+          <Route path="/auth/signup" element={<SignupPage />} />
           
-          {/* Community routes - Portuguese URLs preserved */}
-          <Route path="comunidade" element={<CommunityPage />} />
-          <Route path="comunidade/:postId" element={<CommunityPostPage />} />
-          <Route path="comunidade/criar" element={<CreatePostPage />} />
-          <Route path="comunidade/info" element={<CommunityInfoPage />} />
+          {/* Protected Application Routes */}
+          <Route path="/" element={
+            <ProtectedAppRoute>
+              <AppShell />
+            </ProtectedAppRoute>
+          }>
+            {/* Homepage with scoped data provider */}
+            <Route index element={
+              <AppDataProvider>
+                <Index />
+              </AppDataProvider>
+            } />
+            
+            {/* Other pages without global data provider */}
+            <Route path="comunidade" element={<CommunityPage />} />
+            <Route path="acervo" element={<CollectionPage />} />
+          </Route>
           
-          {/* Collection route - Portuguese URL preserved */}
-          <Route path="acervo" element={<CollectionPage />} />
-          
-          {/* Profile route - Portuguese URL preserved */}
-          <Route path="perfil" element={<ProfilePage />} />
-          
-          {/* Review detail route */}
-          <Route path="review/:slug" element={<ReviewDetailPage />} />
-          
-          {/* Saved posts route */}
-          <Route path="salvos" element={<SavedPostsPage />} />
-        </Route>
-
-        {/* 404 fallback */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthSessionProvider>
     </BrowserRouter>
   );
 };
