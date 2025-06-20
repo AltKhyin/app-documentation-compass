@@ -1,9 +1,9 @@
 
 # **[DOC_2] System Architecture**
 
-**Version:** 3.0 (Vite-First Update)  
-**Date:** June 16, 2025  
-**Purpose:** This document defines the canonical system architecture for the EVIDENS platform, optimized for the Vite + React development environment.
+**Version:** 4.0 (Decoupled Architecture Update)  
+**Date:** June 20, 2025  
+**Purpose:** This document defines the canonical system architecture for the EVIDENS platform, optimized for the Vite + React development environment with decoupled data layer.
 
 ---
 
@@ -13,7 +13,7 @@
 
 **Frontend Application:**
 - **Framework:** Vite + React 18 (Single-Page Application)
-- **Language:** TypeScript
+- **Language:** TypeScript (Strict Mode)
 - **Styling:** TailwindCSS + shadcn/ui components
 - **State Management:** TanStack Query v5 + Zustand
 - **Routing:** React Router v6
@@ -28,32 +28,98 @@
 
 ### **1.2 Application Architecture**
 
-The EVIDENS platform is implemented as a unified, client-side rendered (CSR) application. This single application serves:
+The EVIDENS platform is implemented as a unified, client-side rendered (CSR) application with a **decoupled data architecture**. This single application serves:
 
 1. **Public Interface:** Homepage, Acervo (review collection), community features
 2. **Authenticated Experience:** User profiles, personalized feeds, contribution features  
 3. **Administrative Interface:** Content management and moderation (via protected routes)
 
-### **1.3 Architectural Trade-offs**
+### **1.3 Architectural Principles**
 
-The selection of a Vite + React Single-Page Application (SPA) architecture prioritizes:
+**PRINCIPLE 1 (Decoupled Data Layer):** Each component and page is responsible for its own data requirements. No global data providers except for truly global state (authentication).
 
-**Advantages:**
-- Rapid development iteration
-- Highly interactive user experience
-- Seamless client-side routing
-- Optimized for dynamic, data-driven interfaces
-- Strong development tooling and hot-reload capabilities
+**PRINCIPLE 2 (Instant Shell Rendering):** The application shell renders immediately without waiting for any data fetching operations.
 
-**Strategic Trade-offs:**
-- **Search Engine Optimization (SEO):** As a Client-Side Rendered application, content is generated in the user's browser. This makes it challenging for search engine crawlers to index public content effectively, limiting organic discovery via search engines like Google. This is a known and accepted constraint of the current architecture.
-- **Initial Load Time:** All application code is loaded on first visit, though this is mitigated by Vite's code-splitting capabilities.
+**PRINCIPLE 3 (Granular Data Fetching):** Data is fetched at the most specific scope possible - individual components fetch only what they need.
 
 ---
 
-## **2.0 Frontend Application Structure**
+## **2.0 Decoupled Architecture Model**
 
-### **2.1 Directory Organization**
+### **2.1 System Flow Diagram**
+
+```mermaid
+graph TD
+    subgraph "Browser"
+        A[React Application] --> B(AppRouter);
+        B --> C{Authenticated?};
+        C -- Yes --> D[AppShell - Instant Render];
+        C -- No --> LoginPage[LoginPage];
+
+        D --> E[Page Outlet];
+
+        subgraph "Page-Specific Content (Inside Outlet)"
+            E --> P1(Homepage);
+            E --> P2(CommunityPage);
+            E --> P3(AcervoPage);
+        end
+
+        subgraph "Independent Shell Components (Inside AppShell)"
+            D --> S1(UserProfileBlock);
+            D --> S2(NotificationBell);
+        end
+    end
+
+    subgraph "Backend (Supabase)"
+        API(Edge Functions / RPCs)
+        DB[(PostgreSQL Database)];
+        Auth(Supabase Auth);
+    end
+
+    P1 -- Fetches Data --> F1(get-homepage-feed);
+    P2 -- Fetches Data --> F2(get-community-page-data);
+    P3 -- Fetches Data --> F3(get-acervo-data);
+
+    S1 -- Fetches Data --> UQ(useUserProfileQuery);
+    S2 -- Fetches Data --> NQ(useNotificationCountQuery);
+
+    F1 --> API;
+    F2 --> API;
+    F3 --> API;
+
+    UQ --> DB;
+    NQ --> DB;
+
+    API --> DB;
+    A -- Checks Session --> Auth;
+
+    style D fill:#cde4f9,stroke:#333,stroke-width:2px
+    style P1 fill:#d5f0d5,stroke:#333
+    style P2 fill:#d5f0d5,stroke:#333
+    style P3 fill:#d5f0d5,stroke:#333
+    style S1 fill:#fff2cc,stroke:#333
+    style S2 fill:#fff2cc,stroke:#333
+```
+
+### **2.2 Key Architectural Changes**
+
+**FROM (Legacy Pattern):**
+- Global AppDataProvider wrapping entire application
+- Single consolidated query fetching all data upfront
+- Shell components dependent on global context
+- Blocked rendering until data loads
+
+**TO (Current Pattern):**
+- Instant shell rendering with independent components
+- Granular, scoped data fetching per component/page
+- Self-contained shell components with their own queries
+- Parallel data loading with skeleton states
+
+---
+
+## **3.0 Frontend Application Structure**
+
+### **3.1 Directory Organization**
 
 The application follows a feature-first organization pattern within the `src/` directory:
 
@@ -63,36 +129,64 @@ The application follows a feature-first organization pattern within the `src/` d
 │   ├── shell/          # App layout (AppShell, Sidebar, Header)
 │   ├── homepage/       # Homepage-specific components
 │   ├── acervo/         # Acervo-specific components
+│   ├── community/      # Community-specific components
 │   ├── auth/           # Authentication components
 │   └── ui/             # Reusable UI components (buttons, cards, etc.)
 ├── config/             # Application configuration (navigation, constants)
-├── contexts/           # React Context providers
-├── hooks/              # Custom hooks and TanStack Query hooks
+├── contexts/           # React Context providers (auth only)
+├── hooks/              # UI-specific custom hooks
 ├── pages/              # Top-level route components
 ├── store/              # Zustand global state stores
 ├── lib/                # Utility functions and Supabase client
 └── types/              # Shared TypeScript interfaces
+/packages/hooks/        # Data-fetching hooks (TanStack Query)
 ```
 
-### **2.2 Component Architecture Principles**
+### **3.2 Component Architecture Principles**
 
 1. **Atomic Design:** UI components are organized from atomic (Button) to complex (ReviewCarousel)
 2. **Feature Isolation:** Feature-specific components are co-located with their logic
 3. **Shared UI Library:** Common components are centralized in `components/ui/`
-4. **Responsive Design:** All components implement mobile-first, adaptive designs
+4. **Data Independence:** Components fetch their own data via dedicated hooks
+5. **Responsive Design:** All components implement mobile-first, adaptive designs
 
-### **2.3 State Management Strategy**
+### **3.3 State Management Strategy**
 
 **Local State:** `useState` and `useReducer` for component-specific state
 **Server State:** TanStack Query for all API interactions and caching
-**Global State:** Zustand for authentication state and app-wide configuration
+**Global State:** Zustand ONLY for authentication state and app-wide configuration
 **Form State:** React Hook Form for complex form interactions
 
 ---
 
-## **3.0 Backend Architecture**
+## **4.0 Data Architecture**
 
-### **3.1 Supabase Services Integration**
+### **4.1 Decoupled Data Fetching**
+
+**Shell Components:**
+- `UserProfileBlock` → `useUserProfileQuery()`
+- `NotificationBell` → `useNotificationCountQuery()`
+
+**Page Components:**
+- `Index.tsx` → `useConsolidatedHomepageFeedQuery()` (exception - multiple modules)
+- `CommunityPage.tsx` → `useCommunityPageQuery()`
+- `CollectionPage.tsx` → `useAcervoDataQuery()`
+
+**Specialized Components:**
+- Individual hooks for specific features (e.g., `useSavePostMutation`)
+
+### **4.2 Data Fetching Rules**
+
+1. **No Global Data Providers:** Only authentication state is global
+2. **Component-Scoped Queries:** Each component fetches only what it needs
+3. **Independent Loading States:** Components manage their own skeleton/error states
+4. **Parallel Data Loading:** Multiple queries run concurrently without blocking
+
+---
+
+## **5.0 Backend Architecture**
+
+### **5.1 Supabase Services Integration**
 
 **Database Layer:**
 - PostgreSQL with Row Level Security (RLS) policies
@@ -109,7 +203,7 @@ The application follows a feature-first organization pattern within the `src/` d
 - Rate limiting and input validation
 - Integration with external services
 
-### **3.2 Data Fetching Architecture**
+### **5.2 Data Fetching Architecture**
 
 All data fetching follows the patterns defined in [DOC_6]_DATA_FETCHING_STRATEGY.md:
 
@@ -117,32 +211,20 @@ All data fetching follows the patterns defined in [DOC_6]_DATA_FETCHING_STRATEGY
 1. UI components NEVER call Supabase client directly
 2. All data access is encapsulated in custom hooks
 3. Mutations invalidate relevant queries for consistency
-
-**Hook Patterns:**
-```typescript
-// Queries (READ operations)
-useConsolidatedHomepageFeedQuery()
-useAcervoDataQuery()
-useUserProfileQuery()
-
-// Mutations (WRITE operations)  
-useCastVoteMutation()
-useSubmitSuggestionMutation()
-useUpdateProfileMutation()
-```
+4. Each hook has a single, clear responsibility
 
 ---
 
-## **4.0 Security Architecture**
+## **6.0 Security Architecture**
 
-### **4.1 Authentication & Authorization**
+### **6.1 Authentication & Authorization**
 
 **JWT Custom Claims:** User roles and subscription tiers are embedded in JWT tokens via database triggers
 **Row Level Security:** All database access is controlled via RLS policies
 **Route Protection:** Sensitive routes use `ProtectedRoute` component with role checking
 **API Rate Limiting:** All Edge Functions implement rate limiting
 
-### **4.2 Data Access Patterns**
+### **6.2 Data Access Patterns**
 
 **Public Data:** Available to anonymous users (published reviews, public profiles)
 **User Data:** Accessible only to the authenticated user (personal settings, private data)
@@ -151,16 +233,17 @@ useUpdateProfileMutation()
 
 ---
 
-## **5.0 Performance & Scalability**
+## **7.0 Performance & Scalability**
 
-### **5.1 Client-Side Optimizations**
+### **7.1 Client-Side Optimizations**
 
 **Code Splitting:** Vite automatically splits code by routes and components
 **Query Caching:** TanStack Query provides aggressive caching with 5-minute stale time
 **Optimistic Updates:** User interactions update immediately with server synchronization
 **Image Optimization:** Responsive images with proper sizing and lazy loading
+**Parallel Loading:** Independent data queries prevent waterfall effects
 
-### **5.2 Database Optimizations**
+### **7.2 Database Optimizations**
 
 **Indexing:** Critical foreign keys and query patterns are indexed
 **Query Optimization:** Database functions minimize round-trips
@@ -169,16 +252,17 @@ useUpdateProfileMutation()
 
 ---
 
-## **6.0 Future Extensibility**
+## **8.0 Future Extensibility**
 
-### **6.1 Protected Route Admin Features**
+### **8.1 Architectural Benefits**
 
-The current architecture supports future admin functionality through:
-- Role-based route protection (`/admin/*` routes)
-- Enhanced `ProtectedRoute` component with role checking
-- Shared component library for consistent admin UI
+The decoupled architecture provides:
+- **Scalability:** New features don't affect existing components
+- **Performance:** Components load independently without blocking
+- **Maintainability:** Clear separation of concerns
+- **Testability:** Components can be tested in isolation
 
-### **6.2 Migration Considerations**
+### **8.2 Migration Considerations**
 
 Should future requirements necessitate:
 - **Server-Side Rendering:** The component architecture is compatible with Next.js migration

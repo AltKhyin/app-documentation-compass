@@ -1,32 +1,104 @@
 
 # EVIDENS Development Protocols
-Version: 1.0.0
-Date: June 19, 2025
-Purpose: Standardized development protocols to ensure code quality, type safety, and prevent integration issues.
+Version: 2.0.0 (Strict Standards Update)
+Date: June 20, 2025
+Purpose: Standardized development protocols to ensure code quality, type safety, and prevent integration issues. Updated with mandatory strict TypeScript and import path standardization.
 
-## Core Development Principles
+## **PROTOCOL #1: Strict TypeScript Compliance (NON-NEGOTIABLE)**
 
-### 1. Single Source of Truth Protocol
-**Rule**: All type definitions MUST reside in `src/types/index.ts`
-**Rationale**: Prevents duplicate interfaces and type inconsistencies across components
+**RULE**: The EVIDENS codebase MUST be configured to run with `strict: true` in `tsconfig.app.json`.
 
-**Implementation Guidelines**:
+**RATIONALE**: Strict TypeScript is the foundation of production-ready code quality. It prevents the most common sources of runtime errors and ensures reliable type checking.
+
+**MANDATORY CONFIGURATION:**
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+    "strictPropertyInitialization": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true
+  }
+}
+```
+
+**IMPLEMENTATION GUIDELINES:**
+- All new code must be fully strict-compliant
+- No new `any` types are permitted unless explicitly justified and approved in code review
+- The use of the non-null assertion operator (`!`) is strongly discouraged
+- All potentially null or undefined values must be handled with explicit type guards or optional chaining (`?.`)
+- All TODO comments regarding type safety must be linked to a ticket in the project management system
+
+**VERIFICATION CHECKLIST:**
+- [ ] `npm run build` completes without type errors
+- [ ] No `any` types in new code
+- [ ] All null/undefined values properly handled
+- [ ] TypeScript strict mode enabled in configuration
+
+## **PROTOCOL #2: Import Pathing Strategy (STANDARDIZATION)**
+
+**RULE**: The style of an import path should communicate its architectural purpose and maintain consistency across the codebase.
+
+**PRINCIPLE**: Intra-module vs. Cross-module distinction drives import path selection.
+
+**RULE FOR ALIASED PATHS (@/):** Use aliased paths for all cross-module imports. An import is cross-module if it accesses a shared, application-wide resource from a different architectural layer.
+
+**Examples:**
+```typescript
+// Cross-module imports - USE ALIASED PATHS
+import { Button } from '@/components/ui/button';
+import { useSomeQuery } from '@/packages/hooks/useSomeQuery';
+import { useAuthStore } from '@/store/auth';
+import type { UserProfile } from '@/types';
+```
+
+**RULE FOR RELATIVE PATHS (./, ../):** Use relative paths for all intra-module imports. An import is intra-module if it accesses a file that is considered a "private" part of the same, self-contained module.
+
+**Examples:**
+```typescript
+// Intra-module imports - USE RELATIVE PATHS
+import styles from './styles.module.css';
+import { helper } from './helpers';
+// In barrel files (index.ts):
+export * from './ComponentA';
+// Between shared files in isolated environments:
+import { corsHeaders } from '../_shared/cors';
+```
+
+**VERIFICATION CHECKLIST:**
+- [ ] All cross-module imports use `@/` alias
+- [ ] All intra-module imports use relative paths
+- [ ] Import paths are consistent within each file
+- [ ] No mixing of aliased and relative paths for the same resource
+
+## **PROTOCOL #3: Single Source of Truth for Types**
+
+**RULE**: All type definitions MUST reside in `src/types/index.ts`
+**RATIONALE**: Prevents duplicate interfaces and type inconsistencies across components
+
+**IMPLEMENTATION GUIDELINES:**
 - All shared types belong in `src/types/index.ts`
-- Components MUST import types from `src/types/`
+- Components MUST import types from `@/types`
 - Hook-specific interfaces should extend from base types, not duplicate them
 - Before creating a new interface, verify it doesn't exist in the global types
 
-**Verification Checklist**:
+**VERIFICATION CHECKLIST:**
 - [ ] Search codebase for duplicate interface definitions
-- [ ] Verify all imports reference `src/types/`
+- [ ] Verify all imports reference `@/types`
 - [ ] Confirm TypeScript compilation passes
 - [ ] No duplicate type warnings in IDE
 
-### 2. TanStack Query Implementation Standards
-**Rule**: All data-fetching hooks MUST follow TanStack Query v5 patterns
-**Rationale**: Ensures consistent server state management and prevents API compatibility issues
+## **PROTOCOL #4: TanStack Query Implementation Standards**
 
-**Required Patterns**:
+**RULE**: All data-fetching hooks MUST follow TanStack Query v5 patterns
+**RATIONALE**: Ensures consistent server state management and prevents API compatibility issues
+
+**REQUIRED PATTERNS:**
 ```typescript
 // useInfiniteQuery v5 Pattern
 export const useExampleQuery = () => {
@@ -51,90 +123,73 @@ export const useSingleQuery = (id: string) => {
 };
 ```
 
-**Verification Checklist**:
+**VERIFICATION CHECKLIST:**
 - [ ] All infinite queries include `initialPageParam`
 - [ ] `getNextPageParam` uses v5 signature
 - [ ] Query keys are descriptive arrays
 - [ ] Mutations invalidate relevant queries in `onSuccess`
 
-### 3. Component Integration Protocol
-**Rule**: Components using shared types MUST follow standardized import and usage patterns
-**Rationale**: Prevents type mismatches and ensures components work together seamlessly
+## **PROTOCOL #5: Component Integration Standards**
 
-**Import Standards**:
+**RULE**: Components using shared types MUST follow standardized import and usage patterns
+**RATIONALE**: Prevents type mismatches and ensures components work together seamlessly
+
+**IMPORT STANDARDS:**
 ```typescript
 // Correct type imports
-import type { CommunityPost, UserProfile } from '../../types';
+import type { CommunityPost, UserProfile } from '@/types';
 
 // Correct icon imports
 import { Bookmark, BookmarkCheck, Share2 } from 'lucide-react';
 
 // Correct hook imports  
-import { useSavePostMutation } from '../../../packages/hooks/useSavePostMutation';
+import { useSavePostMutation } from '@/packages/hooks/useSavePostMutation';
 ```
 
-**Component Structure**:
+**COMPONENT STRUCTURE:**
 - Data fetching: Use custom hooks only (never direct supabase calls)
-- State management: Follow [D3.3] decision algorithm
+- State management: Follow [D3.3] decision algorithm from EVIDENS Directives
 - Event handlers: Proper TypeScript event types
 - Conditional rendering: Safe property access with optional chaining
 
-**Verification Checklist**:
+**VERIFICATION CHECKLIST:**
 - [ ] All types imported from canonical source
 - [ ] All icons explicitly imported
 - [ ] No direct database calls in components
 - [ ] Proper event handler typing
 
-### 4. Multimedia Post Development Standards
-**Rule**: Posts with multimedia content MUST follow standardized patterns
-**Rationale**: Ensures consistent rendering and type safety across all post types
+## **PROTOCOL #6: Data Access Layer (The Golden Rule)**
 
-**Required Fields Check**:
-```typescript
-interface CommunityPost {
-  post_type?: 'text' | 'image' | 'video' | 'poll';
-  image_url?: string | null;
-  video_url?: string | null;
-  poll_data?: Record<string, any> | null;
-}
-```
+**DAL.1 (No Direct Access)**: UI components are FORBIDDEN from importing or calling the supabase-js client directly.
 
-**Rendering Pattern**:
-```typescript
-const renderMultimediaContent = () => {
-  switch (post.post_type) {
-    case 'image':
-      return post.image_url ? <img src={post.image_url} /> : null;
-    case 'video':
-      return post.video_url ? <video src={post.video_url} /> : null;
-    case 'poll':
-      return post.poll_data ? <PollComponent data={post.poll_data} /> : null;
-    default:
-      return null;
-  }
-};
-```
+**DAL.2 (Hook Abstraction)**: All backend interactions MUST be encapsulated in a custom hook within `/packages/hooks/`.
 
-### 5. Error Prevention Protocols
+**DAL.3 (Query Engine)**: All data-fetching hooks MUST use TanStack Query.
 
-**Pre-Commit Verification**:
-1. TypeScript compilation passes without errors
+**DAL.4 (Cache Invalidation)**: Hooks using useMutation MUST invalidate relevant queries in their onSuccess callback.
+
+**DAL.5 (Granular Fetching)**: Each hook should have a single, clear responsibility. Avoid consolidated queries except for specific optimizations.
+
+## **Error Prevention Protocols**
+
+**PRE-COMMIT VERIFICATION:**
+1. TypeScript compilation passes without errors (`npm run build`)
 2. No ESLint warnings
 3. All imports resolve correctly
 4. Component renders without console errors
 
-**Integration Testing Requirements**:
+**INTEGRATION TESTING REQUIREMENTS:**
 - Critical user flows tested (save/unsave posts)
 - Mobile responsiveness verified
 - Type contracts validated across components
 - Data access patterns confirmed
 
-**Documentation Requirements**:
+**DOCUMENTATION REQUIREMENTS:**
 - All new features documented in README-BÍBLIA.md
 - Type changes noted in change log
 - Component interactions documented
 
-## File Organization Standards
+## **File Organization Standards**
 
 ### Hook Directory Structure
 ```
@@ -159,33 +214,7 @@ src/components/
 └── shell/                        # Layout components
 ```
 
-## Type Safety Enforcement
-
-### Required TypeScript Settings
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "exactOptionalPropertyTypes": true
-  }
-}
-```
-
-### ESLint Rules (Recommended)
-```json
-{
-  "rules": {
-    "@typescript-eslint/no-unused-vars": "error",
-    "@typescript-eslint/no-explicit-any": "warn",
-    "import/no-duplicates": "error",
-    "import/order": "error"
-  }
-}
-```
-
-## Common Anti-Patterns to Avoid
+## **Common Anti-Patterns to Avoid**
 
 ### ❌ Direct Database Calls in Components
 ```typescript
@@ -233,11 +262,11 @@ export interface CommunityPost {
 }
 ```
 
-## Troubleshooting Guide
+## **Troubleshooting Guide**
 
 ### Type Import Errors
 **Symptom**: "Cannot find name 'CommunityPost'"
-**Solution**: Verify import path points to `src/types/index.ts`
+**Solution**: Verify import path points to `@/types`
 
 ### TanStack Query Errors  
 **Symptom**: "Property 'initialPageParam' is missing"
@@ -251,5 +280,10 @@ export interface CommunityPost {
 **Symptom**: "Property 'posts' does not exist on type 'InfiniteData'"
 **Solution**: Use `data.pages.flatMap(page => page.posts)` for infinite queries
 
-## Version History
+### Strict TypeScript Migration Errors
+**Symptom**: Various null/undefined errors after enabling strict mode
+**Solution**: Add proper type guards and optional chaining systematically
+
+## **Version History**
+- v2.0.0 (June 20, 2025): Added strict TypeScript mandate and import path standardization
 - v1.0.0 (June 19, 2025): Initial protocols established during Community stabilization
