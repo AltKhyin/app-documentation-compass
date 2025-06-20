@@ -1,14 +1,15 @@
+
 # **[DOC_5] EVIDENS API Contract**
 
-**Version:** 3.4  
-**Date:** June 19, 2025
+**Version:** 3.5  
+**Date:** June 20, 2025
 
 **Purpose:** This document defines the canonical contract for all server‑side business logic within the EVIDENS ecosystem. It specifies when to use Supabase's auto‑generated API and provides the definitive blueprint for all custom Supabase Edge Functions. The AI developer must adhere to this specification to ensure all backend interactions are secure, transactional, and predictable.
 
-**CHANGELOG (v3.4):**
-- Added `save-post` and `get-saved-posts` Edge Functions for post bookmarking
-- Updated rate limiting table with new function limits
-- Enhanced multimedia post support documentation
+**CHANGELOG (v3.5):**
+- **CRITICAL UPDATE**: Added Section 1.5 "Mandatory Edge Function Structure" to prevent recurring CORS and authentication errors
+- Enhanced error prevention protocols for systematic Edge Function development
+- Established canonical 7-step implementation pattern for all new functions
 
 ---
 
@@ -36,6 +37,60 @@ Every Edge Function MUST include a boilerplate block at the beginning of its cod
 
 **PRINCIPLE 6 (Rate Limiting):**  
 Every Edge Function MUST implement rate limiting using the centralized utility in `supabase/functions/_shared/rate-limit.ts`. Rate limits are configured per function and enforced per user.
+
+---
+
+## **1.5 The Mandatory Edge Function Structure (CRITICAL)**
+
+**RULE 7 (Mandatory Structure):** All new Edge Functions must adhere to the following 7-step internal structure to ensure consistency, security, and proper CORS handling. This pattern eliminates the recurring CORS preflight errors and authentication failures.
+
+### **The 7-Step Implementation Pattern:**
+
+```typescript
+// STEP 1: CORS Preflight Handling (MANDATORY FIRST)
+if (req.method === 'OPTIONS') {
+  return handleCorsPreflightRequest();
+}
+
+try {
+  // STEP 2: Manual Authentication (requires verify_jwt = false in config.toml)
+  const supabase = createClient(/* ... */);
+  const user = await authenticateUser(supabase, req.headers.get('Authorization'));
+
+  // STEP 3: Rate Limiting Implementation
+  const rateLimitResult = await checkRateLimit(supabase, 'function-name', user.id);
+  if (!rateLimitResult.allowed) throw RateLimitError;
+
+  // STEP 4: Input Parsing & Validation
+  const body = await req.json();
+  validateRequiredFields(body, ['required', 'fields']);
+
+  // STEP 5: Core Business Logic Execution
+  // [Function-specific implementation]
+
+  // STEP 6: Standardized Success Response
+  return createSuccessResponse(result, rateLimitHeaders(rateLimitResult));
+
+} catch (error) {
+  // STEP 7: Centralized Error Handling
+  return createErrorResponse(error);
+}
+```
+
+### **Critical Configuration Requirements:**
+
+1. **Function Code**: Must use shared helpers from `supabase/functions/_shared/api-helpers.ts`
+2. **Gateway Config**: Must set `verify_jwt = false` in `supabase/config.toml` for the specific function
+3. **Rate Limiting**: Must implement using `checkRateLimit` from shared utilities
+
+### **Why This Pattern Prevents Errors:**
+
+- **CORS Issues**: Step 1 immediately handles OPTIONS requests with proper headers
+- **Auth Failures**: Manual authentication allows proper error handling and response formatting
+- **Rate Limit Errors**: Consistent implementation prevents service abuse
+- **Response Inconsistency**: Shared helpers ensure uniform API responses
+
+**VIOLATION CONSEQUENCES**: Functions that do not follow this exact pattern will experience the recurring error cycle of CORS failures, authentication issues, and inconsistent responses.
 
 ---
 
