@@ -1,3 +1,4 @@
+
 // ABOUTME: Form component for creating new community posts with rich content support.
 
 import React, { useState } from 'react';
@@ -29,7 +30,8 @@ export const CreatePostForm = ({ onPostCreated }: CreatePostFormProps) => {
   const [videoUrl, setVideoUrl] = useState('');
   const [pollData, setPollData] = useState<{
     question: string;
-    options: Array<{ text: string }>;
+    options: Array<{ id: string; text: string }>;
+    expiresAt?: string;
   } | null>(null);
 
   const createPostMutation = useCreateCommunityPostMutation();
@@ -86,13 +88,19 @@ export const CreatePostForm = ({ onPostCreated }: CreatePostFormProps) => {
       return;
     }
 
+    // Transform poll data to match API expectations
+    const transformedPollData = pollData ? {
+      question: pollData.question,
+      options: pollData.options.map(opt => ({ text: opt.text }))
+    } : undefined;
+
     const payload = {
       title: title.trim() || undefined,
       content: content.trim(),
       category,
       post_type: postType,
       ...(postType === 'video' && videoUrl && { video_url: videoUrl }),
-      ...(postType === 'poll' && pollData && { poll_data: pollData })
+      ...(postType === 'poll' && transformedPollData && { poll_data: transformedPollData })
     };
 
     createPostMutation.mutate(payload, {

@@ -21,8 +21,8 @@ interface PollData {
 }
 
 interface PollCreatorProps {
-  value?: PollData;
-  onChange: (pollData: PollData) => void;
+  value?: PollData | null;
+  onChange: (pollData: PollData | null) => void;
   onRemove: () => void;
 }
 
