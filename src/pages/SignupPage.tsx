@@ -1,21 +1,14 @@
 
-// ABOUTME: The signup page for new users to register.
-import AuthLayout from '@/components/auth/AuthLayout';
+// ABOUTME: Signup page with form validation and user registration handling.
+import React from 'react';
 import SignupForm from '@/components/auth/SignupForm';
-import { Link } from 'react-router-dom';
+import SplitScreenAuthLayout from '@/components/auth/SplitScreenAuthLayout';
 
 const SignupPage = () => {
   return (
-    <AuthLayout>
-        <h2 className="text-2xl font-semibold text-center text-foreground mb-6">Criar Conta</h2>
-        <SignupForm />
-        <p className="text-center text-sm text-muted-foreground mt-6">
-            Já tem uma conta?{' '}
-            <Link to="/login" className="font-semibold text-primary hover:underline">
-                Faça login
-            </Link>
-        </p>
-    </AuthLayout>
+    <SplitScreenAuthLayout>
+      <SignupForm />
+    </SplitScreenAuthLayout>
   );
 };
 

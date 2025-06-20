@@ -1,7 +1,8 @@
 
-// ABOUTME: The login page for users to sign in.
-import SplitScreenAuthLayout from '@/components/auth/SplitScreenAuthLayout';
+// ABOUTME: Login page with form validation and authentication handling.
+import React from 'react';
 import LoginForm from '@/components/auth/LoginForm';
+import SplitScreenAuthLayout from '@/components/auth/SplitScreenAuthLayout';
 
 const LoginPage = () => {
   return (

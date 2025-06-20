@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { LogOut, Settings, Monitor, Moon, Sun } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/components/theme/CustomThemeProvider';
 import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
@@ -56,7 +56,7 @@ export const ProfileMenu = ({ isCollapsed }: ProfileMenuProps) => {
   };
 
   const handleThemeChange = (newTheme: string) => {
-    setTheme(newTheme);
+    setTheme(newTheme as 'light' | 'dark' | 'system');
     toast({
       title: "Tema alterado",
       description: `Tema alterado para ${newTheme === 'light' ? 'claro' : newTheme === 'dark' ? 'escuro' : 'sistema'}.`,
