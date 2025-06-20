@@ -77,81 +77,51 @@ Deno.serve(async (req) => {
       console.log('No authorization header provided, proceeding as anonymous');
     }
 
-    // Parse request to get post ID
-    let postId: number;
+    // Extract post ID from URL path
+    const url = new URL(req.url);
+    const pathSegments = url.pathname.split('/').filter(Boolean);
     
-    if (req.method === 'POST') {
-      try {
-        const body: PostDetailRequest = await req.json();
-        
-        if (!body.post_id || typeof body.post_id !== 'number') {
-          console.log('Invalid post_id in POST body');
-          return new Response(
-            JSON.stringify({
-              error: {
-                message: 'Invalid post_id provided',
-                code: 'VALIDATION_ERROR'
-              }
-            }),
-            { 
-              status: 400, 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            }
-          );
-        }
-        
-        postId = body.post_id;
-      } catch (error) {
-        console.log('Error parsing POST body:', error);
-        return new Response(
-          JSON.stringify({
-            error: {
-              message: 'Invalid JSON in request body',
-              code: 'VALIDATION_ERROR'
-            }
-          }),
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
-      }
-    } else if (req.method === 'GET') {
-      // Support GET requests with URL parameters
-      const url = new URL(req.url);
-      const postIdParam = url.searchParams.get('post_id');
-      
-      if (!postIdParam || isNaN(Number(postIdParam))) {
-        console.log('Invalid post_id parameter in GET request');
-        return new Response(
-          JSON.stringify({
-            error: {
-              message: 'Invalid post_id parameter',
-              code: 'VALIDATION_ERROR'
-            }
-          }),
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
-      }
-      
-      postId = Number(postIdParam);
+    // Try to get post_id from URL path (last segment) or query parameter
+    let postId: number;
+    const postIdFromPath = pathSegments[pathSegments.length - 1];
+    const postIdFromQuery = url.searchParams.get('post_id');
+    
+    if (postIdFromPath && !isNaN(Number(postIdFromPath))) {
+      postId = Number(postIdFromPath);
+    } else if (postIdFromQuery && !isNaN(Number(postIdFromQuery))) {
+      postId = Number(postIdFromQuery);
     } else {
-      console.log(`Method ${req.method} not allowed`);
-      return new Response(
-        JSON.stringify({
-          error: {
-            message: 'Method not allowed',
-            code: 'METHOD_NOT_ALLOWED'
+      // Fallback: try to parse from request body for POST requests
+      let postIdFromBody = null;
+      if (req.method === 'POST') {
+        try {
+          const body = await req.text();
+          if (body && body.trim()) {
+            const parsedBody: PostDetailRequest = JSON.parse(body);
+            postIdFromBody = parsedBody.post_id;
           }
-        }),
-        { 
-          status: 405, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        } catch (parseError) {
+          console.log('Could not parse POST body:', parseError);
         }
-      );
+      }
+      
+      if (postIdFromBody && !isNaN(Number(postIdFromBody))) {
+        postId = Number(postIdFromBody);
+      } else {
+        console.log('Invalid or missing post_id');
+        return new Response(
+          JSON.stringify({
+            error: {
+              message: 'Invalid or missing post_id parameter',
+              code: 'VALIDATION_ERROR'
+            }
+          }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
     }
 
     console.log(`Fetching post detail for ID: ${postId}`);
@@ -229,7 +199,7 @@ Deno.serve(async (req) => {
       
       isSaved = !!savedData;
 
-      // Check if user can moderate (admin/editor role)
+      // Check if user can moderate (admin/editor role)  
       const { data: userData } = await supabase
         .from('Practitioners')
         .select('role')

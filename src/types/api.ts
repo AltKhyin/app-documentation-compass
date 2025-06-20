@@ -1,21 +1,19 @@
 
-// ABOUTME: Centralized API response and error handling types for improved type safety across the application.
+// ABOUTME: API response and request type definitions for standardized data handling.
 
-// Generic API response wrapper - eliminates any usage
-export interface ApiResponse<T = unknown> {
+export interface ApiResponse<T = any> {
   data?: T;
   error?: ApiError;
   success: boolean;
+  message?: string;
 }
 
-// Standardized error interface
 export interface ApiError {
   message: string;
   code?: string;
-  details?: Record<string, unknown>;
+  details?: any;
 }
 
-// Form validation types - improved type safety
 export interface FormFieldError {
   field: string;
   message: string;
@@ -26,25 +24,34 @@ export interface FormValidationResult {
   errors: FormFieldError[];
 }
 
-// Generic pagination parameters - reusable across the app
 export interface PaginationParams {
-  page?: number;
-  limit?: number;
+  page: number;
+  limit: number;
 }
 
-// Generic pagination response - eliminates any usage
-export interface PaginationResponse<T> {
-  data: T[];
-  pagination: {
-    page: number;
-    limit: number;
-    hasMore: boolean;
-    total?: number;
-  };
+export interface PaginationResponse {
+  page: number;
+  limit: number;
+  total_count: number;
+  total_pages: number;
+  has_next: boolean;
+  has_previous: boolean;
 }
 
-// HTTP method types for API calls
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 
-// Generic query parameters type
-export type QueryParams = Record<string, string | number | boolean | undefined>;
+export interface QueryParams {
+  [key: string]: string | number | boolean | undefined;
+}
+
+// Community-specific API types
+export interface SavePostMutationData {
+  post_id: number;
+  is_saved?: boolean;
+}
+
+export interface SavePostResponse {
+  success: boolean;
+  is_saved: boolean;
+  message?: string;
+}

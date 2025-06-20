@@ -21,17 +21,17 @@ export async function checkRateLimit(
   const windowStart = new Date(now.getTime() - (windowSeconds * 1000));
 
   try {
-    // Clean old entries
+    // Clean old entries using the correct column name 'key'
     await supabase
       .from('rate_limit_log')
       .delete()
       .lt('created_at', windowStart.toISOString());
 
-    // Count current requests in window
+    // Count current requests in window using 'key' column
     const { count, error } = await supabase
       .from('rate_limit_log')
       .select('*', { count: 'exact' })
-      .eq('identifier', identifier)
+      .eq('key', identifier)
       .gte('created_at', windowStart.toISOString());
 
     if (error) {
@@ -58,11 +58,12 @@ export async function checkRateLimit(
       };
     }
 
-    // Log this request
+    // Log this request using the correct column structure
     await supabase
       .from('rate_limit_log')
       .insert({
-        identifier,
+        key: identifier,
+        timestamp: Math.floor(now.getTime() / 1000),
         created_at: now.toISOString()
       });
 

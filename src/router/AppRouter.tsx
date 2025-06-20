@@ -1,69 +1,121 @@
 
-// ABOUTME: Main application router with standardized English route names while preserving Portuguese URLs for users
+// ABOUTME: Main application router configuration with protected routes and lazy loading.
 
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ProtectedAppRoute } from '../components/routes/ProtectedAppRoute';
-import AppShell from '../components/shell/AppShell';
+import React, { Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ProtectedRoute } from '../components/auth/ProtectedRoute';
+import { CommunityLoadingState } from '../components/community/CommunityLoadingState';
 
-// Pages - standardized English names for internal consistency
-import Index from '../pages/Index';
-import AuthPage from '../pages/AuthPage';
-import LoginPage from '../pages/LoginPage';
-import SignupPage from '../pages/SignupPage';
-import CommunityPage from '../pages/CommunityPage';
-import CollectionPage from '../pages/CollectionPage';
-import ProfilePage from '../pages/ProfilePage';
-import ReviewDetailPage from '../pages/ReviewDetailPage';
-import CommunityPostPage from '../pages/CommunityPostPage';
-import CreatePostPage from '../pages/CreatePostPage';
-import CommunityInfoPage from '../pages/CommunityInfoPage';
-import SavedPostsPage from '../pages/SavedPostsPage';
-import NotFound from '../pages/NotFound';
-import UnauthorizedPage from '../pages/UnauthorizedPage';
-import DebugSignupPage from '../pages/DebugSignupPage';
+// Lazy loading for better performance
+const Index = React.lazy(() => import('../pages/Index'));
+const LoginPage = React.lazy(() => import('../pages/LoginPage'));
+const SignupPage = React.lazy(() => import('../pages/SignupPage'));
+const CommunityPage = React.lazy(() => import('../pages/CommunityPage'));
+const CommunityPostPage = React.lazy(() => import('../pages/CommunityPostPage'));
+const CreatePostPage = React.lazy(() => import('../pages/CreatePostPage'));
+const CollectionPage = React.lazy(() => import('../pages/CollectionPage'));
+const ReviewDetailPage = React.lazy(() => import('../pages/ReviewDetailPage'));
+const SavedPostsPage = React.lazy(() => import('../pages/SavedPostsPage'));
+const ProfilePage = React.lazy(() => import('../pages/ProfilePage'));
+const CommunityInfoPage = React.lazy(() => import('../pages/CommunityInfoPage'));
+const NotFound = React.lazy(() => import('../pages/NotFound'));
 
-export const AppRouter = () => {
+export default function AppRouter() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public authentication routes */}
-        <Route path="/auth" element={<AuthPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/debug-signup" element={<DebugSignupPage />} />
-        <Route path="/unauthorized" element={<UnauthorizedPage />} />
-
-        {/* Protected application routes with Portuguese URLs preserved for users */}
-        <Route path="/" element={
-          <ProtectedAppRoute>
-            <AppShell />
-          </ProtectedAppRoute>
-        }>
-          <Route index element={<Index />} />
+    <Router>
+      <Suspense fallback={<CommunityLoadingState variant="page" />}>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
           
-          {/* Community routes - Portuguese URLs preserved */}
-          <Route path="comunidade" element={<CommunityPage />} />
-          <Route path="comunidade/:postId" element={<CommunityPostPage />} />
-          <Route path="comunidade/criar" element={<CreatePostPage />} />
-          <Route path="comunidade/info" element={<CommunityInfoPage />} />
+          {/* Protected Routes */}
+          <Route 
+            path="/" 
+            element={
+              <ProtectedRoute requiredRole="practitioner">
+                <Index />
+              </ProtectedRoute>
+            } 
+          />
           
-          {/* Collection route - Portuguese URL preserved */}
-          <Route path="acervo" element={<CollectionPage />} />
+          <Route 
+            path="/comunidade" 
+            element={
+              <ProtectedRoute requiredRole="practitioner">
+                <CommunityPage />
+              </ProtectedRoute>
+            } 
+          />
           
-          {/* Profile route - Portuguese URL preserved */}
-          <Route path="perfil" element={<ProfilePage />} />
+          <Route 
+            path="/comunidade/:postId" 
+            element={
+              <ProtectedRoute requiredRole="practitioner">
+                <CommunityPostPage />
+              </ProtectedRoute>
+            } 
+          />
           
-          {/* Review detail route */}
-          <Route path="review/:slug" element={<ReviewDetailPage />} />
+          <Route 
+            path="/comunidade/criar" 
+            element={
+              <ProtectedRoute requiredRole="practitioner">
+                <CreatePostPage />
+              </ProtectedRoute>
+            } 
+          />
           
-          {/* Saved posts route */}
-          <Route path="salvos" element={<SavedPostsPage />} />
-        </Route>
-
-        {/* 404 fallback */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+          <Route 
+            path="/acervo" 
+            element={
+              <ProtectedRoute requiredRole="practitioner">
+                <CollectionPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/review/:slug" 
+            element={
+              <ProtectedRoute requiredRole="practitioner">
+                <ReviewDetailPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/salvos" 
+            element={
+              <ProtectedRoute requiredRole="practitioner">
+                <SavedPostsPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/perfil" 
+            element={
+              <ProtectedRoute requiredRole="practitioner">
+                <ProfilePage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/comunidade/sobre" 
+            element={
+              <ProtectedRoute requiredRole="practitioner">
+                <CommunityInfoPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Fallback Routes */}
+          <Route path="/404" element={<NotFound />} />
+          <Route path="*" element={<Navigate to="/404" replace />} />
+        </Routes>
+      </Suspense>
+    </Router>
   );
-};
+}

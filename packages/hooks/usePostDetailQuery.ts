@@ -12,8 +12,9 @@ export const usePostDetailQuery = (postId: number) => {
       console.log('Fetching post detail for ID:', postId);
       
       try {
+        // Use GET method with URL parameter instead of POST with JSON body
         const { data, error } = await supabase.functions.invoke('get-community-post-detail', {
-          body: { post_id: postId },
+          method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           }
@@ -29,18 +30,18 @@ export const usePostDetailQuery = (postId: number) => {
             throw new Error('Too many requests. Please wait a moment and try again.');
           }
           if (error.message?.includes('not found') || error.message?.includes('POST_NOT_FOUND')) {
-            throw new Error('This post could not be found.');
+            throw new Error('Este post não foi encontrado.');
           }
           if (error.message?.includes('network') || error.message?.includes('Failed to fetch')) {
-            throw new Error('Network error. Please check your connection and try again.');
+            throw new Error('Erro de conexão. Verifique sua internet e tente novamente.');
           }
           
-          throw new Error(error.message || `Failed to fetch post details for ID: ${postId}`);
+          throw new Error(error.message || `Falha ao carregar o post com ID: ${postId}`);
         }
 
         if (!data) {
           console.error('No data returned from edge function');
-          throw new Error(`Post with ID ${postId} not found`);
+          throw new Error(`Post com ID ${postId} não encontrado`);
         }
 
         console.log('Post detail fetched successfully:', data);
@@ -51,13 +52,13 @@ export const usePostDetailQuery = (postId: number) => {
         // Enhanced error handling for specific error types
         if (error instanceof Error) {
           if (error.message.includes('Rate limit')) {
-            throw new Error('Too many requests. Please wait a moment and try again.');
+            throw new Error('Muitas tentativas. Aguarde um momento e tente novamente.');
           }
           if (error.message.includes('not found')) {
-            throw new Error('This post could not be found.');
+            throw new Error('Este post não foi encontrado.');
           }
           if (error.message.includes('network') || error.message.includes('Failed to fetch') || error.message.includes('Failed to send a request')) {
-            throw new Error('Network error. Please check your connection and try again.');
+            throw new Error('Erro de conexão. Verifique sua internet e tente novamente.');
           }
         }
         
