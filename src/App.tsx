@@ -1,5 +1,5 @@
 
-// ABOUTME: Main application component with hierarchical error boundary protection
+// ABOUTME: Main application component with hierarchical error boundary protection - Root tier (Tier 1)
 
 import React from 'react';
 import { AppRouter } from './router/AppRouter';
@@ -13,8 +13,8 @@ function App() {
       {/* Tier 1: Root Error Boundary - Ultimate safety net for entire application */}
       <ErrorBoundary 
         tier="root"
-        context="aplicação"
-        showDetails={true}
+        context="aplicação completa"
+        showDetails={process.env.NODE_ENV === 'development'}
         showHomeButton={false}
         showBackButton={false}
       >
