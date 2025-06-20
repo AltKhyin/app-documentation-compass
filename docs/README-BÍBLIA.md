@@ -1,321 +1,268 @@
-# EVIDENS - Documentação Canônica do Sistema
-**Versão:** 2.1.0  
-**Data:** 19 de Junho de 2025  
-**Status:** Milestone 3 Community Module - Implementation Complete ✅
 
-## 📚 VISÃO GERAL DO PROJETO
-Este documento serve como a fonte única de verdade para a arquitetura, convenções e decisões de design do aplicativo EVIDENS. Ele deve ser lido e referenciado por todos os membros da equipe de desenvolvimento antes de iniciar qualquer tarefa de codificação.
+# **EVIDENS - README BÍBLIA**
 
-O objetivo é garantir consistência, manutenibilidade e escalabilidade em todo o projeto.
-
-## 🎯 PRINCÍPIOS FUNDAMENTAIS
-- **[P1] Máxima Precisão:** Priorizar a exatidão e a correção em todas as implementações.
-- **[P2] Simplicidade:** Remover complexidade desnecessária e evitar soluções excessivamente intrincadas.
-- **[P3] Padronização:** Aderir a padrões e convenções estabelecidas para garantir a consistência.
-- **[P4] Reutilização:** Maximizar a reutilização de componentes e código para reduzir a duplicação.
-- **[P5] Testabilidade:** Projetar componentes e módulos para serem facilmente testáveis.
-- **[P6] Segurança:** Implementar medidas de segurança em todas as camadas do aplicativo.
-- **[P7] Desempenho:** Otimizar o desempenho para garantir uma experiência de usuário fluida.
-- **[P8] Acessibilidade:** Garantir que o aplicativo seja acessível a todos os usuários, independentemente de suas habilidades.
-
-## ⚙️ CONFIGURAÇÃO DO AMBIENTE
-1.  Instale o Node.js (v18 ou superior)
-2.  Instale o pnpm (`npm install -g pnpm`)
-3.  Clone o repositório
-4.  Execute `pnpm install` na raiz do projeto
-5.  Configure as variáveis de ambiente (consulte a seção abaixo)
-6.  Execute `pnpm dev` para iniciar o servidor de desenvolvimento
-
-### Variáveis de Ambiente Necessárias
-- `SUPABASE_URL`: URL do seu projeto Supabase
-- `SUPABASE_ANON_KEY`: Chave anônima do seu projeto Supabase
-- `SUPABASE_SERVICE_ROLE_KEY`: Chave de função de serviço do seu projeto Supabase
-- `NEXT_PUBLIC_SUPABASE_URL`: URL do seu projeto Supabase (para o cliente)
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Chave anônima do seu projeto Supabase (para o cliente)
-
-## 🗂️ ESTRUTURA DE PASTAS
-```
-├── src/                # Código fonte principal
-│   ├── components/     # Componentes React reutilizáveis
-│   │   ├── community/  # Módulo da comunidade
-│   │   │   ├── sidebar/    # Componentes da barra lateral
-│   │   │   │   ├── RulesModule.tsx
-│   │   │   │   ├── LinksModule.tsx
-│   │   │   │   ├── TrendingDiscussionsModule.tsx
-│   │   │   │   ├── RecentActivityModule.tsx
-│   │   │   │   └── FeaturedPollModule.tsx
-│   │   │   ├── PostCard.tsx ✅ NEW
-│   │   │   ├── CommunitySidebar.tsx
-│   │   │   ├── CommunityErrorBoundary.tsx
-│   │   │   ├── CommunityLoadingState.tsx
-│   │   │   └── CommunityFeedWithSidebar.tsx
-│   ├── types/          # Definições de tipos TypeScript
-│   │   ├── index.ts
-│   │   └── community.ts ✅ NEW
-│   ├── contexts/       # Contextos React para gerenciamento de estado global
-│   ├── hooks/          # Hooks React personalizados
-│   ├── pages/          # Páginas do aplicativo
-│   ├── styles/         # Estilos globais e temas
-│   ├── utils/          # Funções utilitárias
-├── packages/           # Hooks de data fetching
-│   └── hooks/          # Hooks customizados para acesso a dados
-├── public/             # Arquivos estáticos
-├── supabase/           # Configuração do Supabase
-├── docs/               # Documentação do projeto
-├── README.md           # Instruções de configuração e uso
-└── package.json        # Metadados do projeto e dependências
-```
-
-## 🗺️ ROUTING
-O aplicativo usa `react-router-dom` para gerenciamento de rotas. As rotas são definidas no arquivo `src/router/AppRouter.tsx`.
-
-### Rotas Principais
-- `/`: Homepage (Index)
-- `/acervo`: Acervo de reviews
-- `/comunidade`: Comunidade (fórum) - **FUNCIONAL**
-- `/comunidade/:postId`: Detalhe de um post na comunidade
-- `/comunidade/criar`: Criação de novos posts
-- `/profile`: Página de perfil do usuário
-- `/reviews/:slug`: Detalhe de uma review
-- `/auth`: Autenticação (login/signup)
-
-## 💾 BANCO DE DADOS
-O aplicativo usa o Supabase como banco de dados. O esquema do banco de dados é definido no arquivo `supabase/migrations/*.sql`.
-
-### Tabelas Principais
-- `Practitioners`: Informações dos usuários (profissionais)
-- `Reviews`: Reviews de artigos científicos
-- `CommunityPosts`: Posts da comunidade (fórum)
-- `CommunityPost_Votes`: Votos dos usuários nos posts da comunidade
-- `SiteSettings`: Configurações do site (administradas pelo painel de controle)
-
-## 🔑 ROW LEVEL SECURITY (RLS)
-O aplicativo usa RLS para garantir que os usuários só possam acessar os dados que têm permissão para acessar. As políticas de RLS são definidas nos arquivos `supabase/policies/*.sql`.
-
-### Políticas Principais
-- `Practitioners`: Os usuários só podem ver seus próprios dados, exceto administradores.
-- `Reviews`: Todos os usuários podem ver todas as reviews.
-- `CommunityPosts`: Todos os usuários podem ver todos os posts, mas apenas usuários autenticados podem criar, atualizar ou deletar seus próprios posts. Administradores podem deletar qualquer post.
-- `CommunityPost_Votes`: Usuários autenticados podem votar em posts.
-
-## 📡 API CONTRACT
-O aplicativo usa Edge Functions do Supabase para expor uma API REST. Os contratos da API são definidos em `docs/[DOC_5]_API_CONTRACT.md`.
-
-### Endpoints Principais
-- `get-community-page-data`: Retorna os dados para a página da comunidade (posts e sidebar). **FUNCIONAL**
-- `get-review-by-slug`: Retorna uma review pelo seu slug.
-- `create-community-post`: Cria um novo post na comunidade.
-- `moderate-community-post`: Executa ações de moderação em um post da comunidade (pin, hide, etc.).
-
-## 🧰 DATA FETCHING
-O aplicativo usa TanStack Query para gerenciamento de estado e cache de dados. Os hooks de data fetching são definidos na pasta `packages/hooks/`.
-
-### Hooks Principais
-- `useCommunityPageQuery`: Retorna os dados para a página da comunidade (posts e sidebar). **FUNCIONAL**
-- `useReviewBySlugQuery`: Retorna uma review pelo seu slug.
-- `useCreateCommunityPostMutation`: Cria um novo post na comunidade.
-- `usePostActionMutation`: Executa ações de moderação em um post da comunidade (pin, hide, etc.).
-
-## 🎨 VISUAL SYSTEM
-O aplicativo usa componentes do Shadcn UI para garantir consistência visual. Os estilos globais são definidos no arquivo `src/index.css`.
-
-### Componentes Principais
-- `Button`: Botão
-- `Card`: Cartão
-- `Input`: Input de texto
-- `Select`: Select (dropdown)
-- `Alert`: Alerta (mensagem de erro/sucesso)
-
-## 📱 MOBILE ADAPTATION
-O aplicativo usa um design responsivo para se adaptar a diferentes tamanhos de tela. O breakpoint para mobile é definido como `768px` no arquivo `src/hooks/use-mobile.tsx`.
-
-### Estratégias de Adaptação
-- **Layout:** O layout de duas colunas (feed + sidebar) é usado em telas maiores que `768px`. Em telas menores, o layout é de uma coluna, e a sidebar é omitida.
-- **Componentes:** Alguns componentes têm versões diferentes para mobile e desktop. Por exemplo, a bottom tab bar é usada apenas em mobile.
-- **Navegação:** A navegação principal é feita através da bottom tab bar em mobile e da sidebar em desktop.
-
-## 📊 STATUS ATUAL DO PROJETO
-
-### ✅ MÓDULOS IMPLEMENTADOS E FUNCIONAIS
-- **Autenticação Completa:** Login/Signup com Supabase Auth
-- **App Shell Responsivo:** Desktop sidebar + Mobile bottom tabs
-- **Homepage Feed:** Reviews recentes e sugestões
-- **Acervo Completo:** Filtros, busca, tags hierárquicas
-- **Review Detail:** Renderização de conteúdo estruturado
-- **Community Module (MILESTONE 3 COMPLETE):**
-  - **✅ Backend:** Edge functions operacionais com rate limiting
-  - **✅ Frontend:** Routing CORRIGIDO e funcional
-  - **✅ UI Completa:** PostCard, error boundaries, loading states
-  - **✅ Desktop:** Feed + Sidebar layout totalmente funcional
-  - **✅ Mobile:** Feed responsivo (sidebar omitida conforme blueprint)
-  - **✅ Sidebar Modules:** Rules, Links, Trending, Recent Activity, Featured Poll
-  - **✅ Type Safety:** Definições TypeScript completas
-  - **✅ Data Integration:** Hook consolidado para posts + sidebar
-
-### 🔧 FEATURES TÉCNICAS IMPLEMENTADAS
-- **Rate Limiting:** Todos os endpoints protegidos (30 req/60s)
-- **Error Boundaries:** Padronizados por módulo (CommunityErrorBoundary)
-- **Loading States:** Componentes reutilizáveis (CommunityLoadingState)
-- **Mobile-First Design:** Breakpoints padronizados com useIsMobile
-- **Data Access Layer:** TanStack Query + hooks customizados + types
-- **Component Architecture:** Hierarquia clara (Pages → Modules → Primitives)
-
-### 🚧 PRÓXIMAS IMPLEMENTAÇÕES NECESSÁRIAS
-1. **Post Detail View (Milestone 4.1):** Implementar CommunityPostPage
-2. **Voting System (Milestone 4.2):** Sistema de upvote/downvote
-3. **Comment System (Milestone 4.3):** Sistema de comentários e replies
-4. **Post Creation (Milestone 4.4):** Completar CreatePostPage workflow
-5. **Moderation Tools (Milestone 5):** Ferramentas de moderação para admins
-
-## 🏛️ ARQUITETURA GERAL
-
-### Diagrama de Alto Nível
-```
-[Cliente] ↔ [App Shell] ↔ [Módulos] ↔ [Data Hooks] ↔ [Edge Functions] ↔ [Supabase DB]
-```
-
-### Fluxo de Dados Típico
-1.  O usuário interage com um componente na UI.
-2.  O componente chama um hook de data fetching (`use...Query` ou `use...Mutation`).
-3.  O hook chama uma Edge Function do Supabase.
-4.  A Edge Function executa uma query no banco de dados Supabase.
-5.  O banco de dados retorna os dados para a Edge Function.
-6.  A Edge Function retorna os dados para o hook.
-7.  O hook atualiza o estado do componente, que é re-renderizado.
-
-## 🧱 ARQUITETURA DE COMPONENTES (ATUALIZADA)
-
-### Padrão de Error Handling
-```
-CommunityErrorBoundary (por módulo)
-├── Fallback UI padronizado
-├── Reset de estado automático
-└── Logging centralizado
-```
-
-### Padrão de Loading States
-```
-CommunityLoadingState
-├── Variant: feed | sidebar | post | minimal
-├── Skeleton patterns consistentes
-└── Count configurável
-```
-
-### Hierarquia Mobile-First
-```
-CommunityFeedWithSidebar
-├── Desktop: Two-column (feed + sidebar)
-├── Mobile: Single column (feed only)
-└── Responsive breakpoints ([DOC_8])
-```
-
-### Feed Display Pattern
-```
-PostCard (Individual post display)
-├── Vote buttons (desktop: left column, mobile: inline)
-├── Author metadata (avatar, name, timestamp)
-├── Content preview (title, text, category, flair)
-├── Engagement metrics (votes, comments)
-└── Action buttons (share, save)
-```
-
-### Módulos da Sidebar da Comunidade
-```
-CommunitySidebar
-├── FeaturedPollModule (enquete da semana)
-├── RulesModule (regras da comunidade)
-├── TrendingDiscussionsModule (discussões em alta)
-├── RecentActivityModule (atividade recente)
-└── LinksModule (links úteis)
-```
-
-### Type Safety Architecture
-```
-src/types/community.ts
-├── CommunityPost (estrutura completa do post)
-├── SidebarData (dados da sidebar)
-└── CommunityPageResponse (resposta da API)
-```
-
-## 🛡️ DIRETRIZES DE SEGURANÇA
-
-### [SEC.1] Autenticação e Autorização
-- Use o Supabase Auth para autenticação de usuários.
-- Use RLS para autorização e controle de acesso aos dados.
-- Valide os dados de entrada em todas as Edge Functions.
-- Implemente rate limiting para proteger contra ataques de negação de serviço.
-
-### [SEC.2] Moderação de Conteúdo
-- Implemente um sistema de moderação de conteúdo para a comunidade.
-- Permita que administradores e moderadores removam posts ofensivos ou spam.
-- Implemente um sistema de denúncia de posts.
-- Monitore a atividade da comunidade para identificar e remover conteúdo impróprio.
-
-## 🧪 DIRETRIZES DE TESTE
-
-### [T1] Testes Unitários
-- Escreva testes unitários para todos os componentes e funções utilitárias.
-- Use Jest e React Testing Library para testes unitários.
-- Garanta que todos os testes unitários passem antes de fazer commit do código.
-
-### [T2] Testes de Integração
-- Escreva testes de integração para garantir que os diferentes módulos do aplicativo funcionem juntos corretamente.
-- Use Cypress para testes de integração.
-- Garanta que todos os testes de integração passem antes de fazer deploy do aplicativo.
-
-## 🚀 DIRETRIZES DE DEPLOY
-
-### [D1] Ambiente de Produção
-- Use um ambiente de produção separado do ambiente de desenvolvimento.
-- Configure as variáveis de ambiente corretamente no ambiente de produção.
-- Use um certificado SSL para garantir a segurança das conexões HTTPS.
-- Monitore o desempenho do aplicativo em produção.
-
-### [D2] Continuous Integration/Continuous Deployment (CI/CD)
-- Use um sistema de CI/CD para automatizar o processo de deploy.
-- Configure o sistema de CI/CD para executar testes automatizados antes de fazer deploy do aplicativo.
-- Use um sistema de versionamento de código (Git) para gerenciar as alterações no código.
-
-## 📋 PLANO DE DESENVOLVIMENTO FUTURO
-
-### Phase 4: POST INTERACTION SYSTEM (PRÓXIMO)
-**Objetivo:** Implementar sistema completo de interação com posts
-**Componentes Necessários:**
-- ✅ PostCard component (IMPLEMENTADO)
-- PostDetail component para visualização individual
-- VoteButtons component para upvote/downvote
-- Comment system para discussões aninhadas
-- Reply functionality para respostas
-
-### Phase 5: CONTENT CREATION & MODERATION
-**Objetivo:** Completar ferramentas de criação e moderação
-**Componentes Necessários:**
-- Enhanced CreatePostForm com rich text editor
-- Moderation dashboard para admins
-- Content flagging system
-- User reputation system
-
-### Phase 6: PERFORMANCE OPTIMIZATION
-**Objetivo:** Otimizar performance e cache
-**Melhorias Necessárias:**
-- Implement virtual scrolling para feeds longos
-- Optimize image loading com lazy loading
-- Implement infinite scroll com intersection observer
-- Cache optimization para dados da sidebar
-
-## 📜 GLOSSÁRIO
-
-### Termos Comuns
-- **Review:** Avaliação de um artigo científico.
-- **Acervo:** Coleção de reviews.
-- **Comunidade:** Fórum de discussão científica.
-- **Post:** Mensagem em um fórum de discussão.
-- **Slug:** Identificador único de uma review (usado na URL).
-- **Edge Function:** Função serverless executada no Edge do Supabase.
-- **RLS:** Row Level Security (segurança em nível de linha).
-- **Sidebar:** Barra lateral com módulos informativos da comunidade.
+**Version:** 6.2.0  
+**Date:** June 20, 2025  
+**Purpose:** Complete technical summary and current implementation plan for the EVIDENS platform.
 
 ---
-**Última Atualização:** Milestone 3 - Community Module Implementation Complete ✅
-**Próximo Marco:** Milestone 4 - Post Interaction System & Content Creation
-**Funcionalidade Atual:** Community feed funcional com sidebar completa, tipos TypeScript, error handling e loading states
+
+## **STRATEGIC ANALYSIS - CRITICAL SYSTEM FIXES**
+
+### **Goal Deconstruction**
+Fix three critical architectural issues preventing core app functionality: broken sidebar navigation, theme persistence failures, and missing page content rendering.
+
+### **System-Wide Context Gathering**
+**Key Files Affected:**
+- `src/App.tsx` - Provider hierarchy conflicts
+- `src/components/shell/AppShell.tsx` - Missing Outlet rendering
+- `src/components/shell/DesktopShell.tsx` - Routing integration failure
+- `src/components/shell/MobileShell.tsx` - Routing integration failure
+- `src/components/theme/CustomThemeProvider.tsx` - Theme persistence logic
+- `src/components/auth/AuthThemeProvider.tsx` - Conflicting theme override
+- `src/config/navigation.ts` - Path inconsistencies
+- `src/router/AppRouter.tsx` - Nested routing structure
+
+**Database Tables:** None directly affected (UI/routing layer issues)
+**Existing Components:** Shell architecture, theme providers, navigation components
+
+### **Solution Ideation & Trade-off Analysis**
+
+**Strategy 1: Incremental Patchwork Fixes**
+- Pros: Minimal code changes, faster initial fixes
+- Cons: Technical debt accumulation, potential for introducing new bugs, doesn't address root architectural flaws
+
+**Strategy 2: Comprehensive Architectural Restructure (RECOMMENDED)**
+- Pros: Addresses root causes, creates maintainable foundation, prevents future similar issues, aligns with project principles
+- Cons: More extensive changes required, higher initial development time
+- **Justification:** Aligns with project directive D3.1 (proper architecture) and ensures long-term maintainability
+
+### **Milestone Dependency Chain**
+1. **Milestone 1** (Provider Architecture) → **Milestone 2** (Routing Structure) → **Milestone 3** (Theme Management) → **Milestone 4** (Navigation Consistency) → **Milestone 5** (Validation & Testing)
+2. Each milestone builds upon the previous one's foundation
+3. No parallel execution possible due to interdependencies
+
+---
+
+## **DETAILED IMPLEMENTATION PLAN**
+
+### **MILESTONE 1: Provider Architecture Restructure**
+**Objective:** Eliminate provider conflicts and establish correct hierarchy
+
+#### **Task 1.1: Fix App.tsx Provider Hierarchy**
+**Files to Modify:**
+- `src/App.tsx`
+
+**Technical Specification:**
+1. Remove duplicate `QueryClientProvider`, `AuthSessionProvider`, `PWAProvider` instances
+2. Keep only `AppProviders` wrapper with correct provider order
+3. Remove `AuthThemeProvider` from global scope (limit to auth routes only)
+4. Ensure single `CustomThemeProvider` instance controls main app theming
+
+**Governing Directives:** [D3.3] State Management Decision Algorithm
+
+**Verification Criteria:**
+- [ ] No duplicate providers in component tree
+- [ ] Single theme provider controls main app
+- [ ] No console warnings about provider conflicts
+
+#### **Task 1.2: Scope AuthThemeProvider Correctly**
+**Files to Modify:**
+- `src/pages/AuthPage.tsx`
+- `src/components/auth/SplitScreenAuthLayout.tsx`
+
+**Technical Specification:**
+1. Wrap only `SplitScreenAuthLayout` with `AuthThemeProvider`
+2. Remove global `AuthThemeProvider` from `App.tsx`
+3. Ensure auth pages maintain white theme while main app respects user preference
+
+**Governing Directives:** [D3.3] State Management, Theme separation
+
+**Verification Criteria:**
+- [ ] Auth pages force white theme
+- [ ] Main app respects saved theme preference
+- [ ] Theme persistence works across refreshes
+
+### **MILESTONE 2: Routing Structure Implementation**
+**Objective:** Fix React Router v6 nested routing to display page content
+
+#### **Task 2.1: Implement Outlet in Shell Components**
+**Files to Modify:**
+- `src/components/shell/AppShell.tsx`
+- `src/components/shell/DesktopShell.tsx`
+- `src/components/shell/MobileShell.tsx`
+
+**Technical Specification:**
+1. Import `Outlet` from `react-router-dom` in all shell components
+2. Replace `{children}` with `<Outlet />` in main content areas
+3. Remove `children` prop from shell component interfaces
+4. Ensure proper layout structure with shell + outlet content
+
+**Governing Directives:** [M2.2] Architectural Model - SPA with CSR
+
+**Verification Criteria:**
+- [ ] Page content renders correctly in main area
+- [ ] Navigation between routes shows different content
+- [ ] Shell layout remains consistent across routes
+
+#### **Task 2.2: Fix AppShell Route Integration**
+**Files to Modify:**
+- `src/components/shell/AppShell.tsx`
+
+**Technical Specification:**
+1. Remove `children` parameter from component props
+2. Ensure AppShell serves as layout wrapper for nested routes
+3. Maintain data loading logic for app-wide context
+4. Add proper TypeScript interface updates
+
+**Governing Directives:** [D3.2] Component Architecture - Data Flow
+
+**Verification Criteria:**
+- [ ] AppShell renders without children prop errors
+- [ ] Nested routes display correctly within shell
+- [ ] App data context remains available to all routes
+
+### **MILESTONE 3: Theme Management Resolution**
+**Objective:** Ensure consistent theme persistence and prevent conflicts
+
+#### **Task 3.1: Validate CustomThemeProvider Logic**
+**Files to Modify:**
+- `src/components/theme/CustomThemeProvider.tsx`
+
+**Technical Specification:**
+1. Verify localStorage integration for theme persistence
+2. Ensure proper initialization race condition handling
+3. Validate system theme detection and fallback logic
+4. Fix any theme application timing issues
+
+**Governing Directives:** [AD.1] Mobile First principles
+
+**Verification Criteria:**
+- [ ] Theme persists across browser refreshes
+- [ ] System theme detection works correctly
+- [ ] No theme flashing during app initialization
+
+### **MILESTONE 4: Navigation Path Consistency**
+**Objective:** Align all navigation paths across components and routing
+
+#### **Task 4.1: Standardize Navigation Paths**
+**Files to Modify:**
+- `src/config/navigation.ts`
+- `src/router/AppRouter.tsx`
+
+**Technical Specification:**
+1. Change profile path from `/profile` to `/perfil` consistently
+2. Verify all navigation items match actual route definitions
+3. Update both main and mobile navigation configurations
+4. Ensure admin routes use correct path matching
+
+**Governing Directives:** [D3.1] Naming Convention consistency
+
+**Verification Criteria:**
+- [ ] All navigation links work correctly
+- [ ] No 404 errors from navigation clicks
+- [ ] Active route highlighting functions properly
+
+### **MILESTONE 5: System Validation & Testing**
+**Objective:** Comprehensive verification of all fixes
+
+#### **Task 5.1: End-to-End Functionality Testing**
+**Files to Modify:**
+- None (testing phase)
+
+**Technical Specification:**
+1. Test navigation between all major routes
+2. Verify theme persistence across multiple refresh cycles
+3. Confirm page content displays correctly on all routes
+4. Validate mobile and desktop shell behavior
+
+**Governing Directives:** [P1.1] Pre-Flight Checklist verification
+
+**Verification Criteria:**
+- [ ] Sidebar navigation works on all routes
+- [ ] Theme preference persists after refresh
+- [ ] All page content renders correctly
+- [ ] No console errors or TypeScript issues
+- [ ] Mobile and desktop layouts function properly
+
+---
+
+## **RISK ASSESSMENT**
+
+### **High-Risk Items:**
+1. **Provider Hierarchy Changes** - Risk of breaking authentication state
+   - **Mitigation:** Incremental testing of auth flow after each provider change
+2. **Routing Structure Overhaul** - Risk of breaking existing navigation
+   - **Mitigation:** Systematic testing of all routes before deployment
+
+### **Medium-Risk Items:**
+1. **Theme Provider Conflicts** - Risk of visual inconsistencies
+   - **Mitigation:** Visual testing across all pages and theme modes
+
+---
+
+## **CLEANUP & DEPRECATION**
+
+### **Task C.1: Remove Obsolete Code**
+**Files to Clean:**
+- Remove duplicate provider instances from `App.tsx`
+- Remove unused `children` props from shell components
+- Clean up any unused imports after routing changes
+
+---
+
+## **CURRENT SYSTEM STATUS**
+
+### **✅ IMPLEMENTED FEATURES**
+- Authentication system with JWT custom claims
+- Community features with post creation and voting
+- Review system with detailed content blocks
+- Mobile-responsive adaptive design
+- PWA functionality
+- Basic shell layout structure
+
+### **🚨 CRITICAL ISSUES (Current Plan Focus)**
+1. **Sidebar Navigation Broken** - Links don't navigate between pages
+2. **Theme Resets on Refresh** - User preferences not persisting
+3. **Missing Page Content** - Only shell visible, no route content rendering
+
+### **📋 TECHNICAL DEBT (Discovered)**
+- Route path inconsistencies between `/profile` and `/perfil`
+- Potential optimization opportunities in data fetching hooks
+- Component prop interface cleanup needed
+
+---
+
+## **IMPLEMENTATION FLOWCHART**
+
+```
+START
+  ↓
+[MILESTONE 1: Provider Architecture]
+  ├── Fix App.tsx Provider Hierarchy
+  ├── Scope AuthThemeProvider Correctly
+  ↓
+[MILESTONE 2: Routing Structure]
+  ├── Implement Outlet in Shell Components
+  ├── Fix AppShell Route Integration
+  ↓
+[MILESTONE 3: Theme Management]
+  ├── Validate CustomThemeProvider Logic
+  ↓
+[MILESTONE 4: Navigation Consistency]
+  ├── Standardize Navigation Paths
+  ↓
+[MILESTONE 5: System Validation]
+  ├── End-to-End Functionality Testing
+  ↓
+[CLEANUP & DEPRECATION]
+  ├── Remove Obsolete Code
+  ↓
+END (Fully Functional App)
+```
+
+---
+
+**Last Updated:** June 20, 2025  
+**Next Review:** After completion of MILESTONE 1
+
