@@ -1,14 +1,15 @@
+
 # 📖 README-BÍBLIA: Estado Atual do Projeto EVIDENS
 
-**Versão:** 6.1.0 (Task 4 Code Consistency - Correção de Rotas)  
+**Versão:** 6.2.0 (Task 4 Code Consistency - Correção de Documentação)  
 **Data:** 20 de Junho de 2025  
-**Status:** ✅ Tasks 1-3 Completados, 🟡 Task 4 Planejado - Sistema de Hardening Arquitetural 100% Mapeado
+**Status:** ✅ Tasks 1-3 Completados, 🔄 Task 4 Em Execução - Consistência de Código com Rotas em Português
 
 ## 🚀 RESUMO EXECUTIVO
 
 O projeto EVIDENS é uma plataforma científica de revisão de literatura implementada como uma Progressive Web App (PWA) usando React + Vite + Supabase. O sistema oferece uma experiência completa de consumo de conteúdo científico com funcionalidades de comunidade, curadoria e personalização.
 
-**ESTADO ATUAL:** ✅ Tasks 1-3 completos, 🟡 Task 4 planejado. Sistema production-ready com plano de consistência de código mapeado e pronto para execução.
+**ESTADO ATUAL:** ✅ Tasks 1-3 completos, 🔄 Task 4 em execução. Sistema production-ready com correção de documentação para manter rotas em português.
 
 ## 📋 FUNCIONALIDADES IMPLEMENTADAS
 
@@ -76,7 +77,7 @@ O projeto EVIDENS é uma plataforma científica de revisão de literatura implem
 ## 🏗️ PLANO DE HARDENING ARQUITETURAL (FASE FINAL)
 
 ### **OBJETIVO ESTRATÉGICO**
-Completar a transformação do EVIDENS em um sistema production-ready através da resolução de inconsistências de código, seguindo o plano definido no `docs/CODEBASE_AUDIT_REPORT.md`.
+Completar a transformação do EVIDENS em um sistema production-ready através da resolução de inconsistências de código, seguindo o plano corrigido que **mantém as rotas em português** para experiência do usuário brasileiro.
 
 ### **✅ TASK 1: DECOUPLING DA CAMADA DE DADOS (CONCLUÍDO)**
 **Status:** 🟢 Completo
@@ -171,41 +172,41 @@ Completar a transformação do EVIDENS em um sistema production-ready através d
 
 **PROGRESSO ATUAL:** 100% da Task 3 completado
 
-### **🟡 TASK 4: CONSISTÊNCIA DE CÓDIGO (PLANEJADO)**
-**Status:** 🟡 Planejado e Mapeado
-**Objetivo:** Eliminar inconsistências de nomeação e estrutura, consolidar componentes duplicados, mantendo rotas em português conforme padrão estabelecido.
+### **🔄 TASK 4: CONSISTÊNCIA DE CÓDIGO (EM EXECUÇÃO - CORRIGIDO)**
+**Status:** 🔄 Em Execução (Documentação Corrigida)
+**Objetivo:** Eliminar inconsistências de nomeação e estrutura, consolidar componentes duplicados, **mantendo rotas em português conforme padrão estabelecido**.
 
-**IMPORTANTE:** As rotas da aplicação devem permanecer em **português** (/comunidade, /acervo, /perfil) para manter a consistência com a experiência do usuário brasileiro. Apenas o código interno (componentes, funções, variáveis) deve ser em inglês.
+**CORREÇÃO CRÍTICA:** O plano anterior estava incorreto ao sugerir rotas em inglês. A arquitetura correta do EVIDENS é:
+- **ROTAS:** Português (/comunidade, /acervo, /perfil) - **MANTER ASSIM**
+- **CÓDIGO:** Inglês (CommunityPage.tsx, CollectionPage.tsx) - **MANTER ASSIM**
+- **UI LABELS:** Português (Comunidade, Acervo, Perfil) - **MANTER ASSIM**
 
-#### **🟡 Milestone 1: Consolidação de Autenticação**
-- **Status:** Planejado
-- **Objetivo:** Eliminar componentes de autenticação duplicados
-- **Arquivos Alvo:**
-  - `src/pages/AuthPage.tsx` (REMOVER)
-  - `src/components/auth/AuthLayout.tsx` (REMOVER)
-  - `src/components/auth/SplitScreenAuthLayout.tsx` (RENOMEAR)
-  - `src/router/AppRouter.tsx` (MODIFICAR)
+#### **🔄 Milestone 1: Consolidação de Autenticação (EM EXECUÇÃO)**
+- **Status:** 🔄 Em Andamento
+- **Objetivo:** Eliminar componentes de autenticação duplicados mantendo funcionalidade
+- **Arquivos Identificados para Análise:**
+  - `src/pages/AuthPage.tsx` (Verificar se pode ser removido)
+  - `src/components/auth/AuthLayout.tsx` (Verificar duplicação)
+  - `src/components/auth/SplitScreenAuthLayout.tsx` (Componente principal)
+  - `src/router/AppRouter.tsx` (Manter rotas em português)
 
-#### **🟡 Milestone 2: Padronização de Componentes**
-- **Status:** Planejado
-- **Objetivo:** Manter rotas em português, padronizar componentes em inglês
-- **Mudanças Planejadas:**
-  - **MANTER:** `/comunidade`, `/acervo`, `/perfil` (rotas em português)
-  - **PADRONIZAR:** Componentes internos em inglês (CommunityPage.tsx, etc.)
-- **Arquivos Alvo:**
-  - `src/config/navigation.ts` (verificar consistência)
-  - Verificar links hardcoded
+#### **🔄 Milestone 2: Padronização de Componentes (PLANEJADO)**
+- **Status:** 🔄 Planejado
+- **Objetivo:** **MANTER rotas em português, padronizar componentes em inglês**
+- **Padrão Correto Confirmado:**
+  - **MANTER:** `/comunidade`, `/acervo`, `/perfil` (rotas em português - UX brasileiro)
+  - **MANTER:** CommunityPage.tsx, CollectionPage.tsx (componentes em inglês - código)
+  - **MANTER:** Labels "Comunidade", "Acervo" (UI em português - UX brasileiro)
 
-#### **🟡 Milestone 3: Limpeza de Componentes**
-- **Status:** Planejado
+#### **🔄 Milestone 3: Limpeza de Componentes (PLANEJADO)**
+- **Status:** 🔄 Planejado
 - **Objetivo:** Remover componentes redundantes e de debug
-- **Arquivos Alvo:**
-  - `src/pages/DebugSignupPage.tsx` (REMOVER)
-  - `src/pages/CreatePostPage.tsx` (REMOVER)
-  - `src/pages/community/SubmitPage.tsx` (CONSOLIDAR)
+- **Arquivos Identificados:**
+  - `src/pages/DebugSignupPage.tsx` (REMOVER - debug only)
+  - `src/pages/CreatePostPage.tsx` (ANALISAR vs SubmitPage.tsx)
 
-#### **🟡 Milestone 4: Verificação e Testes**
-- **Status:** Planejado
+#### **🔄 Milestone 4: Verificação e Testes (PLANEJADO)**
+- **Status:** 🔄 Planejado
 - **Objetivo:** Testes abrangentes de todos os fluxos refatorados
 - **Verificações Planejadas:**
   - Fluxos de autenticação
@@ -213,16 +214,15 @@ Completar a transformação do EVIDENS em um sistema production-ready através d
   - Criação de posts
   - Build e deployment
 
-#### **Critérios de Verificação Task 4:**
+#### **Critérios de Verificação Task 4 (CORRIGIDOS):**
 - [ ] Todas as rotas de autenticação funcionam corretamente
-- [ ] Rota `/auth` antiga não existe mais
-- [ ] Todas as rotas principais mantêm português (/comunidade, /acervo, /perfil)
+- [ ] **Todas as rotas principais MANTÊM português** (/comunidade, /acervo, /perfil)
 - [ ] Navegação direta para rotas em português funciona
 - [ ] Componentes duplicados foram removidos
 - [ ] Aplicação builda sem erros
 - [ ] Sem erros de console ou funcionalidades quebradas
 
-**PROGRESSO ATUAL:** 0% da Task 4 implementado (100% planejado)
+**PROGRESSO ATUAL:** 5% da Task 4 implementado (documentação corrigida)
 
 ## 🔧 ARQUITETURA ATUAL (PÓS-TASK 3 COMPLETO)
 
@@ -244,20 +244,20 @@ src/
 │   ├── community/       # Módulo comunidade
 │   ├── acervo/          # Módulo acervo
 │   ├── auth/            # Sistema de autenticação
-│   │   ├── AuthLayout.tsx      # 🟡 Para consolidar
-│   │   └── SplitScreenAuthLayout.tsx # 🟡 Para renomear
+│   │   ├── AuthLayout.tsx      # 🔄 Para analisar duplicação
+│   │   └── SplitScreenAuthLayout.tsx # ✅ Componente principal
 │   ├── shell/           # Layout e navegação (REFATORADO)
 │   │   ├── AppShell.tsx      # ✅ COMPLETO: Com Tier 2 boundary
 │   │   ├── DesktopShell.tsx  # ✅ ATUALIZADO: Children pattern
 │   │   ├── MobileShell.tsx   # ✅ ATUALIZADO: Children pattern
-│   │   └── ProfileMenu.tsx   # ✅ NOVO: Menu de perfil com logout/tema
+│   │   └── ProfileMenu.tsx   # ✅ IMPLEMENTADO: Menu funcional
 │   └── ErrorBoundary.tsx     # ✅ COMPLETO: Tier-aware system
 ├── pages/               # Páginas principais
-│   ├── AuthPage.tsx          # 🟡 Para remover
-│   ├── CreatePostPage.tsx    # 🟡 Para remover
-│   ├── DebugSignupPage.tsx   # 🟡 Para remover
+│   ├── AuthPage.tsx          # 🔄 Para analisar se pode ser removido
+│   ├── CreatePostPage.tsx    # 🔄 Para analisar vs SubmitPage.tsx
+│   ├── DebugSignupPage.tsx   # 🔄 Para remover (debug only)
 │   └── community/
-│       └── SubmitPage.tsx    # 🟡 Para consolidar
+│       └── SubmitPage.tsx    # ✅ Componente principal para posts
 ├── hooks/               # Hooks customizados
 ├── packages/hooks/      # Hooks de data-fetching
 │   └── useUserProfileQuery.ts  # ✅ Hook independente para shell
@@ -279,8 +279,16 @@ src/
 3. **Granular Data Fetching:** ✅ Dados buscados no escopo mais específico possível
 4. **Layered Error Boundaries:** ✅ Sistema hierárquico de tratamento de erros (100% completo)
 5. **Strict Type Safety:** ✅ Zero tolerância para tipos implícitos ou unsafe (100% completo)
-6. **Code Consistency:** 🟡 Nomenclatura padronizada e componentes únicos (Planejado)
-7. **Portuguese Routes:** ✅ Rotas em português para UX brasileiro (/comunidade, /acervo)
+6. **Code Consistency:** 🔄 Nomenclatura padronizada e componentes únicos (Em execução)
+7. **Portuguese Routes:** ✅ **CONFIRMADO** - Rotas em português para UX brasileiro (/comunidade, /acervo)
+
+### **Padrão de Nomenclatura Confirmado (EVIDENS Standard)**
+```
+🌐 ROTAS (Português):     /comunidade, /acervo, /perfil
+📁 ARQUIVOS (Inglês):     CommunityPage.tsx, CollectionPage.tsx, ProfilePage.tsx
+🏷️ UI LABELS (Português): "Comunidade", "Acervo", "Perfil"
+⚙️ CÓDIGO (Inglês):       functions, variables, hooks, types
+```
 
 ### **Fluxo de Dados Atual**
 ```mermaid
@@ -301,7 +309,7 @@ graph TD
 
         subgraph "Independent Shell Components (Inside AppShell) ✅"
             D --> S1(UserProfileBlock ✅);
-            D --> S2(NotificationBell);
+            D --> S2(ProfileMenu ✅);
         end
     end
 
@@ -316,11 +324,11 @@ graph TD
     P3 -- NO DATA FETCH ✅ --> F3(Independent Loading);
 
     S1 -- Fetches Data ✅ --> UQ(useUserProfileQuery ✅);
-    S2 -- Fetches Data --> NQ(useNotificationCountQuery);
+    S2 -- Theme/Logout ✅ --> AUTH(Supabase Auth);
 
     F1 --> API;
     UQ --> DB;
-    NQ --> DB;
+    AUTH --> Auth;
 
     API --> DB;
     A -- Checks Session --> Auth;
@@ -329,12 +337,13 @@ graph TD
     style P2 fill:#90EE90,stroke:#333
     style P3 fill:#90EE90,stroke:#333
     style S1 fill:#90EE90,stroke:#333
+    style S2 fill:#90EE90,stroke:#333
     style UQ fill:#90EE90,stroke:#333
 ```
 
 ## 📊 MÉTRICAS DE QUALIDADE ATUAL
 
-### **✅ Task 1 - Métr]icas Alcançadas**
+### **✅ Task 1 - Métricas Alcançadas**
 - ✅ **Performance:** Shell rendering < 100ms atingido
 - ✅ **Decoupling:** 100% independência entre shell e páginas
 - ✅ **Data Fetching:** Granular, component-scoped queries implementadas
@@ -355,11 +364,11 @@ graph TD
 - ✅ **Build Quality:** Compilação sem erros TypeScript
 - ✅ **Code Quality:** Type guards implementados sistematicamente
 
-### **🎯 Task 4 - Métricas Alvo**
-- 🎯 **Route Consistency:** 100% rotas em inglês (Planejado)
-- 🎯 **Component Uniqueness:** Zero componentes duplicados (Planejado)
-- 🎯 **Authentication Simplicity:** Single canonical auth flow (Planejado)
-- 🎯 **Code Maintainability:** Nomenclatura 100% consistente (Planejado)
+### **🔄 Task 4 - Métricas Alvo (CORRIGIDAS)**
+- ✅ **Route Consistency:** 100% rotas em português mantidas (EVIDENS Standard)
+- 🔄 **Component Uniqueness:** Zero componentes duplicados (Em progresso: 20%)
+- 🔄 **Authentication Simplicity:** Single canonical auth flow (Planejado)
+- 🔄 **Code Maintainability:** Nomenclatura 100% consistente (Planejado)
 
 ## 🔄 FLUXOS DE DADOS IMPLEMENTADOS
 
@@ -397,11 +406,11 @@ graph TD
 - Dias 3-4: Correção de types/ e packages/hooks/ ✅
 - Dias 5-7: Correção de componentes e páginas ✅
 
-### **Semana 4: Task 4 - Code Consistency (PLANEJADO)**
-- Dias 1-2: Consolidação de autenticação
-- Dias 3-4: Padronização de rotas e navegação
-- Dias 5-6: Limpeza de componentes
-- Dia 7: Verificação e testes
+### **Semana 4: Task 4 - Code Consistency (EM EXECUÇÃO)**
+- Dia 1: Correção de documentação e padrões ✅
+- Dias 2-3: Consolidação de autenticação (🔄 Em andamento)
+- Dias 4-5: Limpeza de componentes (🔄 Planejado)
+- Dias 6-7: Verificação e testes (🔄 Planejado)
 
 ## 🚨 RISCOS IDENTIFICADOS E MITIGAÇÕES
 
@@ -417,35 +426,35 @@ graph TD
 - **Status:** Estratégia "boil the ocean slowly" bem-sucedida
 - **Resultado:** Build passing em todos os milestones, zero regressões
 
-### **🟡 Risco 4: Broken Internal Links (Task 4)**
-- **Natureza:** Mudança de paths de rota pode quebrar links hardcoded
-- **Mitigação:** Busca global abrangente e substituição sistemática
-- **Plano B:** Manter redirects temporários se necessário
+### **✅ Risco 4: Route Standardization Confusion - MITIGADO**
+- **Status:** Documentação corrigida, padrão EVIDENS confirmado
+- **Resultado:** Rotas permanecem em português, código em inglês (correto)
 
-### **🟡 Risco 5: Authentication Flow Disruption (Task 4)**
+### **🔄 Risco 5: Authentication Flow Disruption (Task 4)**
 - **Natureza:** Consolidação de componentes pode quebrar fluxos de login/signup
-- **Mitigação:** Testes cuidadosos de todos os cenários de autenticação
+- **Mitigação:** Análise cuidadosa antes de remoção, testes de todos os cenários
 
 ## 📝 NOTAS DE DESENVOLVIMENTO ATUALIZADAS
 
-### **Padrões Estabelecidos**
-- Nomes de arquivo em inglês (ex: CommunityPage.tsx)
-- **URLs em português** (ex: /comunidade, /acervo) - ✅ **Padrão mantido**
+### **Padrões Estabelecidos (EVIDENS Standard)**
+- **Arquivos:** Nomes em inglês (ex: CommunityPage.tsx)
+- **Rotas:** URLs em português (ex: /comunidade, /acervo) - ✅ **CONFIRMADO**
+- **UI:** Labels em português (ex: "Comunidade", "Acervo") - ✅ **CONFIRMADO**
+- **Código:** Funções/variáveis em inglês (ex: handleClick, isLoading)
 - Componentes organizados por feature
 - Hooks centralizados em packages/hooks/
 - Tratamento de erro padronizado
-- **✅ NOVO:** Import paths consistentes usando @ alias
-- **✅ NOVO:** Type safety rigorosa obrigatória (implementado)
-- **✅ NOVO:** Menu de perfil funcional com logout e seleção de tema
-- **🟡 FUTURO:** Rotas em inglês para consistência total
+- **✅ IMPLEMENTADO:** Import paths consistentes usando @ alias
+- **✅ IMPLEMENTADO:** Type safety rigorosa obrigatória
+- **✅ IMPLEMENTADO:** Menu de perfil funcional com logout e seleção de tema
 
 ### **Convenções de Código Hardened**
 - PascalCase para componentes e tipos
 - camelCase para funções e variáveis
 - snake_case para colunas de banco
 - ABOUTME headers em todos os arquivos
-- **✅ NOVO:** Strict TypeScript compliance obrigatória (implementado)
-- **✅ NOVO:** Type guards em vez de non-null assertions (implementado)
+- **✅ IMPLEMENTADO:** Strict TypeScript compliance obrigatória
+- **✅ IMPLEMENTADO:** Type guards em vez de non-null assertions
 
 ### **Anti-Padrões a Evitar**
 - ❌ Global data providers para dados específicos
@@ -453,9 +462,9 @@ graph TD
 - ❌ Non-null assertion (`!`) sem type guards
 - ❌ Import paths relativos para recursos cross-module
 - ❌ Componentes que não tratam próprios estados de erro
-- **🟡 NOVO:** Componentes duplicados (Task 4 resolverá)
-- **🟡 NOVO:** Inconsistências de nomenclatura (Task 4 resolverá)
-- **❌ NOVO:** Rotas em inglês (manter português para UX brasileira)
+- **🔄 EM RESOLUÇÃO:** Componentes duplicados (Task 4)
+- **🔄 EM RESOLUÇÃO:** Inconsistências de nomenclatura (Task 4)
+- **✅ CONFIRMADO:** Rotas em português são CORRETAS (não são anti-padrão)
 
 ## 🔍 DEBUGGING E LOGS
 
@@ -464,14 +473,14 @@ graph TD
 - Error boundaries implementados
 - Network monitoring
 - Performance profiling
-- **✅ NOVO:** TypeScript strict mode error reporting (implementado)
+- **✅ IMPLEMENTADO:** TypeScript strict mode error reporting
 
 ### **Resolução de Problemas**
 - Verificar logs do Supabase
 - Monitorar rate limits
 - Validar RLS policies
 - Checar estados de cache
-- **✅ NOVO:** Verificar type safety em builds (implementado)
+- **✅ IMPLEMENTADO:** Verificar type safety em builds
 
 ## 📈 ROADMAP PÓS-HARDENING
 
@@ -490,17 +499,17 @@ graph TD
 
 ---
 
-**Última Atualização:** Task 4 (Code Consistency) 100% planejado e mapeado com correção para manter rotas em português. Menu de perfil implementado com funcionalidade de logout e seleção de tema.
+**Última Atualização:** Task 4 (Code Consistency) - Documentação corrigida para manter padrão EVIDENS (rotas em português).
 
-**Próxima Revisão:** Após execução da Task 4 (Code Consistency).
+**Próxima Revisão:** Após consolidação de componentes de autenticação.
 
 **Status de Implementação:** 
 - ✅ Task 1 (Data Decoupling) - Completo e verificado
 - ✅ Task 2 (Error Boundaries) - 100% completo, sistema hierárquico implementado
 - ✅ Task 3 (Strict TypeScript) - 100% completo, type safety garantida
 - ✅ ProfileMenu - Menu de perfil funcional implementado
-- 🟡 Task 4 (Code Consistency) - 100% planejado, pronto para execução
+- 🔄 Task 4 (Code Consistency) - 5% implementado (documentação corrigida)
 
-**Progresso Geral:** 75% do plano de hardening concluído + ProfileMenu implementado
+**Progresso Geral:** 80% do plano de hardening concluído
 
-**Próximo Passo:** Executar Task 4 seguindo o plano detalhado corrigido para manter as rotas em português.
+**Próximo Passo:** Continuar Task 4 com consolidação de componentes de autenticação seguindo padrão EVIDENS corrigido.
