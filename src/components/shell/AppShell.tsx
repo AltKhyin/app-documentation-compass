@@ -1,9 +1,11 @@
 
-// ABOUTME: The main application shell controller.
+// ABOUTME: The main application shell controller with integrated error boundary protection.
+
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAppData } from '@/contexts/AppDataContext';
+import { ErrorBoundary } from '../ErrorBoundary';
 import DesktopShell from './DesktopShell';
 import MobileShell from './MobileShell';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -74,12 +76,23 @@ const AppShell = () => {
 
   console.log('AppShell: Rendering shell with data ready');
 
-  // Once the data is ready, render the appropriate shell with Outlet for content
-  if (isMobile) {
-    return <MobileShell />;
-  }
-
-  return <DesktopShell />;
+  // Shell Component Factory
+  const ShellComponent = isMobile ? MobileShell : DesktopShell;
+  
+  return (
+    <ShellComponent>
+      {/* Tier 2: Page Content Error Boundary - Isolates page crashes from shell */}
+      <ErrorBoundary 
+        tier="page"
+        context="conteúdo da página"
+        showDetails={false}
+        showHomeButton={true}
+        showBackButton={true}
+      >
+        <Outlet />
+      </ErrorBoundary>
+    </ShellComponent>
+  );
 };
 
 export default AppShell;

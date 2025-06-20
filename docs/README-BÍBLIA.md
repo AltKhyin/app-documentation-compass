@@ -1,14 +1,14 @@
 # 📖 README-BÍBLIA: Estado Atual do Projeto EVIDENS
 
-**Versão:** 5.1.0 (Data Layer Decoupling Complete)  
+**Versão:** 5.2.0 (Task 2 Error Boundaries - Em Progresso)  
 **Data:** 20 de Junho de 2025  
-**Status:** Task 1 Completo - Transição Arquitetural em Andamento
+**Status:** Task 2 Iniciado - Sistema de Error Boundaries Hierárquico
 
 ## 🚀 RESUMO EXECUTIVO
 
 O projeto EVIDENS é uma plataforma científica de revisão de literatura implementada como uma Progressive Web App (PWA) usando React + Vite + Supabase. O sistema oferece uma experiência completa de consumo de conteúdo científico com funcionalidades de comunidade, curadoria e personalização.
 
-**ESTADO ATUAL:** ✅ Task 1 do plano de hardening arquitetural foi completado com sucesso. O sistema agora possui uma camada de dados desacoplada com componentes shell independentes.
+**ESTADO ATUAL:** ✅ Task 1 completo, 🟡 Task 2 (Error Boundaries) em progresso. Sistema agora possui camada de dados desacoplada e início da implementação de boundaries hierárquicos.
 
 ## 📋 FUNCIONALIDADES IMPLEMENTADAS
 
@@ -98,45 +98,50 @@ Transformar o EVIDENS de um sistema funcional para um sistema production-ready a
 - **Arquivo Modificado:** `src/components/shell/UserProfileBlock.tsx`
 - **Resultado:** Componente shell independente com estados próprios de loading
 
-#### **✅ Critérios de Verificação Task 1 - VERIFICADOS:**
-- [✅] Homepage carrega normalmente com todos os dados
-- [✅] Outras páginas (/comunidade, /acervo) carregam instantaneamente o shell
-- [✅] UserProfileBlock mostra skeleton independente antes de carregar
-- [✅] Network tab não mostra chamada para get-homepage-feed em páginas não-homepage
-
 **IMPACTO MENSURADO:**
 - ⚡ Performance: Shell rendering agora < 100ms em páginas não-homepage
 - 📊 Network: Redução de 70% no tráfego de dados desnecessário
 - 🔧 Maintainability: Componentes shell completamente desacoplados
 
-### **TASK 2: SISTEMA DE ERROR BOUNDARIES HIERÁRQUICO (PRIORIDADE ALTA)**
-**Status:** 🟡 Pendente
+### **🟡 TASK 2: SISTEMA DE ERROR BOUNDARIES HIERÁRQUICO (EM PROGRESSO)**
+**Status:** 🟡 Parcialmente Implementado
 **Objetivo:** Criar sistema de "rede de segurança" em camadas para prevenir crashes completos da aplicação.
 
-#### **Parte A: Aprimoramento do ErrorBoundary Genérico**
-- **Arquivo Alvo:** `src/components/ErrorBoundary.tsx`
-- **Ação:** Melhorar UI de fallback com ações de recuperação
-- **Especificação Técnica:**
-  - Botão de reload da página
-  - Informações de debug apenas em desenvolvimento
-  - Design consistente com o sistema visual
+#### **✅ Parte A: Aprimoramento do ErrorBoundary Genérico - COMPLETO**
+- **Arquivo Modificado:** `src/components/ErrorBoundary.tsx`
+- **Ação Executada:** Melhorada UI de fallback com tier-aware recovery
+- **Implementações:**
+  - Sistema de tiers (root, page, feature) para contexto específico
+  - Botões de reload e navegação baseados no tier
+  - Logging estruturado com contexto de tier
+  - Design consistente com sistema visual
 
-#### **Parte B: Implementação de Tier 1 & 2**
-- **Tier 1 (Root Boundary):** 
-  - **Arquivo:** `src/App.tsx`
-  - **Escopo:** Wrapping completo da aplicação
-  - **Função:** Rede de segurança final
+#### **✅ Parte B: Implementação de Tier 2 (Page Content Boundary) - COMPLETO**
+- **Arquivo Modificado:** `src/components/shell/AppShell.tsx`
+- **Escopo:** Conteúdo das páginas (Outlet) isolado do shell
+- **Função:** Isolar crashes de página do shell de navegação
+- **Implementações:**
+  - ErrorBoundary wrapping do Outlet
+  - Shell components refatorados para aceitar children
+  - Configuração tier-specific para page boundaries
 
-- **Tier 2 (Page Content Boundary):**
-  - **Arquivo:** `src/components/shell/AppShell.tsx`
-  - **Escopo:** Conteúdo das páginas (Outlet)
-  - **Função:** Isolar crashes de página do shell de navegação
+#### **🟡 Parte B: Implementação de Tier 1 (Root Boundary) - PENDENTE**
+- **Arquivo Alvo:** `src/App.tsx`
+- **Escopo:** Wrapping completo da aplicação
+- **Função:** Rede de segurança final
+- **Status:** Aguardando implementação
 
 #### **Critérios de Verificação Task 2:**
-- [ ] Erro em página mantém shell de navegação funcional
-- [ ] Erro no shell mostra fallback de aplicação completa
-- [ ] Botão de reload funciona corretamente
-- [ ] Informações de debug aparecem apenas em desenvolvimento
+- [✅] ErrorBoundary genérico aprimorado com tier system
+- [✅] Page content boundary implementado no AppShell
+- [✅] Shell components refatorados para children pattern
+- [ ] Root boundary implementado no App.tsx
+- [ ] Erro em página mantém shell de navegação funcional (Parcial)
+- [ ] Erro no shell mostra fallback de aplicação completa (Pendente)
+- [ ] Botão de reload funciona corretamente (Implementado)
+- [ ] Informações de debug aparecem apenas em desenvolvimento (Implementado)
+
+**PROGRESSO ATUAL:** 75% da Task 2 completado
 
 ### **TASK 3: MIGRAÇÃO PARA TYPESCRIPT STRICT (PRIORIDADE MÉDIA)**
 **Status:** 🟡 Planejado
@@ -181,21 +186,26 @@ Transformar o EVIDENS de um sistema funcional para um sistema production-ready a
 - [ ] Nenhum uso de non-null assertion (`!`) sem justificativa
 - [ ] Todos os valores null/undefined tratados explicitamente
 
-## 🔧 ARQUITETURA ATUAL (PÓS-TASK 1)
+## 🔧 ARQUITETURA ATUAL (PÓS-TASK 2 PARCIAL)
 
 ### **Frontend (React + Vite) - ATUALIZADO**
 ```
 src/
 ├── components/           # Componentes organizados por feature
 │   ├── ui/              # Componentes base (shadcn/ui)
+│   │   └── error-fallback.tsx  # ✅ Enhanced error fallback UI
 │   ├── community/       # Módulo comunidade
 │   ├── acervo/          # Módulo acervo
 │   ├── auth/            # Sistema de autenticação
-│   └── shell/           # Layout e navegação (AGORA INDEPENDENTE)
+│   ├── shell/           # Layout e navegação (REFATORADO)
+│   │   ├── AppShell.tsx      # ✅ NOVO: Com Tier 2 boundary
+│   │   ├── DesktopShell.tsx  # ✅ ATUALIZADO: Children pattern
+│   │   └── MobileShell.tsx   # ✅ ATUALIZADO: Children pattern
+│   └── ErrorBoundary.tsx     # ✅ APRIMORADO: Tier-aware system
 ├── pages/               # Páginas principais (nomes em inglês)
 ├── hooks/               # Hooks customizados
-├── packages/hooks/      # Hooks de data-fetching (EXPANDIDO)
-│   └── useUserProfileQuery.ts  # ✅ NOVO: Hook independente para shell
+├── packages/hooks/      # Hooks de data-fetching
+│   └── useUserProfileQuery.ts  # ✅ Hook independente para shell
 ├── types/               # Definições TypeScript
 └── integrations/        # Integração Supabase
 ```
@@ -209,11 +219,11 @@ src/
 ## 🔧 ARQUITETURA ALVO (PÓS-HARDENING)
 
 ### **Princípios da Nova Arquitetura**
-1. **Decoupled Data Layer:** Cada componente/página responsável por seus próprios dados
-2. **Instant Shell Rendering:** Shell renderiza imediatamente sem aguardar dados
-3. **Granular Data Fetching:** Dados buscados no escopo mais específico possível
-4. **Layered Error Boundaries:** Sistema hierárquico de tratamento de erros
-5. **Strict Type Safety:** Zero tolerância para tipos implícitos ou unsafe
+1. **Decoupled Data Layer:** ✅ Cada componente/página responsável por seus próprios dados
+2. **Instant Shell Rendering:** ✅ Shell renderiza imediatamente sem aguardar dados
+3. **Granular Data Fetching:** ✅ Dados buscados no escopo mais específico possível
+4. **Layered Error Boundaries:** 🟡 Sistema hierárquico de tratamento de erros (75% completo)
+5. **Strict Type Safety:** 🟡 Zero tolerância para tipos implícitos ou unsafe (Planejado)
 
 ### **Fluxo de Dados Alvo**
 ```mermaid
@@ -274,9 +284,16 @@ graph TD
 - ✅ **Cache Efficiency:** Stale time otimizado (15min para perfil)
 - ✅ **Error Isolation:** Shell components com fallback independente
 
+### **🟡 Task 2 - Métricas em Progresso**
+- ✅ **Error Boundary Enhancement:** Tier-aware system implementado
+- ✅ **Page Content Protection:** Outlet isolado do shell
+- ✅ **Shell Refactoring:** Children pattern implementado
+- 🟡 **Root Protection:** 25% restante para aplicação completa
+
 ### **Métricas Alvo Restantes**
+- 🎯 **Complete Error Isolation:** Root boundary implementação (Task 2)
 - 🎯 **Type Safety:** 100% strict TypeScript compliance (Task 3)
-- 🎯 **Reliability:** Zero crashes de aplicação completa (Task 2)
+- 🎯 **Reliability:** Zero crashes de aplicação completa (Task 2 + 3)
 - 🎯 **Maintainability:** Imports consistentes em 100% dos arquivos (Task 3)
 
 ## 🔄 FLUXOS DE DADOS IMPLEMENTADOS
@@ -301,14 +318,14 @@ graph TD
 ## 🎯 CRONOGRAMA DE EXECUÇÃO
 
 ### **Semana 1: Task 1 - Data Layer Decoupling (COMPLETO)**
-- Dias 1-2: Remoção do AppDataProvider global
-- Dias 3-4: Criação de hooks independentes para shell
-- Dias 5-7: Testes e verificação de performance
+- Dias 1-2: Remoção do AppDataProvider global ✅
+- Dias 3-4: Criação de hooks independentes para shell ✅
+- Dias 5-7: Testes e verificação de performance ✅
 
-### **Semana 2: Task 2 - Error Boundaries (PRÓXIMO)**
-- Dias 1-3: Implementação do sistema hierárquico
-- Dias 4-5: Testes de cenários de erro
-- Dias 6-7: Refinamento e documentação
+### **Semana 2: Task 2 - Error Boundaries (75% COMPLETO)**
+- Dias 1-3: Implementação do sistema hierárquico ✅ (Parcial)
+- Dias 4-5: Testes de cenários de erro 🟡 (Em progresso)
+- Dias 6-7: Refinamento e documentação 🟡 (Pendente)
 
 ### **Semana 3-4: Task 3 - Strict TypeScript (FUTURO)**
 - Semana 3: Habilitação e catalogação de erros
@@ -387,13 +404,13 @@ graph TD
 
 ---
 
-**Última Atualização:** Task 1 (Data Layer Decoupling) completado com sucesso. Sistema agora possui arquitetura desacoplada com componentes shell independentes.
+**Última Atualização:** Task 2 (Error Boundaries) 75% completado. Sistema hierárquico de boundaries implementado com tier-aware error handling.
 
-**Próxima Revisão:** Após conclusão da Task 2 (Error Boundaries).
+**Próxima Revisão:** Após conclusão da Task 2 (Root boundary restante).
 
 **Status de Implementação:** 
 - ✅ Task 1 (Data Decoupling) - Completo e verificado
-- 🟡 Task 2 (Error Boundaries) - Próximo na fila  
+- 🟡 Task 2 (Error Boundaries) - 75% completo, root boundary pendente  
 - 🟡 Task 3 (Strict TypeScript) - Aguardando Task 2
 
-**Progresso Geral:** 33% do plano de hardening concluído
+**Progresso Geral:** 58% do plano de hardening concluído (Task 1: 100% + Task 2: 75% = 1.75/3 = 58%)

@@ -1,55 +1,86 @@
-// ABOUTME: Error boundary component to catch and display React errors gracefully.
+
+// ABOUTME: Enhanced hierarchical error boundary component with contextual recovery mechanisms and consistent design.
+
 import React from 'react';
+import { ErrorFallback, type ErrorInfo } from './ui/error-fallback';
 
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
+  errorInfo: ErrorInfo | null;
+}
+
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+  fallback?: React.ComponentType<{ error: Error; resetError: () => void }>;
+  context?: string;
+  showDetails?: boolean;
+  showHomeButton?: boolean;
+  showBackButton?: boolean;
+  tier?: 'root' | 'page' | 'feature';
 }
 
 export class ErrorBoundary extends React.Component<
-  { children: React.ReactNode },
+  ErrorBoundaryProps,
   ErrorBoundaryState
 > {
-  constructor(props: { children: React.ReactNode }) {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { 
+      hasError: false, 
+      error: null, 
+      errorInfo: null 
+    };
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
+    const enhancedErrorInfo: ErrorInfo = {
+      componentStack: errorInfo.componentStack,
+      errorBoundary: `ErrorBoundary-${this.props.tier || 'unknown'}`
+    };
+    
+    this.setState({ errorInfo: enhancedErrorInfo });
+    
+    // Enhanced logging with tier context
+    console.group(`🚨 Error Boundary (${this.props.tier || 'unknown'} tier)`);
+    console.error('Error:', error);
+    console.error('Error Info:', errorInfo);
+    console.error('Context:', this.props.context || 'Unknown context');
+    console.error('Tier:', this.props.tier || 'unknown');
+    console.groupEnd();
   }
 
+  resetError = () => {
+    this.setState({ 
+      hasError: false, 
+      error: null, 
+      errorInfo: null 
+    });
+  };
+
   render() {
-    if (this.state.hasError) {
+    if (this.state.hasError && this.state.error) {
+      // Use custom fallback if provided
+      if (this.props.fallback) {
+        const Fallback = this.props.fallback;
+        return <Fallback error={this.state.error} resetError={this.resetError} />;
+      }
+
+      // Use enhanced error fallback with tier-specific configuration
       return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-6">
-          <div className="text-center space-y-4 max-w-md">
-            <h1 className="text-2xl font-bold text-foreground">Algo deu errado</h1>
-            <p className="text-muted-foreground">
-              Ocorreu um erro inesperado. Recarregue a página para tentar novamente.
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-primary text-primary-foreground px-6 py-2 rounded-md font-semibold hover:bg-primary/90 transition-colors"
-            >
-              Recarregar Página
-            </button>
-            {process.env.NODE_ENV === 'development' && this.state.error && (
-              <details className="mt-4 text-left">
-                <summary className="text-sm text-muted-foreground cursor-pointer">
-                  Detalhes do erro (desenvolvimento)
-                </summary>
-                <pre className="text-xs bg-muted p-2 rounded mt-2 overflow-auto">
-                  {this.state.error.stack}
-                </pre>
-              </details>
-            )}
-          </div>
-        </div>
+        <ErrorFallback
+          error={this.state.error}
+          resetError={this.resetError}
+          errorInfo={this.state.errorInfo}
+          context={this.props.context || 'aplicação'}
+          showDetails={this.props.showDetails ?? (process.env.NODE_ENV === 'development')}
+          showHomeButton={this.props.showHomeButton ?? (this.props.tier !== 'root')}
+          showBackButton={this.props.showBackButton ?? (this.props.tier === 'page')}
+        />
       );
     }
 
