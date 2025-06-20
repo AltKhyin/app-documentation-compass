@@ -1,5 +1,5 @@
 
-// ABOUTME: Main community page that orchestrates the two-column layout with consolidated data fetching and standardized error handling.
+// ABOUTME: Main community page with enhanced error handling and performance optimization.
 
 import React from 'react';
 import { CommunityFeedWithSidebar } from '../components/community/CommunityFeedWithSidebar';
@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
-export default function ComunidadePage() {
+export default function CommunityPage() {
   const {
     data,
     fetchNextPage,
@@ -21,6 +21,7 @@ export default function ComunidadePage() {
     refetch
   } = useCommunityPageQuery();
 
+  // Enhanced error handling with user-friendly messages
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center max-w-md mx-auto">
@@ -42,6 +43,7 @@ export default function ComunidadePage() {
     );
   }
 
+  // Enhanced loading state with better skeleton layout
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-6">

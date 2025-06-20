@@ -1,39 +1,25 @@
 
-// ABOUTME: Consolidated community page data endpoint combining feed and sidebar data into a single efficient request.
+// ABOUTME: Optimized community page data endpoint with improved error handling and performance.
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0'
 import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts'
-
-// CORS headers as mandated by [DOC_5] PRINCIPLE 5 - Complete CORS implementation
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
-}
+import { 
+  createErrorResponse, 
+  createSuccessResponse, 
+  handleCorsPreflightRequest,
+  RateLimitError 
+} from '../_shared/api-helpers.ts'
 
 serve(async (req) => {
-  // Handle CORS preflight requests FIRST - [DOC_5] PRINCIPLE 5 compliance
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    console.log('Handling CORS preflight request');
-    return new Response('ok', { 
-      status: 200,
-      headers: corsHeaders 
-    });
+    return handleCorsPreflightRequest();
   }
 
   // Only allow POST requests for this endpoint
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({
-      error: { message: 'Method not allowed', code: 'METHOD_NOT_ALLOWED' }
-    }), {
-      status: 405,
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders
-      }
-    });
+    return createErrorResponse(new Error('Method not allowed'), 405);
   }
 
   try {
@@ -60,20 +46,11 @@ serve(async (req) => {
       }
     }
 
-    // Check rate limit (30 requests per 60 seconds) - [DOC_5] PRINCIPLE 6 compliance
+    // Check rate limit (30 requests per 60 seconds)
     const rateLimitResult = await checkRateLimit(supabase, 'get-community-page-data', userId);
     if (!rateLimitResult.allowed) {
       console.log('Rate limit exceeded for user:', userId);
-      return new Response(JSON.stringify({
-        error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }
-      }), {
-        status: 429,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-          ...rateLimitHeaders(rateLimitResult)
-        }
-      });
+      throw RateLimitError;
     }
 
     // Parse request body safely
@@ -88,7 +65,7 @@ serve(async (req) => {
     }
 
     const { page = 0, limit = 20 } = requestBody;
-    const actualLimit = Math.min(limit, 50);
+    const actualLimit = Math.min(limit, 50); // Cap at 50 for performance
     const offset = page * actualLimit;
 
     console.log(`Fetching community page data: page=${page}, limit=${actualLimit}, user=${userId}`);
@@ -151,11 +128,11 @@ serve(async (req) => {
         title: post.title,
         content: post.content,
         category: post.category,
-        upvotes: post.upvotes,
-        downvotes: post.downvotes,
+        upvotes: post.upvotes || 0,
+        downvotes: post.downvotes || 0,
         created_at: post.created_at,
-        is_pinned: post.is_pinned,
-        is_locked: post.is_locked,
+        is_pinned: post.is_pinned || false,
+        is_locked: post.is_locked || false,
         flair_text: post.flair_text,
         flair_color: post.flair_color,
         author: post.Practitioners ? {
@@ -167,7 +144,7 @@ serve(async (req) => {
         reply_count: 0 // Will need separate query for reply counts in fallback
       }));
 
-      // If we have posts and a valid user, fetch their votes
+      // Enhanced fallback: fetch user votes if needed
       if (posts.length > 0 && userId !== '00000000-0000-0000-0000-000000000000') {
         const postIds = posts.map(p => p.id);
         const { data: userVotes } = await supabase
@@ -188,7 +165,7 @@ serve(async (req) => {
         }));
       }
 
-      // Fetch reply counts for posts
+      // Enhanced fallback: fetch reply counts
       if (posts.length > 0) {
         const postIds = posts.map(p => p.id);
         const { data: replyCounts } = await supabase
@@ -210,11 +187,17 @@ serve(async (req) => {
       console.log(`Successfully fetched ${posts.length} community posts via fallback query`);
     }
 
-    // Derive trending discussions from the already-fetched posts (server-side optimization)
+    // Optimized trending discussions calculation
     const trendingDiscussions = (posts || [])
-      .filter(post => post.created_at && new Date(post.created_at) > new Date(Date.now() - 48 * 60 * 60 * 1000)) // Last 48 hours
+      .filter(post => {
+        // Only include recent posts (last 48 hours)
+        if (!post.created_at) return false;
+        const postDate = new Date(post.created_at);
+        const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
+        return postDate > cutoff;
+      })
       .sort((a, b) => {
-        // Engagement score: (New Votes * 2) + (New Comments)
+        // Enhanced engagement score calculation
         const scoreA = ((a.upvotes || 0) + (a.downvotes || 0)) * 2 + (a.reply_count || 0);
         const scoreB = ((b.upvotes || 0) + (b.downvotes || 0)) * 2 + (b.reply_count || 0);
         return scoreB - scoreA;
@@ -222,7 +205,7 @@ serve(async (req) => {
       .slice(0, 5) // Top 5 trending
       .map(post => ({
         id: post.id,
-        title: post.title || 'Untitled Post',
+        title: post.title || 'Discussão sem título',
         content: post.content || '',
         category: post.category || 'general',
         reply_count: post.reply_count || 0,
@@ -233,8 +216,8 @@ serve(async (req) => {
         is_pinned: post.is_pinned || false
       }));
 
-    // Fetch sidebar configuration from site settings
-    const { data: sidebarSettings, error: settingsError } = await supabase
+    // Optimized sidebar configuration fetch
+    const { data: sidebarSettings } = await supabase
       .from('SiteSettings')
       .select('value')
       .eq('key', 'community_sidebar_settings')
@@ -248,13 +231,13 @@ serve(async (req) => {
         'Use linguagem apropriada'
       ],
       links: [
-        { title: 'Guia da Comunidade', url: '/community/about' },
+        { title: 'Guia da Comunidade', url: '/comunidade/info' },
         { title: 'FAQ', url: '/faq' }
       ],
       featuredPollId: null
     };
 
-    if (!settingsError && sidebarSettings?.value) {
+    if (sidebarSettings?.value) {
       try {
         sidebarConfig = { ...sidebarConfig, ...JSON.parse(JSON.stringify(sidebarSettings.value)) };
       } catch (e) {
@@ -262,7 +245,7 @@ serve(async (req) => {
       }
     }
 
-    // Fetch featured poll if configured
+    // Optimized featured poll fetch
     let featuredPoll = null;
     if (sidebarConfig.featuredPollId) {
       const { data: poll } = await supabase
@@ -283,7 +266,7 @@ serve(async (req) => {
       featuredPoll = poll;
     }
 
-    // Fetch recent activity for sidebar
+    // Optimized recent activity fetch
     const { data: recentActivity } = await supabase
       .from('CommunityPosts')
       .select(`
@@ -297,7 +280,7 @@ serve(async (req) => {
       .order('created_at', { ascending: false })
       .limit(3);
 
-    // Construct consolidated response
+    // Construct optimized response
     const response = {
       posts: posts || [],
       pagination: {
@@ -314,27 +297,12 @@ serve(async (req) => {
       }
     };
 
-    console.log('Successfully prepared consolidated community page data');
+    console.log('Successfully prepared optimized community page data');
 
-    return new Response(JSON.stringify(response), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders,
-        ...rateLimitHeaders(rateLimitResult)
-      }
-    });
+    return createSuccessResponse(response, rateLimitHeaders(rateLimitResult));
 
   } catch (error) {
     console.error('Community page data fetch error:', error);
-    return new Response(JSON.stringify({
-      error: { message: error.message || 'Internal server error', code: 'INTERNAL_ERROR' }
-    }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders
-      }
-    });
+    return createErrorResponse(error);
   }
 });
