@@ -8,6 +8,7 @@ export interface NavigationItem {
   label: string;
   icon: any;
   roles?: string[];
+  mobileLabel?: string;
 }
 
 export const navigationItems: NavigationItem[] = [
@@ -29,6 +30,34 @@ export const navigationItems: NavigationItem[] = [
   {
     path: '/perfil',
     label: 'Perfil',
+    icon: User,
+  },
+];
+
+// Mobile navigation items - same as navigationItems but can have different mobile labels
+export const mobileNavigationItems: NavigationItem[] = [
+  {
+    path: '/',
+    label: 'Início',
+    mobileLabel: 'Início',
+    icon: Home,
+  },
+  {
+    path: '/acervo',
+    label: 'Acervo',
+    mobileLabel: 'Acervo',
+    icon: Library,
+  },
+  {
+    path: '/comunidade',
+    label: 'Comunidade',
+    mobileLabel: 'Comunidade',
+    icon: Users,
+  },
+  {
+    path: '/perfil',
+    label: 'Perfil',
+    mobileLabel: 'Perfil',
     icon: User,
   },
 ];
