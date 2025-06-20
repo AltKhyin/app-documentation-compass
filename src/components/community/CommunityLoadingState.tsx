@@ -1,237 +1,144 @@
 
-// ABOUTME: Enhanced loading state component with adaptive skeletons and progressive indicators for community module.
+// ABOUTME: Standardized loading state components for community module with progressive indicators and skeleton states.
 
 import React from 'react';
-import { Skeleton } from '../ui/skeleton';
+import { Loader2, MessageCircle, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '../ui/card';
-import { useIsMobile } from '../../hooks/use-mobile';
+import { Skeleton } from '../ui/skeleton';
 
-export interface CommunityLoadingStateProps {
-  variant?: 'feed' | 'sidebar' | 'post' | 'minimal' | 'page';
-  count?: number;
-  showAnimation?: boolean;
+interface CommunityLoadingStateProps {
+  variant?: 'page' | 'post' | 'sidebar' | 'minimal';
   description?: string;
+  showAnimation?: boolean;
 }
 
 export const CommunityLoadingState = ({
-  variant = 'feed',
-  count = 3,
-  showAnimation = true,
-  description
+  variant = 'page',
+  description = 'Carregando...',
+  showAnimation = true
 }: CommunityLoadingStateProps) => {
-  const isMobile = useIsMobile();
+  
+  // Minimal loading state for inline use
+  if (variant === 'minimal') {
+    return (
+      <div className="flex items-center justify-center py-4">
+        <Loader2 className={`w-5 h-5 animate-spin mr-2 ${showAnimation ? '' : 'opacity-50'}`} />
+        <span className="text-sm text-muted-foreground">{description}</span>
+      </div>
+    );
+  }
 
-  // Progressive loading animation
-  const [visibleItems, setVisibleItems] = React.useState(1);
-
-  React.useEffect(() => {
-    if (!showAnimation || variant === 'minimal') return;
-
-    const interval = setInterval(() => {
-      setVisibleItems(prev => {
-        if (prev >= count) {
-          clearInterval(interval);
-          return prev;
-        }
-        return prev + 1;
-      });
-    }, 200);
-
-    return () => clearInterval(interval);
-  }, [count, showAnimation, variant]);
-
-  const renderFeedSkeleton = () => (
-    <div className="space-y-4">
-      {Array.from({ length: showAnimation ? visibleItems : count }, (_, index) => (
-        <Card key={index} className={`${showAnimation ? 'animate-pulse' : ''}`}>
-          <CardContent className="p-4">
-            <div className="flex gap-3">
-              {/* Vote buttons skeleton */}
-              <div className="flex-shrink-0 flex flex-col items-center gap-1">
-                <Skeleton className="w-8 h-6 rounded" />
-                <Skeleton className="w-6 h-6 rounded" />
-                <Skeleton className="w-8 h-6 rounded" />
+  // Post detail loading state
+  if (variant === 'post') {
+    return (
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center space-x-4">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-[200px]" />
+                <Skeleton className="h-3 w-[150px]" />
               </div>
-
-              {/* Content skeleton */}
-              <div className="flex-1 space-y-3">
-                {/* Header with badges */}
-                <div className="flex items-center gap-2">
-                  <Skeleton className="w-16 h-5 rounded-full" />
-                  <Skeleton className="w-20 h-5 rounded-full" />
-                  {!isMobile && <Skeleton className="w-12 h-4 rounded-full" />}
-                </div>
-
-                {/* Title */}
-                <Skeleton className="w-4/5 h-6 rounded" />
-                
-                {/* Content preview */}
-                <div className="space-y-2">
-                  <Skeleton className="w-full h-4 rounded" />
-                  <Skeleton className="w-3/4 h-4 rounded" />
-                  {!isMobile && <Skeleton className="w-1/2 h-4 rounded" />}
-                </div>
-
-                {/* Footer */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="w-6 h-6 rounded-full" />
-                    <Skeleton className="w-20 h-4 rounded" />
-                    <Skeleton className="w-16 h-4 rounded" />
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Skeleton className="w-4 h-4 rounded" />
-                    <Skeleton className="w-6 h-4 rounded" />
-                  </div>
-                </div>
-              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-2/3" />
             </div>
           </CardContent>
         </Card>
-      ))}
-    </div>
-  );
-
-  const renderSidebarSkeleton = () => (
-    <div className="space-y-4 sticky top-6">
-      {/* Rules module */}
-      <Card>
-        <CardHeader>
-          <Skeleton className="w-24 h-5 rounded" />
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {Array.from({ length: 4 }, (_, i) => (
-            <Skeleton key={i} className="w-full h-4 rounded" />
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Trending discussions */}
-      <Card>
-        <CardHeader>
-          <Skeleton className="w-32 h-5 rounded" />
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {Array.from({ length: 3 }, (_, i) => (
-            <div key={i} className="space-y-2">
-              <Skeleton className="w-full h-4 rounded" />
-              <div className="flex items-center gap-2">
-                <Skeleton className="w-12 h-3 rounded" />
-                <Skeleton className="w-16 h-3 rounded" />
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Recent activity */}
-      <Card>
-        <CardHeader>
-          <Skeleton className="w-28 h-5 rounded" />
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {Array.from({ length: 3 }, (_, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <Skeleton className="w-5 h-5 rounded-full" />
-              <Skeleton className="w-full h-4 rounded" />
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderPostSkeleton = () => (
-    <Card>
-      <CardContent className="p-6">
-        <div className="space-y-4">
-          {/* Header */}
-          <div className="flex items-center gap-2">
-            <Skeleton className="w-16 h-5 rounded-full" />
-            <Skeleton className="w-20 h-5 rounded-full" />
-          </div>
-
-          {/* Title */}
-          <Skeleton className="w-3/5 h-8 rounded" />
-
-          {/* Content */}
-          <div className="space-y-3">
-            {Array.from({ length: 4 }, (_, i) => (
-              <Skeleton key={i} className="w-full h-4 rounded" />
-            ))}
-            <Skeleton className="w-2/3 h-4 rounded" />
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center justify-between pt-4">
-            <div className="flex items-center gap-4">
-              <Skeleton className="w-16 h-8 rounded" />
-              <Skeleton className="w-16 h-8 rounded" />
-              <Skeleton className="w-16 h-8 rounded" />
-            </div>
-            <Skeleton className="w-8 h-8 rounded" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  const renderMinimalSkeleton = () => (
-    <div className="flex justify-center items-center py-8">
-      <div className="flex items-center gap-3">
-        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        <span className="text-sm text-muted-foreground">Carregando...</span>
       </div>
-    </div>
-  );
+    );
+  }
 
-  const renderPageSkeleton = () => (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex gap-8">
-        {/* Main content */}
-        <div className="flex-1">
-          {/* Page header */}
-          <div className="mb-6">
-            <div className="flex justify-between items-center">
-              <Skeleton className="w-32 h-8 rounded" />
-              <Skeleton className="w-32 h-10 rounded" />
-            </div>
-          </div>
-          {renderFeedSkeleton()}
+  // Sidebar loading state
+  if (variant === 'sidebar') {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <Card key={i}>
+            <CardHeader>
+              <Skeleton className="h-5 w-3/4" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-4/5" />
+                <Skeleton className="h-3 w-2/3" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  // Full page loading state (default)
+  return (
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4 py-6">
+        {/* Header skeleton */}
+        <div className="flex justify-between items-center mb-6">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-10 w-28" />
         </div>
 
-        {/* Sidebar */}
-        {!isMobile && (
-          <div className="w-80 flex-shrink-0">
-            {renderSidebarSkeleton()}
+        {/* Main content skeleton */}
+        <div className="space-y-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-4">
+                <div className="flex gap-3">
+                  {/* Vote buttons skeleton */}
+                  <div className="flex-shrink-0 flex flex-col items-center space-y-2">
+                    <Skeleton className="h-6 w-6" />
+                    <Skeleton className="h-4 w-8" />
+                    <Skeleton className="h-6 w-6" />
+                  </div>
+                  
+                  {/* Content skeleton */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Skeleton className="h-5 w-16" />
+                      <Skeleton className="h-5 w-20" />
+                    </div>
+                    <Skeleton className="h-6 w-3/4 mb-2" />
+                    <div className="space-y-2 mb-3">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-2/3" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-4 w-4 rounded-full" />
+                      <Skeleton className="h-3 w-20" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Animated loading indicator */}
+        {showAnimation && (
+          <div className="flex items-center justify-center py-8">
+            <div className="flex items-center space-x-3">
+              <div className="flex space-x-1">
+                <MessageCircle className="w-5 h-5 text-primary animate-pulse" />
+                <Users className="w-5 h-5 text-primary animate-pulse" style={{ animationDelay: '0.2s' }} />
+              </div>
+              <span className="text-sm text-muted-foreground">{description}</span>
+            </div>
           </div>
         )}
       </div>
     </div>
   );
-
-  // Render appropriate skeleton based on variant
-  switch (variant) {
-    case 'feed':
-      return (
-        <div>
-          {description && (
-            <div className="text-center mb-4">
-              <p className="text-sm text-muted-foreground">{description}</p>
-            </div>
-          )}
-          {renderFeedSkeleton()}
-        </div>
-      );
-    case 'sidebar':
-      return renderSidebarSkeleton();
-    case 'post':
-      return renderPostSkeleton();
-    case 'minimal':
-      return renderMinimalSkeleton();
-    case 'page':
-      return renderPageSkeleton();
-    default:
-      return renderFeedSkeleton();
-  }
 };
+
+export default CommunityLoadingState;
