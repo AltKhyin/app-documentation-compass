@@ -1,7 +1,6 @@
-
 # 📖 README-BÍBLIA: Estado Atual do Projeto EVIDENS
 
-**Versão:** 6.0.0 (Task 4 Code Consistency - Planejamento Completo)  
+**Versão:** 6.1.0 (Task 4 Code Consistency - Correção de Rotas)  
 **Data:** 20 de Junho de 2025  
 **Status:** ✅ Tasks 1-3 Completados, 🟡 Task 4 Planejado - Sistema de Hardening Arquitetural 100% Mapeado
 
@@ -174,7 +173,9 @@ Completar a transformação do EVIDENS em um sistema production-ready através d
 
 ### **🟡 TASK 4: CONSISTÊNCIA DE CÓDIGO (PLANEJADO)**
 **Status:** 🟡 Planejado e Mapeado
-**Objetivo:** Eliminar inconsistências de nomeação e estrutura, consolidar componentes duplicados e padronizar paths de rotas.
+**Objetivo:** Eliminar inconsistências de nomeação e estrutura, consolidar componentes duplicados, mantendo rotas em português conforme padrão estabelecido.
+
+**IMPORTANTE:** As rotas da aplicação devem permanecer em **português** (/comunidade, /acervo, /perfil) para manter a consistência com a experiência do usuário brasileiro. Apenas o código interno (componentes, funções, variáveis) deve ser em inglês.
 
 #### **🟡 Milestone 1: Consolidação de Autenticação**
 - **Status:** Planejado
@@ -185,17 +186,15 @@ Completar a transformação do EVIDENS em um sistema production-ready através d
   - `src/components/auth/SplitScreenAuthLayout.tsx` (RENOMEAR)
   - `src/router/AppRouter.tsx` (MODIFICAR)
 
-#### **🟡 Milestone 2: Padronização de Rotas**
+#### **🟡 Milestone 2: Padronização de Componentes**
 - **Status:** Planejado
-- **Objetivo:** Converter paths de rotas de português para inglês
+- **Objetivo:** Manter rotas em português, padronizar componentes em inglês
 - **Mudanças Planejadas:**
-  - `/comunidade` → `/community`
-  - `/acervo` → `/collection`
-  - `/perfil` → `/profile`
+  - **MANTER:** `/comunidade`, `/acervo`, `/perfil` (rotas em português)
+  - **PADRONIZAR:** Componentes internos em inglês (CommunityPage.tsx, etc.)
 - **Arquivos Alvo:**
-  - `src/router/AppRouter.tsx`
-  - `src/config/navigation.ts`
-  - Todos os arquivos com links hardcoded
+  - `src/config/navigation.ts` (verificar consistência)
+  - Verificar links hardcoded
 
 #### **🟡 Milestone 3: Limpeza de Componentes**
 - **Status:** Planejado
@@ -210,15 +209,15 @@ Completar a transformação do EVIDENS em um sistema production-ready através d
 - **Objetivo:** Testes abrangentes de todos os fluxos refatorados
 - **Verificações Planejadas:**
   - Fluxos de autenticação
-  - Navegação interna
+  - Navegação interna (rotas em português)
   - Criação de posts
   - Build e deployment
 
 #### **Critérios de Verificação Task 4:**
 - [ ] Todas as rotas de autenticação funcionam corretamente
 - [ ] Rota `/auth` antiga não existe mais
-- [ ] Todos os links internos navegam para rotas em inglês
-- [ ] Navegação direta para novas rotas funciona
+- [ ] Todas as rotas principais mantêm português (/comunidade, /acervo, /perfil)
+- [ ] Navegação direta para rotas em português funciona
 - [ ] Componentes duplicados foram removidos
 - [ ] Aplicação builda sem erros
 - [ ] Sem erros de console ou funcionalidades quebradas
@@ -250,7 +249,8 @@ src/
 │   ├── shell/           # Layout e navegação (REFATORADO)
 │   │   ├── AppShell.tsx      # ✅ COMPLETO: Com Tier 2 boundary
 │   │   ├── DesktopShell.tsx  # ✅ ATUALIZADO: Children pattern
-│   │   └── MobileShell.tsx   # ✅ ATUALIZADO: Children pattern
+│   │   ├── MobileShell.tsx   # ✅ ATUALIZADO: Children pattern
+│   │   └── ProfileMenu.tsx   # ✅ NOVO: Menu de perfil com logout/tema
 │   └── ErrorBoundary.tsx     # ✅ COMPLETO: Tier-aware system
 ├── pages/               # Páginas principais
 │   ├── AuthPage.tsx          # 🟡 Para remover
@@ -280,6 +280,7 @@ src/
 4. **Layered Error Boundaries:** ✅ Sistema hierárquico de tratamento de erros (100% completo)
 5. **Strict Type Safety:** ✅ Zero tolerância para tipos implícitos ou unsafe (100% completo)
 6. **Code Consistency:** 🟡 Nomenclatura padronizada e componentes únicos (Planejado)
+7. **Portuguese Routes:** ✅ Rotas em português para UX brasileiro (/comunidade, /acervo)
 
 ### **Fluxo de Dados Atual**
 ```mermaid
@@ -429,12 +430,13 @@ graph TD
 
 ### **Padrões Estabelecidos**
 - Nomes de arquivo em inglês (ex: CommunityPage.tsx)
-- URLs preservadas em português (ex: /comunidade) - 🟡 **Para padronizar em Task 4**
+- **URLs em português** (ex: /comunidade, /acervo) - ✅ **Padrão mantido**
 - Componentes organizados por feature
 - Hooks centralizados em packages/hooks/
 - Tratamento de erro padronizado
 - **✅ NOVO:** Import paths consistentes usando @ alias
 - **✅ NOVO:** Type safety rigorosa obrigatória (implementado)
+- **✅ NOVO:** Menu de perfil funcional com logout e seleção de tema
 - **🟡 FUTURO:** Rotas em inglês para consistência total
 
 ### **Convenções de Código Hardened**
@@ -453,6 +455,7 @@ graph TD
 - ❌ Componentes que não tratam próprios estados de erro
 - **🟡 NOVO:** Componentes duplicados (Task 4 resolverá)
 - **🟡 NOVO:** Inconsistências de nomenclatura (Task 4 resolverá)
+- **❌ NOVO:** Rotas em inglês (manter português para UX brasileira)
 
 ## 🔍 DEBUGGING E LOGS
 
@@ -487,7 +490,7 @@ graph TD
 
 ---
 
-**Última Atualização:** Task 4 (Code Consistency) 100% planejado e mapeado. Plano de refatoração abrangente criado com 4 milestones e verificações detalhadas.
+**Última Atualização:** Task 4 (Code Consistency) 100% planejado e mapeado com correção para manter rotas em português. Menu de perfil implementado com funcionalidade de logout e seleção de tema.
 
 **Próxima Revisão:** Após execução da Task 4 (Code Consistency).
 
@@ -495,8 +498,9 @@ graph TD
 - ✅ Task 1 (Data Decoupling) - Completo e verificado
 - ✅ Task 2 (Error Boundaries) - 100% completo, sistema hierárquico implementado
 - ✅ Task 3 (Strict TypeScript) - 100% completo, type safety garantida
+- ✅ ProfileMenu - Menu de perfil funcional implementado
 - 🟡 Task 4 (Code Consistency) - 100% planejado, pronto para execução
 
-**Progresso Geral:** 75% do plano de hardening concluído (Tasks 1-3: 100% + Task 4: 0% = 3/4 = 75%)
+**Progresso Geral:** 75% do plano de hardening concluído + ProfileMenu implementado
 
-**Próximo Passo:** Executar Task 4 seguindo o plano detalhado de 4 milestones para atingir 100% de consistência de código.
+**Próximo Passo:** Executar Task 4 seguindo o plano detalhado corrigido para manter as rotas em português.

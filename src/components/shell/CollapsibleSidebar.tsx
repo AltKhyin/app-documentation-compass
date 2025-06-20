@@ -1,9 +1,10 @@
+
 // ABOUTME: The main sidebar navigation for desktop views with collapsible functionality.
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../ui/button';
 import NavItem from './NavItem';
-import { UserProfileBlock } from './UserProfileBlock';
+import { ProfileMenu } from './ProfileMenu';
 import { navigationItems, adminNavigationItems, getVisibleNavigationItems } from '@/config/navigation';
 import { useAuthStore } from '@/store/auth';
 
@@ -77,9 +78,9 @@ const CollapsibleSidebar = ({ isCollapsed, onToggle }: CollapsibleSidebarProps) 
         </Button>
       </div>
 
-      {/* User profile block at bottom */}
+      {/* Profile menu at bottom */}
       <div className={`border-t border-border ${isCollapsed ? 'p-2' : 'p-4'}`}>
-        <UserProfileBlock isCollapsed={isCollapsed} />
+        <ProfileMenu isCollapsed={isCollapsed} />
       </div>
     </aside>
   );
