@@ -1,112 +1,70 @@
 
-// ABOUTME: Main community page with comprehensive error handling, network awareness, and enhanced loading states.
+// ABOUTME: Community page with Reddit-style layout and seamless feed integration.
 
 import React from 'react';
 import { CommunityFeedWithSidebar } from '../components/community/CommunityFeedWithSidebar';
 import { CommunityErrorBoundary } from '../components/community/CommunityErrorBoundary';
 import { CommunityLoadingState } from '../components/community/CommunityLoadingState';
-import { NetworkAwareFallback, useNetworkStatus } from '../components/community/NetworkAwareFallback';
 import { useCommunityPageQuery } from '../../packages/hooks/useCommunityPageQuery';
-import { Alert, AlertDescription } from '../components/ui/alert';
-import { Button } from '../components/ui/button';
-import { AlertCircle, RefreshCw, WifiOff } from 'lucide-react';
+import { useIsMobile } from '../hooks/use-mobile';
 
-export default function CommunityPage() {
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    error,
-    refetch,
-    dataUpdatedAt
-  } = useCommunityPageQuery();
+const CommunityPage = () => {
+  const isMobile = useIsMobile();
+  const { data, isLoading, error } = useCommunityPageQuery();
 
-  const { isOnline } = useNetworkStatus();
-  const lastSync = dataUpdatedAt ? new Date(dataUpdatedAt) : undefined;
-
-  // Enhanced error handling with network awareness
-  if (error && !data) {
-    return (
-      <div className="min-h-screen">
-        <div className="container mx-auto px-4 py-6">
-          <CommunityErrorBoundary context="página da comunidade" showDetails={true}>
-            <div className="flex flex-col items-center justify-center py-12 px-4 text-center max-w-md mx-auto">
-              <Alert variant="destructive" className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  {!isOnline ? 
-                    'Sem conexão com a internet. Verifique sua conexão e tente novamente.' :
-                    `Erro ao carregar a comunidade: ${error.message}`
-                  }
-                </AlertDescription>
-              </Alert>
-              
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => refetch()}
-                  disabled={!isOnline}
-                  className="flex items-center gap-2"
-                >
-                  {!isOnline ? <WifiOff className="w-4 h-4" /> : <RefreshCw className="w-4 h-4" />}
-                  {!isOnline ? 'Sem Conexão' : 'Tentar Novamente'}
-                </Button>
-                
-                <Button 
-                  variant="ghost"
-                  onClick={() => window.location.href = '/'}
-                  className="flex items-center gap-2"
-                >
-                  Voltar ao Início
-                </Button>
-              </div>
-            </div>
-          </CommunityErrorBoundary>
-        </div>
-      </div>
-    );
+  if (isLoading) {
+    return <CommunityLoadingState />;
   }
 
-  // Enhanced loading state with progressive indicators
-  if (isLoading && !data) {
+  if (error) {
     return (
-      <CommunityLoadingState 
-        variant="page" 
-        description="Carregando comunidade..."
-        showAnimation={true}
+      <CommunityErrorBoundary 
+        error={error} 
+        resetErrorBoundary={() => window.location.reload()} 
       />
-    );
-  }
-
-  // Show network fallback if offline with no data
-  if (!isOnline && !data) {
-    return (
-      <div className="min-h-screen">
-        <div className="container mx-auto px-4 py-6">
-          <NetworkAwareFallback
-            isOnline={isOnline}
-            onRetry={() => window.location.reload()}
-            context="comunidade"
-          />
-        </div>
-      </div>
     );
   }
 
   return (
-    <CommunityErrorBoundary context="página principal da comunidade">
-      <CommunityFeedWithSidebar
-        posts={data?.posts || []}
-        sidebarData={data?.sidebarData}
-        onLoadMore={fetchNextPage}
-        hasMore={hasNextPage}
-        isLoadingMore={isFetchingNextPage}
-        lastSync={lastSync}
-        isLoading={isLoading}
-        error={error}
-      />
-    </CommunityErrorBoundary>
+    <div className="min-h-screen bg-background">
+      {/* Reddit-style seamless container */}
+      <div className="max-w-7xl mx-auto">
+        {/* Mobile header with community info */}
+        {isMobile && (
+          <div className="sticky top-0 z-10 bg-background border-b border-community-separator px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-lg font-semibold">Comunidade EVIDENS</h1>
+                <p className="text-sm text-muted-foreground">
+                  Discussões científicas de alto nível
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Desktop header - integrated into the layout */}
+        {!isMobile && (
+          <div className="px-6 py-4 border-b border-community-separator">
+            <div className="max-w-4xl">
+              <h1 className="text-2xl font-bold mb-1">Comunidade EVIDENS</h1>
+              <p className="text-muted-foreground">
+                Discussões científicas de alto nível • Praticantes conectados
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Main content with Reddit-style layout */}
+        <div className="flex gap-6 px-0 md:px-6">
+          <CommunityFeedWithSidebar 
+            initialData={data}
+            className="flex-1"
+          />
+        </div>
+      </div>
+    </div>
   );
-}
+};
+
+export default CommunityPage;
