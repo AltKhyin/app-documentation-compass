@@ -1,72 +1,62 @@
 
-// ABOUTME: Centralized navigation configuration with role-based access control for consistent routing.
-import { Home, Archive, Users, User, Edit } from 'lucide-react';
-import type { NavigationItem } from '@/types';
+// ABOUTME: Navigation configuration with role-based visibility and path definitions.
 
-// Main navigation items (accessible to all authenticated users)
+import { Home, Library, Users, User, Settings, Shield, BarChart3 } from 'lucide-react';
+
+export interface NavigationItem {
+  path: string;
+  label: string;
+  icon: any;
+  roles?: string[];
+}
+
 export const navigationItems: NavigationItem[] = [
-  { 
-    icon: Home, 
-    label: 'Início', 
-    path: '/' 
+  {
+    path: '/',
+    label: 'Início',
+    icon: Home,
   },
-  { 
-    icon: Archive, 
-    label: 'Acervo', 
-    path: '/acervo' 
+  {
+    path: '/acervo',
+    label: 'Acervo',
+    icon: Library,
   },
-  { 
-    icon: Users, 
-    label: 'Comunidade', 
-    path: '/comunidade' 
+  {
+    path: '/comunidade',
+    label: 'Comunidade',
+    icon: Users,
   },
-  { 
-    icon: User, 
-    label: 'Perfil', 
-    path: '/perfil' 
-  },
-];
-
-// Mobile-specific navigation (optimized for bottom tab bar)
-export const mobileNavigationItems: NavigationItem[] = [
-  ...navigationItems.slice(0, 3), // Home, Acervo, Comunidade
-  { 
-    icon: User, 
-    label: 'Perfil', 
+  {
     path: '/perfil',
-    mobileLabel: 'Perfil'
+    label: 'Perfil',
+    icon: User,
   },
 ];
 
-// Admin navigation items (only visible to users with appropriate roles)
 export const adminNavigationItems: NavigationItem[] = [
-  { 
-    icon: Edit, 
-    label: 'Editor', 
-    path: '/editor',
-    requiredRole: 'editor'
+  {
+    path: '/admin/moderation',
+    label: 'Moderação',
+    icon: Shield,
+    roles: ['admin', 'moderator'],
   },
-  // Future admin items will be added here
+  {
+    path: '/admin/analytics',
+    label: 'Analytics',
+    icon: BarChart3,
+    roles: ['admin'],
+  },
+  {
+    path: '/admin/settings',
+    label: 'Configurações',
+    icon: Settings,
+    roles: ['admin'],
+  },
 ];
 
-// Utility function to filter navigation items based on user role
-export const getVisibleNavigationItems = (
-  items: NavigationItem[], 
-  userRole: string = 'practitioner'
-): NavigationItem[] => {
+export const getVisibleNavigationItems = (items: NavigationItem[], userRole: string) => {
   return items.filter(item => {
-    if (!item.requiredRole) return true;
-    
-    const roleHierarchy: Record<string, number> = {
-      admin: 3,
-      moderator: 2,
-      editor: 2,
-      practitioner: 1,
-    };
-    
-    const userLevel = roleHierarchy[userRole] || 0;
-    const requiredLevel = roleHierarchy[item.requiredRole] || 0;
-    
-    return userLevel >= requiredLevel;
+    if (!item.roles) return true;
+    return item.roles.includes(userRole);
   });
 };

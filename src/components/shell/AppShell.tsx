@@ -1,13 +1,14 @@
 
 // ABOUTME: The main application shell controller.
 import React from 'react';
+import { Outlet } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAppData } from '@/contexts/AppDataContext';
 import DesktopShell from './DesktopShell';
 import MobileShell from './MobileShell';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const AppShell = ({ children }: { children: React.ReactNode }) => {
+const AppShell = () => {
   const isMobile = useIsMobile();
   const { isLoading: isAppDataLoading, isError, error } = useAppData();
 
@@ -73,12 +74,12 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
 
   console.log('AppShell: Rendering shell with data ready');
 
-  // Once the data is ready, render the appropriate shell.
+  // Once the data is ready, render the appropriate shell with Outlet for content
   if (isMobile) {
-    return <MobileShell>{children}</MobileShell>;
+    return <MobileShell />;
   }
 
-  return <DesktopShell>{children}</DesktopShell>;
+  return <DesktopShell />;
 };
 
 export default AppShell;

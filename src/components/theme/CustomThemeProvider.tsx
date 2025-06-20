@@ -26,22 +26,23 @@ export function CustomThemeProvider({
   const [theme, setThemeState] = useState<Theme>(defaultTheme);
   const [actualTheme, setActualTheme] = useState<'dark' | 'light'>('dark');
 
-  // Initialize theme from localStorage or default
+  // Initialize theme from localStorage or default - runs once on mount
   useEffect(() => {
     try {
       const savedTheme = localStorage.getItem(storageKey) as Theme;
       if (savedTheme && ['dark', 'light', 'system'].includes(savedTheme)) {
+        console.log('CustomThemeProvider: Loading saved theme:', savedTheme);
         setThemeState(savedTheme);
       } else {
-        // If no saved theme, set default to dark
-        setThemeState('dark');
-        localStorage.setItem(storageKey, 'dark');
+        console.log('CustomThemeProvider: No saved theme, using default:', defaultTheme);
+        setThemeState(defaultTheme);
+        localStorage.setItem(storageKey, defaultTheme);
       }
     } catch (error) {
-      console.warn('Failed to load theme from localStorage:', error);
-      setThemeState('dark');
+      console.warn('CustomThemeProvider: Failed to load theme from localStorage:', error);
+      setThemeState(defaultTheme);
     }
-  }, [storageKey]);
+  }, [storageKey, defaultTheme]);
 
   // Handle system theme changes and apply theme to document
   useEffect(() => {
@@ -50,17 +51,20 @@ export function CustomThemeProvider({
     const handleSystemThemeChange = () => {
       if (theme === 'system') {
         const systemTheme = mediaQuery.matches ? 'dark' : 'light';
+        console.log('CustomThemeProvider: System theme changed to:', systemTheme);
         setActualTheme(systemTheme);
         updateDocumentTheme(systemTheme);
       }
     };
 
-    // Set initial theme
+    // Set initial theme based on current theme state
     if (theme === 'system') {
       const systemTheme = mediaQuery.matches ? 'dark' : 'light';
+      console.log('CustomThemeProvider: Using system theme:', systemTheme);
       setActualTheme(systemTheme);
       updateDocumentTheme(systemTheme);
     } else {
+      console.log('CustomThemeProvider: Using explicit theme:', theme);
       setActualTheme(theme);
       updateDocumentTheme(theme);
     }
@@ -73,7 +77,7 @@ export function CustomThemeProvider({
     const root = document.documentElement;
     const body = document.body;
     
-    // Remove all theme classes
+    // Remove all theme classes and add the new one
     root.classList.remove('light', 'dark');
     root.classList.add(newTheme);
     
@@ -83,15 +87,19 @@ export function CustomThemeProvider({
     } else {
       body.style.backgroundColor = 'hsl(220 20% 98%)'; // --background light
     }
+
+    console.log('CustomThemeProvider: Applied theme to document:', newTheme);
   };
 
   const setTheme = (newTheme: Theme) => {
+    console.log('CustomThemeProvider: Setting theme to:', newTheme);
     setThemeState(newTheme);
     
     try {
       localStorage.setItem(storageKey, newTheme);
+      console.log('CustomThemeProvider: Saved theme to localStorage:', newTheme);
     } catch (error) {
-      console.warn('Failed to save theme to localStorage:', error);
+      console.warn('CustomThemeProvider: Failed to save theme to localStorage:', error);
     }
 
     if (newTheme === 'system') {

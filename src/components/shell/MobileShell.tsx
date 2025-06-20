@@ -1,14 +1,14 @@
+
 // ABOUTME: Main application shell for mobile viewports with bottom tab bar navigation.
 
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation, Link } from 'react-router-dom';
 import BottomTabBar from './BottomTabBar';
 import { Button } from '../ui/button';
 import NotificationBell from './NotificationBell';
 import { Info } from 'lucide-react';
-import { useLocation, Link } from 'react-router-dom';
 
-const MobileShell = ({ children }: { children: React.ReactNode }) => {
+const MobileShell = () => {
   const location = useLocation();
   
   return (
@@ -34,9 +34,9 @@ const MobileShell = ({ children }: { children: React.ReactNode }) => {
         </div>
       </header>
       
-      {/* Main Content */}
+      {/* Main Content rendered via React Router Outlet */}
       <main className="pt-16 min-h-[calc(100vh-112px)]">
-        {children}
+        <Outlet />
       </main>
 
       {/* Bottom Tab Bar */}

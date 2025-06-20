@@ -6,6 +6,7 @@ import { Navigate } from 'react-router-dom';
 import LoginForm from '../components/auth/LoginForm';
 import SignupForm from '../components/auth/SignupForm';
 import SplitScreenAuthLayout from '../components/auth/SplitScreenAuthLayout';
+import AuthThemeProvider from '../components/auth/AuthThemeProvider';
 import { useAuthStore } from '../store/auth';
 import { Button } from '../components/ui/button';
 
@@ -19,22 +20,24 @@ export default function AuthPage() {
   }
 
   return (
-    <SplitScreenAuthLayout>
-      <div className="w-full max-w-md mx-auto space-y-6">
-        {/* Auth Forms */}
-        {isLoginMode ? <LoginForm /> : <SignupForm />}
+    <AuthThemeProvider>
+      <SplitScreenAuthLayout>
+        <div className="w-full max-w-md mx-auto space-y-6">
+          {/* Auth Forms */}
+          {isLoginMode ? <LoginForm /> : <SignupForm />}
 
-        {/* Toggle Mode */}
-        <div className="text-center pt-4 border-t border-gray-200">
-          <Button
-            variant="ghost"
-            onClick={() => setIsLoginMode(!isLoginMode)}
-            className="text-blue-600 hover:text-blue-700"
-          >
-            {isLoginMode ? 'Criar conta' : 'Fazer login'}
-          </Button>
+          {/* Toggle Mode */}
+          <div className="text-center pt-4 border-t border-gray-200">
+            <Button
+              variant="ghost"
+              onClick={() => setIsLoginMode(!isLoginMode)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              {isLoginMode ? 'Criar conta' : 'Fazer login'}
+            </Button>
+          </div>
         </div>
-      </div>
-    </SplitScreenAuthLayout>
+      </SplitScreenAuthLayout>
+    </AuthThemeProvider>
   );
 }

@@ -1,11 +1,12 @@
 
 // ABOUTME: Renders the two-column layout for desktop and tablet viewports with fixed header.
 import React, { useState } from 'react';
+import { Outlet } from 'react-router-dom';
 import CollapsibleSidebar from './CollapsibleSidebar';
 import { cn } from '@/lib/utils';
 import NotificationBell from './NotificationBell';
 
-const DesktopShell = ({ children }: { children: React.ReactNode }) => {
+const DesktopShell = () => {
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window === "undefined") {
       return false;
@@ -42,8 +43,10 @@ const DesktopShell = ({ children }: { children: React.ReactNode }) => {
         'min-h-screen transition-all duration-300 pt-16 bg-background',
         isCollapsed ? 'ml-20' : 'ml-60'
       )}>
-        {/* Main Content */}
-        <main className="p-6">{children}</main>
+        {/* Main Content rendered via React Router Outlet */}
+        <main className="p-6">
+          <Outlet />
+        </main>
       </div>
     </div>
   );
