@@ -4,7 +4,6 @@
 import React from 'react';
 import ProtectedRoute from '../auth/ProtectedRoute';
 import { AppDataProvider } from '../../contexts/AppDataContext';
-import AppShell from '../shell/AppShell';
 import type { UserProfile } from '../../types';
 
 interface ProtectedAppRouteProps {
@@ -16,9 +15,7 @@ export const ProtectedAppRoute = ({ children, requiredRole = 'practitioner' }: P
   return (
     <ProtectedRoute requiredRole={requiredRole}>
       <AppDataProvider>
-        <AppShell>
-          {children}
-        </AppShell>
+        {children}
       </AppDataProvider>
     </ProtectedRoute>
   );
