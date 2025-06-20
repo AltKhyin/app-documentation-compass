@@ -3,7 +3,7 @@
 
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ProtectedRoute } from '../components/auth/ProtectedRoute';
+import ProtectedRoute from '../components/auth/ProtectedRoute';
 import { CommunityLoadingState } from '../components/community/CommunityLoadingState';
 
 // Lazy loading for better performance
