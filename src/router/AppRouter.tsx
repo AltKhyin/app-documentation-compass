@@ -11,7 +11,9 @@ import { AppDataProvider } from '@/contexts/AppDataContext';
 // Pages
 import Index from '@/pages/Index';
 import CommunityPage from '@/pages/CommunityPage';
+import CommunityPostPage from '@/pages/CommunityPostPage';
 import CollectionPage from '@/pages/CollectionPage';
+import ReviewDetailPage from '@/pages/ReviewDetailPage';
 import LoginPage from '@/pages/LoginPage';
 import SignupPage from '@/pages/SignupPage';
 
@@ -37,9 +39,13 @@ export const AppRouter = () => {
               </AppDataProvider>
             } />
             
-            {/* Other pages without global data provider */}
+            {/* Community routes */}
             <Route path="comunidade" element={<CommunityPage />} />
+            <Route path="comunidade/:postId" element={<CommunityPostPage />} />
+            
+            {/* Collection routes */}
             <Route path="acervo" element={<CollectionPage />} />
+            <Route path="reviews/:slug" element={<ReviewDetailPage />} />
           </Route>
           
           {/* Fallback */}
