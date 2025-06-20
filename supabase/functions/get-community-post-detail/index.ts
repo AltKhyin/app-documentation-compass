@@ -15,9 +15,15 @@ interface PostDetailRequest {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
+  console.log(`Request method: ${req.method}, URL: ${req.url}`);
+  
+  // Handle CORS preflight requests first
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    console.log('Handling CORS preflight request');
+    return new Response(null, { 
+      status: 200,
+      headers: corsHeaders 
+    });
   }
 
   try {
@@ -26,10 +32,13 @@ Deno.serve(async (req) => {
                      req.headers.get('x-real-ip') || 
                      'unknown';
     
+    console.log(`Client IP: ${clientIP}`);
+    
     // Check rate limit (60 requests per minute per IP)
     const rateLimitResult = await checkRateLimit(supabase, `get-post-detail:${clientIP}`, 60, 60);
     
     if (!rateLimitResult.allowed) {
+      console.log('Rate limit exceeded');
       return new Response(
         JSON.stringify({
           error: {
@@ -57,25 +66,47 @@ Deno.serve(async (req) => {
         const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(
           authHeader.replace('Bearer ', '')
         );
-        if (!authError) {
+        if (!authError && authUser) {
           user = authUser;
+          console.log(`Authenticated user: ${user.id}`);
         }
       } catch (error) {
         console.log('Optional auth failed, proceeding without user context:', error);
       }
+    } else {
+      console.log('No authorization header provided, proceeding as anonymous');
     }
 
-    // Parse request body
+    // Parse request to get post ID
     let postId: number;
     
     if (req.method === 'POST') {
-      const body: PostDetailRequest = await req.json();
-      
-      if (!body.post_id || typeof body.post_id !== 'number') {
+      try {
+        const body: PostDetailRequest = await req.json();
+        
+        if (!body.post_id || typeof body.post_id !== 'number') {
+          console.log('Invalid post_id in POST body');
+          return new Response(
+            JSON.stringify({
+              error: {
+                message: 'Invalid post_id provided',
+                code: 'VALIDATION_ERROR'
+              }
+            }),
+            { 
+              status: 400, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            }
+          );
+        }
+        
+        postId = body.post_id;
+      } catch (error) {
+        console.log('Error parsing POST body:', error);
         return new Response(
           JSON.stringify({
             error: {
-              message: 'Invalid post_id provided',
+              message: 'Invalid JSON in request body',
               code: 'VALIDATION_ERROR'
             }
           }),
@@ -85,14 +116,13 @@ Deno.serve(async (req) => {
           }
         );
       }
-      
-      postId = body.post_id;
     } else if (req.method === 'GET') {
       // Support GET requests with URL parameters
       const url = new URL(req.url);
       const postIdParam = url.searchParams.get('post_id');
       
       if (!postIdParam || isNaN(Number(postIdParam))) {
+        console.log('Invalid post_id parameter in GET request');
         return new Response(
           JSON.stringify({
             error: {
@@ -109,6 +139,7 @@ Deno.serve(async (req) => {
       
       postId = Number(postIdParam);
     } else {
+      console.log(`Method ${req.method} not allowed`);
       return new Response(
         JSON.stringify({
           error: {
@@ -123,7 +154,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('Fetching post detail for ID:', postId);
+    console.log(`Fetching post detail for ID: ${postId}`);
 
     // Fetch post with author details
     const { data: post, error: postError } = await supabase
@@ -139,8 +170,24 @@ Deno.serve(async (req) => {
       .eq('id', postId)
       .single();
 
-    if (postError || !post) {
+    if (postError) {
       console.error('Post fetch error:', postError);
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'Post not found',
+            code: 'POST_NOT_FOUND'
+          }
+        }),
+        { 
+          status: 404, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    if (!post) {
+      console.log('Post not found in database');
       return new Response(
         JSON.stringify({
           error: {
@@ -160,6 +207,8 @@ Deno.serve(async (req) => {
     let userCanModerate = false;
 
     if (user) {
+      console.log('Fetching user-specific data');
+      
       // Get user's vote on this post
       const { data: voteData } = await supabase
         .from('CommunityPost_Votes')
@@ -220,13 +269,16 @@ Deno.serve(async (req) => {
       user_can_moderate: userCanModerate
     };
 
-    console.log('Post detail fetched successfully for ID:', postId);
+    console.log(`Post detail fetched successfully for ID: ${postId}`);
 
     return new Response(
       JSON.stringify(response),
       { 
         status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json'
+        }
       }
     );
 
@@ -241,7 +293,10 @@ Deno.serve(async (req) => {
       }),
       { 
         status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json'
+        }
       }
     );
   }

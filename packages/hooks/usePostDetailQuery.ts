@@ -19,12 +19,27 @@ export const usePostDetailQuery = (postId: number) => {
           }
         });
 
+        console.log('Edge function response:', { data, error });
+
         if (error) {
           console.error('Post detail fetch error:', error);
+          
+          // Handle specific error types
+          if (error.message?.includes('Rate limit')) {
+            throw new Error('Too many requests. Please wait a moment and try again.');
+          }
+          if (error.message?.includes('not found') || error.message?.includes('POST_NOT_FOUND')) {
+            throw new Error('This post could not be found.');
+          }
+          if (error.message?.includes('network') || error.message?.includes('Failed to fetch')) {
+            throw new Error('Network error. Please check your connection and try again.');
+          }
+          
           throw new Error(error.message || `Failed to fetch post details for ID: ${postId}`);
         }
 
         if (!data) {
+          console.error('No data returned from edge function');
           throw new Error(`Post with ID ${postId} not found`);
         }
 
@@ -41,7 +56,7 @@ export const usePostDetailQuery = (postId: number) => {
           if (error.message.includes('not found')) {
             throw new Error('This post could not be found.');
           }
-          if (error.message.includes('network')) {
+          if (error.message.includes('network') || error.message.includes('Failed to fetch') || error.message.includes('Failed to send a request')) {
             throw new Error('Network error. Please check your connection and try again.');
           }
         }
