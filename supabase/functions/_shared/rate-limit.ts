@@ -1,70 +1,94 @@
 
-// ABOUTME: Shared rate limiting utility for edge functions using database-based tracking.
+// ABOUTME: Centralized rate limiting utility for all edge functions with consistent exports.
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 interface RateLimitResult {
   allowed: boolean;
-  remaining?: number;
-  resetTime?: number;
+  remaining: number;
+  resetTime: number;
 }
 
-export async function rateLimit(
+/**
+ * Check rate limit for a given key and user
+ * @param supabase - Supabase client instance
+ * @param key - Rate limit key (e.g., 'create-post:user-id')
+ * @param limit - Maximum requests allowed
+ * @param windowSeconds - Time window in seconds
+ * @returns Promise<RateLimitResult>
+ */
+export async function checkRateLimit(
   supabase: any,
   key: string,
   limit: number,
-  windowSeconds: number
+  windowSeconds: number = 60
 ): Promise<RateLimitResult> {
+  const now = Math.floor(Date.now() / 1000);
+  const windowStart = now - windowSeconds;
+
   try {
-    const now = Math.floor(Date.now() /  1000);
-    const windowStart = now - windowSeconds;
-    
-    // Clean old entries
+    // Clean up old entries
     await supabase
       .from('rate_limit_log')
       .delete()
-      .lt('timestamp', windowStart);
-    
-    // Count current requests in window
-    const { count, error: countError } = await supabase
+      .lt('created_at', new Date((now - windowSeconds) * 1000).toISOString());
+
+    // Count recent requests
+    const { data: recentRequests, error } = await supabase
       .from('rate_limit_log')
-      .select('*', { count: 'exact' })
+      .select('*')
       .eq('key', key)
-      .gte('timestamp', windowStart);
-    
-    if (countError) {
-      console.error('Rate limit count error:', countError);
-      // Allow request if we can't check rate limit
-      return { allowed: true };
+      .gte('created_at', new Date(windowStart * 1000).toISOString());
+
+    if (error) {
+      console.error('Rate limit check error:', error);
+      // Allow request on error to prevent blocking users
+      return { allowed: true, remaining: limit, resetTime: now + windowSeconds };
     }
-    
-    if ((count || 0) >= limit) {
-      return { 
-        allowed: false, 
+
+    const requestCount = recentRequests?.length || 0;
+
+    if (requestCount >= limit) {
+      return {
+        allowed: false,
         remaining: 0,
-        resetTime: windowStart + windowSeconds
+        resetTime: now + windowSeconds
       };
     }
-    
+
     // Log this request
-    const { error: insertError } = await supabase
+    await supabase
       .from('rate_limit_log')
       .insert({
-        key: key,
-        timestamp: now
+        key,
+        created_at: new Date().toISOString()
       });
-    
-    if (insertError) {
-      console.error('Rate limit log error:', insertError);
-    }
-    
-    return { 
-      allowed: true, 
-      remaining: limit - (count || 0) - 1,
-      resetTime: windowStart + windowSeconds
+
+    return {
+      allowed: true,
+      remaining: limit - requestCount - 1,
+      resetTime: now + windowSeconds
     };
-    
   } catch (error) {
-    console.error('Rate limiting error:', error);
-    // Allow request if rate limiting fails
-    return { allowed: true };
+    console.error('Rate limit error:', error);
+    // Allow request on error
+    return { allowed: true, remaining: limit, resetTime: now + windowSeconds };
   }
+}
+
+/**
+ * Legacy export for backward compatibility
+ * @deprecated Use checkRateLimit instead
+ */
+export const rateLimit = checkRateLimit;
+
+/**
+ * Generate rate limit headers for HTTP responses
+ */
+export function rateLimitHeaders(result: RateLimitResult): Record<string, string> {
+  return {
+    'X-RateLimit-Limit': '60',
+    'X-RateLimit-Remaining': result.remaining.toString(),
+    'X-RateLimit-Reset': result.resetTime.toString(),
+  };
 }

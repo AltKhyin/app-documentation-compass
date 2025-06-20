@@ -3,7 +3,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 import { corsHeaders } from '../_shared/cors.ts'
-import { rateLimit } from '../_shared/rate-limit.ts'
+import { checkRateLimit } from '../_shared/rate-limit.ts'
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -19,7 +19,7 @@ interface CreatePostRequest {
   video_url?: string;
   poll_data?: Record<string, any>;
   review_id?: number;
-  parent_post_id?: number; // NEW: This makes it a comment if provided
+  parent_post_id?: number; // This makes it a comment if provided
 }
 
 interface CreatePostResponse {
@@ -35,25 +35,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Rate limiting check - more restrictive for post creation
-    const clientIP = req.headers.get('x-forwarded-for') || 'unknown';
-    const rateLimitResult = await rateLimit(supabase, `create-post:${clientIP}`, 10, 60); // 10 posts per minute
-    
-    if (!rateLimitResult.allowed) {
-      return new Response(
-        JSON.stringify({
-          error: {
-            message: 'Rate limit exceeded. Please wait before creating another post.',
-            code: 'RATE_LIMIT_EXCEEDED'
-          }
-        }),
-        { 
-          status: 429, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
     // Authentication check - required for post creation
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -87,6 +68,28 @@ Deno.serve(async (req) => {
         { 
           status: 401, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Rate limiting check - 10 posts per minute
+    const rateLimitResult = await checkRateLimit(supabase, `create-post:${user.id}`, 10, 60);
+    
+    if (!rateLimitResult.allowed) {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'Rate limit exceeded. Please wait before creating another post.',
+            code: 'RATE_LIMIT_EXCEEDED'
+          }
+        }),
+        { 
+          status: 429, 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString()
+          }
         }
       );
     }
@@ -174,14 +177,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Use updated database function for post/comment creation with auto-upvote
+    // Use database function for post/comment creation with auto-upvote
     const { data: result, error: createError } = await supabase
       .rpc('create_post_and_auto_vote', {
         p_author_id: user.id,
         p_title: body.title || null,
         p_content: body.content,
         p_category: body.category,
-        p_parent_id: body.parent_post_id || null // NEW: Support for comments
+        p_parent_id: body.parent_post_id || null // Support for comments
       });
 
     if (createError || !result || result.length === 0) {
@@ -222,7 +225,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // NEW: Notification logic for comments
+    // Notification logic for comments
     if (body.parent_post_id) {
       // Get the parent post/comment to find its author
       const { data: parentContent } = await supabase

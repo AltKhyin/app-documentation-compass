@@ -60,3 +60,6 @@ verify_jwt = false
 
 [functions.cast-poll-vote]
 verify_jwt = true
+
+[functions.reward-content]
+verify_jwt = true
