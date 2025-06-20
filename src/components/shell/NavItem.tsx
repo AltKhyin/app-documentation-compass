@@ -1,46 +1,36 @@
 
-// ABOUTME: A reusable navigation item for sidebars and tab bars.
+// ABOUTME: Individual navigation item component with proper Router context handling.
+
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
+import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-type NavItemProps = {
+interface NavItemProps {
   href: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
   label: string;
-  isCollapsed?: boolean;
-  isMobile?: boolean;
-};
+  isCollapsed: boolean;
+}
 
-const NavItem = ({ href, icon: Icon, label, isCollapsed = false, isMobile = false }: NavItemProps) => {
-  const linkContent = (
+const NavItem = ({ href, icon: Icon, label, isCollapsed }: NavItemProps) => {
+  const location = useLocation();
+  
+  return (
     <NavLink
       to={href}
       className={({ isActive }) =>
         cn(
-          'flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-muted',
-          isActive
-            ? isMobile
-              ? 'text-primary'
-              : 'bg-muted text-foreground'
-            : 'text-foreground hover:text-foreground',
-          { 'justify-center': isCollapsed }
+          "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+          isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground",
+          isCollapsed && "justify-center px-2"
         )
       }
     >
-      <Icon className="h-5 w-5" />
-      {!isCollapsed && <span className="text-sm font-medium">{label}</span>}
+      <Icon size={20} className="flex-shrink-0" />
+      {!isCollapsed && <span className="truncate">{label}</span>}
     </NavLink>
   );
-
-  // Don't use tooltips when collapsed - just return the link directly
-  if (isCollapsed) {
-    return linkContent;
-  }
-
-  // Only show tooltips when expanded (which is redundant, so we'll skip it entirely)
-  return linkContent;
 };
 
 export default NavItem;
