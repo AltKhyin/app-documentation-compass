@@ -10,10 +10,6 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 )
 
-interface PostDetailRequest {
-  post_id: number;
-}
-
 Deno.serve(async (req) => {
   console.log(`Request method: ${req.method}, URL: ${req.url}`);
   
@@ -28,7 +24,7 @@ Deno.serve(async (req) => {
 
   try {
     // Get client IP for rate limiting
-    const clientIP = req.headers.get('x-forwarded-for') || 
+    const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
                      req.headers.get('x-real-ip') || 
                      'unknown';
     
@@ -77,51 +73,63 @@ Deno.serve(async (req) => {
       console.log('No authorization header provided, proceeding as anonymous');
     }
 
-    // Extract post ID from URL path
+    // Extract post ID from URL path - improved extraction
     const url = new URL(req.url);
-    const pathSegments = url.pathname.split('/').filter(Boolean);
+    let postId: number | null = null;
     
-    // Try to get post_id from URL path (last segment) or query parameter
-    let postId: number;
-    const postIdFromPath = pathSegments[pathSegments.length - 1];
-    const postIdFromQuery = url.searchParams.get('post_id');
+    // Method 1: Try to get from URL search params
+    const postIdParam = url.searchParams.get('post_id');
+    if (postIdParam && !isNaN(Number(postIdParam))) {
+      postId = Number(postIdParam);
+      console.log(`Post ID from query params: ${postId}`);
+    }
     
-    if (postIdFromPath && !isNaN(Number(postIdFromPath))) {
-      postId = Number(postIdFromPath);
-    } else if (postIdFromQuery && !isNaN(Number(postIdFromQuery))) {
-      postId = Number(postIdFromQuery);
-    } else {
-      // Fallback: try to parse from request body for POST requests
-      let postIdFromBody = null;
-      if (req.method === 'POST') {
-        try {
-          const body = await req.text();
-          if (body && body.trim()) {
-            const parsedBody: PostDetailRequest = JSON.parse(body);
-            postIdFromBody = parsedBody.post_id;
-          }
-        } catch (parseError) {
-          console.log('Could not parse POST body:', parseError);
+    // Method 2: Try to get from URL path segments
+    if (!postId) {
+      const pathSegments = url.pathname.split('/').filter(Boolean);
+      console.log('URL path segments:', pathSegments);
+      
+      // Look for numeric segments that could be post IDs
+      for (let i = pathSegments.length - 1; i >= 0; i--) {
+        const segment = pathSegments[i];
+        if (!isNaN(Number(segment)) && Number(segment) > 0) {
+          postId = Number(segment);
+          console.log(`Post ID from path segment: ${postId}`);
+          break;
         }
       }
-      
-      if (postIdFromBody && !isNaN(Number(postIdFromBody))) {
-        postId = Number(postIdFromBody);
-      } else {
-        console.log('Invalid or missing post_id');
-        return new Response(
-          JSON.stringify({
-            error: {
-              message: 'Invalid or missing post_id parameter',
-              code: 'VALIDATION_ERROR'
-            }
-          }),
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    }
+    
+    // Method 3: Try to get from request body (for POST requests)
+    if (!postId && req.method === 'POST') {
+      try {
+        const body = await req.text();
+        if (body && body.trim()) {
+          const parsedBody = JSON.parse(body);
+          if (parsedBody.post_id && !isNaN(Number(parsedBody.post_id))) {
+            postId = Number(parsedBody.post_id);
+            console.log(`Post ID from request body: ${postId}`);
           }
-        );
+        }
+      } catch (parseError) {
+        console.log('Could not parse POST body:', parseError);
       }
+    }
+
+    if (!postId || postId <= 0) {
+      console.log('Invalid or missing post_id parameter. URL:', req.url);
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'Invalid or missing post_id parameter',
+            code: 'VALIDATION_ERROR'
+          }
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     console.log(`Fetching post detail for ID: ${postId}`);

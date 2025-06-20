@@ -12,12 +12,14 @@ export const usePostDetailQuery = (postId: number) => {
       console.log('Fetching post detail for ID:', postId);
       
       try {
-        // Use GET method with URL parameter instead of POST with JSON body
+        // Call the edge function with post_id as a URL parameter
         const { data, error } = await supabase.functions.invoke('get-community-post-detail', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-          }
+          },
+          // Pass post_id as a query parameter
+          body: new URLSearchParams({ post_id: postId.toString() })
         });
 
         console.log('Edge function response:', { data, error });

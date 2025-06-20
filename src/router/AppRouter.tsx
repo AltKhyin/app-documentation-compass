@@ -4,6 +4,7 @@
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
+import AppShell from '../components/shell/AppShell';
 import { CommunityLoadingState } from '../components/community/CommunityLoadingState';
 
 // Lazy loading for better performance
@@ -25,97 +26,38 @@ export default function AppRouter() {
     <Router>
       <Suspense fallback={<CommunityLoadingState variant="page" />}>
         <Routes>
-          {/* Public Routes */}
+          {/* Public Routes - No AppShell */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           
-          {/* Protected Routes */}
+          {/* Protected Routes - Wrapped with AppShell */}
           <Route 
-            path="/" 
+            path="/*" 
             element={
               <ProtectedRoute requiredRole="practitioner">
-                <Index />
+                <AppShell />
               </ProtectedRoute>
-            } 
+            }
           />
-          
-          <Route 
-            path="/comunidade" 
-            element={
-              <ProtectedRoute requiredRole="practitioner">
-                <CommunityPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/comunidade/:postId" 
-            element={
-              <ProtectedRoute requiredRole="practitioner">
-                <CommunityPostPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/comunidade/criar" 
-            element={
-              <ProtectedRoute requiredRole="practitioner">
-                <CreatePostPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/acervo" 
-            element={
-              <ProtectedRoute requiredRole="practitioner">
-                <CollectionPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/review/:slug" 
-            element={
-              <ProtectedRoute requiredRole="practitioner">
-                <ReviewDetailPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/salvos" 
-            element={
-              <ProtectedRoute requiredRole="practitioner">
-                <SavedPostsPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/perfil" 
-            element={
-              <ProtectedRoute requiredRole="practitioner">
-                <ProfilePage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/comunidade/sobre" 
-            element={
-              <ProtectedRoute requiredRole="practitioner">
-                <CommunityInfoPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Fallback Routes */}
-          <Route path="/404" element={<NotFound />} />
-          <Route path="*" element={<Navigate to="/404" replace />} />
         </Routes>
       </Suspense>
     </Router>
   );
 }
+
+// Define protected routes that will be rendered inside AppShell
+export const protectedRoutes = (
+  <Routes>
+    <Route path="/" element={<Index />} />
+    <Route path="/comunidade" element={<CommunityPage />} />
+    <Route path="/comunidade/:postId" element={<CommunityPostPage />} />
+    <Route path="/comunidade/criar" element={<CreatePostPage />} />
+    <Route path="/acervo" element={<CollectionPage />} />
+    <Route path="/review/:slug" element={<ReviewDetailPage />} />
+    <Route path="/salvos" element={<SavedPostsPage />} />
+    <Route path="/perfil" element={<ProfilePage />} />
+    <Route path="/comunidade/sobre" element={<CommunityInfoPage />} />
+    <Route path="/404" element={<NotFound />} />
+    <Route path="*" element={<Navigate to="/404" replace />} />
+  </Routes>
+);

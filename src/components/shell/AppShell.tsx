@@ -1,12 +1,12 @@
 
 // ABOUTME: The main application shell controller.
 import React from 'react';
-import { Outlet } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAppData } from '@/contexts/AppDataContext';
 import DesktopShell from './DesktopShell';
 import MobileShell from './MobileShell';
 import { Skeleton } from '@/components/ui/skeleton';
+import { protectedRoutes } from '../../router/AppRouter';
 
 const AppShell = () => {
   const isMobile = useIsMobile();
@@ -44,42 +44,50 @@ const AppShell = () => {
   if (isAppDataLoading) {
     console.log('AppShell: Showing loading skeleton');
     return (
-        <div className="flex h-screen w-full bg-background">
-            {/* Sidebar Skeleton for Desktop */}
-            <div className="hidden md:flex flex-col w-60 border-r p-4 space-y-4">
-                <Skeleton className="h-8 w-32" />
-                <Skeleton className="h-8 w-full" />
-                <Skeleton className="h-8 w-full" />
-                <Skeleton className="h-8 w-full" />
-                <div className="mt-auto">
-                    <Skeleton className="h-12 w-full" />
-                </div>
-            </div>
-            {/* Main Content Skeleton */}
-            <div className="flex-1 p-6 space-y-6">
-                <div className="flex justify-end">
-                    <Skeleton className="h-10 w-10 rounded-full" />
-                </div>
-                <Skeleton className="w-full h-96" />
-                <Skeleton className="h-8 w-64" />
-                <div className="flex gap-4">
-                    <Skeleton className="w-64 h-48" />
-                    <Skeleton className="w-64 h-48" />
-                    <Skeleton className="w-64 h-48" />
-                </div>
-            </div>
+      <div className="flex h-screen w-full bg-background">
+        {/* Sidebar Skeleton for Desktop */}
+        <div className="hidden md:flex flex-col w-60 border-r p-4 space-y-4">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+          <div className="mt-auto">
+            <Skeleton className="h-12 w-full" />
+          </div>
         </div>
+        {/* Main Content Skeleton */}
+        <div className="flex-1 p-6 space-y-6">
+          <div className="flex justify-end">
+            <Skeleton className="h-10 w-10 rounded-full" />
+          </div>
+          <Skeleton className="w-full h-96" />
+          <Skeleton className="h-8 w-64" />
+          <div className="flex gap-4">
+            <Skeleton className="w-64 h-48" />
+            <Skeleton className="w-64 h-48" />
+            <Skeleton className="w-64 h-48" />
+          </div>
+        </div>
+      </div>
     );
   }
 
   console.log('AppShell: Rendering shell with data ready');
 
-  // Once the data is ready, render the appropriate shell with Outlet for content
+  // Once the data is ready, render the appropriate shell with routes
   if (isMobile) {
-    return <MobileShell />;
+    return (
+      <MobileShell>
+        {protectedRoutes}
+      </MobileShell>
+    );
   }
 
-  return <DesktopShell />;
+  return (
+    <DesktopShell>
+      {protectedRoutes}
+    </DesktopShell>
+  );
 };
 
 export default AppShell;
