@@ -1,66 +1,124 @@
 
-// ABOUTME: Specialized error boundary for community module with standardized error handling and fallback UI.
+// ABOUTME: Enhanced error boundary for community module with categorized error handling and retry mechanisms.
 
 import React from 'react';
-import { Alert, AlertDescription } from '../ui/alert';
-import { Button } from '../ui/button';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { ErrorFallback, type ErrorInfo } from '../ui/error-fallback';
 
 interface CommunityErrorBoundaryProps {
   children: React.ReactNode;
   fallback?: React.ComponentType<{ error: Error; resetError: () => void }>;
+  context?: string;
+  showDetails?: boolean;
 }
 
 interface CommunityErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
+  errorInfo: ErrorInfo | null;
+  retryCount: number;
 }
 
 export class CommunityErrorBoundary extends React.Component<
   CommunityErrorBoundaryProps,
   CommunityErrorBoundaryState
 > {
+  private resetTimeoutId: number | null = null;
+  private readonly maxRetries = 3;
+
   constructor(props: CommunityErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { 
+      hasError: false, 
+      error: null, 
+      errorInfo: null,
+      retryCount: 0
+    };
   }
 
-  static getDerivedStateFromError(error: Error): CommunityErrorBoundaryState {
+  static getDerivedStateFromError(error: Error): Partial<CommunityErrorBoundaryState> {
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Community Error Boundary caught an error:', error, errorInfo);
+    const enhancedErrorInfo: ErrorInfo = {
+      componentStack: errorInfo.componentStack,
+      errorBoundary: 'CommunityErrorBoundary'
+    };
+    
+    this.setState({ errorInfo: enhancedErrorInfo });
+    
+    // Enhanced logging with context
+    console.group('🚨 Community Error Boundary');
+    console.error('Error caught in Community module:', error);
+    console.error('Error info:', errorInfo);
+    console.error('Context:', this.props.context || 'Community');
+    console.error('Retry count:', this.state.retryCount);
+    console.groupEnd();
+
+    // Auto-retry for network errors (with exponential backoff)
+    if (this.isNetworkError(error) && this.state.retryCount < this.maxRetries) {
+      const delay = Math.min(1000 * Math.pow(2, this.state.retryCount), 5000);
+      
+      console.log(`🔄 Auto-retrying in ${delay}ms (attempt ${this.state.retryCount + 1}/${this.maxRetries})`);
+      
+      this.resetTimeoutId = window.setTimeout(() => {
+        this.setState(prevState => ({
+          hasError: false,
+          error: null,
+          errorInfo: null,
+          retryCount: prevState.retryCount + 1
+        }));
+      }, delay);
+    }
   }
 
+  componentWillUnmount() {
+    if (this.resetTimeoutId) {
+      clearTimeout(this.resetTimeoutId);
+    }
+  }
+
+  private isNetworkError = (error: Error): boolean => {
+    const errorMessage = error.message.toLowerCase();
+    return errorMessage.includes('fetch') || 
+           errorMessage.includes('network') || 
+           errorMessage.includes('failed to fetch') ||
+           errorMessage.includes('load');
+  };
+
   resetError = () => {
-    this.setState({ hasError: false, error: null });
+    if (this.resetTimeoutId) {
+      clearTimeout(this.resetTimeoutId);
+      this.resetTimeoutId = null;
+    }
+    
+    this.setState({ 
+      hasError: false, 
+      error: null, 
+      errorInfo: null,
+      retryCount: 0
+    });
   };
 
   render() {
-    if (this.state.hasError) {
+    if (this.state.hasError && this.state.error) {
+      // Use custom fallback if provided
       if (this.props.fallback) {
         const Fallback = this.props.fallback;
-        return <Fallback error={this.state.error!} resetError={this.resetError} />;
+        return <Fallback error={this.state.error} resetError={this.resetError} />;
       }
 
+      // Use enhanced error fallback with community context
       return (
-        <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
-          <Alert variant="destructive" className="max-w-md">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="mt-2">
-              Ocorreu um erro na comunidade. Tente recarregar a página ou entre em contato conosco se o problema persistir.
-            </AlertDescription>
-          </Alert>
-          <Button
-            variant="outline"
-            onClick={this.resetError}
-            className="mt-4"
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Tentar Novamente
-          </Button>
-        </div>
+        <ErrorFallback
+          error={this.state.error}
+          resetError={this.resetError}
+          errorInfo={this.state.errorInfo}
+          context={this.props.context || 'comunidade'}
+          showDetails={this.props.showDetails ?? false}
+          showHomeButton={true}
+          showBackButton={true}
+        />
       );
     }
 

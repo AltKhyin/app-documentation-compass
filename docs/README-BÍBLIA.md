@@ -1,142 +1,180 @@
 
-# EVIDENS Reviews - Bíblia Técnica  
-**Versão**: 2.4.0  
-**Data**: 20 de junho de 2025  
-**Status**: Sistema Consolidado e Otimizado
+# EVIDENS BÍBLIA - Documentação Viva do Projeto
+**Versão:** 2.5.3  
+**Última Atualização:** 20 de junho de 2025
 
-## 📋 RESUMO EXECUTIVO
+## 🏗️ ARQUITETURA IMPLEMENTADA
 
-O EVIDENS Reviews é uma Single-Page Application (SPA) e Progressive Web App (PWA) construída em React + Vite + TypeScript + Supabase, focada em fornecer reviews científicos de alta qualidade para profissionais de saúde.
+### Frontend (React + Vite + TypeScript)
+- **Shell da Aplicação:** Implementado com navegação adaptativa (mobile + desktop)
+- **Sistema de Autenticação:** OAuth com Google + Supabase Auth
+- **Sistema de Temas:** Dark/Light mode com persistência
+- **PWA:** Configurado para instalação mobile
 
-### 🎯 Status Atual do Sistema
-- ✅ **Sistema de Autenticação**: Implementado (Supabase Auth + JWT claims)
-- ✅ **Shell Principal**: Desktop e Mobile implementados
-- ✅ **Homepage**: Feed personalizado implementado
-- ✅ **Acervo**: Sistema de tags e busca implementado  
-- ✅ **Comunidade**: Feed com sidebar, posts e votação implementados
-- ✅ **Sistema de Tipos**: Consolidado e otimizado
-- ✅ **Nomenclatura**: Padronizada (inglês interno, português para usuários)
-- ✅ **Hooks de Dados**: Otimizados com melhor tratamento de erro
-- 🔄 **Profile**: Placeholder implementado
-- 🔄 **Review Detail**: Em desenvolvimento
+### Backend (Supabase)
+- **Database:** PostgreSQL com RLS policies
+- **Edge Functions:** 12 funções implementadas
+- **Auth:** JWT com custom claims para roles
+- **Storage:** Configurado (não utilizado ainda)
 
 ---
 
-## 🏗️ ARQUITETURA CONSOLIDADA
+## 📱 MÓDULOS IMPLEMENTADOS
 
-### Estrutura de Tipos Otimizada
-```typescript
-// Tipos centralizados e reutilizáveis
-src/types/
-├── index.ts          // Exports principais + tipos base
-├── api.ts           // Tipos para API e resposta padronizadas  
-├── community.ts     // Tipos específicos da comunidade
-└── auth.ts         // Tipos de autenticação
+### 1. HOMEPAGE (/)
+**Status:** ✅ COMPLETO  
+**Componentes:** 7 componentes  
+**Features:** Feed personalizado, carrossel de reviews, sugestões  
+**Mobile:** 100% adaptado  
+
+### 2. ACERVO (/acervo)
+**Status:** ✅ COMPLETO  
+**Componentes:** 6 componentes  
+**Features:** Busca, filtros, masonry grid, tags  
+**Mobile:** 100% adaptado  
+
+### 3. COMUNIDADE (/comunidade)
+**Status:** ✅ COMPLETO + ENHANCED  
+**Componentes:** 15+ componentes  
+**Features:** Posts, votação, moderação, sidebar  
+**Mobile:** 100% adaptado  
+**Enhanced:** Sistema de erro robusto, loading states progressivos, fallbacks offline
+
+### 4. PERFIL (/perfil)
+**Status:** 🟡 PLACEHOLDER  
+**Componentes:** 1 componente básico  
+**Features:** Blueprint 07 pendente  
+
+### 5. REVIEW DETAIL (/acervo/:slug)
+**Status:** ✅ COMPLETO  
+**Componentes:** 4 componentes  
+**Features:** Rendering engine v2.0  
+
+### 6. SALVOS (/salvos)
+**Status:** ✅ COMPLETO  
+**Componentes:** 3 componentes  
+**Features:** Posts salvos, paginação  
+
+---
+
+## 🔧 SISTEMA DE TIPOS CONSOLIDADO
+
+### Tipos Principais (v2.5.3)
+- **Community Types:** Otimizados e consolidados
+- **API Types:** Padronizados e centralizados  
+- **Global Types:** Melhores práticas implementadas
+- **Error Handling:** Sistema robusto com categorização
+
+### Naming Convention
+- **Pages:** Inglês (CommunityPage.tsx, CollectionPage.tsx, ProfilePage.tsx)
+- **Routes:** Português para usuário (/comunidade, /acervo, /perfil)
+- **Components:** Inglês interno, labels em português
+- **Types:** Inglês com interfaces claras
+
+---
+
+## 🛡️ ERROR HANDLING & ROBUSTNESS (NEW)
+
+### Error Boundaries
+- **CommunityErrorBoundary:** Enhanced com retry automático para erros de rede
+- **ErrorFallback:** Componente genérico com categorização de erros
+- **Network Awareness:** Detecção offline/online com fallbacks inteligentes
+
+### Loading States
+- **CommunityLoadingState:** Skeletons adaptativos e animações progressivas
+- **Skeleton Variants:** feed, sidebar, post, minimal, page
+- **Progressive Loading:** Carregamento incremental com timing otimizado
+
+### Fallback Mechanisms
+- **NetworkAwareFallback:** Cache-first com indicadores de status
+- **Offline Support:** Conteúdo cached quando offline
+- **Stale Data Detection:** Alertas para dados desatualizados
+
+---
+
+## 🗂️ ESTRUTURA DE ARQUIVOS
+
+```
+src/
+├── components/
+│   ├── ui/ (35 componentes shadcn/ui + ErrorFallback)
+│   ├── community/ (15+ componentes + enhanced error handling)
+│   ├── homepage/ (7 componentes)
+│   ├── acervo/ (6 componentes)
+│   └── auth/ (6 componentes)
+├── pages/ (12 páginas - nomes em inglês)
+├── hooks/ (5 hooks + useNetworkStatus)
+├── types/ (3 arquivos de tipos consolidados)
+├── config/ (navigation.ts padronizado)
+└── packages/hooks/ (12 data-fetching hooks)
 ```
 
-### Sistema de Nomenclatura Padronizado
-- **Arquivos/Componentes**: Inglês (CommunityPage.tsx, CollectionPage.tsx)
-- **URLs**: Português preservado (/comunidade, /acervo, /perfil)
-- **Interface**: Português para usuários
-- **Código interno**: Inglês para consistência
+---
 
-### Hooks de Dados Otimizados
-```typescript
-// Hooks com tratamento de erro aprimorado
-packages/hooks/
-├── useCommunityPageQuery.ts    // Otimizado: cache + error handling
-├── usePostDetailQuery.ts       // Otimizado: performance + tipos
-└── useAcervoDataQuery.ts      // Dados do acervo consolidados
-```
+## 📊 EDGE FUNCTIONS IMPLEMENTADAS
+
+1. **get-homepage-feed** - Feed personalizado da homepage
+2. **get-acervo-data** - Dados do acervo com filtros
+3. **get-community-page-data** - Dados consolidados da comunidade (otimizado)
+4. **get-community-feed** - Feed da comunidade via RPC
+5. **get-community-post-detail** - Detalhes de posts individuais
+6. **create-community-post** - Criação de posts com auto-voto
+7. **cast-community-vote** - Sistema de votação
+8. **moderate-community-post** - Ações de moderação
+9. **save-post / get-saved-posts** - Sistema de posts salvos
+10. **submit-suggestion** - Envio de sugestões
+11. **cast-suggestion-vote** - Votação em sugestões
+12. **get-review-by-slug** - Review por slug
 
 ---
 
-## 🚀 FUNCIONALIDADES IMPLEMENTADAS
+## 🚀 PERFORMANCE & OTIMIZAÇÕES
 
-### ✅ Sistema de Comunidade (100% funcional)
-- **Feed Principal**: Posts com votação, categorias, e paginação infinita
-- **Sidebar Desktop**: Regras, links, trending discussions, polls
-- **Mobile**: Adaptação com bottom tabs (sem sidebar)
-- **Criação de Posts**: Formulário completo com rich text editor
-- **Votação**: Sistema up/down vote implementado
-- **Moderação**: Sistema de pin/lock posts para admins
+### TanStack Query
+- **Caching Strategy:** Stale-time otimizado por contexto
+- **Infinite Queries:** Implementado para feeds
+- **Cache Invalidation:** Inteligente após mutações
+- **Error Retry:** Configurado com backoff exponencial
 
-### ✅ Sistema de Acervo (100% funcional)  
-- **Grid Responsivo**: Masonry layout com reviews
-- **Sistema de Tags**: Filtros funcionais com contadores
-- **Busca**: Por título e conteúdo dos reviews
-- **Ordenação**: Recente, popular, alfabética
+### Network Optimization
+- **Rate Limiting:** Implementado em todas as Edge Functions
+- **Request Deduplication:** Via TanStack Query
+- **Offline Resilience:** Cache-first com fallbacks
+- **Progressive Enhancement:** Loading states adaptativos
 
-### ✅ Sistema de Shell (100% funcional)
-- **Desktop**: Sidebar colapsível com navegação
-- **Mobile**: Bottom tab bar + header fixo
-- **Contexto de Dados**: AppDataContext para estado global
-- **Responsividade**: useIsMobile hook para adaptações
+### Mobile Performance
+- **Lazy Loading:** Componentes sob demanda
+- **Image Optimization:** Loading lazy em ReviewCards
+- **Touch Optimization:** Gestos e interações mobile
+- **PWA Caching:** Service Worker configurado
 
 ---
 
-## 🔧 OTIMIZAÇÕES TÉCNICAS RECENTES
+## 🎯 PRÓXIMOS MILESTONES
 
-### Performance de Hooks
-- **Cache Inteligente**: staleTime otimizado por tipo de dados
-- **Error Handling**: Mensagens contextuais e retry automático  
-- **Garbage Collection**: gcTime configurado para melhor memória
-- **Refetch Control**: Redução de calls desnecessários
+### PENDENTE - Perfil Completo (Blueprint 07)
+- Sistema de perfil com atividades
+- Hover cards para usuários
+- Histórico de contribuições
+- Configurações avançadas
 
-### Edge Functions
-- **Rate Limiting**: Implementado em todas as funções
-- **Fallback Strategy**: Queries manuais quando RPC falha
-- **Error Responses**: Padronizadas com códigos HTTP corretos
-- **CORS Compliant**: Headers implementados conforme [DOC_5]
-
----
-
-## 📊 MÉTRICAS DE QUALIDADE
-
-### Aderência aos Padrões
-- ✅ **[D3.4] Data Access Layer**: 100% via hooks
-- ✅ **[D3.1] Filesystem**: Estrutura feature-first
-- ✅ **[D3.6] Mobile-First**: Design responsivo implementado
-- ✅ **[D3.3] State Management**: TanStack Query + Zustand
-
-### Cobertura de Funcionalidades
-- **Autenticação**: 100% (login, signup, proteção de rotas)
-- **Comunidade**: 100% (feed, posts, votação, sidebar)
-- **Acervo**: 100% (grid, filtros, busca)  
-- **Navigation**: 100% (desktop + mobile)
-- **Tipos**: 100% (sistema consolidado e otimizado)
+### FUTURO - Admin Module
+- Dashboard de moderação
+- Analytics avançados
+- Gestão de conteúdo
+- Sistema de permissões
 
 ---
 
-## 🎯 PRÓXIMOS PASSOS
+## 📈 MÉTRICAS ATUAIS
 
-### MILESTONE 5: Component Architecture (Pendente)
-- Refatoração de componentes grandes
-- Separação de responsabilidades
-- Melhoria na reutilização
+- **Componentes Totais:** 65+
+- **Páginas Implementadas:** 12
+- **Edge Functions:** 12
+- **Hooks Personalizados:** 17
+- **Cobertura Mobile:** 100%
+- **Sistema de Tipos:** 100% TypeScript
+- **Error Handling:** Sistema robusto implementado
+- **Offline Support:** Implementado para módulo comunidade
 
-### MILESTONE 6: Final Quality Assurance (Pendente)  
-- Testes de integração
-- Validação completa do sistema
-- Performance audit final
-
----
-
-## 🔍 DEBUGGING & LOGS
-
-### Logs Implementados
-```typescript
-// Hooks otimizados com logs contextuais
-console.log('Fetching community page data, page:', pageParam);
-console.log('Successfully fetched X posts via RPC/fallback');
-console.error('Enhanced error context:', error);
-```
-
-### Rate Limiting
-- **Community Data**: 30 req/60s por usuário
-- **Post Detail**: 60 req/60s por IP
-- **Authentication**: Padrão Supabase
-
----
-
-**📝 Última Atualização**: Milestone 4 concluído - Sistema de hooks otimizado com melhor performance e tratamento de erros.
+**Status Geral:** 🟢 SISTEMA ESTÁVEL E ROBUSTO COM ENHANCED ERROR HANDLING
