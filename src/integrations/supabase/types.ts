@@ -137,6 +137,7 @@ export type Database = {
           image_url: string | null
           is_locked: boolean | null
           is_pinned: boolean | null
+          is_rewarded: boolean
           parent_post_id: number | null
           poll_data: Json | null
           post_type: string
@@ -159,6 +160,7 @@ export type Database = {
           image_url?: string | null
           is_locked?: boolean | null
           is_pinned?: boolean | null
+          is_rewarded?: boolean
           parent_post_id?: number | null
           poll_data?: Json | null
           post_type?: string
@@ -181,6 +183,7 @@ export type Database = {
           image_url?: string | null
           is_locked?: boolean | null
           is_pinned?: boolean | null
+          is_rewarded?: boolean
           parent_post_id?: number | null
           poll_data?: Json | null
           post_type?: string
@@ -777,34 +780,40 @@ export type Database = {
     }
     Functions: {
       create_post_and_auto_vote: {
-        Args: {
-          p_author_id: string
-          p_title: string
-          p_content: string
-          p_category: string
-        }
+        Args:
+          | {
+              p_author_id: string
+              p_title: string
+              p_content: string
+              p_category: string
+            }
+          | {
+              p_author_id: string
+              p_title: string
+              p_content: string
+              p_category: string
+              p_parent_id?: number
+            }
         Returns: {
-          author_id: string | null
-          category: string
-          community_id: string | null
-          content: string
-          created_at: string | null
-          downvotes: number | null
-          flair_color: string | null
-          flair_text: string | null
+          post_id: number
+          success: boolean
+        }[]
+      }
+      get_comments_for_post: {
+        Args: { p_post_id: number; p_user_id: string }
+        Returns: {
           id: number
-          image_url: string | null
-          is_locked: boolean | null
-          is_pinned: boolean | null
-          parent_post_id: number | null
-          poll_data: Json | null
-          post_type: string
-          review_id: number | null
-          structured_content: Json | null
-          title: string | null
-          upvotes: number | null
-          video_url: string | null
-        }
+          content: string
+          created_at: string
+          upvotes: number
+          downvotes: number
+          is_rewarded: boolean
+          parent_post_id: number
+          author: Json
+          user_vote: string
+          reply_count: number
+          nesting_level: number
+        }[]
       }
       get_homepage_suggestions: {
         Args: { p_user_id: string }

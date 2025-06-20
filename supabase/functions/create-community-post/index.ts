@@ -1,5 +1,5 @@
 
-// ABOUTME: Edge function for creating new community posts with auto-upvote and comprehensive validation.
+// ABOUTME: Edge function for creating new community posts and comments with auto-upvote and comprehensive validation.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 import { corsHeaders } from '../_shared/cors.ts'
@@ -19,7 +19,7 @@ interface CreatePostRequest {
   video_url?: string;
   poll_data?: Record<string, any>;
   review_id?: number;
-  parent_post_id?: number;
+  parent_post_id?: number; // NEW: This makes it a comment if provided
 }
 
 interface CreatePostResponse {
@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
     }
 
     // Validate category
-    const validCategories = ['general', 'review_discussion', 'question', 'announcement'];
+    const validCategories = ['general', 'review_discussion', 'question', 'announcement', 'comment'];
     if (!validCategories.includes(body.category)) {
       return new Response(
         JSON.stringify({
@@ -174,16 +174,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Use database function for post creation with auto-upvote
-    const { data: newPost, error: createError } = await supabase
+    // Use updated database function for post/comment creation with auto-upvote
+    const { data: result, error: createError } = await supabase
       .rpc('create_post_and_auto_vote', {
         p_author_id: user.id,
         p_title: body.title || null,
         p_content: body.content,
-        p_category: body.category
+        p_category: body.category,
+        p_parent_id: body.parent_post_id || null // NEW: Support for comments
       });
 
-    if (createError || !newPost) {
+    if (createError || !result || result.length === 0) {
       console.error('Error creating post:', createError);
       return new Response(
         JSON.stringify({
@@ -199,6 +200,8 @@ Deno.serve(async (req) => {
       );
     }
 
+    const newPostId = result[0].post_id;
+
     // Update post with multimedia fields if provided
     if (body.post_type || body.image_url || body.video_url || body.poll_data) {
       const updateData: any = {};
@@ -211,7 +214,7 @@ Deno.serve(async (req) => {
       const { error: updateError } = await supabase
         .from('CommunityPosts')
         .update(updateData)
-        .eq('id', newPost.id);
+        .eq('id', newPostId);
 
       if (updateError) {
         console.error('Error updating post with multimedia:', updateError);
@@ -219,10 +222,39 @@ Deno.serve(async (req) => {
       }
     }
 
+    // NEW: Notification logic for comments
+    if (body.parent_post_id) {
+      // Get the parent post/comment to find its author
+      const { data: parentContent } = await supabase
+        .from('CommunityPosts')
+        .select('author_id')
+        .eq('id', body.parent_post_id)
+        .single();
+
+      // Ensure we don't notify a user for replying to themselves
+      if (parentContent && parentContent.author_id !== user.id) {
+        // Get user's full name for the notification
+        const { data: userData } = await supabase
+          .from('Practitioners')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+
+        const userName = userData?.full_name || 'Um usuário';
+
+        // Insert the notification
+        await supabase.from('Notifications').insert({
+          practitioner_id: parentContent.author_id,
+          content: `${userName} respondeu ao seu comentário.`,
+          link: `/comunidade/${body.parent_post_id}#comment-${newPostId}`,
+        });
+      }
+    }
+
     const response: CreatePostResponse = {
       success: true,
-      post_id: newPost.id,
-      message: 'Post created successfully'
+      post_id: newPostId,
+      message: body.parent_post_id ? 'Comment created successfully' : 'Post created successfully'
     };
 
     return new Response(

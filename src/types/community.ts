@@ -1,10 +1,9 @@
-
-// ABOUTME: Optimized and consolidated TypeScript type definitions for community module components and data structures.
+// ABOUTME: Enhanced community types with reward system support.
 
 // Core Community Post interface - optimized with better generic usage
 export interface CommunityPost {
   id: number;
-  title: string | null;
+  title?: string;
   content: string;
   category: string;
   upvotes: number;
@@ -12,17 +11,26 @@ export interface CommunityPost {
   created_at: string;
   is_pinned?: boolean;
   is_locked?: boolean;
+  flair_text?: string;
+  flair_color?: string;
+  image_url?: string;
+  video_url?: string;
+  poll_data?: Record<string, any>;
+  post_type?: 'text' | 'image' | 'video' | 'poll';
+  author_id?: string;
+  author?: {
+    id: string;
+    full_name: string;
+    avatar_url?: string;
+  };
+  user_vote?: 'up' | 'down' | null;
+  reply_count?: number;
   is_saved?: boolean;
   user_can_moderate?: boolean;
-  post_type?: PostType;
-  image_url?: string | null;
-  video_url?: string | null;
-  poll_data?: PollData;
-  flair_text?: string;
-  flair_color?: FlairColor;
-  author: AuthorInfo | null;
-  user_vote?: VoteType;
-  reply_count: number;
+  // NEW: Support for reward system and comments
+  is_rewarded?: boolean;
+  parent_post_id?: number | null;
+  nesting_level?: number;
 }
 
 // Optimized type definitions with proper enums and unions
