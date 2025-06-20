@@ -1,41 +1,29 @@
 
-// ABOUTME: Navigation configuration with role-based visibility and path definitions.
+// ABOUTME: Standardized navigation configuration with English internal names and Portuguese user-facing labels
 
-import { Home, Library, Users, User, Settings, Shield, BarChart3 } from 'lucide-react';
+import { 
+  Home, 
+  BookOpen, 
+  Users, 
+  User, 
+  Bookmark,
+  Settings,
+  Shield,
+  BarChart3,
+  FileText
+} from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 
 export interface NavigationItem {
   path: string;
   label: string;
-  icon: any;
-  roles?: string[];
   mobileLabel?: string;
+  icon: LucideIcon;
+  requiredRoles?: string[];
 }
 
+// Main navigation items - standardized English internal structure
 export const navigationItems: NavigationItem[] = [
-  {
-    path: '/',
-    label: 'Início',
-    icon: Home,
-  },
-  {
-    path: '/acervo',
-    label: 'Acervo',
-    icon: Library,
-  },
-  {
-    path: '/comunidade',
-    label: 'Comunidade',
-    icon: Users,
-  },
-  {
-    path: '/perfil',
-    label: 'Perfil',
-    icon: User,
-  },
-];
-
-// Mobile navigation items - same as navigationItems but can have different mobile labels
-export const mobileNavigationItems: NavigationItem[] = [
   {
     path: '/',
     label: 'Início',
@@ -46,7 +34,7 @@ export const mobileNavigationItems: NavigationItem[] = [
     path: '/acervo',
     label: 'Acervo',
     mobileLabel: 'Acervo',
-    icon: Library,
+    icon: BookOpen,
   },
   {
     path: '/comunidade',
@@ -62,30 +50,75 @@ export const mobileNavigationItems: NavigationItem[] = [
   },
 ];
 
+// Mobile-specific navigation items
+export const mobileNavigationItems: NavigationItem[] = [
+  {
+    path: '/',
+    label: 'Início',
+    mobileLabel: 'Início',
+    icon: Home,
+  },
+  {
+    path: '/acervo',
+    label: 'Acervo',
+    mobileLabel: 'Acervo',
+    icon: BookOpen,
+  },
+  {
+    path: '/comunidade',
+    label: 'Comunidade',
+    mobileLabel: 'Comunidade',
+    icon: Users,
+  },
+  {
+    path: '/salvos',
+    label: 'Salvos',
+    mobileLabel: 'Salvos',
+    icon: Bookmark,
+  },
+  {
+    path: '/perfil',
+    label: 'Perfil',
+    mobileLabel: 'Perfil',
+    icon: User,
+  },
+];
+
+// Admin navigation items - standardized English internal structure
 export const adminNavigationItems: NavigationItem[] = [
+  {
+    path: '/admin/settings',
+    label: 'Configurações',
+    icon: Settings,
+    requiredRoles: ['admin'],
+  },
   {
     path: '/admin/moderation',
     label: 'Moderação',
     icon: Shield,
-    roles: ['admin', 'moderator'],
+    requiredRoles: ['admin', 'editor'],
   },
   {
     path: '/admin/analytics',
     label: 'Analytics',
     icon: BarChart3,
-    roles: ['admin'],
+    requiredRoles: ['admin'],
   },
   {
-    path: '/admin/settings',
-    label: 'Configurações',
-    icon: Settings,
-    roles: ['admin'],
+    path: '/admin/content',
+    label: 'Conteúdo',
+    icon: FileText,
+    requiredRoles: ['admin', 'editor'],
   },
 ];
 
-export const getVisibleNavigationItems = (items: NavigationItem[], userRole: string) => {
+// Utility function to filter navigation items based on user role
+export const getVisibleNavigationItems = (
+  items: NavigationItem[], 
+  userRole: string
+): NavigationItem[] => {
   return items.filter(item => {
-    if (!item.roles) return true;
-    return item.roles.includes(userRole);
+    if (!item.requiredRoles) return true;
+    return item.requiredRoles.includes(userRole);
   });
 };

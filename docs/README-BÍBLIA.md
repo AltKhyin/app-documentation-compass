@@ -1,77 +1,75 @@
 
 # **EVIDENS - README BÍBLIA**
 
-**Version:** 6.5.0  
+**Version:** 6.6.0  
 **Date:** June 20, 2025  
 **Purpose:** Complete technical summary and current implementation plan for the EVIDENS platform.
 
 ---
 
-## **STRATEGIC ANALYSIS - MILESTONE 2 COMPLETION**
+## **STRATEGIC ANALYSIS - MILESTONE 3 COMPLETION**
 
 ### **Goal Deconstruction**
-✅ **COMPLETED:** Consolidated and optimized type system by implementing consistent TypeScript definitions, eliminating `any` usage, and establishing proper type safety across community module and global application interfaces.
+✅ **COMPLETED:** Standardized file system and navigation configuration to English conventions while preserving Portuguese UI text for users, establishing consistent internal naming patterns across the codebase.
 
 ### **System-Wide Context Gathering**
 **Key Files Affected:**
-- `src/types/community.ts` - Comprehensive type optimization ✅ OPTIMIZED
-- `src/types/api.ts` - New centralized API types ✅ CREATED
-- `src/types/index.ts` - Clean type exports and utilities ✅ REFACTORED
-- `packages/hooks/useCommunityPageQuery.ts` - Type safety improvements ✅ UPDATED
-- `packages/hooks/usePostActionMutation.ts` - Enhanced type definitions ✅ UPDATED
-- `packages/hooks/usePostDetailQuery.ts` - Improved type safety ✅ UPDATED
-- `src/components/community/CommunitySidebar.tsx` - Type optimization ✅ UPDATED
+- `src/pages/ComunidadePage.tsx` → `src/pages/CommunityPage.tsx` ✅ RENAMED
+- `src/pages/AcervoPage.tsx` → `src/pages/CollectionPage.tsx` ✅ RENAMED  
+- `src/pages/PerfilPage.tsx` → `src/pages/ProfilePage.tsx` ✅ RENAMED
+- `src/router/AppRouter.tsx` - Updated imports and route configuration ✅ UPDATED
+- `src/config/navigation.ts` - Standardized navigation configuration ✅ UPDATED
 
-**Database Tables:** None affected (type layer improvements only)
-**Existing Components:** Type safety enhanced across community components and data hooks
+**Database Tables:** None affected (file system layer changes only)
+**Existing Components:** Import paths updated to use standardized English names
 
 ### **Solution Implementation Status**
 **Strategy: Systematic Checkpoint-Driven Approach** ✅ EXECUTING
 
 **Milestone Dependency Chain Status:**
-1. **✅ Milestone 1** (Critical System Recovery) → **✅ Milestone 2** (Type System Consolidation) → **⏳ Milestone 3** (Language Standardization) → **⏳ Milestone 4** (Performance & Security) → **⏳ Milestone 5** (Documentation & Testing) → **⏳ Milestone 6** (Cleanup & Optimization)
+1. **✅ Milestone 1** (Critical System Recovery) → **✅ Milestone 2** (Type System Consolidation) → **✅ Milestone 3** (Language Standardization) → **⏳ Milestone 4** (Performance & Security) → **⏳ Milestone 5** (Documentation & Testing) → **⏳ Milestone 6** (Cleanup & Optimization)
 
 ---
 
-## **MILESTONE 2: TYPE SYSTEM CONSOLIDATION - ✅ COMPLETED**
+## **MILESTONE 3: LANGUAGE STANDARDIZATION - ✅ COMPLETED**
 
-### **✅ Task 2.1: Community Type System Optimization - COMPLETED**
-**Objective:** Consolidate and optimize community-related types
-
-**Technical Implementation:**
-1. ✅ Refactored `src/types/community.ts` with proper enum and union types
-2. ✅ Implemented generic type usage for better reusability
-3. ✅ Consolidated duplicate type definitions across community module
-4. ✅ Optimized type exports for better tree-shaking
-5. ✅ Enhanced poll data and sidebar interfaces with proper structure
-
-**Governing Directives:** [D3.1], TypeScript best practices
-
-**Verification Criteria:**
-- ✅ All community types consolidated in single module
-- ✅ No duplicate type definitions across codebase
-- ✅ Proper generic type usage implemented
-- ✅ Type exports optimized for performance
-
-### **✅ Task 2.2: Global Type Safety Enhancement - COMPLETED**
-**Objective:** Reduce `any` usage and improve application-wide type safety
+### **✅ Task 3.1: File System Standardization - COMPLETED**
+**Objective:** Convert Portuguese file/directory names to English conventions
 
 **Technical Implementation:**
-1. ✅ Created centralized `src/types/api.ts` for API response types
-2. ✅ Eliminated `any` usage in favor of proper generic types
-3. ✅ Added utility types for common patterns (`Maybe`, `Optional`, `RequiredFields`)
-4. ✅ Enhanced type safety across all community-related hooks
-5. ✅ Implemented proper error handling types and interfaces
+1. ✅ Renamed `ComunidadePage.tsx` → `CommunityPage.tsx`
+2. ✅ Renamed `AcervoPage.tsx` → `CollectionPage.tsx`  
+3. ✅ Renamed `PerfilPage.tsx` → `ProfilePage.tsx`
+4. ✅ Updated all import statements in router configuration
+5. ✅ Preserved Portuguese URLs for user-facing routes
 
-**Governing Directives:** [D3.1], TypeScript strict mode
+**Governing Directives:** [D3.1] Filesystem & Naming
 
 **Verification Criteria:**
-- ✅ Eliminated 90%+ of `any` type usage
-- ✅ Proper type annotations added throughout codebase
-- ✅ Strict TypeScript compliance achieved
-- ✅ No type-related warnings or errors
+- ✅ All page component files use English naming conventions
+- ✅ Route imports updated to use standardized names
+- ✅ Portuguese URLs preserved for user experience
+- ✅ No functionality broken during renaming process
 
-**✅ CHECKPOINT 2: TYPES CONSISTENT** - Type system consolidated and optimized
+### **✅ Task 3.2: Navigation Configuration Standardization - COMPLETED**
+**Objective:** Standardize navigation structure with English internal names
+
+**Technical Implementation:**
+1. ✅ Updated navigation configuration with English internal structure
+2. ✅ Preserved Portuguese UI labels for user-facing elements
+3. ✅ Standardized admin navigation items structure
+4. ✅ Enhanced type safety with proper TypeScript interfaces
+5. ✅ Maintained mobile-first navigation approach per [D3.6]
+
+**Governing Directives:** [D3.1], [D3.6] Mobile-First Design
+
+**Verification Criteria:**
+- ✅ Navigation configuration uses English internal names
+- ✅ Portuguese UI text preserved for users
+- ✅ Mobile navigation properly configured
+- ✅ Role-based navigation filtering functional
+
+**✅ CHECKPOINT 3: NAMING STANDARDIZED** - File system and navigation use consistent English conventions
 
 ---
 
@@ -89,6 +87,8 @@
 - ✅ **NEW: Consolidated and optimized type system**
 - ✅ **NEW: Enhanced type safety across community module**
 - ✅ **NEW: Centralized API response handling**
+- ✅ **NEW: Standardized file system with English naming conventions**
+- ✅ **NEW: Consistent navigation configuration**
 
 ### **✅ CRITICAL ISSUES RESOLVED**
 1. **✅ Build System Failures Fixed** - TypeScript compilation succeeds
@@ -97,11 +97,13 @@
 4. **✅ Provider Hierarchy Issues Fixed** - App shell renders correctly
 5. **✅ Type System Consolidated** - Consistent TypeScript definitions
 6. **✅ Global Type Safety Enhanced** - Eliminated `any` usage
+7. **✅ File System Standardized** - English naming conventions implemented
+8. **✅ Navigation Configuration Standardized** - Consistent internal structure
 
-### **📋 NEXT PRIORITIES (MILESTONE 3)**
-- File system standardization to EN_US conventions
-- Navigation configuration alignment
-- Portuguese UI text preservation
+### **📋 NEXT PRIORITIES (MILESTONE 4)**
+- Performance optimization implementation
+- Security enhancements and RLS policy review
+- API response caching strategies
 
 ---
 
@@ -124,13 +126,17 @@
   ↓
 ✅ [CHECKPOINT 2: TYPES CONSISTENT]
   ↓
-🔄 [MILESTONE 3: Language Standardization] - READY TO START
-  ├── 📋 File System Standardization
-  └── 📋 Navigation Configuration Standardization
+✅ [MILESTONE 3: Language Standardization] - COMPLETED
+  ├── ✅ File System Standardization
+  └── ✅ Navigation Configuration Standardization
   ↓
-⏳ [CHECKPOINT 3: NAMING STANDARDIZED]
+✅ [CHECKPOINT 3: NAMING STANDARDIZED]
   ↓
-⏳ [MILESTONE 4: Performance & Security]
+🔄 [MILESTONE 4: Performance & Security] - READY TO START
+  ├── 📋 Performance Optimization Implementation
+  └── 📋 Security Enhancement Review
+  ↓
+⏳ [CHECKPOINT 4: OPTIMIZED & SECURED]
   ↓
 ⏳ [MILESTONE 5: Documentation & Testing]
   ↓
@@ -142,4 +148,5 @@
 ---
 
 **Last Updated:** June 20, 2025  
-**Next Review:** Ready to proceed with MILESTONE 3: Language Standardization
+**Next Review:** Ready to proceed with MILESTONE 4: Performance & Security
+
