@@ -1,174 +1,138 @@
 
-// ABOUTME: Individual post page with Reddit-style layout and comment integration.
+// ABOUTME: Community post detail page with integrated commenting system.
 
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Loader2 } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Separator } from '../components/ui/separator';
-import { PostDetailCard } from '../components/community/PostDetailCard';
-import { CommentThread } from '../components/community/CommentThread';
-import { CommunitySidebar } from '../components/community/CommunitySidebar';
-import { CommunityErrorBoundary } from '../components/community/CommunityErrorBoundary';
+import { useParams } from 'react-router-dom';
 import { usePostWithCommentsQuery } from '../../packages/hooks/usePostWithCommentsQuery';
-import { useIsMobile } from '../hooks/use-mobile';
+import { PostDetailCard } from '@/components/community/PostDetailCard';
+import { CommentThread } from '@/components/community/CommentThread';
+import { CommentEditor } from '@/components/community/CommentEditor';
+import { CommunityErrorBoundary } from '@/components/community/CommunityErrorBoundary';
+import { CommunityLoadingState } from '@/components/community/CommunityLoadingState';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, MessageCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import type { CommunityPost } from '../types/community';
 
-const CommunityPostPage = () => {
+export default function CommunityPostPage() {
   const { postId } = useParams<{ postId: string }>();
-  const isMobile = useIsMobile();
-  const { data, isLoading, error } = usePostWithCommentsQuery(
-    postId ? parseInt(postId) : 0
-  );
-
-  if (!postId || isNaN(parseInt(postId))) {
+  const navigate = useNavigate();
+  
+  // Validate postId
+  const numericPostId = postId ? parseInt(postId, 10) : 0;
+  if (!numericPostId || isNaN(numericPostId)) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Post não encontrado</h1>
-          <p className="text-muted-foreground mb-4">
-            O post que você está procurando não existe ou foi removido.
-          </p>
-          <Link to="/comunidade">
-            <Button variant="outline">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar à Comunidade
-            </Button>
-          </Link>
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <div className="text-center py-12">
+          <h1 className="text-2xl font-bold text-destructive mb-4">Post não encontrado</h1>
+          <p className="text-muted-foreground mb-6">O post que você está procurando não existe ou foi removido.</p>
+          <Button onClick={() => navigate('/comunidade')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar para Comunidade
+          </Button>
         </div>
       </div>
     );
   }
 
+  // Fetch post with comments using the new hook
+  const { data, isLoading, error, refetch } = usePostWithCommentsQuery(numericPostId);
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex justify-center">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-          </div>
-        </div>
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <CommunityLoadingState 
+          variant="post" 
+          description="Carregando discussão e comentários..."
+        />
       </div>
     );
   }
 
   if (error) {
     return (
-      <CommunityErrorBoundary 
-        error={error} 
-        resetErrorBoundary={() => window.location.reload()} 
-      />
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <div className="text-center py-12">
+          <h1 className="text-2xl font-bold text-destructive mb-4">Erro ao carregar</h1>
+          <p className="text-muted-foreground mb-6">
+            Não foi possível carregar esta discussão. Tente novamente.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Button variant="outline" onClick={() => refetch()}>
+              Tentar novamente
+            </Button>
+            <Button onClick={() => navigate('/comunidade')}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar para Comunidade
+            </Button>
+          </div>
+        </div>
+      </div>
     );
   }
 
   if (!data?.post) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Post não encontrado</h1>
-          <p className="text-muted-foreground mb-4">
-            O post que você está procurando não existe ou foi removido.
-          </p>
-          <Link to="/comunidade">
-            <Button variant="outline">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar à Comunidade
-            </Button>
-          </Link>
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <div className="text-center py-12">
+          <h1 className="text-2xl font-bold text-destructive mb-4">Post não encontrado</h1>
+          <p className="text-muted-foreground mb-6">Este post não existe ou foi removido.</p>
+          <Button onClick={() => navigate('/comunidade')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar para Comunidade
+          </Button>
         </div>
       </div>
     );
   }
 
+  const { post, comments } = data;
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto">
-        {/* Mobile navigation */}
-        {isMobile && (
-          <div className="sticky top-0 z-10 bg-background border-b border-community-separator px-4 py-3">
-            <div className="flex items-center gap-3">
-              <Link to="/comunidade">
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <ArrowLeft className="w-4 h-4" />
-                </Button>
-              </Link>
-              <div className="min-w-0">
-                <h1 className="text-sm font-medium truncate">
-                  {data.post.title || 'Post da Comunidade'}
-                </h1>
-                <p className="text-xs text-muted-foreground">
-                  r/EVIDENS
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+    <div className="container mx-auto px-4 py-6 max-w-4xl">
+      {/* Back button */}
+      <div className="mb-6">
+        <Button variant="ghost" onClick={() => navigate('/comunidade')}>
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Voltar para Comunidade
+        </Button>
+      </div>
 
-        {/* Desktop navigation */}
-        {!isMobile && (
-          <div className="px-6 py-4 border-b border-community-separator">
-            <div className="max-w-4xl">
-              <Link to="/comunidade">
-                <Button variant="ghost" size="sm" className="mb-2">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Voltar à Comunidade
-                </Button>
-              </Link>
-            </div>
-          </div>
-        )}
+      {/* Main post */}
+      <CommunityErrorBoundary context="post principal">
+        <PostDetailCard post={post as CommunityPost} />
+      </CommunityErrorBoundary>
 
-        {/* Main content with Reddit-style two-column layout */}
-        <div className="flex gap-6 px-0 md:px-6">
-          {/* Left column - Post and comments */}
-          <div className="flex-1 max-w-4xl">
-            {/* Post detail with Reddit-style de-boxed layout */}
-            <PostDetailCard post={data.post} />
-            
-            {/* Comments separator */}
-            <Separator className="reddit-separator" />
-            
-            {/* Comments section */}
-            <div className="px-4 py-6">
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold mb-1">Comentários</h2>
-                <p className="text-sm text-muted-foreground">
-                  {data.comments.length > 0 
-                    ? `${data.comments.length} ${data.comments.length === 1 ? 'comentário' : 'comentários'}`
-                    : 'Nenhum comentário ainda'
-                  }
-                </p>
-              </div>
-              
-              {data.comments.length > 0 ? (
-                <CommentThread 
-                  comments={data.comments} 
-                  postId={data.post.id}
-                />
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground mb-4">
-                    Seja o primeiro a comentar neste post!
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Compartilhe suas ideias e contribua para a discussão.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right column - Sidebar (desktop only) */}
-          {!isMobile && (
-            <div className="w-80 flex-shrink-0">
-              <div className="sticky top-6">
-                <CommunitySidebar />
-              </div>
-            </div>
-          )}
+      {/* Comments section */}
+      <div className="mt-8">
+        <div className="flex items-center gap-2 mb-6">
+          <MessageCircle className="w-5 h-5" />
+          <h2 className="text-xl font-bold">
+            Comentários ({comments.length})
+          </h2>
         </div>
+
+        {/* Comment editor for new top-level comments */}
+        <div className="mb-6">
+          <h3 className="text-sm font-medium text-muted-foreground mb-3">
+            Adicionar comentário
+          </h3>
+          <CommunityErrorBoundary context="editor de comentários">
+            <CommentEditor 
+              parentPostId={numericPostId} 
+              onCommentPosted={() => refetch()} 
+            />
+          </CommunityErrorBoundary>
+        </div>
+
+        {/* Comment thread */}
+        <CommunityErrorBoundary context="thread de comentários">
+          <CommentThread 
+            comments={comments} 
+            onCommentPosted={() => refetch()}
+          />
+        </CommunityErrorBoundary>
       </div>
     </div>
   );
-};
-
-export default CommunityPostPage;
+}

@@ -1,9 +1,9 @@
 
-// ABOUTME: Reddit-style horizontal voting buttons with optimistic updates and visual feedback.
+// ABOUTME: Voting buttons component with optimistic updates and visual feedback.
 
 import React from 'react';
 import { Button } from '../ui/button';
-import { ArrowUp, ArrowDown } from 'lucide-react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useCastCommunityVoteMutation } from '../../../packages/hooks/useCastCommunityVoteMutation';
 import { useAuthStore } from '../../store/auth';
@@ -42,25 +42,25 @@ export const VoteButtons = ({ postId, upvotes, downvotes, userVote }: VoteButton
   };
 
   return (
-    <div className="reddit-vote-container">
+    <div className="flex flex-col items-center gap-1">
       <Button
         variant="ghost"
         size="sm"
         className={cn(
-          "reddit-vote-button rounded-l-full px-2 py-1",
-          userVote === 'up' && "text-vote-up bg-vote-up/10"
+          "p-1 h-8 w-8 hover:bg-green-50",
+          userVote === 'up' && "bg-green-50 text-green-600"
         )}
         onClick={() => handleVote('up')}
         disabled={castVoteMutation.isPending}
       >
-        <ArrowUp className="w-4 h-4" />
+        <ChevronUp className="w-4 h-4" />
       </Button>
 
       <span className={cn(
-        "reddit-vote-score",
-        netScore > 0 && "text-vote-up",
-        netScore < 0 && "text-vote-down",
-        netScore === 0 && "text-community-metadata"
+        "text-sm font-medium px-2 py-1 rounded min-w-[2rem] text-center",
+        netScore > 0 && "text-green-600",
+        netScore < 0 && "text-red-600",
+        netScore === 0 && "text-muted-foreground"
       )}>
         {Math.abs(netScore) > 999 
           ? `${Math.floor(Math.abs(netScore) / 1000)}k`
@@ -72,13 +72,13 @@ export const VoteButtons = ({ postId, upvotes, downvotes, userVote }: VoteButton
         variant="ghost"
         size="sm"
         className={cn(
-          "reddit-vote-button rounded-r-full px-2 py-1",
-          userVote === 'down' && "text-vote-down bg-vote-down/10"
+          "p-1 h-8 w-8 hover:bg-red-50",
+          userVote === 'down' && "bg-red-50 text-red-600"
         )}
         onClick={() => handleVote('down')}
         disabled={castVoteMutation.isPending}
       >
-        <ArrowDown className="w-4 h-4" />
+        <ChevronDown className="w-4 h-4" />
       </Button>
     </div>
   );

@@ -1,7 +1,8 @@
 
-// ABOUTME: Reddit-style de-boxed post detail with consistent layout and enhanced visual hierarchy.
+// ABOUTME: Detailed post card component for individual post pages with full content display and save functionality.
 
 import React from 'react';
+import { Card, CardContent } from '../ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -72,174 +73,176 @@ export const PostDetailCard = ({ post }: PostDetailCardProps) => {
   };
 
   return (
-    <div className={cn(
-      "reddit-post-container px-4 py-6 mb-6",
-      post.is_pinned && "bg-primary/5 border-l-4 border-l-primary"
+    <Card className={cn(
+      "mb-6",
+      post.is_pinned && "ring-2 ring-primary/20 bg-primary/5"
     )}>
-      <div className="flex gap-6">
-        {/* Left side - Vote buttons */}
-        <div className="flex-shrink-0 pt-1">
-          <VoteButtons
-            postId={post.id}
-            upvotes={post.upvotes}
-            downvotes={post.downvotes}
-            userVote={post.user_vote}
-          />
-        </div>
+      <CardContent className="p-8">
+        <div className="flex gap-6">
+          {/* Vote buttons */}
+          <div className="flex-shrink-0">
+            <VoteButtons
+              postId={post.id}
+              upvotes={post.upvotes}
+              downvotes={post.downvotes}
+              userVote={post.user_vote}
+            />
+          </div>
 
-        {/* Right side - Main content */}
-        <div className="flex-1 min-w-0">
-          {/* Header with author info and metadata */}
-          <div className="flex items-start justify-between gap-4 mb-4">
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <Avatar className="w-10 h-10 flex-shrink-0">
-                <AvatarImage src={post.author?.avatar_url || undefined} />
-                <AvatarFallback>
-                  {post.author?.full_name?.charAt(0) || '?'}
-                </AvatarFallback>
-              </Avatar>
-              
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <span className="font-semibold text-base">
-                    {post.author?.full_name || 'Usuário Anônimo'}
-                  </span>
-                  
-                  {/* Moderation indicators */}
-                  {post.is_pinned && (
-                    <>
-                      <span className="text-muted-foreground text-sm">•</span>
-                      <div className="flex items-center gap-1 text-primary">
-                        <Pin className="w-4 h-4" />
-                        <span className="text-sm font-medium">Fixado</span>
-                      </div>
-                    </>
-                  )}
-                  
-                  {post.is_locked && (
-                    <>
-                      <span className="text-muted-foreground text-sm">•</span>
-                      <div className="flex items-center gap-1 text-orange-500">
-                        <Lock className="w-4 h-4" />
-                        <span className="text-sm font-medium">Bloqueado</span>
-                      </div>
-                    </>
-                  )}
-                </div>
+          {/* Main content */}
+          <div className="flex-1 min-w-0">
+            {/* Header with author info and metadata */}
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <Avatar className="w-10 h-10 flex-shrink-0">
+                  <AvatarImage src={post.author?.avatar_url || undefined} />
+                  <AvatarFallback>
+                    {post.author?.full_name?.charAt(0) || '?'}
+                  </AvatarFallback>
+                </Avatar>
                 
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <span>
-                    {formatDistanceToNow(new Date(post.created_at), {
-                      addSuffix: true,
-                      locale: ptBR
-                    })}
-                  </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <span className="font-semibold text-base">
+                      {post.author?.full_name || 'Usuário Anônimo'}
+                    </span>
+                    
+                    {/* Moderation indicators */}
+                    {post.is_pinned && (
+                      <>
+                        <span className="text-muted-foreground text-sm">•</span>
+                        <div className="flex items-center gap-1 text-primary">
+                          <Pin className="w-4 h-4" />
+                          <span className="text-sm font-medium">Fixado</span>
+                        </div>
+                      </>
+                    )}
+                    
+                    {post.is_locked && (
+                      <>
+                        <span className="text-muted-foreground text-sm">•</span>
+                        <div className="flex items-center gap-1 text-orange-500">
+                          <Lock className="w-4 h-4" />
+                          <span className="text-sm font-medium">Bloqueado</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                    <span>
+                      {formatDistanceToNow(new Date(post.created_at), {
+                        addSuffix: true,
+                        locale: ptBR
+                      })}
+                    </span>
+                  </div>
                 </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Custom flair */}
+                {post.flair_text && (
+                  <Badge 
+                    variant="secondary" 
+                    className="text-sm"
+                    style={{ 
+                      backgroundColor: post.flair_color ? `${post.flair_color}20` : undefined,
+                      borderColor: post.flair_color || undefined,
+                      color: post.flair_color || undefined
+                    }}
+                  >
+                    {post.flair_text}
+                  </Badge>
+                )}
+                
+                {/* Category badge */}
+                <Badge variant={categoryColor as any} className="flex-shrink-0">
+                  {categoryLabel}
+                </Badge>
+
+                {/* Post Action Menu */}
+                <PostActionMenu post={post} />
               </div>
             </div>
 
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {/* Custom flair */}
-              {post.flair_text && (
-                <Badge 
-                  variant="secondary" 
-                  className="text-sm"
-                  style={{ 
-                    backgroundColor: post.flair_color ? `${post.flair_color}20` : undefined,
-                    borderColor: post.flair_color || undefined,
-                    color: post.flair_color || undefined
-                  }}
-                >
-                  {post.flair_text}
-                </Badge>
-              )}
-              
-              {/* Category badge */}
-              <Badge variant={categoryColor as any} className="flex-shrink-0">
-                {categoryLabel}
-              </Badge>
+            {/* Title */}
+            {post.title && (
+              <h1 className="text-2xl font-bold text-foreground mb-4 leading-tight">
+                {post.title}
+              </h1>
+            )}
 
-              {/* Post Action Menu */}
-              <PostActionMenu post={post} />
-            </div>
-          </div>
+            {/* Full content */}
+            <div 
+              className="prose dark:prose-invert prose-lg max-w-none text-foreground mb-6"
+              dangerouslySetInnerHTML={{ __html: post.content }}
+            />
 
-          {/* Title */}
-          {post.title && (
-            <h1 className="post-title text-2xl mb-4 leading-tight">
-              {post.title}
-            </h1>
-          )}
+            {/* Media content */}
+            {post.image_url && (
+              <div className="mb-6">
+                <img 
+                  src={post.image_url} 
+                  alt="Post image" 
+                  className="rounded-lg max-w-full h-auto"
+                />
+              </div>
+            )}
 
-          {/* Full content */}
-          <div 
-            className="prose dark:prose-invert prose-lg max-w-none text-foreground mb-6"
-            dangerouslySetInnerHTML={{ __html: post.content }}
-          />
+            {post.video_url && (
+              <div className="mb-6">
+                <video 
+                  src={post.video_url} 
+                  controls 
+                  className="rounded-lg max-w-full h-auto"
+                />
+              </div>
+            )}
 
-          {/* Media content */}
-          {post.image_url && (
-            <div className="mb-6">
-              <img 
-                src={post.image_url} 
-                alt="Post image" 
-                className="rounded-lg max-w-full h-auto"
-              />
-            </div>
-          )}
-
-          {post.video_url && (
-            <div className="mb-6">
-              <video 
-                src={post.video_url} 
-                controls 
-                className="rounded-lg max-w-full h-auto"
-              />
-            </div>
-          )}
-
-          {/* Action buttons */}
-          <div className="flex items-center justify-between pt-4 border-t border-community-separator">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                {post.reply_count > 0 ? `${post.reply_count} respostas` : 'Nenhuma resposta'}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSave}
-                disabled={savePostMutation.isPending}
-                className={cn(
-                  "reddit-action-button",
-                  post.is_saved && "text-primary hover:text-primary"
-                )}
-              >
-                {post.is_saved ? (
-                  <BookmarkCheck className="w-4 h-4" />
-                ) : (
-                  <Bookmark className="w-4 h-4" />
-                )}
-                <span className="ml-1 text-sm">
-                  {post.is_saved ? 'Salvo' : 'Salvar'}
+            {/* Action buttons */}
+            <div className="flex items-center justify-between pt-4 border-t">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {post.reply_count > 0 ? `${post.reply_count} respostas` : 'Nenhuma resposta'}
                 </span>
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleShare}
-                className="reddit-action-button"
-              >
-                <Share2 className="w-4 h-4" />
-                <span className="ml-1 text-sm">Compartilhar</span>
-              </Button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={savePostMutation.isPending}
+                  className={cn(
+                    "text-muted-foreground hover:text-foreground",
+                    post.is_saved && "text-primary hover:text-primary"
+                  )}
+                >
+                  {post.is_saved ? (
+                    <BookmarkCheck className="w-4 h-4" />
+                  ) : (
+                    <Bookmark className="w-4 h-4" />
+                  )}
+                  <span className="ml-1 text-sm">
+                    {post.is_saved ? 'Salvo' : 'Salvar'}
+                  </span>
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleShare}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span className="ml-1 text-sm">Compartilhar</span>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
