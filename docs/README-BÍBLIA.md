@@ -133,6 +133,46 @@ A comprehensive testing strategy is implemented to ensure the quality and reliab
   - Enhanced DEVELOPMENT_PROTOCOLS.md with non-negotiable Edge Function protocol
   - Created systematic approach to prevent recurring CORS/auth errors
 
+### 🔄 Phase 6: Reddit-Style Community Visual Revamp (IN PROGRESS - v0.3.0)
+**Objective:** Transform community pages to replicate Reddit's visual layout while preserving EVIDENS functionality and branding.
+
+#### 🎯 Milestone 1: Design System Foundation (PENDING)
+- [ ] **Enhanced Design Tokens**: Update `tailwind.config.ts` with Reddit-style surface colors and spacing
+- [ ] **Visual System Compliance**: Maintain EVIDENS branding while enabling Reddit-style layouts
+- **Files to Modify**: `tailwind.config.ts`, `src/styles/globals.css`
+- **Governing Directives**: [DOC_7] Visual System
+
+#### 🎯 Milestone 2: Vote Interface Transformation (PENDING)
+- [ ] **Reddit-Style Vote Buttons**: Transform `VoteButtons.tsx` to vertical layout with arrows and net score
+- [ ] **Preserve Functionality**: Maintain all existing vote mutation logic and mobile accessibility
+- **Files to Modify**: `src/components/community/VoteButtons.tsx`
+- **Governing Directives**: [D3.3] State Management, [AD.1] Mobile First
+
+#### 🎯 Milestone 3: Post Card Restructuring (PENDING)
+- [ ] **Reddit-Style Post Layout**: Restructure `PostCard.tsx` with voting left, content right
+- [ ] **De-boxed Appearance**: Remove card borders, add horizontal separators
+- [ ] **Post Detail Consistency**: Update `PostDetailCard.tsx` to match feed styling
+- **Files to Modify**: `src/components/community/PostCard.tsx`, `src/components/community/PostDetailCard.tsx`
+- **Governing Directives**: [D3.2] Component Architecture
+
+#### 🎯 Milestone 4: Page Layout Architecture (PENDING)
+- [ ] **Community Page Layout**: Update `CommunityPage.tsx` for seamless Reddit-style feed
+- [ ] **Post Detail Layout**: Ensure `CommunityPostPage.tsx` consistency
+- [ ] **Preserve Functionality**: Maintain error handling, mobile responsiveness, loading states
+- **Files to Modify**: `src/pages/CommunityPage.tsx`, `src/pages/CommunityPostPage.tsx`
+- **Governing Directives**: [AD.1] Mobile First, [D3.6] Adaptive Design
+
+#### 🎯 Milestone 5: Create Post Interface (PENDING)
+- [ ] **Post Creation Prompt**: Add Reddit-style "Create Post" prompt if needed
+- [ ] **Navigation Integration**: Ensure seamless integration with existing post creation flow
+- **Files to Create/Modify**: `src/components/community/CreatePostPrompt.tsx` (if needed)
+- **Governing Directives**: [D3.1] Filesystem & Naming
+
+#### 🎯 Milestone 6: Integration Testing & Documentation (PENDING)
+- [ ] **Comprehensive Testing**: Validate all functionality, mobile responsiveness, performance
+- [ ] **Documentation Update**: Update README-BÍBLIA.md with implementation status
+- **Governing Directives**: [P1.3] Documentation Synchronization
+
 ### 📊 Current System Health
 - **Database**: ✅ All migrations applied successfully
 - **Backend**: ✅ All Edge Functions operational with standardized architecture
@@ -140,21 +180,30 @@ A comprehensive testing strategy is implemented to ensure the quality and reliab
 - **React Context**: ✅ Hook system stabilized
 - **Error Boundaries**: ✅ Hierarchical protection active
 - **Edge Function Architecture**: ✅ Canonical development protocol established
+- **Community Visual Revamp**: 🔄 Design phase complete, implementation pending
 
 ### 🎯 Next Steps
-1. **Architecture Enforcement**: Monitor adherence to new Edge Function development protocol
-2. **Performance Optimization**: Implement lazy loading for deep comment threads
-3. **Moderation Tools**: Extend admin capabilities for comment management
-4. **Analytics Integration**: Track engagement metrics for commenting system
+1. **Visual Revamp Execution**: Begin Milestone 1 (Design System Foundation)
+2. **Component Evolution**: Incrementally transform existing components to Reddit-style
+3. **Quality Assurance**: Comprehensive testing of visual changes
+4. **Performance Monitoring**: Ensure no regression in rendering performance
+
+### 🚨 Risk Mitigation Strategy
+- **Incremental Testing**: Test each component change individually
+- **Mobile-First Validation**: Validate mobile experience after each change
+- **Rollback Plan**: Maintain ability to revert changes if critical issues arise
+- **Performance Monitoring**: Monitor rendering performance throughout implementation
 
 ## 📜 Change Log
 - **Version 0.1.0 (Initial Release):** Basic application structure and core components.
 - **Version 0.2.0 (Community Features):** Implemented community discussions and commenting system.
 - **Version 0.2.1 (Critical Infrastructure Fix):** Resolved React hook context error and stabilized provider hierarchy.
 - **Version 0.2.2 (Edge Function Architecture Stabilization):** Established canonical Edge Function development protocol to eliminate recurring CORS and authentication errors.
+- **Version 0.3.0 (Reddit-Style Visual Revamp - IN PROGRESS):** Transforming community pages to replicate Reddit's visual layout while preserving EVIDENS functionality and branding.
 
 ## 📝 Notes
 - This document is a living document and will be updated as the application evolves.
 - All code must adhere to the coding standards outlined in this document.
 - All changes must be reviewed and approved by a senior developer.
 - **CRITICAL**: All new Edge Functions must follow the mandatory 7-step implementation pattern defined in [DOC_5] to prevent recurring errors.
+- **VISUAL REVAMP**: The Reddit-style transformation focuses on layout and visual patterns while preserving all existing functionality and EVIDENS branding.
