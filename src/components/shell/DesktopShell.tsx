@@ -37,7 +37,7 @@ const DesktopShell = ({ children }: DesktopShellProps) => {
           {/* Header - now properly aligned with sidebar header */}
           <Header />
 
-          {/* Page content with proper spacing */}
+          {/* Page content with proper spacing - CRITICAL: Render children here */}
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
             {children}
           </main>

@@ -15,8 +15,8 @@ const MobileShell = ({ children }: MobileShellProps) => {
       {/* Header */}
       <Header />
       
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto pb-16">
+      {/* Main Content - CRITICAL: Render children here */}
+      <main className="flex-1 overflow-auto pb-16 p-4">
         {children}
       </main>
       
