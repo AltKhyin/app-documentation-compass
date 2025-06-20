@@ -1,16 +1,16 @@
 
-// ABOUTME: Main homepage that uses scoped homepage data provider for efficient data management.
+// ABOUTME: Main homepage that uses consolidated data to render all homepage modules efficiently.
 
 import React from 'react';
-import { HomepageDataProvider, useHomepageData } from '../contexts/HomepageDataContext';
+import { useConsolidatedHomepageFeedQuery } from '../../packages/hooks/useHomepageFeedQuery';
 import FeaturedReview from '../components/homepage/FeaturedReview';
 import ReviewCarousel from '../components/homepage/ReviewCarousel';
 import NextEditionModule from '../components/homepage/NextEditionModule';
 import { Skeleton } from '../components/ui/skeleton';
 
-const HomepageContent = () => {
-  // Use scoped homepage data - no global dependency
-  const { data, isLoading, isError, error } = useHomepageData();
+const Index = () => {
+  // Use ONLY the consolidated query - no other API calls allowed
+  const { data, isLoading, isError, error } = useConsolidatedHomepageFeedQuery();
 
   console.log('Homepage render state:', { data, isLoading, isError, error });
 
@@ -76,7 +76,7 @@ const HomepageContent = () => {
     );
   }
 
-  console.log('Rendering homepage with scoped data:', data);
+  console.log('Rendering homepage with consolidated data:', data);
 
   // Render modules based on layout order from API
   const renderModule = (moduleType: string) => {
@@ -132,14 +132,6 @@ const HomepageContent = () => {
         {data?.layout?.map((moduleType) => renderModule(moduleType))}
       </div>
     </div>
-  );
-};
-
-const Index = () => {
-  return (
-    <HomepageDataProvider>
-      <HomepageContent />
-    </HomepageDataProvider>
   );
 };
 

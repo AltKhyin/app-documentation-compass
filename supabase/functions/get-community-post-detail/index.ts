@@ -3,38 +3,29 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 import { corsHeaders } from '../_shared/cors.ts'
-import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts'
+import { rateLimit } from '../_shared/rate-limit.ts'
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 )
 
+interface PostDetailRequest {
+  post_id: number;
+}
+
 Deno.serve(async (req) => {
-  console.log(`Request method: ${req.method}, URL: ${req.url}`);
-  
-  // Handle CORS preflight requests first
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    console.log('Handling CORS preflight request');
-    return new Response(null, { 
-      status: 200,
-      headers: corsHeaders 
-    });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Get client IP for rate limiting
-    const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
-                     req.headers.get('x-real-ip') || 
-                     'unknown';
-    
-    console.log(`Client IP: ${clientIP}`);
-    
-    // Check rate limit (60 requests per minute per IP)
-    const rateLimitResult = await checkRateLimit(supabase, `get-post-detail:${clientIP}`, 60, 60);
+    // Rate limiting check
+    const clientIP = req.headers.get('x-forwarded-for') || 'unknown';
+    const rateLimitResult = await rateLimit(supabase, `get-post-detail:${clientIP}`, 60, 60); // 60 requests per minute
     
     if (!rateLimitResult.allowed) {
-      console.log('Rate limit exceeded');
       return new Response(
         JSON.stringify({
           error: {
@@ -44,11 +35,7 @@ Deno.serve(async (req) => {
         }),
         { 
           status: 429, 
-          headers: { 
-            ...corsHeaders, 
-            'Content-Type': 'application/json',
-            ...rateLimitHeaders(rateLimitResult)
-          }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
@@ -58,70 +45,20 @@ Deno.serve(async (req) => {
     let user = null;
     
     if (authHeader) {
-      try {
-        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(
-          authHeader.replace('Bearer ', '')
-        );
-        if (!authError && authUser) {
-          user = authUser;
-          console.log(`Authenticated user: ${user.id}`);
-        }
-      } catch (error) {
-        console.log('Optional auth failed, proceeding without user context:', error);
-      }
-    } else {
-      console.log('No authorization header provided, proceeding as anonymous');
+      const { data: { user: authUser } } = await supabase.auth.getUser(
+        authHeader.replace('Bearer ', '')
+      );
+      user = authUser;
     }
 
-    // Extract post ID from URL path - improved extraction
-    const url = new URL(req.url);
-    let postId: number | null = null;
+    // Parse request body
+    const body: PostDetailRequest = await req.json();
     
-    // Method 1: Try to get from URL search params
-    const postIdParam = url.searchParams.get('post_id');
-    if (postIdParam && !isNaN(Number(postIdParam))) {
-      postId = Number(postIdParam);
-      console.log(`Post ID from query params: ${postId}`);
-    }
-    
-    // Method 2: Try to get from URL path segments
-    if (!postId) {
-      const pathSegments = url.pathname.split('/').filter(Boolean);
-      console.log('URL path segments:', pathSegments);
-      
-      // Look for numeric segments that could be post IDs
-      for (let i = pathSegments.length - 1; i >= 0; i--) {
-        const segment = pathSegments[i];
-        if (!isNaN(Number(segment)) && Number(segment) > 0) {
-          postId = Number(segment);
-          console.log(`Post ID from path segment: ${postId}`);
-          break;
-        }
-      }
-    }
-    
-    // Method 3: Try to get from request body (for POST requests)
-    if (!postId && req.method === 'POST') {
-      try {
-        const body = await req.text();
-        if (body && body.trim()) {
-          const parsedBody = JSON.parse(body);
-          if (parsedBody.post_id && !isNaN(Number(parsedBody.post_id))) {
-            postId = Number(parsedBody.post_id);
-            console.log(`Post ID from request body: ${postId}`);
-          }
-        }
-      } catch (parseError) {
-        console.log('Could not parse POST body:', parseError);
-      }
-    }
-
-    if (!postId || postId <= 0) {
-      console.log('Invalid or missing post_id parameter. URL:', req.url);
+    if (!body.post_id || typeof body.post_id !== 'number') {
       return new Response(
         JSON.stringify({
           error: {
-            message: 'Invalid or missing post_id parameter',
+            message: 'Invalid post_id provided',
             code: 'VALIDATION_ERROR'
           }
         }),
@@ -131,8 +68,6 @@ Deno.serve(async (req) => {
         }
       );
     }
-
-    console.log(`Fetching post detail for ID: ${postId}`);
 
     // Fetch post with author details
     const { data: post, error: postError } = await supabase
@@ -145,27 +80,10 @@ Deno.serve(async (req) => {
           avatar_url
         )
       `)
-      .eq('id', postId)
+      .eq('id', body.post_id)
       .single();
 
-    if (postError) {
-      console.error('Post fetch error:', postError);
-      return new Response(
-        JSON.stringify({
-          error: {
-            message: 'Post not found',
-            code: 'POST_NOT_FOUND'
-          }
-        }),
-        { 
-          status: 404, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    if (!post) {
-      console.log('Post not found in database');
+    if (postError || !post) {
       return new Response(
         JSON.stringify({
           error: {
@@ -185,13 +103,11 @@ Deno.serve(async (req) => {
     let userCanModerate = false;
 
     if (user) {
-      console.log('Fetching user-specific data');
-      
       // Get user's vote on this post
       const { data: voteData } = await supabase
         .from('CommunityPost_Votes')
         .select('vote_type')
-        .eq('post_id', postId)
+        .eq('post_id', body.post_id)
         .eq('practitioner_id', user.id)
         .single();
       
@@ -201,13 +117,13 @@ Deno.serve(async (req) => {
       const { data: savedData } = await supabase
         .from('SavedPosts')
         .select('id')
-        .eq('post_id', postId)
+        .eq('post_id', body.post_id)
         .eq('practitioner_id', user.id)
         .single();
       
       isSaved = !!savedData;
 
-      // Check if user can moderate (admin/editor role)  
+      // Check if user can moderate (admin/editor role)
       const { data: userData } = await supabase
         .from('Practitioners')
         .select('role')
@@ -221,7 +137,7 @@ Deno.serve(async (req) => {
     const { count: replyCount } = await supabase
       .from('CommunityPosts')
       .select('id', { count: 'exact' })
-      .eq('parent_post_id', postId);
+      .eq('parent_post_id', body.post_id);
 
     // Format response
     const response = {
@@ -247,16 +163,11 @@ Deno.serve(async (req) => {
       user_can_moderate: userCanModerate
     };
 
-    console.log(`Post detail fetched successfully for ID: ${postId}`);
-
     return new Response(
       JSON.stringify(response),
       { 
         status: 200, 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json'
-        }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
 
@@ -271,10 +182,7 @@ Deno.serve(async (req) => {
       }),
       { 
         status: 500, 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json'
-        }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }

@@ -2,7 +2,7 @@
 // ABOUTME: Main application component with proper provider hierarchy
 
 import React from 'react';
-import AppRouter from './router/AppRouter';
+import { AppRouter } from './router/AppRouter';
 import { AppProviders } from './components/providers/AppProviders';
 import './App.css';
 

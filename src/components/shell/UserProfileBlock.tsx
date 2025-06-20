@@ -1,8 +1,8 @@
 
-// ABOUTME: Displays user avatar/name with independent data fetching and loading state.
+// ABOUTME: Displays user avatar/name, with loading state and logout action using consolidated data.
 import React from 'react';
 import { LogOut, Sun, Moon, Monitor, Download } from 'lucide-react';
-import { useUserProfileQuery } from '../../../packages/hooks/useUserProfileQuery';
+import { useAppData } from '@/contexts/AppDataContext';
 import { useTheme } from '@/components/theme/CustomThemeProvider';
 import { usePWA } from '@/hooks/usePWA';
 import { usePWAContext } from '@/components/pwa/PWAProvider';
@@ -28,7 +28,7 @@ type UserProfileBlockProps = {
 };
 
 const UserProfileBlock = ({ isCollapsed = false }: UserProfileBlockProps) => {
-  const { data: userProfile, isLoading } = useUserProfileQuery();
+  const { userProfile, isLoading } = useAppData();
   const { theme, setTheme } = useTheme();
   const { isInstallable, isStandalone, showInstallPrompt } = usePWA();
   const { setShowInstallPrompt } = usePWAContext();

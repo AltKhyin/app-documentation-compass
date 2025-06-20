@@ -1,101 +1,70 @@
 
-// ABOUTME: Centralized rate limiting utility for all edge functions.
-
-import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+// ABOUTME: Shared rate limiting utility for edge functions using database-based tracking.
 
 interface RateLimitResult {
   allowed: boolean;
-  limit: number;
-  remaining: number;
-  resetTime: Date;
-  retryAfter?: number;
+  remaining?: number;
+  resetTime?: number;
 }
 
-export async function checkRateLimit(
-  supabase: SupabaseClient,
-  identifier: string,
+export async function rateLimit(
+  supabase: any,
+  key: string,
   limit: number,
-  windowSeconds: number = 60
+  windowSeconds: number
 ): Promise<RateLimitResult> {
-  const now = new Date();
-  const windowStart = new Date(now.getTime() - (windowSeconds * 1000));
-
   try {
-    // Clean old entries using the correct column name 'key'
+    const now = Math.floor(Date.now() /  1000);
+    const windowStart = now - windowSeconds;
+    
+    // Clean old entries
     await supabase
       .from('rate_limit_log')
       .delete()
-      .lt('created_at', windowStart.toISOString());
-
-    // Count current requests in window using 'key' column
-    const { count, error } = await supabase
+      .lt('timestamp', windowStart);
+    
+    // Count current requests in window
+    const { count, error: countError } = await supabase
       .from('rate_limit_log')
       .select('*', { count: 'exact' })
-      .eq('key', identifier)
-      .gte('created_at', windowStart.toISOString());
-
-    if (error) {
-      console.error('Rate limit check error:', error);
-      // Allow request on error to avoid blocking legitimate traffic
-      return {
-        allowed: true,
-        limit,
-        remaining: limit - 1,
-        resetTime: new Date(now.getTime() + (windowSeconds * 1000))
-      };
+      .eq('key', key)
+      .gte('timestamp', windowStart);
+    
+    if (countError) {
+      console.error('Rate limit count error:', countError);
+      // Allow request if we can't check rate limit
+      return { allowed: true };
     }
-
-    const currentCount = count || 0;
-    const remaining = Math.max(0, limit - currentCount - 1);
-
-    if (currentCount >= limit) {
-      return {
-        allowed: false,
-        limit,
+    
+    if ((count || 0) >= limit) {
+      return { 
+        allowed: false, 
         remaining: 0,
-        resetTime: new Date(now.getTime() + (windowSeconds * 1000)),
-        retryAfter: windowSeconds
+        resetTime: windowStart + windowSeconds
       };
     }
-
-    // Log this request using the correct column structure
-    await supabase
+    
+    // Log this request
+    const { error: insertError } = await supabase
       .from('rate_limit_log')
       .insert({
-        key: identifier,
-        timestamp: Math.floor(now.getTime() / 1000),
-        created_at: now.toISOString()
+        key: key,
+        timestamp: now
       });
-
-    return {
-      allowed: true,
-      limit,
-      remaining,
-      resetTime: new Date(now.getTime() + (windowSeconds * 1000))
+    
+    if (insertError) {
+      console.error('Rate limit log error:', insertError);
+    }
+    
+    return { 
+      allowed: true, 
+      remaining: limit - (count || 0) - 1,
+      resetTime: windowStart + windowSeconds
     };
-
+    
   } catch (error) {
     console.error('Rate limiting error:', error);
-    // Allow request on error
-    return {
-      allowed: true,
-      limit,
-      remaining: limit - 1,
-      resetTime: new Date(now.getTime() + (windowSeconds * 1000))
-    };
+    // Allow request if rate limiting fails
+    return { allowed: true };
   }
-}
-
-export function rateLimitHeaders(result: RateLimitResult): Record<string, string> {
-  const headers: Record<string, string> = {
-    'X-RateLimit-Limit': result.limit.toString(),
-    'X-RateLimit-Remaining': result.remaining.toString(),
-    'X-RateLimit-Reset': Math.ceil(result.resetTime.getTime() / 1000).toString(),
-  };
-
-  if (result.retryAfter) {
-    headers['Retry-After'] = result.retryAfter.toString();
-  }
-
-  return headers;
 }

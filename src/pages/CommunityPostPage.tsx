@@ -15,30 +15,24 @@ import type { CommunityPost } from '../types/community';
 export default function CommunityPostPage() {
   const { postId } = useParams<{ postId: string }>();
   
-  // Validate postId parameter
   if (!postId || isNaN(Number(postId))) {
-    console.error('Invalid postId parameter:', postId);
     return <Navigate to="/comunidade" replace />;
   }
-
-  const numericPostId = Number(postId);
-  console.log('CommunityPostPage: Loading post with ID:', numericPostId);
 
   const {
     data: post,
     isLoading,
     error,
     refetch
-  } = usePostDetailQuery(numericPostId);
+  } = usePostDetailQuery(Number(postId));
 
   if (error) {
-    console.error('Error loading post:', error);
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center max-w-md mx-auto">
         <Alert variant="destructive" className="mb-4">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            {error.message || 'Erro ao carregar o post'}
+            Erro ao carregar o post: {error.message}
           </AlertDescription>
         </Alert>
         <Button 
@@ -62,11 +56,8 @@ export default function CommunityPostPage() {
   }
 
   if (!post) {
-    console.error('No post data received');
     return <Navigate to="/comunidade" replace />;
   }
-
-  console.log('CommunityPostPage: Rendering post:', post);
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl">
