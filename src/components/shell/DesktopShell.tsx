@@ -1,5 +1,5 @@
 
-// ABOUTME: Desktop application shell with collapsible sidebar layout.
+// ABOUTME: Desktop application shell with proper two-column layout management.
 
 import React, { useState } from 'react';
 import CollapsibleSidebar from './CollapsibleSidebar';
@@ -21,7 +21,12 @@ const DesktopShell = ({ children }: DesktopShellProps) => {
         isCollapsed={isSidebarCollapsed} 
         onToggle={handleToggleSidebar} 
       />
-      <main className="flex-1 overflow-auto">
+      {/* Main content area with proper sidebar spacing */}
+      <main 
+        className={`flex-1 overflow-auto transition-all duration-300 ${
+          isSidebarCollapsed ? 'ml-20' : 'ml-60'
+        }`}
+      >
         {children}
       </main>
     </div>

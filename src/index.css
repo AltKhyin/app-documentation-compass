@@ -136,6 +136,21 @@
   }
 }
 
+/* Shell Layout Fixes - Ensure content respects shell structure */
+@media (min-width: 768px) {
+  /* Desktop: Ensure main content areas don't overflow under sidebar */
+  .desktop-main-content {
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  /* Prevent content from bleeding under fixed sidebar */
+  .sidebar-aware-content {
+    padding-left: 0; /* DesktopShell handles margin via ml-* classes */
+    width: 100%;
+  }
+}
+
 /* Mobile typography and spacing optimizations */
 @media (max-width: 767px) {
   body {
