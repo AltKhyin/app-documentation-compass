@@ -1,728 +1,297 @@
-
-# **EVIDENS - CODEBASE AUDIT REPORT**
-
-**Version:** 2.0.0  
-**Date:** June 20, 2025  
-**Purpose:** Comprehensive implementation plan for resolving 79 identified codebase issues through systematic, checkpoint-driven approach with zero-downtime deployment strategy.
-
----
-
-## **EXECUTIVE SUMMARY**
-
-This report provides a systematic, checkpoint-driven implementation plan to resolve all 79 identified codebase issues while maintaining system functionality. The plan prioritizes critical system recovery, followed by type system consolidation, language standardization, performance optimization, and cleanup phases.
-
-**Critical Statistics:**
-- **CRITICAL Issues:** 12 (System-breaking, immediate attention required)
-- **HIGH Priority Issues:** 23 (Major impact on functionality/maintainability)
-- **MEDIUM Priority Issues:** 28 (Quality improvements, technical debt)
-- **LOW Priority Issues:** 16 (Minor optimizations, cosmetic improvements)
-
----
-
-## **STRATEGIC ANALYSIS & SOLUTION DESIGN**
-
-### **Goal Deconstruction**
-Create a systematic, checkpoint-driven implementation plan to resolve all 79 identified codebase issues while maintaining system functionality and establishing a clean, maintainable foundation for future development.
-
-### **System-Wide Context Gathering**
-**Key Files Affected:**
-- `src/types/index.ts` - Type export conflicts (Line 296)
-- `src/pages/AuthPage.tsx` - Missing critical authentication component
-- `src/router/AppRouter.tsx` - Router configuration inconsistencies
-- `src/components/routes/ProtectedAppRoute.tsx` - Shell architecture integrity
-- `src/config/navigation.ts` - Path standardization requirements
-- `supabase/functions/get-community-page-data/index.ts` - Performance optimization needs
-
-**Database Tables:** All existing tables remain functional; no schema changes required
-**Existing Components:** Shell architecture, community system, authentication flow, theme management
-
-### **Solution Approach: Systematic Checkpoint-Driven Implementation**
-**Rationale:** This approach maintains system functionality at each checkpoint, allows for safe rollbacks, enables verification at each stage, and aligns with project principles of simplicity and maintainability.
-
-### **Milestone Dependency Chain**
-1. **Milestone 1** (Critical System Recovery) → **Milestone 2** (Type System Consolidation) → **Milestone 3** (Language Standardization) → **Milestone 4** (Performance & Security) → **Milestone 5** (Documentation & Testing) → **Milestone 6** (Cleanup & Optimization)
-
----
-
-## **DETAILED IMPLEMENTATION PLAN**
-
-### **MILESTONE 1: CRITICAL SYSTEM RECOVERY**
-**Objective:** Restore basic system functionality by resolving build-breaking issues
-**Duration:** 1-2 days
-**Risk Level:** HIGH (System currently non-functional)
-**Success Criteria:** Application builds successfully and basic navigation works
-
-#### **Task 1.1: Create Missing AuthPage Component** ⚠️ CRITICAL
-**Priority:** P0 - IMMEDIATE
-**Objective:** Resolve router failure by implementing missing authentication page
-**Files to Create/Modify:**
-- `src/pages/AuthPage.tsx` (CREATE)
-
-**Technical Specification:**
-1. Create AuthPage component following Blueprint 01 patterns
-2. Implement login/signup forms with proper error handling
-3. Integrate with existing authentication providers
-4. Ensure mobile-responsive design per [AD.1]
-5. Apply AuthThemeProvider scoping correctly
-
-**Code Structure:**
-```typescript
-// AuthPage.tsx structure
-- Import existing LoginForm and SignupForm components
-- Implement tab switching between login/signup
-- Apply AuthLayout wrapper
-- Ensure responsive design
-```
-
-**Governing Directives:** [D3.2], [AD.1], Blueprint 01
-**Verification Criteria:**
-- [ ] Route `/auth` renders without errors
-- [ ] Login/signup functionality works
-- [ ] Mobile responsive design implemented
-- [ ] No console errors related to authentication
-- [ ] Component follows established patterns
-
-#### **Task 1.2: Resolve Type Export Conflicts** ⚠️ CRITICAL
-**Priority:** P0 - IMMEDIATE
-**Objective:** Fix TypeScript compilation errors in community module
-**Files to Modify:**
-- `src/types/index.ts` (MODIFY - Remove line 296)
-- `src/types/community.ts` (VALIDATE)
-
-**Technical Specification:**
-1. Remove duplicate `CommunityPost` export from `src/types/index.ts` line 296
-2. Ensure all community types remain in `src/types/community.ts`
-3. Update all import statements to reference correct type locations
-4. Verify no circular dependencies exist
-5. Run TypeScript compiler to validate changes
-
-**Governing Directives:** [D3.1], TypeScript best practices
-**Verification Criteria:**
-- [ ] TypeScript compilation succeeds
-- [ ] No duplicate type exports
-- [ ] All imports resolve correctly
-- [ ] No circular dependencies
-- [ ] Build process completes successfully
-
-#### **Task 1.3: Fix Import/Export Syntax Issues** ⚠️ CRITICAL
-**Priority:** P0 - IMMEDIATE
-**Objective:** Resolve component composition failures
-**Files to Modify:**
-- `src/App.tsx` (VALIDATE imports)
-- `src/router/AppRouter.tsx` (VALIDATE imports)
-
-**Technical Specification:**
-1. Audit all provider component imports for consistent syntax
-2. Verify default vs named export patterns
-3. Ensure component composition works correctly
-4. Test provider hierarchy functionality
-5. Validate all import paths are correct
-
-**Governing Directives:** [D3.2], ES6 module standards
-**Verification Criteria:**
-- [ ] Application starts without import errors
-- [ ] Provider hierarchy functions correctly
-- [ ] Component composition works
-- [ ] No console warnings about imports
-- [ ] All routes accessible
-
-#### **Task 1.4: Validate Shell Architecture Integrity** 🔍 HIGH
-**Priority:** P1 - DAY 1
-**Objective:** Ensure recent changes haven't broken shell architecture
-**Files to Modify:**
-- `src/components/routes/ProtectedAppRoute.tsx` (VALIDATE)
-- `src/components/shell/AppShell.tsx` (VALIDATE)
-
-**Technical Specification:**
-1. Verify AppShell wrapper is properly integrated
-2. Ensure data flow patterns remain intact
-3. Test shell rendering across all routes
-4. Validate AppDataProvider integration
-5. Check mobile/desktop shell switching
-
-**Governing Directives:** [M2.2], [D3.2]
-**Verification Criteria:**
-- [ ] Shell renders correctly on all routes
-- [ ] Data context flows properly
-- [ ] No layout breaking issues
-- [ ] AppDataProvider integration works
-- [ ] Mobile/desktop switching functional
-
-**CHECKPOINT 1: SYSTEM FUNCTIONAL** ✅
-*Verification: Application builds, starts, and basic navigation works*
-
----
-
-### **MILESTONE 2: TYPE SYSTEM CONSOLIDATION**
-**Objective:** Establish consistent, maintainable type system
-**Duration:** 1-2 days
-**Risk Level:** MEDIUM (System functional but types inconsistent)
-**Success Criteria:** All types properly defined and no TypeScript warnings
-
-#### **Task 2.1: Community Type System Optimization** 🔧 HIGH
-**Priority:** P2 - DAY 2-3
-**Objective:** Consolidate and optimize community-related types
-**Files to Modify:**
-- `src/types/community.ts` (OPTIMIZE)
-- `packages/hooks/useCommunityPageQuery.ts` (VALIDATE)
-
-**Technical Specification:**
-1. Review all community type definitions for consistency
-2. Remove duplicate or redundant type definitions
-3. Ensure proper generic type usage
-4. Optimize type exports for better tree-shaking
-5. Add missing type annotations
-
-**Issues Addressed:**
-- Duplicate type definitions across files
-- Inconsistent type naming
-- Missing type annotations
-- Poor type reusability
-
-**Governing Directives:** [D3.1], TypeScript best practices
-**Verification Criteria:**
-- [ ] All community types consolidated
-- [ ] No duplicate type definitions
-- [ ] Proper generic type usage
-- [ ] Type exports optimized
-- [ ] No TypeScript warnings
-
-#### **Task 2.2: Global Type Safety Enhancement** 🛡️ HIGH
-**Priority:** P2 - DAY 2-3
-**Objective:** Reduce `any` usage and improve type safety
-**Files to Modify:**
-- `src/types/index.ts` (REVIEW)
-- Various component files (AUDIT)
-
-**Technical Specification:**
-1. Audit codebase for `any` type usage
-2. Replace `any` with proper type definitions
-3. Add missing type annotations
-4. Ensure strict TypeScript compliance
-5. Create utility types for common patterns
-
-**Issues Addressed:**
-- Excessive use of `any` type
-- Missing type annotations
-- Weak type definitions
-- Runtime type errors
-
-**Governing Directives:** [D3.1], TypeScript strict mode
-**Verification Criteria:**
-- [ ] Reduced `any` type usage by 80%
-- [ ] Proper type annotations added
-- [ ] Strict TypeScript compliance
-- [ ] No type-related warnings
-- [ ] Improved IDE support
-
-**CHECKPOINT 2: TYPES CONSISTENT** ✅
-*Verification: TypeScript strict mode enabled with no errors*
-
----
-
-### **MILESTONE 3: LANGUAGE STANDARDIZATION**
-**Objective:** Implement EN_US technical naming with PT_BR UI preservation
-**Duration:** 2-3 days
-**Risk Level:** MEDIUM (Functional but naming inconsistent)
-**Success Criteria:** Consistent naming conventions throughout codebase
-
-#### **Task 3.1: File System Standardization** 📁 MEDIUM
-**Priority:** P3 - DAY 4-5
-**Objective:** Standardize file naming to EN_US technical conventions
-**Files to Modify:**
-- `src/pages/ComunidadePage.tsx` → `src/pages/CommunityPage.tsx` (RENAME)
-- `src/pages/PerfilPage.tsx` → `src/pages/ProfilePage.tsx` (RENAME)
-- Update all import references
-
-**Technical Specification:**
-1. Rename files to follow EN_US technical naming
-2. Update all import statements
-3. Preserve all Portuguese UI text
-4. Update router configuration
-5. Ensure no functionality changes
-
-**Language Standards:**
-- **Technical Elements (EN_US):** File names, component names, function names
-- **UI Elements (PT_BR):** Button text, labels, navigation items
-
-**Governing Directives:** [D3.1], Language Standardization Plan
-**Verification Criteria:**
-- [ ] Files renamed to EN_US conventions
-- [ ] All imports updated correctly
-- [ ] Portuguese UI text preserved
-- [ ] Router configuration updated
-- [ ] No functionality changes
-
-#### **Task 3.2: Navigation Configuration Standardization** 🧭 MEDIUM
-**Priority:** P3 - DAY 4-5
-**Objective:** Align navigation paths with standardized conventions
-**Files to Modify:**
-- `src/config/navigation.ts` (MODIFY)
-- `src/router/AppRouter.tsx` (VALIDATE)
-
-**Technical Specification:**
-1. Ensure consistent path naming
-2. Maintain Portuguese UI labels
-3. Standardize admin navigation items
-4. Validate role-based navigation logic
-5. Update mobile navigation configuration
-
-**Issues Addressed:**
-- Mixed Portuguese/English path conventions
-- Inconsistent navigation patterns
-- Role-based navigation inconsistencies
-
-**Governing Directives:** [D3.1], Navigation consistency
-**Verification Criteria:**
-- [ ] Consistent path naming
-- [ ] Portuguese UI labels preserved
-- [ ] Admin navigation standardized
-- [ ] Role-based logic validated
-- [ ] Mobile navigation functional
-
-**CHECKPOINT 3: NAMING STANDARDIZED** ✅
-*Verification: All technical elements use EN_US, UI elements remain PT_BR*
-
----
-
-### **MILESTONE 4: PERFORMANCE & SECURITY OPTIMIZATION**
-**Objective:** Address performance bottlenecks and security vulnerabilities
-**Duration:** 2-3 days
-**Risk Level:** HIGH (Performance and security issues)
-**Success Criteria:** Performance improved and security vulnerabilities addressed
-
-#### **Task 4.1: Edge Function Optimization** ⚡ HIGH
-**Priority:** P4 - DAY 6-7
-**Objective:** Optimize community page data fetching performance
-**Files to Modify:**
-- `supabase/functions/get-community-page-data/index.ts` (REFACTOR)
-
-**Technical Specification:**
-1. Split large function into smaller, focused functions
-2. Implement proper error handling
-3. Optimize database queries
-4. Add comprehensive logging
-5. Ensure rate limiting compliance
-
-**Issues Addressed:**
-- Function too long (341+ lines)
-- Complex nested logic
-- Poor error handling
-- Performance bottlenecks
-
-**Refactoring Strategy:**
-```typescript
-// Split into modules:
-- fetchCommunityPosts()
-- fetchSidebarData()
-- handleAuthentication()
-- validateRateLimit()
-```
-
-**Governing Directives:** [DOC_5], [DAL.1-4], Performance best practices
-**Verification Criteria:**
-- [ ] Function split into focused modules
-- [ ] Error handling implemented
-- [ ] Database queries optimized
-- [ ] Rate limiting functional
-- [ ] Performance metrics improved
-
-#### **Task 4.2: Security Audit Implementation** 🔒 HIGH
-**Priority:** P4 - DAY 6-7
-**Objective:** Address identified security vulnerabilities
-**Files to Modify:**
-- Various components (AUDIT for XSS)
-- Edge functions (VALIDATE rate limiting)
-
-**Technical Specification:**
-1. Audit for XSS vulnerabilities in rich text rendering
-2. Implement input validation
-3. Validate rate limiting implementation
-4. Review authentication flow security
-5. Ensure RLS policy compliance
-
-**Security Issues Addressed:**
-- XSS vulnerabilities in rich text
-- Missing input validation
-- Insufficient rate limiting
-- Authentication flow gaps
-- RLS policy enforcement
-
-**Governing Directives:** [DOC_4], [SEC.1-3], Security best practices
-**Verification Criteria:**
-- [ ] XSS vulnerabilities addressed
-- [ ] Input validation implemented
-- [ ] Rate limiting validated
-- [ ] Authentication security reviewed
-- [ ] RLS compliance verified
-
-**CHECKPOINT 4: PERFORMANCE OPTIMIZED** ✅
-*Verification: Performance metrics improved and security audit passed*
-
----
-
-### **MILESTONE 5: DOCUMENTATION & TESTING**
-**Objective:** Synchronize documentation and establish testing foundation
-**Duration:** 1-2 days
-**Risk Level:** LOW (Documentation and testing improvements)
-**Success Criteria:** Documentation current and testing infrastructure functional
-
-#### **Task 5.1: Documentation Refactoring** 📚 MEDIUM
-**Priority:** P5 - DAY 8
-**Objective:** Refactor overly long documentation files
-**Files to Modify:**
-- `docs/README-BÍBLIA.md` (REFACTOR - Currently too long)
-- `docs/CODEBASE_AUDIT_REPORT.md` (REFACTOR - Currently too long)
-
-**Technical Specification:**
-1. Split large documents into focused sections
-2. Create clear document hierarchy
-3. Update implementation status
-4. Ensure documentation accuracy
-5. Create cross-references between documents
-
-**Document Structure Strategy:**
-```
-docs/
-├── core/
-│   ├── architecture-overview.md
-│   ├── development-guidelines.md
-│   └── implementation-status.md
-├── blueprints/ (existing)
-└── audit/
-    ├── critical-issues.md
-    ├── implementation-plan.md
-    └── progress-tracking.md
-```
-
-**Governing Directives:** [P1.3], Documentation best practices
-**Verification Criteria:**
-- [ ] Documentation files under 500 lines each
-- [ ] Clear document hierarchy established
-- [ ] Implementation status accurate
-- [ ] Cross-references functional
-- [ ] Easy navigation between documents
-
-#### **Task 5.2: Testing Infrastructure Validation** 🧪 MEDIUM
-**Priority:** P5 - DAY 8
-**Objective:** Ensure testing infrastructure is functional
-**Files to Modify:**
-- Test files (AUDIT and FIX)
-- Testing configuration (VALIDATE)
-
-**Technical Specification:**
-1. Audit all test files for missing dependencies
-2. Fix broken test configurations
-3. Ensure test coverage for critical components
-4. Validate testing infrastructure
-5. Document testing procedures
-
-**Testing Issues Addressed:**
-- Missing test dependencies
-- Broken test configurations
-- Insufficient test coverage
-- Non-functional testing infrastructure
-
-**Governing Directives:** Testing best practices, [P1.1]
-**Verification Criteria:**
-- [ ] All tests run successfully
-- [ ] Test coverage adequate for critical components
-- [ ] Testing infrastructure validated
-- [ ] Testing procedures documented
-- [ ] No test-related build errors
-
-**CHECKPOINT 5: DOCUMENTATION CURRENT** ✅
-*Verification: Documentation under 500 lines per file and tests functional*
-
----
-
-### **MILESTONE 6: CLEANUP & OPTIMIZATION**
-**Objective:** Remove technical debt and optimize codebase
-**Duration:** 1-2 days
-**Risk Level:** LOW (Cleanup and optimization)
-**Success Criteria:** Codebase clean and optimized
-
-#### **Task 6.1: Code Cleanup Implementation** 🧹 MEDIUM
-**Priority:** P6 - DAY 9
-**Objective:** Remove unused code and optimize component architecture
-**Files to Modify:**
-- Various components (CLEANUP)
-- Unused imports (REMOVE)
-- Duplicate code (CONSOLIDATE)
-
-**Technical Specification:**
-1. Remove unused imports and components
-2. Consolidate duplicate code patterns
-3. Optimize component architecture
-4. Clean up CSS and styling inconsistencies
-5. Remove deprecated code patterns
-
-**Cleanup Areas:**
-- Unused imports and exports
-- Duplicate utility functions
-- Inconsistent styling patterns
-- Deprecated React patterns
-- Dead code elimination
-
-**Governing Directives:** [P2], [D3.2], Code quality standards
-**Verification Criteria:**
-- [ ] No unused imports or exports
-- [ ] Duplicate code consolidated
-- [ ] Component architecture follows standards
-- [ ] CSS inconsistencies resolved
-- [ ] No deprecated patterns remain
-
-#### **Task 6.2: Performance Optimization Implementation** 🚀 LOW
-**Priority:** P6 - DAY 9
-**Objective:** Implement performance improvements
-**Files to Modify:**
-- Components (OPTIMIZE)
-- Hooks (OPTIMIZE)
-- Bundle configuration (VALIDATE)
-
-**Technical Specification:**
-1. Implement React.memo where appropriate
-2. Optimize data fetching patterns
-3. Add lazy loading for components
-4. Validate bundle size optimization
-5. Implement performance monitoring
-
-**Performance Optimizations:**
-- React.memo for expensive components
-- useMemo/useCallback for expensive calculations
-- Lazy loading for route components
-- Bundle splitting optimization
-- Performance metrics collection
-
-**Governing Directives:** Performance best practices, [AD.1]
-**Verification Criteria:**
-- [ ] React.memo implemented appropriately
-- [ ] Data fetching patterns optimized
-- [ ] Lazy loading functional
-- [ ] Bundle size optimized
-- [ ] Performance monitoring active
-
-**CHECKPOINT 6: SYSTEM OPTIMIZED** ✅
-*Verification: All technical debt resolved and performance optimized*
-
----
-
-## **CRITICAL ISSUES DETAILED BREAKDOWN**
-
-### **C1. Build System Failures** ⚠️ CRITICAL
-**Description:** TypeScript compilation errors preventing application build
-**Root Cause:** Type export conflicts in community module
-**Impact:** Complete system failure - application cannot run
-**Resolution:** Task 1.2 - Remove duplicate exports
-
-### **C2. Missing AuthPage Component** ⚠️ CRITICAL
-**Description:** Router references non-existent AuthPage component
-**Root Cause:** Component not created in allowed files
-**Impact:** Authentication flow completely broken
-**Resolution:** Task 1.1 - Create AuthPage component
-
-### **C3. Type Export Conflicts** ⚠️ CRITICAL
-**Description:** CommunityPost type exported from multiple locations
-**Root Cause:** Duplicate type definitions
-**Impact:** Build failures and type system inconsistency
-**Resolution:** Task 1.2 - Consolidate type exports
-
-### **C4. Provider Hierarchy Issues** ⚠️ CRITICAL
-**Description:** Recent changes may have corrupted provider composition
-**Root Cause:** Shell architecture modifications
-**Impact:** App shell may not render correctly
-**Resolution:** Task 1.4 - Validate shell architecture
-
-### **C5. Navigation Path Inconsistencies** ⚠️ CRITICAL
-**Description:** Mixed Portuguese/English path conventions
-**Root Cause:** Inconsistent naming standards
-**Impact:** Users may encounter broken navigation
-**Resolution:** Task 3.2 - Standardize navigation
-
----
-
-## **HIGH PRIORITY ISSUES SUMMARY**
-
-### **Component Architecture Violations** 🔧 HIGH
-- Multiple components violate established hierarchy
-- Data flow patterns inconsistent
-- Component composition issues
-
-### **Performance Anti-patterns** ⚡ HIGH
-- Unnecessary re-renders
-- Missing React.memo usage
-- Inefficient data fetching
-
-### **Security Vulnerabilities** 🔒 HIGH
-- XSS risks in rich text rendering
-- Missing input validation
-- Rate limiting gaps
-
-### **Type Safety Issues** 🛡️ HIGH
-- Excessive `any` type usage
-- Missing type annotations
-- Weak type definitions
-
----
-
-## **IMPLEMENTATION TIMELINE**
-
-| Day | Milestone | Focus | Risk Level |
-|-----|-----------|-------|------------|
-| 1-2 | M1: Critical Recovery | Build fixes, AuthPage | HIGH |
-| 2-3 | M2: Type Consolidation | Type safety, consistency | MEDIUM |
-| 4-5 | M3: Language Standards | File naming, navigation | MEDIUM |
-| 6-7 | M4: Performance & Security | Optimization, security | HIGH |
-| 8 | M5: Documentation | Docs, testing | LOW |
-| 9 | M6: Cleanup | Code cleanup, optimization | LOW |
-
----
-
-## **RISK ASSESSMENT & MITIGATION**
-
-### **System Stability Risks**
-- **HIGH:** Build system failures prevent development
-- **MEDIUM:** Type changes could introduce runtime errors  
-- **LOW:** Documentation changes have minimal impact
-
-**Mitigation:** Checkpoint-driven approach with rollback capability
-
-### **Development Velocity Risks**
-- **HIGH:** Current build errors block all development
-- **MEDIUM:** File renaming requires coordination
-- **LOW:** Performance optimizations need testing
-
-**Mitigation:** Incremental deployment with verification
-
-### **User Experience Risks**
-- **HIGH:** Authentication failures prevent access
-- **MEDIUM:** Performance issues degrade experience
-- **LOW:** Documentation doesn't affect users
-
-**Mitigation:** Maintain functionality at each checkpoint
-
----
-
-## **SUCCESS METRICS**
-
-### **Technical Health**
-- [ ] Zero build errors
-- [ ] All TypeScript strict mode compliance
-- [ ] No console warnings
-- [ ] Performance benchmarks met
-
-### **Code Quality**
-- [ ] Consistent naming conventions
-- [ ] No duplicate code patterns
-- [ ] Proper component hierarchy
-- [ ] Security vulnerabilities addressed
-
-### **Development Experience**
-- [ ] Clear documentation structure
-- [ ] Functional testing infrastructure
-- [ ] Reduced onboarding complexity
-- [ ] Maintainable codebase
-
----
-
-## **DISCOVERED TECHNICAL DEBT**
-*(Items identified but deferred to prevent scope creep)*
-
-### **Future Enhancements**
-1. **Bundle Size Optimization** - Code splitting and lazy loading
-2. **Accessibility Improvements** - ARIA labels and keyboard navigation  
-3. **Internationalization** - Structure for future i18n support
-4. **Advanced Monitoring** - Comprehensive performance metrics
-5. **Component Storybook** - Documentation and testing environment
-
-### **Advanced Optimizations**
-6. **Error Boundaries** - Granular error handling
-7. **Service Worker** - Enhanced PWA functionality
-8. **Database Optimization** - Index and query improvements
-9. **Caching Strategies** - Sophisticated caching mechanisms
-10. **Mobile Enhancements** - Device-specific optimizations
-
----
-
-## **IMPLEMENTATION FLOWCHART**
-
-```
-┌─────────────────┐
-│      START      │
-└─────────┬───────┘
-          │
-    ┌─────▼─────┐
-    │MILESTONE 1│ ◄── CRITICAL RECOVERY
-    │Build Fixes│     - AuthPage Creation
-    │Type Fixes │     - Import/Export Fixes
-    └─────┬─────┘     - Shell Validation
-          │
-    ┌─────▼─────┐
-    │CHECKPOINT │ ◄── System Functional
-    │     1     │
-    └─────┬─────┘
-          │
-    ┌─────▼─────┐
-    │MILESTONE 2│ ◄── TYPE CONSOLIDATION
-    │Type System│     - Community Types
-    │Optimization│     - Global Type Safety
-    └─────┬─────┘
-          │
-    ┌─────▼─────┐
-    │CHECKPOINT │ ◄── Types Consistent
-    │     2     │
-    └─────┬─────┘
-          │
-    ┌─────▼─────┐
-    │MILESTONE 3│ ◄── LANGUAGE STANDARDS
-    │File System│     - EN_US Technical
-    │Standards  │     - PT_BR UI Preserved
-    └─────┬─────┘
-          │
-    ┌─────▼─────┐
-    │CHECKPOINT │ ◄── Naming Standardized
-    │     3     │
-    └─────┬─────┘
-          │
-    ┌─────▼─────┐
-    │MILESTONE 4│ ◄── PERFORMANCE & SECURITY
-    │Performance│     - Edge Function Opt
-    │& Security │     - Security Audit
-    └─────┬─────┘
-          │
-    ┌─────▼─────┐
-    │CHECKPOINT │ ◄── Performance Optimized
-    │     4     │
-    └─────┬─────┘
-          │
-    ┌─────▼─────┐
-    │MILESTONE 5│ ◄── DOCUMENTATION
-    │Docs &     │     - Refactor Long Docs
-    │Testing    │     - Validate Tests
-    └─────┬─────┘
-          │
-    ┌─────▼─────┐
-    │CHECKPOINT │ ◄── Documentation Current
-    │     5     │
-    └─────┬─────┘
-          │
-    ┌─────▼─────┐
-    │MILESTONE 6│ ◄── CLEANUP & OPTIMIZATION
-    │Code       │     - Remove Unused Code
-    │Cleanup    │     - Performance Tuning
-    └─────┬─────┘
-          │
-    ┌─────▼─────┐
-    │FINAL      │ ◄── System Optimized
-    │CHECKPOINT │
-    └─────┬─────┘
-          │
-    ┌─────▼─────┐
-    │ COMPLETION│
-    │  SUCCESS  │
-    └───────────┘
-```
-
----
-
-**✅ Max-Accuracy Planning complete.**
+EVIDENS: Architectural Hardening & Production Readiness GuideDocument Version: 1.0Date: June 20, 2025Objective: To provide a comprehensive, step-by-step guide for executing critical architectural improvements to the EVIDENS platform. This document will guide a developer through a series of prioritized tasks to enhance performance, stability, and long-term maintainability, preparing the application for a production launch.Introduction: The "Why" Behind This RefactorAfter a series of deep-dive analyses, our codebase has been identified as architecturally sound but possessing several latent risks that could impact its long-term health. The current implementation has two primary issues that we must address:A Performance & Architectural Flaw: The application currently fetches all data required for the homepage on every single authenticated page. This is inefficient and slows down the user experience. This is caused by a React Context Provider (AppDataProvider) being applied globally when it should only apply to the homepage. While the app functions, this pattern is not scalable and leads to a suboptimal user experience.A Maintainability & Stability Flaw: The project's TypeScript configuration is not set to strict mode. This is a significant piece of technical debt that leaves us vulnerable to common runtime errors (like trying to access data on a null object) and makes the code harder to safely refactor in the future.The goal of this guide is to provide a meticulously detailed, step-by-step plan to fix these issues. We will work methodically to ensure the application remains stable at every stage of the process.Who is this document for?This guide is written for a developer who may not have full context on the initial architectural decisions. Every step includes the "What" (the action to take), the "How" (the specific code to write), and the "Why" (the reasoning behind the change).Prerequisites & SetupBefore you begin, please ensure you have the following set up:Git: You have Git installed and are ableto create and switch between branches.Node.js & npm: You have a recent version of Node.js and npm installed. Run npm install in the project root to ensure all dependencies are up to date.Code Editor: You are using a code editor like VS Code with appropriate extensions for TypeScript and React.Local Environment: Your local development environment is running correctly. You should be able to start the application with npm run dev.Your First Step: Create a New BranchAll of this work should be done on a dedicated feature branch to avoid disrupting the main branch.git checkout main
+git pull
+git checkout -b feature/architectural-hardening
+Now, let's begin. We will tackle the tasks in order of priority.Task 1: Decoupling the Data Layer & Achieving Shell Independence (Highest Priority)Strategic Goal: To fix the core performance issue by ensuring data is only fetched for the page that needs it. We will decouple the application's main navigation "shell" from any page-specific data, making the application feel faster and more responsive.Part A: Scoping the Homepage Data ProviderThe Why: Currently, the AppDataProvider is wrapped around every single protected route in the application (src/components/routes/ProtectedAppRoute.tsx). This provider is responsible for fetching the homepage data. Our goal is to move this provider so it only wraps the homepage component itself.Step 1.1: Remove the Global ProviderWHAT: Open the file src/components/routes/ProtectedAppRoute.tsx.HOW: Locate the AppDataProvider component and remove it, leaving only its {children}.File: src/components/routes/ProtectedAppRoute.tsxCode (Before):import { AppDataProvider } from '@/contexts/AppDataContext';
+import { ProtectedRoute } from '../auth/ProtectedRoute';
+// ...
+export const ProtectedAppRoute = ({ children, requiredRole = 'practitioner' }: ProtectedAppRouteProps) => {
+  return (
+    <ProtectedRoute requiredRole={requiredRole}>
+      <AppDataProvider> {/* <-- THIS LINE AND THE CLOSING TAG WILL BE REMOVED */}
+        {children}
+      </AppDataProvider>
+    </ProtectedRoute>
+  );
+};
+Code (After):import { ProtectedRoute } from '../auth/ProtectedRoute';
+// ... (The AppDataProvider import is now unused and can be removed)
+export const ProtectedAppRoute = ({ children, requiredRole = 'practitioner' }: ProtectedAppRouteProps) => {
+  return (
+    <ProtectedRoute requiredRole={requiredRole}>
+      {children}
+    </ProtectedRoute>
+  );
+};
+WHY: This change ensures that the ProtectedAppRoute component is solely responsible for one thing: checking if a user is authenticated and authorized. It no longer forces a data fetch on every page.VERIFICATION (Expect Breakage): Save the file. Your running application will now likely crash when you navigate to the homepage (/). This is expected and correct. It crashes because the homepage component (Index.tsx) uses the useAppData() hook, but we have just removed its provider. This proves the decoupling is working.Step 1.2: Relocate the Provider to the Homepage RouteWHAT: Open the main router configuration file, src/router/AppRouter.tsx. We will now apply the AppDataProvider only to the specific route that needs it.HOW: Import the AppDataProvider and wrap the Index component with it.File: src/router/AppRouter.tsxCode (Before):// ...
+<Route index element={<Index />} />
+// ...
+Code (After):// Add the import at the top of the file
+import { AppDataProvider } from '../contexts/AppDataContext';
+// ...
+
+// Find the route for the Index page and wrap the element
+<Route index element={
+  <AppDataProvider>
+    <Index />
+  </AppDataProvider>
+} />
+// ...
+WHY: This correctly scopes the homepage data. The useConsolidatedHomepageFeedQuery will now only be executed when the user is on the homepage route. No other page will trigger this data fetch.VERIFICATION: Save the file. Go to your running application and navigate to the homepage (/). It should now load and function correctly, just as it did before. However, if you navigate to another page like /comunidade, you might notice that the UserProfileBlock in the sidebar is now broken. This is also expected and is what we will fix in Part B.Part B: Creating Self-Contained Shell ComponentsThe Why: The application shell (the sidebar, header, etc.) should not depend on data from any specific page. Shell components like the UserProfileBlock need only a tiny amount of data (the user's profile) and should be responsible for fetching it themselves.Step 1.3: Create a Dedicated useUserProfileQuery HookWHAT: Create a new file for a highly-focused TanStack Query hook that fetches only the profile for the currently logged-in user.HOW: Create the file packages/hooks/useUserProfileQuery.ts and add the following code.File: packages/hooks/useUserProfileQuery.tsCode:import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuthStore } from '@/store/auth';
+import type { UserProfile } from '@/types'; // Assuming UserProfile is correctly defined in types
+
+// This is a small, focused function to fetch just the practitioner's profile.
+const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
+  const { data, error } = await supabase
+    .from('Practitioners')
+    .select('id, full_name, avatar_url, role') // Only select the fields you need!
+    .eq('id', userId)
+    .single();
+
+  if (error) {
+    console.error('Error fetching user profile:', error.message);
+    // In a real production app, you might want to log this to a service like Sentry.
+    throw new Error(error.message);
+  }
+  return data;
+};
+
+export const useUserProfileQuery = () => {
+  // We get the userId from our global Zustand auth store.
+  const userId = useAuthStore((state) => state.user?.id);
+
+  return useQuery({
+    // The query key is an array. The first element is a generic name for the query.
+    // The second element is the dynamic part (the userId).
+    // This ensures that if the user logs out and another logs in,
+    // TanStack Query will fetch the new user's data.
+    queryKey: ['user-profile', userId],
+
+    // The function that will be executed to fetch the data.
+    queryFn: () => {
+      if (!userId) {
+        // If there's no user, we shouldn't attempt to fetch.
+        return Promise.resolve(null);
+      }
+      return fetchUserProfile(userId);
+    },
+
+    // This is a crucial option. It tells the query not to run at all
+    // until a userId is available.
+    enabled: !!userId,
+
+    // This tells TanStack Query to consider the data "fresh" for 15 minutes.
+    // It won't be refetched on window focus during this time, which is good
+    // because a user's profile doesn't change very often.
+    staleTime: 1000 * 60 * 15, // 15 minutes
+  });
+};
+WHY: This hook is reusable, efficient, and completely independent of any page data. It perfectly encapsulates the logic for fetching the user's profile. By only selecting the columns it needs, it's also more performant than fetching *.Step 1.4: Refactor UserProfileBlock.tsxWHAT: Open src/components/shell/UserProfileBlock.tsx and replace its dependency on the global useAppData with our new, self-contained useUserProfileQuery.HOW: Modify the component as follows.File: src/components/shell/UserProfileBlock.tsxCode (Before):import { useAppData } from '@/contexts/AppDataContext';
+// ...
+const UserProfileBlock = ({ isCollapsed }: { isCollapsed: boolean }) => {
+  const { userProfile, isLoading } = useAppData();
+
+  if (isLoading) {
+    // ... skeleton logic ...
+  }
+  // ... rest of the component
+};
+Code (After):import { Skeleton } from '@/components/ui/skeleton';
+import { useUserProfileQuery } from '../../../packages/hooks/useUserProfileQuery'; // Adjust path if necessary
+// ... other imports
+
+const UserProfileBlock = ({ isCollapsed }: { isCollapsed: boolean }) => {
+  // The component now uses its own data-fetching hook.
+  const { data: userProfile, isLoading } = useUserProfileQuery();
+
+  // Its loading state is now independent.
+  if (isLoading) {
+    return (
+      <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center p-2' : 'p-3'}`}>
+        <Skeleton className="h-9 w-9 rounded-full" />
+        {!isCollapsed && <Skeleton className="h-4 w-24" />}
+      </div>
+    );
+  }
+
+  // We add a guard for the case where the user profile couldn't be fetched.
+  if (!userProfile) {
+    return (
+      <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center p-2' : 'p-3'}`}>
+        {/* You can show a placeholder or an error state */}
+        <div className="h-9 w-9 rounded-full bg-muted" />
+        {!isCollapsed && <span className="text-sm text-muted-foreground">User not found</span>}
+      </div>
+    );
+  }
+
+  // The rest of the component remains largely the same, using the 'userProfile' data.
+  // ...
+  return (
+    // ... JSX to render the user's name and avatar
+  );
+};
+WHY: The UserProfileBlock is now a truly independent, "smart" component. It knows how to fetch its own data and how to display its own loading state. Its success or failure has zero impact on any other part of the application. This is a robust and maintainable pattern.Final Verification for Task 1After completing all the steps above, you should be able to verify the following:[ ] Homepage Works: Navigate to /. The page should load and display all its data as before.[ ] Other Pages Are Fast: Navigate to /comunidade or /acervo. The application shell (sidebar, header) should appear instantly.[ ] Shell Component Loads Independently: On the /comunidade page, you will briefly see a skeleton in the sidebar where the UserProfileBlock is, which will then be replaced by the user's information. This "pop-in" is the visual proof of our decoupling.[ ] Efficient Network Requests: Open your browser's Developer Tools to the "Network" tab. When you load the /comunidade page, you should NOT see a call to the get-homepage-feed function. You should see a database query to the Practitioners table. This confirms we have eliminated the unnecessary data fetching.If all these checks pass, you have successfully completed the most critical architectural improvement. You can now commit your changes for this task.git add .
+git commit -m "feat: decouple data providers and create independent shell components"
+Task 2: Implementing a Tiered Error Boundary System (High Priority)Strategic Goal: To make our application more resilient. A runtime error in one part of the app should not crash the entire screen. We will create a layered "safety net" so that if a component breaks, only that component is replaced with an error message, leaving the rest of the application functional.The Why: Currently, our app has some error handling, but a severe error in a page's content could potentially crash the main navigation shell, leaving the user with a blank white page and no way to recover. This is a very poor user experience.Step 2.1: Enhance the Generic ErrorBoundary ComponentWHAT: We will improve our main error boundary component to provide a more user-friendly fallback UI.HOW: Open src/components/ErrorBoundary.tsx and update its render method.File: src/components/ErrorBoundary.tsxCode:import React from 'react';
+import { Button } from '@/components/ui/button';
+
+interface Props {
+  children: React.ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+  error: Error | null;
+}
+
+export class ErrorBoundary extends React.Component<Props, State> {
+  public state: State = {
+    hasError: false,
+    error: null,
+  };
+
+  public static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  public componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // In a real production app, you would log this error to a service.
+    // Example: Sentry.captureException(error, { extra: errorInfo });
+    console.error('Uncaught error:', error, errorInfo);
+  }
+
+  public render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex h-full w-full items-center justify-center bg-background p-6">
+          <div className="text-center">
+            <h1 className="text-xl font-bold text-destructive">Oops! Algo deu errado.</h1>
+            <p className="mt-2 text-muted-foreground">
+              Nossa equipe de engenharia foi notificada. Por favor, tente recarregar a página.
+            </p>
+            <Button className="mt-4" onClick={() => window.location.reload()}>
+              Recarregar Página
+            </Button>
+            {/* This <details> block will only show in development mode, which is helpful for debugging */}
+            {process.env.NODE_ENV === 'development' && this.state.error && (
+              <details className="mt-6 text-left">
+                <summary className="cursor-pointer text-sm">Detalhes do erro</summary>
+                <pre className="mt-2 whitespace-pre-wrap rounded-md bg-muted p-4 text-xs">
+                  {this.state.error.stack}
+                </pre>
+              </details>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+WHY: This provides a single, consistent, and helpful error screen that gives the user a clear action (reload) and gives developers debugging information when in development mode.Step 2.2: Implement Tier 1 & 2 Boundaries (Application Root & Page Content)The Why: We will now use our enhanced ErrorBoundary in two key places. Tier 1 will wrap the entire application as a last-resort safety net. Tier 2 will wrap the page content area, isolating it from the main navigation shell.WHAT: Wrap the entire application router in the ErrorBoundary.HOW: Open src/App.tsx.File: src/App.tsxCode:import { AppProviders } from '@/components/providers/AppProviders';
+import { AppRouter } from '@/router/AppRouter';
+import { ErrorBoundary } from './components/ErrorBoundary'; // Import the boundary
+
+function App() {
+  return (
+    <ErrorBoundary> {/* <-- TIER 1: The Root Boundary */}
+      <AppProviders>
+        <AppRouter />
+      </AppProviders>
+    </ErrorBoundary>
+  );
+}
+
+export default App;
+WHAT: Now, wrap the page content Outlet to protect the shell.HOW: Open src/components/shell/AppShell.tsx. This requires a small refactor to how children are passed.File: src/components/shell/AppShell.tsxCode:import { Outlet } from 'react-router-dom';
+import { DesktopShell } from './DesktopShell';
+import { MobileShell } from './MobileShell';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { ErrorBoundary } from '@/components/ErrorBoundary'; // Import the boundary
+
+export const AppShell = () => {
+  const isMobile = useIsMobile();
+
+  // We create a component for the page content that is wrapped in our boundary.
+  const PageContent = (
+    <div className="flex-1 overflow-auto p-4 md:p-6">
+      <ErrorBoundary> {/* <-- TIER 2: The Page Content Boundary */}
+        <Outlet />
+      </ErrorBoundary>
+    </div>
+  );
+
+  if (isMobile) {
+    return <MobileShell>{PageContent}</MobileShell>;
+  }
+  return <DesktopShell>{PageContent}</DesktopShell>;
+};
+WHAT: You now need to update DesktopShell and MobileShell to accept and render this PageContent as a child.HOW:Open src/components/shell/DesktopShell.tsx. Modify it to accept children.// src/components/shell/DesktopShell.tsx
+export const DesktopShell = ({ children }: { children: React.ReactNode }) => {
+    // ...
+    return (
+        <div className="flex h-screen w-full">
+            <CollapsibleSidebar />
+            <div className="flex flex-1 flex-col">
+                <Header />
+                <main className="flex-1 bg-muted/30">{children}</main> {/* <-- Render children here */}
+            </div>
+        </div>
+    );
+};
+Open src/components/shell/MobileShell.tsx. Modify it to accept children.// src/components/shell/MobileShell.tsx
+export const MobileShell = ({ children }: { children: React.ReactNode }) => {
+    // ...
+    return (
+        <div className="flex h-screen w-full flex-col">
+            <Header />
+            <main className="flex-1 overflow-y-auto bg-muted/30">{children}</main> {/* <-- Render children here */}
+            <BottomTabBar />
+        </div>
+    );
+};
+Verification for Task 2This is best tested by temporarily introducing an error.Test Tier 2:Open src/pages/CommunityPage.tsx.At the very top of the component function, add this line: throw new Error('Test Error from Community Page');Save the file and navigate to /comunidade.Expected Result: The main navigation shell (sidebar/header) should remain perfectly visible and functional. The main content area where the posts would normally appear should now display your enhanced error fallback UI. This proves the page content is isolated.Cleanup: Remember to remove the throw new Error line.Test Tier 1:Open src/components/shell/Header.tsx.At the top of the component, add throw new Error('Test Error from Header');Expected Result: Because the Header is outside the Tier 2 boundary, this error will bubble up to the Tier 1 boundary in App.tsx. The entire screen should now show the error fallback UI. This proves your final safety net works.Cleanup: Remove the throw new Error line.If these tests pass, you have successfully implemented a robust, layered error-handling system. You can now commit your changes.git add .
+git commit -m "feat: implement tiered error boundary system for stability"
+Task 3: Migrating to a Strict TypeScript Environment (Medium Priority)Strategic Goal: To dramatically improve the long-term quality, maintainability, and stability of our codebase by enabling TypeScript's strictest settings. This is the most important investment we can make in the future health of the project.The Why: Currently, our project has "strict": false in its tsconfig.app.json. This means we are missing out on TypeScript's most powerful feature: its ability to catch potential errors before they happen. Specifically, without strict mode, TypeScript doesn't effectively check for null or undefined values, which is the cause of most runtime errors in web applications. This task will fix that.Important: This task is more challenging than the others and requires careful, methodical work. It may produce many errors initially. Do not be discouraged. This is expected. We will fix them one by one.The "Boil the Ocean Slowly" StrategyWe will not try to fix all errors at once. We will follow a bottom-up approach:Enable strict mode.Fix the core type definitions first.Fix the data-fetching hooks.Fix the components and pages.Step 3.1: Enable Strict Mode & Establish a BaselineWHAT: Update the two main tsconfig files to enable strict mode.HOW:Open tsconfig.json. Find and remove the following lines if they exist: "strictNullChecks": false and "noImplicitAny": false.Open tsconfig.app.json. Find the "strict" flag and change its value to true.File: tsconfig.app.jsonCode (After):{
+  "compilerOptions": {
+    // ...
+    "strict": true // <-- This is the most important change
+  },
+  // ...
+}
+WHAT: Get a list of all the new type errors.HOW: Open your terminal in the project root and run npm run build. This command will fail, which is what we want. It will print a long list of all the files and lines that now have type errors.ACTION: Copy this entire output into a new text file called typescript-errors.md. This is now your checklist. As you fix errors, you can delete them from this file.Step 3.2: Fixing the Most Common Error TypesYou will encounter two main categories of errors repeatedly. Here is how to fix them.Error Type 1: Object is possibly 'null' or 'undefined'.This is the most common and most important error to fix. It means you are trying to use a variable that might not have a value yet.THE WRONG WAY (Avoid This): Using the non-null assertion operator !.const { data } = useSomeQuery();
+// This tells TypeScript "trust me, data is not null", but it might be! This is dangerous.
+return <div>{data!.title}</div>; // AVOID THIS PATTERN
+THE RIGHT WAY (Use Type Guards): Explicitly check for the value before you use it.const { data, isLoading } = useSomeQuery();
+
+if (isLoading) {
+  return <p>Loading...</p>;
+}
+
+// This is a type guard. After this 'if' block, TypeScript *knows*
+// that 'data' cannot be null or undefined.
+if (!data) {
+  return <p>No data available.</p>;
+}
+
+// Now it is 100% safe to access data.title
+return <div>{data.title}</div>;
+Another Right Way (Optional Chaining ?.): Use this when you want to render nothing if the object is null.// If userProfile is null, this expression will safely return 'undefined' instead of crashing.
+return <div>{userProfile?.name}</div>
+Error Type 2: Parameter 'x' implicitly has an 'any' type.This means you have a function parameter without a type.Solution: Add an explicit type. If you're not sure what the type is, you can often find it by looking at where the function is being called or by inspecting the types from the library you are using (like React).Example (Event Handler):// BEFORE
+const handleInputChange = (event) => { /* ... */ }
+
+// AFTER
+const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => { /* ... */ }
+Example (Custom Component Prop):// BEFORE
+const MyComponent = ({ user }) => { /* ... */ }
+
+// AFTER
+import type { UserProfile } from '@/types';
+const MyComponent = ({ user }: { user: UserProfile | null }) => { /* ... */ }
+Step 3.3: The Step-by-Step Fixing ProcessStart with src/types/: Open all files in this directory. Review every interface and type. If a property can truly be null from the database, its type must reflect that. For example, avatar_url: string should become avatar_url: string | null;.Move to packages/hooks/: Fix all the data-fetching hooks. The return types of their queryFn must be accurate. If a query can return no result, the promise should resolve to null, and the function's return type should be Promise<YourType | null>.Fix Pages and Components: Go through your typescript-errors.md checklist file by file. Apply the type guarding and explicit typing patterns described above.Rerun the Build: Periodically, run npm run build to see your list of errors get shorter. This will help keep you motivated!Verification for Task 3The task is complete when npm run build runs successfully and reports zero errors. At this point, you have significantly improved the quality and stability of the entire application. You can commit your work.git add .
+git commit -m "feat: enable strict typescript and resolve all type errors"
+Final Document ConclusionBy completing these three tasks, you will have addressed the most critical architectural and quality issues in the codebase. You will have:Dramatically improved the application's performance and responsiveness.Made the UI far more resilient to runtime errors.Eliminated an entire class of potential bugs by enforcing strict type safety.The application is now on a solid foundation, ready for future feature development and a confident production launch.
