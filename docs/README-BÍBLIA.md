@@ -1,287 +1,332 @@
 
-# 📚 EVIDENS - Bíblia do Desenvolvimento
+# **EVIDENS Platform - Architectural Stabilization Plan**
 
-**Versão:** 3.2.1  
-**Data:** 20 de junho de 2025  
-**Status:** Em desenvolvimento ativo
-
-> **IMPORTANTE**: Este documento é a fonte única da verdade para o estado atual do projeto EVIDENS. Todas as funcionalidades listadas aqui foram implementadas e testadas.
+**Version:** 6.0 (Stabilization Update)  
+**Date:** June 20, 2025  
+**Purpose:** Complete architectural documentation and implementation roadmap for shell independence and sustainable development patterns.
 
 ---
 
-## 🎯 **RESUMO EXECUTIVO**
+## **🎯 STRATEGIC OBJECTIVE**
 
-O **EVIDENS** é uma plataforma científica focada em democratizar o acesso ao conhecimento médico baseado em evidências. A aplicação combina **Reviews estruturados** com uma **Comunidade científica ativa**, proporcionando um ambiente completo para profissionais da saúde.
+Restore the EVIDENS application shell architecture to ensure persistent, stable navigation while establishing sustainable development patterns that prevent architectural drift and enable effective AI-assisted development.
 
-### **Arquitetura Atual**
-- **Frontend**: React 18 + TypeScript + Vite (SPA/PWA)
-- **Backend**: 100% Supabase (Database + Auth + Edge Functions)
-- **Styling**: Tailwind CSS + shadcn/ui
-- **State Management**: TanStack Query v5 + Zustand (seletivo)
-- **Deployment**: Lovable Cloud
+## **🔍 CURRENT STATE ANALYSIS**
 
----
+### **Critical Issues Identified**
+1. **Shell-Data Coupling Crisis:** AppShell depends on homepage data, causing navigation disappearance
+2. **Architectural Drift:** 10+ rounds of band-aid fixes violating core blueprints
+3. **Scope Creep:** Global data providers used for page-specific functionality
+4. **Error Propagation:** Page-level failures cascade to shell-level failures
 
-## 🏗️ **MÓDULOS IMPLEMENTADOS**
-
-### **1. 🏠 Homepage** ✅ **COMPLETO**
-**Responsável**: `src/pages/Index.tsx`
-
-#### **Funcionalidades Ativas:**
-- ✅ Feed principal com carousel de Reviews em destaque
-- ✅ Módulo "Próxima Edição" com enquete interativa
-- ✅ Sistema de recomendações personalizadas
-- ✅ PWA com instalação automática
-- ✅ Adaptação completa para mobile
-
-#### **Componentes Core:**
-- `ReviewCarousel` - Carrossel responsivo principal
-- `NextEditionModule` - Votação para próximo Review
-- `PWAInstallPrompt` - Instalação Progressive Web App
-
-#### **Edge Functions:**
-- `get-homepage-feed` - Dados consolidados da homepage
-- `get-personalized-recommendations` - IA de recomendação
+### **User Experience Impact**
+- ❌ Sidebar disappears during page loads
+- ❌ Header missing on desktop views  
+- ❌ Navigation instability across route changes
+- ❌ Inconsistent loading states
 
 ---
 
-### **2. 📚 Acervo (Biblioteca)** ✅ **COMPLETO**
-**Responsável**: `src/pages/CollectionPage.tsx`
+## **🏗️ ARCHITECTURAL STABILIZATION PLAN**
 
-#### **Funcionalidades Ativas:**
-- ✅ Grid masonry responsivo para Reviews
-- ✅ Sistema de filtros por tags avançado
-- ✅ Busca em tempo real (título + conteúdo)
-- ✅ Ordenação inteligente (Recentes, Populares, Alfabética)
-- ✅ Modal de tags para mobile
-- ✅ Performance otimizada com indexação
+### **PHASE 1: SHELL INDEPENDENCE RESTORATION**
+**Objective:** Decouple shell rendering from data dependencies
+**Timeline:** Week 1 (Critical Priority)
+**Governing Directives:** [M2.2], [D3.2], [DAL.1]
 
-#### **Componentes Core:**
-- `MasonryGrid` - Layout responsivo dos cards
-- `TagsPanel` - Filtros laterais (desktop)
-- `MobileTagsModal` - Filtros mobile
-- `SearchInput` - Busca em tempo real
-- `ClientSideSorter` - Ordenação local
+#### **Task 1.1: AppShell Decoupling**
+**Objective:** Remove `useAppData()` dependency from AppShell component
+**Files to Modify:**
+- `src/components/shell/AppShell.tsx`
+- `src/contexts/AppDataContext.tsx`
 
-#### **Edge Functions:**
-- `get-acervo-data` - Dados otimizados com cache
+**Technical Specification:**
+1. Extract `useAppData()` call from AppShell.tsx
+2. Replace data-dependent loading state with shell-only skeleton
+3. Ensure shell renders immediately regardless of data state
+4. Move loading logic to individual page components
+5. Implement shell-specific error boundary
 
----
+**Verification Criteria:**
+- [ ] AppShell renders without data dependencies
+- [ ] Sidebar persists across all route changes
+- [ ] Header displays consistently on desktop and mobile
+- [ ] Shell skeleton appears instantly on load
 
-### **3. 📖 Review Detail** ✅ **COMPLETO**
-**Responsável**: `src/pages/ReviewDetailPage.tsx`
+#### **Task 1.2: Independent Shell Components**
+**Objective:** Create self-contained shell components with isolated data fetching
+**Files to Modify:**
+- `src/components/shell/UserProfileBlock.tsx`
+- `src/components/shell/NotificationBell.tsx`
+- `packages/hooks/useUserProfileQuery.ts` (create)
+- `packages/hooks/useNotificationCountQuery.ts` (create)
 
-#### **Funcionalidades Ativas:**
-- ✅ Renderização de conteúdo estruturado v2.0
-- ✅ Layout responsivo (desktop/mobile)
-- ✅ Sistema de blocos modulares
-- ✅ Navegação por slugs amigáveis
-- ✅ Meta tags dinâmicas para SEO
+**Technical Specification:**
+1. Create `useUserProfileQuery()` hook for user data
+2. Create `useNotificationCountQuery()` hook for notification count
+3. Implement component-level loading states
+4. Add error handling within each component
+5. Ensure graceful degradation on data failures
 
-#### **Componentes Core:**
-- `LayoutAwareRenderer` - Engine de renderização
-- `BlockRenderer` - Processador de blocos
-- `TextBlock`, `ImageBlock`, `HeadingBlock` - Blocos específicos
+**Verification Criteria:**
+- [ ] UserProfileBlock loads independently
+- [ ] NotificationBell shows count without global dependency
+- [ ] Components handle their own loading/error states
+- [ ] Shell remains functional during component data failures
 
-#### **Edge Functions:**
-- `get-review-by-slug` - Busca otimizada por slug
+### **PHASE 2: DATA PROVIDER RESTRUCTURING**
+**Objective:** Eliminate global data providers and establish page-specific data patterns
+**Timeline:** Week 2 (High Priority)
+**Governing Directives:** [D3.3], [DAL.2], [DAL.3]
 
----
+#### **Task 2.1: Remove Global AppDataProvider**
+**Objective:** Extract AppDataProvider from global scope
+**Files to Modify:**
+- `src/components/providers/AppProviders.tsx`
+- `src/pages/Index.tsx`
+- `src/contexts/AppDataContext.tsx`
 
-### **4. 👥 Comunidade** ✅ **COMPLETO E OTIMIZADO**
-**Responsável**: `src/pages/CommunityPage.tsx`
+**Technical Specification:**
+1. Remove `<AppDataProvider>` from AppProviders.tsx
+2. Scope AppDataProvider to homepage usage only
+3. Wrap only Index.tsx with AppDataProvider
+4. Update import statements and dependencies
+5. Verify other pages function without global data
 
-#### **Funcionalidades Ativas:**
-- ✅ Feed infinito de discussões
-- ✅ Sistema de votação (upvote/downvote)
-- ✅ Posts salvos com sincronização
-- ✅ Categorização automática
-- ✅ Editor rico (Tiptap) para posts
-- ✅ Upload de imagens e vídeos
-- ✅ Sistema de enquetes integradas
-- ✅ Moderação avançada (pin/lock posts)
-- ✅ Sidebar informativa (desktop only)
-- ✅ **Sistema robusto de error handling**
-- ✅ **Estados de loading progressivos**
-- ✅ **Fallbacks para conexão offline**
-- ✅ **Auto-retry inteligente**
+**Verification Criteria:**
+- [ ] AppDataProvider only wraps homepage
+- [ ] Community, Acervo, Profile pages load independently
+- [ ] No global data queries on non-homepage routes
+- [ ] Route-specific data loading patterns established
 
-#### **Componentes Core:**
-- `CommunityFeedWithSidebar` - Layout principal dois-colunas
-- `PostCard` - Card individual de post
-- `PostDetailCard` - Visualização detalhada
-- `VoteButtons` - Sistema de votação
-- `CommunitySidebar` - Barra lateral (regras, links, trending)
-- `CommunityErrorBoundary` - **Boundary robusto com contexto**
-- `CommunityLoadingState` - **Estados de loading padronizados**
-- `NetworkAwareFallback` - **Fallback consciente de rede**
+#### **Task 2.2: Page-Specific Data Architecture**
+**Objective:** Implement isolated data fetching per page
+**Files to Create:**
+- `src/contexts/CommunityDataContext.tsx`
+- `src/contexts/AcervoDataContext.tsx`
+- `packages/hooks/useCommunityShellData.ts`
 
-#### **Páginas Específicas:**
-- `/comunidade` - Feed principal
-- `/comunidade/[postId]` - Detalhes do post
-- `/comunidade/criar` - Criação de posts
-- `/comunidade/salvos` - Posts salvos
+**Technical Specification:**
+1. Create page-specific data contexts
+2. Implement route-aware data loading
+3. Add progressive loading states
+4. Establish data invalidation patterns
+5. Optimize query key strategies
 
-#### **Edge Functions:**
-- `get-community-page-data` - **Feed otimizado com fallbacks**
-- `get-community-post-detail` - **Detalhes com CORS e auth fixados**
-- `create-community-post` - Criação transacional
-- `cast-community-vote` - Votação atômica
-- `save-post` - Sistema de salvamento
-- `get-saved-posts` - Listagem paginada
+**Verification Criteria:**
+- [ ] Each page manages its own data
+- [ ] No cross-page data dependencies
+- [ ] Optimized loading sequences
+- [ ] Clear data boundaries between pages
 
-#### **Melhorias Implementadas (v3.2.1):**
-- ✅ **Error Boundary categorizado** - Diferentes tratamentos por tipo de erro
-- ✅ **Loading states progressivos** - Skeleton states detalhados
-- ✅ **Network awareness** - Detecção de offline/online
-- ✅ **Auto-retry exponential backoff** - Retry inteligente com delays
-- ✅ **CORS fixado** - Suporte a POST e GET requests
-- ✅ **Rate limiting robusto** - 60 req/min com headers adequados
+### **PHASE 3: ERROR HANDLING STANDARDIZATION**
+**Objective:** Implement layered error boundaries with progressive recovery
+**Timeline:** Week 3 (Medium Priority)
+**Governing Directives:** [P1.2], [SEC.3]
 
----
+#### **Task 3.1: Three-Tier Error Boundary System**
+**Objective:** Protect navigation, content, and features with isolated error scopes
+**Files to Create:**
+- `src/components/error-boundaries/ShellErrorBoundary.tsx`
+- `src/components/error-boundaries/PageErrorBoundary.tsx`
+- `src/components/error-boundaries/ComponentErrorBoundary.tsx`
 
-### **5. 🔐 Autenticação** ✅ **COMPLETO**
-**Responsável**: Sistema distribuído
+**Technical Specification:**
+1. **Shell-Level:** Protect navigation and core shell functionality
+2. **Page-Level:** Isolate page content failures from shell
+3. **Component-Level:** Contain feature-specific errors
+4. Implement error reporting and recovery mechanisms
+5. Add context-aware error messages
 
-#### **Funcionalidades Ativas:**
-- ✅ Login/Signup com validação robusta
-- ✅ Integração Google OAuth
-- ✅ Gerenciamento de sessões
-- ✅ Proteção de rotas por role
-- ✅ Contexto de autenticação global
+**Verification Criteria:**
+- [ ] Navigation never disappears due to content errors
+- [ ] Page failures don't affect shell functionality
+- [ ] Component errors are isolated and recoverable
+- [ ] Clear error reporting and user feedback
 
-#### **Componentes Core:**
-- `AuthSessionProvider` - Provedor de contexto
-- `ProtectedRoute` - Proteção de rotas
-- `LoginForm`, `SignupForm` - Formulários
-- `SplitScreenAuthLayout` - Layout auth
+#### **Task 3.2: Smart Error Recovery**
+**Objective:** Implement progressive error recovery with retry mechanisms
+**Files to Modify:**
+- All error boundary components
+- Key data fetching hooks
 
----
+**Technical Specification:**
+1. Network-aware error handling
+2. Exponential backoff retry strategies
+3. Context-specific error messages
+4. Graceful degradation patterns
+5. User-initiated recovery actions
 
-### **6. 🏛️ App Shell** ✅ **COMPLETO**
-**Responsável**: `src/components/shell/AppShell.tsx`
+**Verification Criteria:**
+- [ ] Automatic retry on network failures
+- [ ] Clear user feedback during errors
+- [ ] Recovery actions work as expected
+- [ ] Graceful degradation maintains core functionality
 
-#### **Funcionalidades Ativas:**
-- ✅ Shell adaptivo desktop/mobile
-- ✅ Sidebar colapsível (desktop)
-- ✅ Bottom tabs (mobile)
-- ✅ Header responsivo com perfil
-- ✅ Sistema de notificações
+### **PHASE 4: PERFORMANCE OPTIMIZATION**
+**Objective:** Optimize loading sequences and eliminate unnecessary API calls
+**Timeline:** Week 4 (Low Priority)
+**Governing Directives:** [AD.4], [D3.4]
 
-#### **Componentes Core:**
-- `DesktopShell` - Layout desktop
-- `MobileShell` - Layout mobile
-- `CollapsibleSidebar` - Navegação lateral
-- `BottomTabBar` - Tabs inferiores
-- `NotificationBell` - Notificações
+#### **Task 4.1: Route-Specific Data Loading**
+**Objective:** Eliminate unnecessary API calls based on current route
+**Files to Modify:**
+- All page components
+- Data fetching hooks
+- Route configuration
 
----
+**Technical Specification:**
+1. Implement route-aware data loading
+2. Add data prefetching for common paths
+3. Optimize query invalidation strategies
+4. Cache management improvements
+5. Progressive data loading patterns
 
-## 🛠️ **ARQUITETURA TÉCNICA**
+**Verification Criteria:**
+- [ ] No unnecessary API calls on route changes
+- [ ] Improved page load performance
+- [ ] Smart caching reduces redundant requests
+- [ ] Progressive loading enhances UX
 
-### **Estrutura de Dados**
-- **Banco**: PostgreSQL (Supabase)
-- **Tabelas principais**: `Reviews`, `CommunityPosts`, `Practitioners`, `Tags`
-- **RLS**: Políticas de segurança por tabela
-- **Indexes**: Otimização para queries frequentes
+#### **Task 4.2: Loading Sequence Optimization**
+**Objective:** Ensure shell renders immediately with progressive content loading
+**Files to Modify:**
+- Shell components
+- Page components
+- Loading state components
 
-### **Estado da Aplicação**
-- **Server State**: TanStack Query v5 (cache, invalidation, retries)
-- **Client State**: useState/useReducer (local), Zustand (global UI)
-- **Persistence**: Supabase Real-time subscriptions
+**Technical Specification:**
+1. Shell renders within 100ms
+2. Progressive content loading
+3. Skeleton states for all components
+4. Smooth loading transitions
+5. Performance monitoring integration
 
-### **Padrões de Desenvolvimento**
-- **Hooks personalizados**: `/packages/hooks/` (data) + `/src/hooks/` (UI)
-- **Componentes**: Feature-first organization
-- **Tipos**: Centralizados em `src/types/index.ts`
-- **Styling**: Utility-first com Tailwind
+**Verification Criteria:**
+- [ ] Shell appears instantly on all routes
+- [ ] Progressive loading provides smooth UX
+- [ ] Loading states are consistent across app
+- [ ] Performance metrics meet targets
 
----
+### **PHASE 5: CLEANUP & VALIDATION**
+**Objective:** Remove deprecated code and validate architectural integrity
+**Timeline:** Week 5 (Maintenance)
 
-## 📊 **MÉTRICAS DE QUALIDADE**
+#### **Task 5.1: Code Cleanup**
+**Files to Remove/Modify:**
+- Deprecated global data patterns
+- Unused error handling code
+- Redundant loading states
+- Legacy shell dependencies
 
-### **Performance**
-- ✅ Code splitting automático (Vite)
-- ✅ Lazy loading de componentes
-- ✅ Cache inteligente (TanStack Query)
-- ✅ Otimização de imagens
-- ✅ PWA com service worker
-
-### **Experiência do Usuário**
-- ✅ Responsividade completa (mobile-first)
-- ✅ Estados de loading informativos
-- ✅ Error boundaries com recovery
-- ✅ Offline fallbacks
-- ✅ Feedback visual consistente
-
-### **Segurança**
-- ✅ Row Level Security (RLS) ativo
-- ✅ Rate limiting em todas APIs
-- ✅ Validação de entrada (Zod)
-- ✅ CORS configurado adequadamente
-- ✅ JWT com custom claims
-
----
-
-## 🚀 **DEPLOY & INFRAESTRUTURA**
-
-### **Ambientes**
-- **Desenvolvimento**: Local (Vite + Supabase local)
-- **Produção**: Lovable Cloud + Supabase Cloud
-
-### **Monitoramento**
-- ✅ Edge Function logs centralizados
-- ✅ Error tracking via console
-- ✅ Performance metrics (Core Web Vitals)
-- ✅ Rate limit monitoring
-
----
-
-## 📋 **PRÓXIMOS PASSOS**
-
-### **Backlog Técnico**
-1. Sistema de notificações push
-2. Analytics avançados
-3. Moderação automática (ML)
-4. Cache distribuído (Redis)
-5. Testes automatizados (E2E)
-
-### **Funcionalidades Planejadas**
-1. Comentários aninhados na comunidade
-2. Sistema de reputação detalhado
-3. Integração com referências externas
-4. Mode offline completo
-5. Internacionalização (i18n)
+#### **Task 5.2: Architectural Validation**
+**Verification Checklist:**
+- [ ] Shell independence verified across all routes
+- [ ] Data fetching follows [DAL.1-4] patterns
+- [ ] Error boundaries protect all levels
+- [ ] Performance targets achieved
+- [ ] Blueprint compliance confirmed
 
 ---
 
-## 🔄 **CHANGELOG RECENTE**
+## **🔄 IMPLEMENTATION FLOWCHART**
 
-### **v3.2.1 (20/06/2025)**
-- 🔧 **HOTFIX**: Correção crítica do sistema de post details
-- 🛡️ **Segurança**: CORS policy corrigida para Edge Functions
-- 🔄 **Resilência**: Auto-retry inteligente implementado
-- 📊 **Rate Limiting**: Headers apropriados adicionados
-- 🎯 **Error Handling**: Categorização e fallbacks aprimorados
-
-### **v3.2.0 (19/06/2025)**
-- 🚀 **Feature**: Sistema robusto de error boundaries
-- 🎨 **UX**: Loading states progressivos e informativos
-- 🌐 **Conectividade**: Network awareness e offline fallbacks
-- ⚡ **Performance**: Otimizações de cache e memória
-- 📱 **Mobile**: Melhorias na adaptação mobile-first
-
-### **v3.1.0 (18/06/2025)**
-- 🏗️ **Arquitetura**: Consolidação do módulo comunidade
-- 🔄 **Data Flow**: Hooks otimizados para performance
-- 🎯 **Edge Functions**: Streamlining e error handling
-- 📊 **Monitoramento**: Logs estruturados implementados
+```
+START
+  ↓
+[Phase 1: Shell Independence]
+  ├── Remove AppShell data dependencies
+  ├── Create independent shell components
+  └── Implement shell error boundaries
+  ↓
+[Phase 2: Data Restructuring]
+  ├── Remove global AppDataProvider
+  ├── Create page-specific data contexts
+  └── Implement isolated data fetching
+  ↓
+[Phase 3: Error Handling]
+  ├── Three-tier error boundary system
+  ├── Smart error recovery mechanisms
+  └── Progressive recovery patterns
+  ↓
+[Phase 4: Performance Optimization]
+  ├── Route-specific data loading
+  ├── Loading sequence optimization
+  └── Cache management improvements
+  ↓
+[Phase 5: Cleanup & Validation]
+  ├── Remove deprecated code
+  ├── Validate architectural integrity
+  └── Performance testing
+  ↓
+COMPLETE: Stable, Sustainable Architecture
+```
 
 ---
 
-**📧 Contato Técnico**: Para questões sobre implementação, consulte os blueprints em `/docs/blueprints/`  
-**🔗 Repositório**: Estrutura definida conforme `[DOC_2]_SYSTEM_ARCHITECTURE.md`  
-**📱 PWA**: Disponível para instalação em dispositivos compatíveis
+## **⚠️ RISK ASSESSMENT**
+
+### **High-Risk Items**
+1. **Data Migration Complexity:** Moving from global to page-specific data
+   - *Mitigation:* Gradual migration with backward compatibility
+2. **Error Boundary Implementation:** Complex error propagation patterns
+   - *Mitigation:* Extensive testing of error scenarios
+
+### **Medium-Risk Items**
+1. **Performance Regression:** Changes to data loading patterns
+   - *Mitigation:* Performance monitoring and optimization
+2. **Component Integration:** Shell components with new data patterns
+   - *Mitigation:* Comprehensive integration testing
+
+### **Low-Risk Items**
+1. **UI Consistency:** Minor visual changes during transition
+   - *Mitigation:* Visual regression testing
 
 ---
-*Documento atualizado automaticamente a cada deploy • Última sincronização: 20/06/2025 01:28 UTC*
+
+## **🎯 SUCCESS CRITERIA**
+
+### **Technical Metrics**
+- [ ] Shell renders within 100ms on all routes
+- [ ] Zero shell disappearance incidents
+- [ ] 90%+ reduction in shell-related errors
+- [ ] Consistent navigation behavior across all pages
+
+### **Architectural Metrics**
+- [ ] 100% compliance with [DAL.1-4] directives
+- [ ] Zero global data dependencies in shell
+- [ ] Three-tier error boundary coverage
+- [ ] Page-specific data isolation achieved
+
+### **Development Metrics**
+- [ ] Reduced AI context requirements for shell changes
+- [ ] Standardized patterns across all components
+- [ ] Improved code maintainability scores
+- [ ] Enhanced development velocity
+
+---
+
+## **📚 GOVERNING DOCUMENTATION**
+
+This plan is governed by and must comply with:
+- **[DOC_2]** System Architecture - Shell design patterns
+- **[DOC_6]** Data Fetching Strategy - Component data isolation
+- **[Blueprint 02]** Main App Shell - Shell independence requirements
+- **Development Protocols** - Standardization and sustainability requirements
+
+---
+
+## **🔄 NEXT STEPS**
+
+1. **Review and Approve:** Technical team review of stabilization plan
+2. **Phase 1 Implementation:** Begin shell independence restoration
+3. **Progressive Rollout:** Implement phases with continuous validation
+4. **Monitor and Adjust:** Track metrics and adjust implementation as needed
+5. **Documentation Update:** Maintain current documentation throughout process
+
+---
+
+**Last Updated:** June 20, 2025  
+**Status:** Ready for Implementation  
+**Priority:** Critical - Foundation for Sustainable Development
+
