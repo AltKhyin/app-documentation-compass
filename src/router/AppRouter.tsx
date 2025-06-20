@@ -19,7 +19,11 @@ const router = createBrowserRouter([
   {
     path: '/auth',
     element: <AuthPage />,
-    errorElement: <ErrorBoundary><div>Authentication Error</div></ErrorBoundary>
+    errorElement: (
+      <ErrorBoundary>
+        <div>Authentication Error</div>
+      </ErrorBoundary>
+    )
   },
   {
     path: '/',
@@ -28,7 +32,11 @@ const router = createBrowserRouter([
         <AppShell />
       </ProtectedAppRoute>
     ),
-    errorElement: <ErrorBoundary><div>Application Error</div></ErrorBoundary>,
+    errorElement: (
+      <ErrorBoundary>
+        <div>Application Error</div>
+      </ErrorBoundary>
+    ),
     children: [
       {
         index: true,

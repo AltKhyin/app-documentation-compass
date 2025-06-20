@@ -1,4 +1,3 @@
-
 // ABOUTME: Form component for creating new community posts with rich content support.
 
 import React, { useState } from 'react';
@@ -26,7 +25,7 @@ export const CreatePostForm = ({ onPostCreated }: CreatePostFormProps) => {
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('');
   const [postType, setPostType] = useState<'text' | 'image' | 'poll' | 'video'>('text');
-  const [imageUrl, setImageUrl] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState('');
   const [pollData, setPollData] = useState<{
     question: string;
@@ -72,7 +71,7 @@ export const CreatePostForm = ({ onPostCreated }: CreatePostFormProps) => {
     }
 
     // Validate post type specific requirements
-    if (postType === 'image' && !imageUrl) {
+    if (postType === 'image' && !imageFile) {
       toast.error('Adicione uma imagem para posts do tipo imagem');
       return;
     }
@@ -92,7 +91,6 @@ export const CreatePostForm = ({ onPostCreated }: CreatePostFormProps) => {
       content: content.trim(),
       category,
       post_type: postType,
-      ...(postType === 'image' && imageUrl && { image_url: imageUrl }),
       ...(postType === 'video' && videoUrl && { video_url: videoUrl }),
       ...(postType === 'poll' && pollData && { poll_data: pollData })
     };
@@ -183,7 +181,11 @@ export const CreatePostForm = ({ onPostCreated }: CreatePostFormProps) => {
                     maxLength={200}
                   />
                 </div>
-                <ImageUploadZone onImageUploaded={setImageUrl} />
+                <ImageUploadZone 
+                  onImageSelect={setImageFile}
+                  selectedImage={imageFile}
+                  onImageRemove={() => setImageFile(null)}
+                />
               </TabsContent>
 
               <TabsContent value="video" className="space-y-4">
@@ -196,11 +198,19 @@ export const CreatePostForm = ({ onPostCreated }: CreatePostFormProps) => {
                     maxLength={200}
                   />
                 </div>
-                <VideoUrlInput onVideoUrlChange={setVideoUrl} />
+                <VideoUrlInput 
+                  value={videoUrl}
+                  onChange={setVideoUrl} 
+                  onRemove={() => setVideoUrl('')}
+                />
               </TabsContent>
 
               <TabsContent value="poll" className="space-y-4">
-                <PollCreator onPollDataChange={setPollData} />
+                <PollCreator 
+                  value={pollData}
+                  onChange={setPollData} 
+                  onRemove={() => setPollData(null)}
+                />
               </TabsContent>
             </Tabs>
           </div>
