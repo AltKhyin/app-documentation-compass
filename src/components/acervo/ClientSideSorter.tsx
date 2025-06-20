@@ -2,7 +2,7 @@
 // ABOUTME: Client-side sorting component for Acervo page with improved tag priority algorithm.
 
 import React, { useMemo } from 'react';
-import type { Tag } from '../../types';
+import type { Tag } from '@/types';
 import type { AcervoReview } from '../../../packages/hooks/useAcervoDataQuery';
 
 interface ClientSideSorterProps {

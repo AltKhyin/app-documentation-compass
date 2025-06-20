@@ -1,9 +1,8 @@
-
 // ABOUTME: TanStack Query mutation hook for saving/unsaving community posts with cache invalidation.
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../src/integrations/supabase/client';
-import { SavePostMutationData, SavePostResponse } from '../../src/types';
+import { SavePostMutationData, SavePostResponse } from '@/types';
 
 /**
  * Mutation function that calls the save-post Edge Function

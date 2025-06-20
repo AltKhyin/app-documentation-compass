@@ -1,9 +1,8 @@
-
 // ABOUTME: TanStack Query hook for fetching user's saved posts with infinite scroll support.
 
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '../../src/integrations/supabase/client';
-import { CommunityPost } from '../../src/types';
+import { CommunityPost } from '@/types';
 
 interface SavedPostsResponse {
   posts: CommunityPost[];

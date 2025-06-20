@@ -1,11 +1,10 @@
-
 // ABOUTME: Community feed component that displays posts in a vertical list with infinite scroll functionality.
 
 import React from 'react';
 import { PostCard } from './PostCard';
 import { Button } from '../ui/button';
 import { Loader2 } from 'lucide-react';
-import type { CommunityPost } from '../../types/community';
+import type { CommunityPost } from '@/types/community';
 
 interface CommunityFeedProps {
   posts: CommunityPost[];
