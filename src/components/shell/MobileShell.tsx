@@ -2,8 +2,8 @@
 // ABOUTME: Mobile application shell with header and bottom navigation.
 
 import React from 'react';
-import { Header } from './Header';
-import { BottomTabBar } from './BottomTabBar';
+import Header from './Header';
+import BottomTabBar from './BottomTabBar';
 
 interface MobileShellProps {
   children: React.ReactNode;

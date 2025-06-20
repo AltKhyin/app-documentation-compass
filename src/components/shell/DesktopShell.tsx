@@ -2,7 +2,7 @@
 // ABOUTME: Desktop application shell with collapsible sidebar layout.
 
 import React, { useState } from 'react';
-import { CollapsibleSidebar } from './CollapsibleSidebar';
+import CollapsibleSidebar from './CollapsibleSidebar';
 
 interface DesktopShellProps {
   children: React.ReactNode;
