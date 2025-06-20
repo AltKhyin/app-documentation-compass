@@ -10,10 +10,13 @@ interface CommentThreadProps {
   onCommentPosted: () => void;
 }
 
+// Enhanced comment type with replies
+type EnhancedComment = CommunityPost & { replies: EnhancedComment[] };
+
 export const CommentThread = ({ comments, onCommentPosted }: CommentThreadProps) => {
   // Build a hierarchical tree from the flat list of comments
-  const commentMap = new Map<number, CommunityPost & { replies: CommunityPost[] }>();
-  const rootComments: (CommunityPost & { replies: CommunityPost[] })[] = [];
+  const commentMap = new Map<number, EnhancedComment>();
+  const rootComments: EnhancedComment[] = [];
 
   // First pass: Create enhanced comment objects with replies array
   comments.forEach(comment => {
@@ -36,7 +39,7 @@ export const CommentThread = ({ comments, onCommentPosted }: CommentThreadProps)
 
   // Recursive function to render comments and their replies
   const renderComments = (
-    commentsToRender: (CommunityPost & { replies: CommunityPost[] })[],
+    commentsToRender: EnhancedComment[],
     level: number
   ): React.ReactNode => {
     return commentsToRender.map(comment => (
