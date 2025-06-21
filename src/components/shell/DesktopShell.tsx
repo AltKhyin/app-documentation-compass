@@ -1,5 +1,5 @@
 
-// ABOUTME: Desktop shell layout component with proper sidebar-content relationship and responsive layout.
+// ABOUTME: Desktop shell layout component with proper sidebar-content relationship and fixed header architecture.
 
 import React, { useState } from 'react';
 import CollapsibleSidebar from './CollapsibleSidebar';
@@ -19,7 +19,7 @@ const DesktopShell = ({ children }: DesktopShellProps) => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-background relative">
+    <div className="min-h-screen w-full bg-background flex">
       {/* Fixed sidebar - independent positioning */}
       <CollapsibleSidebar
         isCollapsed={isCollapsed}
@@ -29,19 +29,19 @@ const DesktopShell = ({ children }: DesktopShellProps) => {
       {/* Main content wrapper - positioned to avoid sidebar overlap */}
       <div
         className={cn(
-          'absolute top-0 right-0 bottom-0 transition-all duration-300 ease-in-out',
-          isCollapsed ? 'left-20' : 'left-60' // Match sidebar widths exactly
+          'flex-1 flex flex-col transition-all duration-300 ease-in-out',
+          isCollapsed ? 'ml-20' : 'ml-60' // Match sidebar widths exactly
         )}
       >
-        <div className="flex h-full flex-col">
-          {/* Header - now properly aligned with sidebar header */}
-          <Header />
+        {/* Fixed Header - now properly separated from scrollable content */}
+        <Header />
 
-          {/* Page content with proper spacing - CRITICAL: Render children here */}
-          <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        {/* Scrollable content area - CRITICAL: This is where page content scrolls */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-4 md:p-6">
             {children}
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
     </div>
   );
