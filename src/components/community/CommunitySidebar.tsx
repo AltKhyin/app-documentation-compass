@@ -1,5 +1,5 @@
 
-// ABOUTME: Main community sidebar component that orchestrates all sidebar modules per Blueprint 06 - improved type safety.
+// ABOUTME: Simplified community sidebar without sticky positioning - part of single scroll container.
 
 import React from 'react';
 import { RulesModule } from './sidebar/RulesModule';
@@ -25,7 +25,7 @@ export const CommunitySidebar = ({
   recentActivity
 }: CommunitySidebarProps) => {
   return (
-    <div className="space-y-4 sticky top-6">
+    <div className="space-y-4">
       {/* Featured Poll Module - Priority display if available */}
       {featuredPoll && (
         <FeaturedPollModule poll={featuredPoll} />
