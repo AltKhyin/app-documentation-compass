@@ -5,8 +5,7 @@ import {
   Home, 
   BookOpen, 
   Users, 
-  User, 
-  Bookmark,
+  User,
   Settings,
   Shield,
   BarChart3,
@@ -49,14 +48,6 @@ export const navigationItems: NavigationItem[] = [
     icon: Users,
     showOnMobile: true,
     showOnDesktop: true,
-  },
-  {
-    path: '/salvos',
-    label: 'Salvos',
-    mobileLabel: 'Salvos',
-    icon: Bookmark,
-    showOnMobile: false, // FIXED: Should NOT show on mobile
-    showOnDesktop: true, // FIXED: Should show on desktop
   },
   {
     path: '/perfil',
