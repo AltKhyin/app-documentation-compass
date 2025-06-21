@@ -1,5 +1,5 @@
 
-// ABOUTME: Individual community post page with Reddit-style two-column layout - single scroll architecture with fixed routing.
+// ABOUTME: Individual community post page following standard shell integration pattern - matches other detail pages.
 
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -18,7 +18,7 @@ const CommunityPostPage = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  // Enhanced ID parsing with comprehensive validation - FIXED
+  // Enhanced ID parsing with comprehensive validation
   const postId = React.useMemo(() => {
     console.log('CommunityPostPage: Raw params object:', params);
     console.log('CommunityPostPage: Available param keys:', Object.keys(params));
@@ -70,7 +70,7 @@ const CommunityPostPage = () => {
   // Early return for invalid ID with improved UX
   if (postId === 0) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6">
         <div className="text-center py-12">
           <h2 className="text-xl font-semibold mb-4">URL inválida</h2>
           <p className="text-muted-foreground mb-6">
@@ -87,7 +87,7 @@ const CommunityPostPage = () => {
 
   if (postLoading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6">
         <CommunityLoadingState description="Carregando discussão..." />
       </div>
     );
@@ -96,7 +96,7 @@ const CommunityPostPage = () => {
   if (postError || !postData) {
     console.error('Post error or no data:', postError, postData);
     return (
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6">
         <div className="text-center py-12">
           <h2 className="text-xl font-semibold mb-4">Post não encontrado</h2>
           <p className="text-muted-foreground mb-6">
@@ -114,8 +114,9 @@ const CommunityPostPage = () => {
   const { post, comments } = postData;
   const sidebarData = communityData?.sidebarData;
 
+  // Standard shell integration matching other detail pages
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="container mx-auto px-4 py-6">
       {/* Back to feed button */}
       <div className="mb-4">
         <Button 
@@ -129,7 +130,7 @@ const CommunityPostPage = () => {
         </Button>
       </div>
 
-      {/* Single scroll container - unified layout */}
+      {/* Standard two-column layout */}
       <div className={`flex gap-8 ${isMobile ? 'flex-col' : 'flex-row'}`}>
         {/* Main Content Column */}
         <div className={`${isMobile ? 'w-full' : 'flex-1'} min-w-0`}>
@@ -138,7 +139,7 @@ const CommunityPostPage = () => {
           </CommunityErrorBoundary>
         </div>
 
-        {/* Sidebar Column - Desktop Only, unified scroll */}
+        {/* Sidebar Column - Desktop Only */}
         {!isMobile && sidebarData && (
           <div className="w-80 flex-shrink-0">
             <CommunityErrorBoundary context="sidebar da comunidade">
