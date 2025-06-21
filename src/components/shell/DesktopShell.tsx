@@ -1,5 +1,5 @@
 
-// ABOUTME: Desktop shell layout component with simplified structure - no header, just sidebar and content.
+// ABOUTME: Desktop shell layout component with proper content constraints and overflow handling.
 
 import React, { useState } from 'react';
 import CollapsibleSidebar from './CollapsibleSidebar';
@@ -25,16 +25,16 @@ const DesktopShell = ({ children }: DesktopShellProps) => {
         onToggle={toggleSidebar}
       />
 
-      {/* Main content wrapper - positioned to avoid sidebar overlap */}
+      {/* Main content wrapper - positioned to avoid sidebar overlap with proper constraints */}
       <div
         className={cn(
-          'flex-1 transition-all duration-300 ease-in-out',
+          'flex-1 transition-all duration-300 ease-in-out min-w-0', // FIXED: Added min-w-0 to prevent flex item overflow
           isCollapsed ? 'ml-20' : 'ml-60' // Match sidebar widths exactly
         )}
       >
-        {/* Scrollable content area - simplified without header */}
-        <main className="min-h-screen overflow-y-auto">
-          <div className="p-4 md:p-6">
+        {/* Scrollable content area with overflow constraints */}
+        <main className="min-h-screen overflow-y-auto overflow-x-hidden"> {/* FIXED: Added overflow-x-hidden */}
+          <div className="p-4 md:p-6 max-w-full"> {/* FIXED: Added max-w-full constraint */}
             {children}
           </div>
         </main>
