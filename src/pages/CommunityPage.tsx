@@ -1,5 +1,5 @@
 
-// ABOUTME: Main community page with single scroll container architecture - no nested scrolling.
+// ABOUTME: Main community page with single scroll container architecture - no shell-level scrolling conflicts.
 
 import React from 'react';
 import { CommunityFeedWithSidebar } from '../components/community/CommunityFeedWithSidebar';
@@ -29,40 +29,42 @@ export default function CommunityPage() {
   // Enhanced error handling with network awareness
   if (error && !data) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <CommunityErrorBoundary context="página da comunidade" showDetails={true}>
-          <div className="flex flex-col items-center justify-center py-12 px-4 text-center max-w-md mx-auto">
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                {!isOnline ? 
-                  'Sem conexão com a internet. Verifique sua conexão e tente novamente.' :
-                  `Erro ao carregar a comunidade: ${error.message}`
-                }
-              </AlertDescription>
-            </Alert>
-            
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => refetch()}
-                disabled={!isOnline}
-                className="flex items-center gap-2"
-              >
-                {!isOnline ? <WifiOff className="w-4 h-4" /> : <RefreshCw className="w-4 h-4" />}
-                {!isOnline ? 'Sem Conexão' : 'Tentar Novamente'}
-              </Button>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-6">
+          <CommunityErrorBoundary context="página da comunidade" showDetails={true}>
+            <div className="flex flex-col items-center justify-center py-12 px-4 text-center max-w-md mx-auto">
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {!isOnline ? 
+                    'Sem conexão com a internet. Verifique sua conexão e tente novamente.' :
+                    `Erro ao carregar a comunidade: ${error.message}`
+                  }
+                </AlertDescription>
+              </Alert>
               
-              <Button 
-                variant="ghost"
-                onClick={() => window.location.href = '/'}
-                className="flex items-center gap-2"
-              >
-                Voltar ao Início
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => refetch()}
+                  disabled={!isOnline}
+                  className="flex items-center gap-2"
+                >
+                  {!isOnline ? <WifiOff className="w-4 h-4" /> : <RefreshCw className="w-4 h-4" />}
+                  {!isOnline ? 'Sem Conexão' : 'Tentar Novamente'}
+                </Button>
+                
+                <Button 
+                  variant="ghost"
+                  onClick={() => window.location.href = '/'}
+                  className="flex items-center gap-2"
+                >
+                  Voltar ao Início
+                </Button>
+              </div>
             </div>
-          </div>
-        </CommunityErrorBoundary>
+          </CommunityErrorBoundary>
+        </div>
       </div>
     );
   }
@@ -70,12 +72,14 @@ export default function CommunityPage() {
   // Enhanced loading state with progressive indicators
   if (isLoading && !data) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <CommunityLoadingState 
-          variant="page" 
-          description="Carregando comunidade..."
-          showAnimation={true}
-        />
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-6">
+          <CommunityLoadingState 
+            variant="page" 
+            description="Carregando comunidade..."
+            showAnimation={true}
+          />
+        </div>
       </div>
     );
   }
@@ -83,28 +87,32 @@ export default function CommunityPage() {
   // Show network fallback if offline with no data
   if (!isOnline && !data) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <NetworkAwareFallback
-          isOnline={isOnline}
-          onRetry={() => window.location.reload()}
-          context="comunidade"
-        />
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-6">
+          <NetworkAwareFallback
+            isOnline={isOnline}
+            onRetry={() => window.location.reload()}
+            context="comunidade"
+          />
+        </div>
       </div>
     );
   }
 
   return (
-    <CommunityErrorBoundary context="página principal da comunidade">
-      <CommunityFeedWithSidebar
-        posts={data?.posts || []}
-        sidebarData={data?.sidebarData}
-        onLoadMore={fetchNextPage}
-        hasMore={hasNextPage}
-        isLoadingMore={isFetchingNextPage}
-        lastSync={lastSync}
-        isLoading={isLoading}
-        error={error}
-      />
-    </CommunityErrorBoundary>
+    <div className="min-h-screen bg-background">
+      <CommunityErrorBoundary context="página principal da comunidade">
+        <CommunityFeedWithSidebar
+          posts={data?.posts || []}
+          sidebarData={data?.sidebarData}
+          onLoadMore={fetchNextPage}
+          hasMore={hasNextPage}
+          isLoadingMore={isFetchingNextPage}
+          lastSync={lastSync}
+          isLoading={isLoading}
+          error={error}
+        />
+      </CommunityErrorBoundary>
+    </div>
   );
 }

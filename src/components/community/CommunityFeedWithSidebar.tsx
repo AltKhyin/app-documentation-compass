@@ -1,5 +1,5 @@
 
-// ABOUTME: Simplified two-column layout with single scroll container - no nested scrolling or sticky positioning.
+// ABOUTME: Unified two-column layout with single scroll container - eliminates shell-level scrolling conflicts.
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -133,7 +133,7 @@ export const CommunityFeedWithSidebar = ({
           </CommunityErrorBoundary>
         </div>
 
-        {/* Sidebar Column - Desktop Only, no sticky positioning */}
+        {/* Sidebar Column - Desktop Only, unified scroll */}
         {!isMobile && sidebarData && (
           <div className="w-80 flex-shrink-0">
             <CommunityErrorBoundary context="sidebar da comunidade">
