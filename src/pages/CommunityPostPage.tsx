@@ -7,14 +7,14 @@ import { PostDetail } from '../components/community/PostDetail';
 import { CommunitySidebar } from '../components/community/CommunitySidebar';
 import { CommunityErrorBoundary } from '../components/community/CommunityErrorBoundary';
 import { CommunityLoadingState } from '../components/community/CommunityLoadingState';
-import { usePostWithCommentsQuery, usePostDetailQuery } from '../../packages/hooks/usePostDetailQuery';
+import { usePostWithCommentsQuery } from '../../packages/hooks/usePostWithCommentsQuery';
 import { useCommunityPageQuery } from '../../packages/hooks/useCommunityPageQuery';
 import { useIsMobile } from '../hooks/use-mobile';
 import { Button } from '../components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export const CommunityPostPage = () => {
+const CommunityPostPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -149,3 +149,5 @@ export const CommunityPostPage = () => {
     </div>
   );
 };
+
+export default CommunityPostPage;
