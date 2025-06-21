@@ -1,5 +1,5 @@
 
-// ABOUTME: Reddit-style community feed with separator-based layout and optimized infinite scroll.
+// ABOUTME: Reddit-style community feed with true flat design and optimized infinite scroll.
 
 import React from 'react';
 import { PostCard } from './PostCard';
@@ -26,18 +26,21 @@ export const CommunityFeed = ({
       {posts.map((post, index) => (
         <React.Fragment key={post.id}>
           <PostCard post={post} />
-          {/* Add separator between posts, but not after the last post */}
-          {index < posts.length - 1 && <Separator className="my-0" />}
+          {/* Subtle separator between posts - only if not last */}
+          {index < posts.length - 1 && (
+            <Separator className="border-border/20" />
+          )}
         </React.Fragment>
       ))}
 
       {/* Load more button */}
       {hasMore && (
-        <div className="flex justify-center pt-6 pb-4">
+        <div className="flex justify-center py-8">
           <Button
             variant="outline"
             onClick={onLoadMore}
             disabled={isLoadingMore}
+            className="reddit-action-button px-6 py-2 h-auto"
           >
             {isLoadingMore ? (
               <Loader2 className="w-4 h-4 animate-spin mr-2" />
