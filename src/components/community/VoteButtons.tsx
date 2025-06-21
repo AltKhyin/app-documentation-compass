@@ -1,5 +1,5 @@
 
-// ABOUTME: Voting buttons component with optimistic updates and visual feedback.
+// ABOUTME: Reddit-style horizontal voting buttons with optimistic updates and EVIDENS color mapping.
 
 import React from 'react';
 import { Button } from '../ui/button';
@@ -42,13 +42,13 @@ export const VoteButtons = ({ postId, upvotes, downvotes, userVote }: VoteButton
   };
 
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className="reddit-vote-buttons">
       <Button
         variant="ghost"
         size="sm"
         className={cn(
-          "p-1 h-8 w-8 hover:bg-green-50",
-          userVote === 'up' && "bg-green-50 text-green-600"
+          "reddit-vote-button",
+          userVote === 'up' && "text-green-600 bg-green-50 hover:bg-green-100"
         )}
         onClick={() => handleVote('up')}
         disabled={castVoteMutation.isPending}
@@ -57,7 +57,7 @@ export const VoteButtons = ({ postId, upvotes, downvotes, userVote }: VoteButton
       </Button>
 
       <span className={cn(
-        "text-sm font-medium px-2 py-1 rounded min-w-[2rem] text-center",
+        "reddit-vote-score",
         netScore > 0 && "text-green-600",
         netScore < 0 && "text-red-600",
         netScore === 0 && "text-muted-foreground"
@@ -72,8 +72,8 @@ export const VoteButtons = ({ postId, upvotes, downvotes, userVote }: VoteButton
         variant="ghost"
         size="sm"
         className={cn(
-          "p-1 h-8 w-8 hover:bg-red-50",
-          userVote === 'down' && "bg-red-50 text-red-600"
+          "reddit-vote-button",
+          userVote === 'down' && "text-red-600 bg-red-50 hover:bg-red-100"
         )}
         onClick={() => handleVote('down')}
         disabled={castVoteMutation.isPending}

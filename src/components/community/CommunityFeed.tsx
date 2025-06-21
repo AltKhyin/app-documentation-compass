@@ -1,8 +1,10 @@
-// ABOUTME: Community feed component that displays posts in a vertical list with infinite scroll functionality.
+
+// ABOUTME: Reddit-style community feed with separator-based layout and optimized infinite scroll.
 
 import React from 'react';
 import { PostCard } from './PostCard';
 import { Button } from '../ui/button';
+import { Separator } from '../ui/separator';
 import { Loader2 } from 'lucide-react';
 import type { CommunityPost } from '@/types/community';
 
@@ -20,14 +22,18 @@ export const CommunityFeed = ({
   isLoadingMore
 }: CommunityFeedProps) => {
   return (
-    <div className="space-y-4">
-      {posts.map((post) => (
-        <PostCard key={post.id} post={post} />
+    <div className="reddit-feed-container">
+      {posts.map((post, index) => (
+        <React.Fragment key={post.id}>
+          <PostCard post={post} />
+          {/* Add separator between posts, but not after the last post */}
+          {index < posts.length - 1 && <Separator className="my-0" />}
+        </React.Fragment>
       ))}
 
       {/* Load more button */}
       {hasMore && (
-        <div className="flex justify-center pt-6">
+        <div className="flex justify-center pt-6 pb-4">
           <Button
             variant="outline"
             onClick={onLoadMore}
