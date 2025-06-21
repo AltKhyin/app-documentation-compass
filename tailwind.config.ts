@@ -1,12 +1,13 @@
-import type { Config } from "tailwindcss"
 
-const config = {
+import type { Config } from "tailwindcss";
+
+const config: Config = {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
   ],
   prefix: "",
   theme: {
@@ -20,26 +21,25 @@ const config = {
     extend: {
       colors: {
         border: "hsl(var(--border))",
-        'border-hover': "hsl(var(--border-hover))",
-        'border-strong': "hsl(var(--border-strong))",
+        "border-hover": "hsl(var(--border-hover))",
+        "border-strong": "hsl(var(--border-strong))",
+        input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--text-secondary))",
-        },
-        tertiary: "hsl(var(--text-tertiary))",
         surface: {
           DEFAULT: "hsl(var(--surface))",
           muted: "hsl(var(--surface-muted))",
           hover: "hsl(var(--surface-hover))",
         },
-        'comment-thread': "hsl(var(--comment-thread))",
-        'action-hover': "hsl(var(--action-hover))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
@@ -60,22 +60,15 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-      },
-      spacing: {
-        'reddit-xs': 'var(--spacing-reddit-xs)',
-        'reddit-sm': 'var(--spacing-reddit-sm)', 
-        'reddit-md': 'var(--spacing-reddit-md)',
-        'reddit-lg': 'var(--spacing-reddit-lg)',
-        'reddit-xl': 'var(--spacing-reddit-xl)',
+        // Add the missing color tokens for Reddit-style UI
+        tertiary: "hsl(var(--text-tertiary))",
+        "comment-thread": "hsl(var(--comment-thread))",
+        "action-hover": "hsl(var(--action-hover))",
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-      },
-      fontFamily: {
-        sans: ["var(--font-sans)"],
-        serif: ["var(--font-serif)"],
       },
       keyframes: {
         "accordion-down": {
@@ -93,7 +86,10 @@ const config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
-} satisfies Config
+  plugins: [
+    require("tailwindcss-animate"),
+    require('@tailwindcss/typography')
+  ],
+};
 
-export default config
+export default config;
