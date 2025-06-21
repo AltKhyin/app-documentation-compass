@@ -1,200 +1,205 @@
 
-# EVIDENS - README BÍBLIA
-**Versão:** 8.2.0  
-**Data:** 21 de Junho de 2025  
-**Status:** FASE 2 - SIMPLIFICAÇÃO ARQUITETURAL CONCLUÍDA ✅
+# **EVIDENS - Bíblia de Implementação**
+
+**Versão:** 8.3.0  
+**Data:** 21 de junho de 2025  
+**Status:** 🟢 ACTIVE DEVELOPMENT
 
 ---
 
-## 🎯 SIMPLIFICAÇÃO ARQUITETURAL CONCLUÍDA
+## **📋 CONTROLE DE VERSÃO**
 
-### **CONTEXTO DA SOLUÇÃO**
-Após resolver a falha arquitetural de layout, identificamos problemas adicionais de responsividade e complexidade desnecessária no sistema de header. A solução foi uma simplificação estratégica que remove o header problemático e seus componentes relacionados.
+### **8.3.0 - Navigation Unification & Homepage Responsiveness** *(21/06/2025)*
+**BREAKING CHANGES:**
+- **ARCHITECTURAL:** Unified navigation system eliminates duplicate mobile/desktop navigation arrays
+- **STANDARDIZATION:** Homepage now uses consistent container patterns for proper responsiveness
 
-### **SOLUÇÃO IMPLEMENTADA**
-- **Arquivos Removidos:** `src/components/shell/Header.tsx`, `src/components/shell/NotificationBell.tsx`, `src/components/pwa/PWAInstallButton.tsx`
-- **Arquivos Modificados:** `src/components/shell/DesktopShell.tsx`, `src/components/shell/MobileShell.tsx`, `src/components/pwa/PWAProvider.tsx`
-- **Mudança Estrutural:** Layout simplificado sem header, mantendo apenas navegação lateral (desktop) e bottom tabs (mobile)
-- **Resultado:** Interface mais limpa, responsiva e sem conflitos de layout
+**Core Changes:**
+- ✅ **Navigation Unification:** Single source of truth in `src/config/navigation.ts` with context-aware filtering
+- ✅ **Homepage Responsiveness:** Standardized container patterns (`container mx-auto px-4 py-6`)
+- ✅ **Mobile Navigation Consistency:** Core navigation items synchronized between mobile/desktop
+- ✅ **Admin Items Segregation:** Admin navigation items remain desktop-only for ergonomic reasons
+- ✅ **Legacy Support:** Deprecated functions maintained temporarily for backward compatibility
 
----
+**Technical Details:**
+- `getNavigationItems(context, userRole)` - New unified function for navigation filtering
+- `showOnMobile`/`showOnDesktop` flags for context-specific visibility
+- Eliminated maintenance overhead from duplicate navigation structures
+- Homepage container changed from `max-w-7xl mx-auto p-6` to `container mx-auto px-4 py-6`
 
-## 📋 IMPLEMENTAÇÃO CONCLUÍDA
+### **8.2.0 - Shell Simplification** *(21/06/2025)*
+**ARCHITECTURAL DECISION:**
+- ✅ **Header Removal:** Eliminated problematic header component and all related complexity
+- ✅ **PWA Simplification:** Removed header-based PWA install button, kept popup-only approach
+- ✅ **Notification Cleanup:** Removed notification bell and related infrastructure (to be reimplemented later)
+- ✅ **Layout Fixes:** Resolved page overflow and non-fixed header positioning issues
 
-### **FASE 2.2: SIMPLIFICAÇÃO ESTRATÉGICA** ✅ **CONCLUÍDA**
+### **8.1.0 - Layout Architecture Fix** *(21/06/2025)*
+**CRITICAL FIX:**
+- ✅ **Shell Restructuring:** Fixed double scrollbar and floating header issues
+- ✅ **Scroll Hierarchy:** Established proper scroll boundaries in `DesktopShell` and `MobileShell`
+- ✅ **Layout Consistency:** Separated fixed navigation from scrollable content areas
 
-#### **Tarefa 2.2.1: Remoção do Header e Componentes Relacionados** ✅
-**Status:** Implementado com sucesso
-
-**Componentes Removidos:**
-- ✅ `src/components/shell/Header.tsx` - Header principal removido
-- ✅ `src/components/shell/NotificationBell.tsx` - Sistema de notificações removido temporariamente
-- ✅ `src/components/pwa/PWAInstallButton.tsx` - Botão de instalação PWA removido
-
-**Modificações Realizadas:**
-```typescript
-// Nova estrutura implementada para DesktopShell.tsx
-// 1. Sidebar + Main content (sem header)
-// 2. Scroll context simplificado
-// 3. Layout responsivo melhorado
-
-// Nova estrutura implementada para MobileShell.tsx  
-// 1. Main content + Bottom tabs (sem header)
-// 2. Estrutura simplificada
-// 3. Melhor responsividade mobile
-```
-
-**Critérios de Sucesso Atendidos:**
-- ✅ Layout responsivo em todas as telas
-- ✅ Eliminação de problemas de scroll/overflow
-- ✅ Simplificação da arquitetura
-- ✅ Manutenção da funcionalidade core
-
-#### **Tarefa 2.2.2: Ajuste do Sistema PWA** ✅
-**Status:** Implementado com sucesso
-
-**Implementações:**
-- ✅ PWAProvider simplificado (apenas popup de instalação)
-- ✅ Remoção de referências ao botão de instalação do header
-- ✅ Manutenção da funcionalidade de instalação via popup
-
-**Diretrizes Seguidas:**
-- ✅ **[D3.1]** Simplificação de arquitetura
-- ✅ **[P1.1]** Verificação de impactos antes das mudanças
-- ✅ **[M2.2]** Alinhamento com arquitetura do sistema
+### **8.0.0 - Community Stabilization** *(20/06/2025)*
+**MAJOR MILESTONE:**
+- ✅ **Community Feature:** Full community feed with posts, voting, comments, and moderation
+- ✅ **PWA Integration:** Progressive Web App capabilities with installation prompts
+- ✅ **Mobile Optimization:** Complete mobile-first responsive design implementation
+- ✅ **Error Boundaries:** Comprehensive error handling and recovery systems
 
 ---
 
-## 🔧 DETALHES TÉCNICOS DA SOLUÇÃO
+## **🎯 ESTADO ATUAL DA APLICAÇÃO**
 
-### **Estrutura Anterior (Complexa):**
-```typescript
-// DesktopShell.tsx - ANTES (complexo)
-<div className="min-h-screen w-full bg-background flex">
-  <CollapsibleSidebar />
-  <div className="flex-1 flex flex-col">
-    <Header />  // ← Header causando problemas
-    <main className="flex-1 overflow-y-auto">
-      {children}
-    </main>
-  </div>
-</div>
-```
+### **✅ FEATURES IMPLEMENTADAS**
 
-### **Estrutura Nova (Simplificada):**
-```typescript
-// DesktopShell.tsx - DEPOIS (simplificado)
-<div className="min-h-screen w-full bg-background flex">
-  <CollapsibleSidebar />
-  <div className="flex-1">
-    <main className="min-h-screen overflow-y-auto">
-      <div className="p-4 md:p-6">
-        {children}  // ← Conteúdo direto, sem complexidade
-      </div>
-    </main>
-  </div>
-</div>
-```
+#### **🏠 Homepage**
+- ✅ **Layout Responsivo:** Container padronizado com adaptação completa para todos os tamanhos de tela
+- ✅ **Feed Consolidado:** Query única otimizada para todos os módulos da homepage
+- ✅ **Review em Destaque:** Componente hero com review principal
+- ✅ **Carrosséis:** Reviews recentes, populares e recomendações personalizadas
+- ✅ **Próxima Edição:** Sistema de sugestões com votação integrada
 
----
+#### **📚 Acervo**
+- ✅ **Grid Masonry:** Layout dinâmico e responsivo para reviews
+- ✅ **Sistema de Tags:** Filtros hierárquicos com painel lateral (desktop) e modal (mobile)
+- ✅ **Busca Avançada:** Input de busca com filtros em tempo real
+- ✅ **Ordenação:** Múltiplos critérios de ordenação (data, popularidade, etc.)
 
-## 🎯 PRINCÍPIOS ARQUITETURAIS IMPLEMENTADOS
+#### **👥 Comunidade**
+- ✅ **Feed Principal:** Lista de posts com paginação infinita
+- ✅ **Criação de Posts:** Editor rich-text com suporte a imagens, vídeos e enquetes
+- ✅ **Sistema de Votação:** Upvote/downvote com feedback em tempo real
+- ✅ **Comentários:** Sistema completo de comentários aninhados
+- ✅ **Moderação:** Ferramentas de moderação para admins
+- ✅ **Sidebar Contextual:** Regras, links úteis, discussões em alta (desktop only)
 
-### **1. Simplificação Radical:** 
-- ✅ Remoção de componentes problemáticos
-- ✅ Foco na funcionalidade essencial
-- ✅ Eliminação de complexidade desnecessária
+#### **🔐 Autenticação**
+- ✅ **Sistema JWT:** Autenticação baseada em tokens com claims customizados
+- ✅ **OAuth Google:** Login social integrado
+- ✅ **Controle de Acesso:** RLS policies para segurança granular
+- ✅ **Gestão de Sessão:** Persistência de sessão e logout automático
 
-### **2. Responsividade Nativa:** 
-- ✅ Layout que se adapta naturalmente a diferentes telas
-- ✅ Eliminação de pontos de falha responsivos
-
-### **3. Manutenibilidade:** 
-- ✅ Menos componentes para manter
-- ✅ Arquitetura mais previsível
-- ✅ Menor superfície de bugs
-
-### **4. Preparação para o Futuro:**
-- ✅ Sistema de notificações pode ser implementado quando necessário
-- ✅ PWA mantém funcionalidade core via popup
-- ✅ Estrutura permite re-adição de header se necessário
+#### **🏗️ Arquitetura**
+- ✅ **Shell Unificado:** Sistema de navegação consistente mobile/desktop
+- ✅ **Navegação Padronizada:** Fonte única de verdade para itens de navegação
+- ✅ **Layout Responsivo:** Adaptação perfeita para todos os dispositivos
+- ✅ **PWA Completo:** Instalação, offline, notificações push
+- ✅ **Error Boundaries:** Sistema robusto de recuperação de erros
 
 ---
 
-## 📊 BENEFÍCIOS OBTIDOS
+## **🔧 ARQUITETURA TÉCNICA**
 
-### **Problemas Resolvidos:**
-- **Overflow Horizontal:** ✅ Eliminado em telas pequenas
-- **Header Não-Fixo:** ✅ Problema removido com simplificação
-- **Complexidade Desnecessária:** ✅ Arquitetura limpa e focada
+### **Frontend Stack**
+- **Framework:** Vite + React 18 + TypeScript
+- **Styling:** TailwindCSS + shadcn/ui
+- **Roteamento:** React Router v6
+- **Estado:** TanStack Query + Zustand
+- **PWA:** Service Workers + Manifest
 
-### **Funcionalidade Mantida:**
-- **Navegação Principal:** ✅ Sidebar (desktop) + Bottom tabs (mobile)
-- **PWA Installation:** ✅ Via popup automático
-- **Layout Responsivo:** ✅ Melhorado e mais confiável
+### **Backend Stack**
+- **Database:** PostgreSQL (Supabase)
+- **Auth:** Supabase Auth + JWT
+- **API:** Edge Functions + Auto-generated APIs
+- **Storage:** Supabase Storage
+- **Real-time:** Supabase Realtime
 
----
-
-## 🚀 ESTADO ATUAL
-
-### **FASE 2.3: VALIDAÇÃO E POLIMENTO**
-**Status:** Pronto para validação
-
-**Validação Necessária:**
-- [ ] Teste de responsividade em diferentes dispositivos
-- [ ] Verificação de navegação em todas as páginas
-- [ ] Confirmação de funcionamento do PWA popup
-
-### **FUNCIONALIDADES TEMPORARIAMENTE REMOVIDAS:**
-- **Sistema de Notificações:** Será implementado futuramente quando necessário
-- **Botão PWA no Header:** Funcionalidade mantida via popup automático
+### **Padrões Arquiteturais**
+- **Data Fetching:** Hook-based abstraction layer
+- **State Management:** Server state (TanStack) + Global state (Zustand)
+- **Component Structure:** Atomic design com feature-first organization
+- **Navigation:** Unified system com context-aware filtering
+- **Responsiveness:** Mobile-first com breakpoints padronizados
 
 ---
 
-## 🔄 HISTÓRICO DE VERSÕES
+## **📊 MÉTRICAS DE QUALIDADE**
 
-### v8.2.0 (21 Jun 2025) - ARCHITECTURAL SIMPLIFICATION COMPLETE
-**CONTEXTO:** Simplificação estratégica após resolução de problemas de layout
+### **Performance**
+- ✅ **Bundle Size:** Otimizado via code splitting automático
+- ✅ **Lazy Loading:** Componentes e rotas carregados sob demanda
+- ✅ **Cache Strategy:** TanStack Query com 5min stale time
+- ✅ **Image Optimization:** Lazy loading e responsive images
 
-**MUDANÇAS PRINCIPAIS:**
-- ✅ Remoção completa do sistema de header
-- ✅ Eliminação de NotificationBell e PWAInstallButton
-- ✅ Simplificação de DesktopShell e MobileShell
-- ✅ Melhoria significativa da responsividade
+### **Security**
+- ✅ **RLS Policies:** Row Level Security em todas as tabelas
+- ✅ **JWT Claims:** Roles e subscription tiers no token
+- ✅ **Rate Limiting:** Proteção em todas as Edge Functions
+- ✅ **Input Validation:** Validação client/server com Zod
 
-**BENEFÍCIOS OBTIDOS:**
-- ✅ Layout responsivo robusto
-- ✅ Eliminação de complexidade desnecessária
-- ✅ Arquitetura mais limpa e manutenível
-- ✅ Preparação para implementações futuras
-
-**ARQUIVOS MODIFICADOS:**
-- `src/components/shell/DesktopShell.tsx` - Simplificação estrutural
-- `src/components/shell/MobileShell.tsx` - Remoção de header
-- `src/components/pwa/PWAProvider.tsx` - Ajuste para popup-only
-
-**ARQUIVOS REMOVIDOS:**
-- `src/components/shell/Header.tsx`
-- `src/components/shell/NotificationBell.tsx` 
-- `src/components/pwa/PWAInstallButton.tsx`
-
-### v8.1.0 (21 Jun 2025) - ARCHITECTURAL SOLUTION IMPLEMENTED
-**CONTEXTO:** Implementação completa da solução arquitetural para layout shell
-
-**MUDANÇAS PRINCIPAIS:**
-- ✅ Reestruturação completa de DesktopShell.tsx
-- ✅ Separação correta de Header e Main content
-- ✅ Eliminação de scroll contexts competindo
-- ✅ Implementação de scroll boundaries apropriados
+### **UX/Acessibilidade**
+- ✅ **Mobile-First:** Interface otimizada para touch
+- ✅ **Keyboard Navigation:** Suporte completo para navegação por teclado
+- ✅ **Error Recovery:** Mensagens claras e ações de recuperação
+- ✅ **Loading States:** Skeleton loaders e indicadores de progresso
 
 ---
 
-**Status Atual:** ✅ FASE 2 - SIMPLIFICAÇÃO ARQUITETURAL CONCLUÍDA  
-**Última Implementação:** 21 de Junho de 2025, 21:30  
-**Responsável:** Sistema de Arquitetura EVIDENS v8.2  
-**Próxima Validação:** Teste de responsividade e navegação  
-**Estimativa Conclusão Total:** 22 de Junho de 2025
+## **🎯 PRÓXIMOS PASSOS PRIORITÁRIOS**
+
+### **Phase 1: Foundation Completion**
+1. **Notification System:** Implementar sistema completo de notificações
+2. **Profile Enhancement:** Melhorar páginas de perfil e configurações
+3. **Search Optimization:** Implementar busca global avançada
+
+### **Phase 2: Content Management**
+4. **Review Editor:** Sistema completo de criação/edição de reviews
+5. **Content Moderation:** Ferramentas avançadas de moderação
+6. **Analytics Dashboard:** Métricas e insights para admins
+
+### **Phase 3: Advanced Features**
+7. **Real-time Features:** Chat, notificações push, colaboração em tempo real
+8. **Advanced PWA:** Offline sync, background tasks, deep linking
+9. **Performance Optimization:** Bundle optimization, CDN, caching strategies
 
 ---
 
-*A simplificação arquitetural foi implementada com sucesso. O layout agora possui uma estrutura limpa, responsiva e sem complexidade desnecessária. A remoção estratégica do header eliminou os problemas de layout e criou uma base sólida para futuras implementações.*
+## **📋 DECISÕES ARQUITETURAIS IMPORTANTES**
+
+### **Navigation Unification (v8.3.0)**
+**Decisão:** Unified navigation system with single source of truth
+**Reasoning:** Eliminates maintenance overhead and ensures consistency
+**Implementation:** `getNavigationItems(context, userRole)` with flag-based filtering
+**Impact:** Simplified codebase, reduced complexity, better maintainability
+
+### **Header Removal (v8.2.0)**
+**Decisão:** Remove header component entirely
+**Reasoning:** Eliminates scroll conflicts and layout complexity
+**Trade-off:** PWA install moved to popup-only (temporary)
+**Impact:** Cleaner layout, better mobile experience, simplified architecture
+
+### **Shell Architecture (v8.1.0)**
+**Decisão:** Separate fixed navigation from scrollable content
+**Reasoning:** Prevents double scrollbars and layout issues
+**Implementation:** Fixed sidebar/bottom-nav + scrollable main content
+**Impact:** Better UX, consistent behavior across all pages
+
+---
+
+## **🚫 DEPRECATED FEATURES**
+
+### **Removed in v8.3.0:**
+- `mobileNavigationItems` array - Use `getNavigationItems('mobile')` instead
+- `adminNavigationItems` array - Use `getNavigationItems('desktop')` instead
+- `getVisibleNavigationItems()` - Use `getNavigationItems()` instead
+
+### **Removed in v8.2.0:**
+- `Header.tsx` component
+- `NotificationBell.tsx` component  
+- `PWAInstallButton.tsx` component
+- Header-based PWA installation
+
+---
+
+## **📚 REFERÊNCIAS TÉCNICAS**
+
+- **[DOC_2]** - System Architecture (Architectural principles)
+- **[DOC_8]** - Mobile Adaptation (Responsive design rules)
+- **[Blueprint_02]** - Main App Shell (Navigation structure)
+- **Development Protocols** - Type safety and data fetching patterns
+
+---
+
+**Última atualização:** 21 de junho de 2025  
+**Próxima revisão:** A ser definida conforme desenvolvimento

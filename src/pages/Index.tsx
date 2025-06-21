@@ -1,5 +1,5 @@
 
-// ABOUTME: Main homepage that uses consolidated data to render all homepage modules efficiently.
+// ABOUTME: Main homepage with standardized responsive container pattern.
 
 import React from 'react';
 import { useConsolidatedHomepageFeedQuery } from '../../packages/hooks/useHomepageFeedQuery';
@@ -18,7 +18,7 @@ const Index = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-7xl mx-auto p-6 space-y-8">
+        <div className="container mx-auto px-4 py-6 space-y-8">
           {/* Featured Review Skeleton */}
           <Skeleton className="w-full h-96 rounded-md" />
           
@@ -127,7 +127,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto p-6 space-y-8">
+      {/* STANDARDIZED: Use same container pattern as other pages for consistent responsiveness */}
+      <div className="container mx-auto px-4 py-6 space-y-8">
         {/* Render modules in the order specified by the layout array */}
         {data?.layout?.map((moduleType) => renderModule(moduleType))}
       </div>

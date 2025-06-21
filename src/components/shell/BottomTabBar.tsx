@@ -1,8 +1,8 @@
 
-// ABOUTME: Mobile bottom navigation with tab icons and labels.
+// ABOUTME: Mobile bottom navigation with unified navigation structure.
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { mobileNavigationItems, getVisibleNavigationItems } from '@/config/navigation';
+import { getNavigationItems } from '@/config/navigation';
 import { useAuthStore } from '@/store/auth';
 
 const BottomTabBar = () => {
@@ -10,9 +10,9 @@ const BottomTabBar = () => {
   const navigate = useNavigate();
   const { session } = useAuthStore();
   
-  // Filter navigation items based on user role
+  // Get unified navigation items for mobile context
   const userRole = session?.user?.app_metadata?.role || 'practitioner';
-  const visibleItems = getVisibleNavigationItems(mobileNavigationItems, userRole);
+  const visibleItems = getNavigationItems('mobile', userRole);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50">
