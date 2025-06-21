@@ -1,160 +1,415 @@
 
-# Evidens AI-Powered App - README BÍBLIA
+# EVIDENS - README BÍBLIA
+**Versão:** 6.2.0  
+**Data:** 21 de Junho de 2025  
+**Status:** Reddit-Style Community Transformation - PLANEJAMENTO COMPLETO
 
-## 📖 Overview
-This document serves as the central source of truth for the Evidens application, an AI-powered platform designed to revolutionize how users discover, review, and interact with content. It outlines the system architecture, key components, data flow, and coding standards to ensure consistency and maintainability across the project.
+---
 
-## 🏛️ System Architecture
-The Evidens app follows a modular, microservices-inspired architecture, leveraging the power of Supabase for backend services and React for a dynamic frontend experience.
+## 🎯 MISSÃO ATUAL: TRANSFORMAÇÃO VISUAL REDDIT-STYLE PARA COMUNIDADE
 
-### 🧱 Core Components
-1. **Frontend (React):** User interface built with React, TypeScript, and Tailwind CSS.
-2. **Backend (Supabase):** Database, authentication, and serverless functions.
-3. **Edge Functions:** Serverless functions for handling specific tasks like content creation, voting, and moderation.
-4. **Realtime Server:** Supabase Realtime for live updates and notifications.
-5. **Storage:** Supabase Storage for media assets.
+### Objetivo Principal
+Implementar uma transformação visual completa da interface da Comunidade EVIDENS (`/comunidade` e páginas de posts individuais) para replicar os padrões de design do Reddit, mantendo rigorosamente a paleta de cores EVIDENS e toda funcionalidade existente.
 
-### 🔄 Data Flow
-1. User interacts with the React frontend.
-2. Frontend makes API requests to Supabase Edge Functions or directly to the database.
-3. Edge Functions perform business logic and interact with the database.
-4. Supabase Realtime pushes updates to the frontend for real-time experiences.
+### Escopo de Transformação
+- ✅ **INCLUÍDO:** Conteúdo dentro de `/comunidade` e páginas de posts
+- ❌ **EXCLUÍDO:** App shell, sidebar de navegação, header, páginas de autenticação
 
-## 🗂️ Database Schema
-The database schema is designed to be flexible and scalable, with a focus on relational data and JSONB columns for unstructured data.
+---
 
-### 📜 Key Tables
-1. **Practitioners:** User profiles and authentication data.
-2. **Reviews:** Content reviews with detailed metadata.
-3. **CommunityPosts:** Community discussions, comments, and polls.
-4. **AcervoItems:** Curated collection of content items.
-5. **Notifications:** User-specific notifications and alerts.
+## 📋 PLANO DE IMPLEMENTAÇÃO FASEADO
 
-## 🔑 Row Level Security (RLS)
-Row Level Security is implemented on all tables to ensure data privacy and security. Policies are defined to restrict access based on user roles and permissions.
+### **FASE 1: TRANSFORMAÇÃO DO SISTEMA DE VOTAÇÃO** 
+**Prioridade:** CRÍTICA | **Duração Estimada:** 45 minutos | **Dependências:** Nenhuma
 
-### 🛡️ RLS Policies
-1. **Practitioners:** Users can only access their own profile data.
-2. **Reviews:** Publicly accessible, but modifications are restricted to authors and admins.
-3. **CommunityPosts:** Access controlled based on post visibility and user roles.
-4. **AcervoItems:** Publicly accessible, but modifications are restricted to admins.
-5. **Notifications:** Users can only access their own notifications.
+#### Objetivo
+Transformar o sistema de votação de layout vertical para horizontal, replicando exatamente o padrão visual do Reddit.
 
-## 📡 API Contract
-The API contract defines the structure and behavior of all API endpoints, ensuring consistency and predictability across the system.
+#### Arquivos a Modificar
+- `src/components/community/VoteButtons.tsx`
+- `tailwind.config.ts` (adicionar utilitários Reddit)
 
-### ⚙️ API Endpoints
-1. **/api/reviews:** CRUD operations for content reviews.
-2. **/api/community:** Endpoints for managing community discussions and comments.
-3. **/api/acervo:** Endpoints for accessing and managing the curated content collection.
-4. **/api/notifications:** Endpoints for managing user notifications.
-5. **/api/auth:** Authentication and authorization endpoints.
+#### Especificação Técnica Detalhada
 
-## 🧮 Data Fetching Strategy
-The data fetching strategy prioritizes performance and user experience, leveraging TanStack Query for caching, optimistic updates, and background refetching.
+1. **Transformação de Layout:**
+   ```typescript
+   // DE: flex-col (vertical)
+   <div className="flex flex-col items-center gap-1">
+   
+   // PARA: flex-row (horizontal)  
+   <div className="flex flex-row items-center gap-2">
+   ```
 
-### ⚡️ TanStack Query
-1. **Caching:** Data is cached on the client-side to reduce network requests.
-2. **Optimistic Updates:** UI is updated immediately, even before the API request completes.
-3. **Background Refetching:** Data is automatically refetched in the background to keep the UI up-to-date.
-4. **Prefetching:** Data is prefetched before the user navigates to a new page.
+2. **Styling dos Botões:**
+   ```css
+   .reddit-vote-button {
+     @apply w-6 h-6 p-1 rounded hover:bg-surface-muted/50 transition-colors;
+     @apply border-0 shadow-none bg-transparent;
+   }
+   ```
 
-## 🎨 Visual System
-The visual system is based on Tailwind CSS and a custom theme, ensuring a consistent and modern look and feel across the application.
+3. **Score Display:**
+   ```css
+   .reddit-vote-score {
+     @apply text-sm font-semibold min-w-[2rem] text-center text-foreground;
+   }
+   ```
 
-### 🌈 Tailwind CSS
-1. **Utility-First:** CSS classes are used to apply styles directly in the HTML.
-2. **Responsive Design:** Styles are adapted to different screen sizes using media queries.
-3. **Custom Theme:** A custom theme is defined to ensure consistency across the application.
+4. **Estados de Cor (Adaptados para EVIDENS):**
+   - Upvote Ativo: Usar `--color-success-content` (#01A816)
+   - Downvote Ativo: Usar `--color-primary` (#648EFC)
+   - Estado Neutro: Usar `--color-muted-foreground`
 
-## 📱 Mobile Adaptation
-The application is designed to be responsive and adapt to different screen sizes, providing a seamless user experience on both desktop and mobile devices.
+#### Diretivas Governantes
+- [D3.2] - Arquitetura de Componentes
+- [D3.6] - Design Adaptativo (Mobile-First)
+- [DOC_7] - Sistema Visual EVIDENS
 
-### 📐 Responsive Design
-1. **Mobile-First:** The application is designed for mobile devices first, and then adapted to larger screen sizes.
-2. **Media Queries:** CSS media queries are used to apply different styles based on screen size.
-3. **Flexible Layout:** The layout is designed to be flexible and adapt to different screen sizes.
+#### Critérios de Verificação
+- [ ] Layout horizontal mantém funcionalidade de voto
+- [ ] Cores seguem paleta EVIDENS
+- [ ] Responsividade mantida em mobile
+- [ ] Hover states funcionam corretamente
+- [ ] Accessibility (keyboard navigation) preservada
 
-## 🛡️ Error Handling
-Robust error handling is implemented throughout the application to provide a graceful user experience and prevent unexpected crashes.
+---
 
-### 🐞 Error Boundaries
-1. **Hierarchical Error Boundaries:** Error boundaries are placed at different levels of the component tree to catch errors and prevent them from propagating to the entire application.
-2. **Custom Error Fallbacks:** Custom error fallbacks are displayed to the user when an error occurs, providing helpful information and options for recovery.
-3. **Centralized Error Logging:** Errors are logged to a central location for monitoring and analysis.
+### **FASE 2: REDESIGN DOS CONTAINERS DE POST**
+**Prioridade:** ALTA | **Duração Estimada:** 60 minutos | **Dependências:** Fase 1
 
-## 🧪 Testing Strategy
-A comprehensive testing strategy is implemented to ensure the quality and reliability of the application.
+#### Objetivo
+Remover o design "em caixa" (card-based) e implementar separadores horizontais entre posts, replicando o layout linear do Reddit.
 
-### 🛠️ Testing Frameworks
-1. **Jest:** JavaScript testing framework for unit and integration tests.
-2. **React Testing Library:** Testing library for React components.
-3. **Cypress:** End-to-end testing framework for testing the entire application.
+#### Arquivos a Modificar
+- `src/components/community/PostCard.tsx`
+- `src/components/community/PostDetailCard.tsx`
+- `src/components/ui/separator.tsx` (usar existente)
 
-## 🚀 Implementation Status
+#### Especificação Técnica Detalhada
 
-### ✅ Phase 1: Database Foundation (COMPLETED)
-- [x] **Migration 1**: Added `is_rewarded` column to CommunityPosts table
-- [x] **Migration 2**: Created `get_comments_for_post` RPC function with recursive CTE
-- [x] **Migration 3**: Updated `create_post_and_auto_vote` RPC to support parent_post_id
+1. **Remoção do Card Wrapper:**
+   ```typescript
+   // REMOVER:
+   <Card className="hover:shadow-md transition-shadow cursor-pointer">
+     <CardContent className="p-4">
+   
+   // SUBSTITUIR POR:
+   <div className="reddit-post-item">
+     <div className="flex gap-4 p-4">
+   ```
 
-### ✅ Phase 2: Backend Edge Functions (COMPLETED)
-- [x] **Enhanced create-community-post**: Now supports comment creation via parent_post_id
-- [x] **New reward-content function**: Admin-only endpoint for rewarding exceptional content
-- [x] **RPC Updates**: All database functions updated to handle comment hierarchy
+2. **Estrutura Reddit-Style:**
+   ```typescript
+   <div className="reddit-post-item">
+     <div className="flex gap-4 p-4">
+       <VoteButtons /> {/* Agora horizontal */}
+       <div className="flex-1 space-y-2">
+         <PostHeader />
+         <PostContent />
+         <PostActions />
+       </div>
+     </div>
+   </div>
+   ```
 
-### ✅ Phase 3: Frontend Implementation (COMPLETED)
-- [x] **Data Access Layer**: Created specialized hooks following [DAL.1]
-  - `usePostWithCommentsQuery`: Fetches post + complete comment tree
-  - `useCreateCommentMutation`: Handles comment creation with cache invalidation
-  - `useRewardContentMutation`: Admin-only content rewarding
-- [x] **UI Components**: Built recursive comment system
-  - `Comment.tsx`: Individual comment display with nesting support
-  - `CommentEditor.tsx`: Rich text comment creation form
-  - `CommentThread.tsx`: Recursive comment tree renderer
-- [x] **Integration**: Updated CommunityPostPage.tsx with full commenting system
+3. **CSS Classes Customizadas:**
+   ```css
+   .reddit-post-item {
+     @apply bg-transparent border-0 shadow-none rounded-none;
+     @apply border-b border-border last:border-b-0;
+     @apply px-4 py-3 hover:bg-surface/30 transition-colors;
+   }
+   ```
 
-### ✅ Phase 4: Critical Infrastructure Fixes (COMPLETED)
-- [x] **React Hook Context Fix**: Resolved "Cannot read properties of null (reading 'useEffect')" error
-  - Fixed QueryClient instantiation in AppProviders.tsx
-  - Stabilized provider hierarchy to prevent re-creation
-  - Enhanced error handling in query defaults
-  - Moved StrictMode to proper location in App.tsx
-  - Added root element validation in main.tsx
+4. **Hierarquia de Conteúdo:**
+   ```css
+   .reddit-post-title {
+     @apply text-lg font-semibold text-foreground leading-tight;
+   }
+   
+   .reddit-post-body {
+     @apply text-sm text-foreground/80 leading-relaxed;
+   }
+   
+   .reddit-post-meta {
+     @apply text-xs text-secondary flex items-center gap-2;
+   }
+   ```
 
-### ✅ Phase 5: Edge Function Architecture Stabilization (COMPLETED)
-- [x] **CORS & Authentication System Fix**: Resolved recurring Edge Function failures
-  - Standardized CORS preflight handling across all functions
-  - Fixed rate limiting import/export consistency issues
-  - Implemented manual authentication pattern with `verify_jwt = false`
-  - Enhanced shared utilities in `supabase/functions/_shared/`
-- [x] **Documentation Protocol Update**: Established canonical Edge Function development pattern
-  - Updated [DOC_5]_API_CONTRACT.md with mandatory 7-step structure
-  - Enhanced DEVELOPMENT_PROTOCOLS.md with non-negotiable Edge Function protocol
-  - Created systematic approach to prevent recurring CORS/auth errors
+#### Diretivas Governantes
+- [D3.1] - Estrutura de Arquivos
+- [D3.2] - Arquitetura de Componentes
+- [DOC_7] - Sistema Visual
 
-### 📊 Current System Health
-- **Database**: ✅ All migrations applied successfully
-- **Backend**: ✅ All Edge Functions operational with standardized architecture
-- **Frontend**: ✅ All components implemented with proper TypeScript compliance
-- **React Context**: ✅ Hook system stabilized
-- **Error Boundaries**: ✅ Hierarchical protection active
-- **Edge Function Architecture**: ✅ Canonical development protocol established
+#### Critérios de Verificação
+- [ ] Cards removidos, separadores implementados
+- [ ] Hover states sutis funcionando
+- [ ] Conteúdo multimedia renderiza corretamente
+- [ ] Spacing consistente entre posts
+- [ ] Performance mantida (sem re-renders desnecessários)
 
-### 🎯 Next Steps
-1. **Architecture Enforcement**: Monitor adherence to new Edge Function development protocol
-2. **Performance Optimization**: Implement lazy loading for deep comment threads
-3. **Moderation Tools**: Extend admin capabilities for comment management
-4. **Analytics Integration**: Track engagement metrics for commenting system
+---
 
-## 📜 Change Log
-- **Version 0.1.0 (Initial Release):** Basic application structure and core components.
-- **Version 0.2.0 (Community Features):** Implemented community discussions and commenting system.
-- **Version 0.2.1 (Critical Infrastructure Fix):** Resolved React hook context error and stabilized provider hierarchy.
-- **Version 0.2.2 (Edge Function Architecture Stabilization):** Established canonical Edge Function development protocol to eliminate recurring CORS and authentication errors.
+### **FASE 3: OTIMIZAÇÃO DO LAYOUT DE FEED**
+**Prioridade:** MÉDIA | **Duração Estimada:** 30 minutos | **Dependências:** Fase 2
 
-## 📝 Notes
-- This document is a living document and will be updated as the application evolves.
-- All code must adhere to the coding standards outlined in this document.
-- All changes must be reviewed and approved by a senior developer.
-- **CRITICAL**: All new Edge Functions must follow the mandatory 7-step implementation pattern defined in [DOC_5] to prevent recurring errors.
+#### Objetivo
+Ajustar o container do feed para suportar o novo design de posts sem espaçamento entre cards.
+
+#### Arquivos a Modificar
+- `src/components/community/CommunityFeed.tsx`
+- `src/components/community/CommunityFeedWithSidebar.tsx`
+
+#### Especificação Técnica Detalhada
+
+1. **Remoção de Espaçamento entre Cards:**
+   ```typescript
+   // DE:
+   <div className="space-y-4">
+   
+   // PARA:
+   <div className="reddit-feed-container">
+   ```
+
+2. **Implementação de Separadores:**
+   ```typescript
+   {posts.map((post, index) => (
+     <React.Fragment key={post.id}>
+       <PostCard post={post} />
+       {index < posts.length - 1 && <Separator />}
+     </React.Fragment>
+   ))}
+   ```
+
+3. **Container Background:**
+   ```css
+   .reddit-feed-container {
+     @apply bg-background border-0;
+   }
+   ```
+
+#### Diretivas Governantes
+- [D3.2] - Arquitetura de Componentes
+- [M2.1] - Modelo Filosófico (Target User)
+
+#### Critérios de Verificação
+- [ ] Feed renderiza posts sem gaps visuais
+- [ ] Separadores aparecem corretamente
+- [ ] Infinite scroll mantido
+- [ ] Loading states integrados
+
+---
+
+### **FASE 4: OTIMIZAÇÃO RESPONSIVA**
+**Prioridade:** MÉDIA | **Duração Estimada:** 30 minutos | **Dependências:** Fase 3
+
+#### Objetivo
+Garantir que o novo design funcione perfeitamente em dispositivos móveis conforme [DOC_8].
+
+#### Arquivos a Modificar
+- Todos os componentes das fases anteriores
+- `src/index.css` (media queries se necessário)
+
+#### Especificação Técnica Detalhada
+
+1. **Touch Targets Móveis:**
+   ```css
+   @media (max-width: 767px) {
+     .reddit-vote-button {
+       @apply min-h-[44px] min-w-[44px]; /* [AD.3] requirement */
+     }
+   }
+   ```
+
+2. **Layout Móvel dos Votos:**
+   ```typescript
+   // Manter horizontal mesmo em mobile
+   <div className="flex flex-row items-center gap-2 touch-target">
+   ```
+
+3. **Content Reflow:**
+   ```css
+   @media (max-width: 767px) {
+     .reddit-post-item {
+       @apply px-4 py-3; /* Padding otimizado para mobile */
+     }
+   }
+   ```
+
+#### Diretivas Governantes
+- [D3.6] - Design Adaptativo (Mobile-First)
+- [DOC_8] - Adaptação Mobile
+- [AD.1], [AD.2] - Diretivas Mobile
+
+#### Critérios de Verificação
+- [ ] Touch targets ≥ 44px em mobile
+- [ ] Layout horizontal de votos mantido
+- [ ] Conteúdo não quebra em telas pequenas
+- [ ] Performance móvel mantida
+
+---
+
+### **FASE 5: GARANTIA DE QUALIDADE E POLISH**
+**Prioridade:** ALTA | **Duração Estimada:** 45 minutos | **Dependências:** Fase 4
+
+#### Objetivo
+Validação completa, testes de acessibilidade e refinamentos finais.
+
+#### Arquivos a Modificar
+- Potenciais ajustes em qualquer arquivo das fases anteriores
+
+#### Especificação Técnica Detalhada
+
+1. **Checklist de Consistência Visual:**
+   - [ ] Spacing uniforme (16px horizontal, 12px vertical)
+   - [ ] Hierarchy tipográfica respeitada
+   - [ ] Cores EVIDENS aplicadas corretamente
+   - [ ] Hover states sutis e performáticos
+
+2. **Validação Funcional:**
+   - [ ] Sistema de votação 100% funcional
+   - [ ] Navegação entre posts preservada
+   - [ ] Mobile touch interactions responsivas
+   - [ ] Keyboard navigation acessível
+
+3. **Performance Validation:**
+   - [ ] Animações usam transform/opacity
+   - [ ] Sem layout recalculations em hover
+   - [ ] Component re-renders otimizados
+   - [ ] Carregamento de imagens eficiente
+
+#### Diretivas Governantes
+- [P1.1] - Pre-Flight Checklist
+- [SEC.1] - RLS como Firewall
+- [DOC_8] - Experiência Mobile
+
+#### Critérios de Verificação
+- [ ] Todos os critérios das fases anteriores validados
+- [ ] Cross-browser compatibility testada
+- [ ] Accessibility WCAG 2.1 AA mantida
+- [ ] Performance budgets respeitados
+
+---
+
+## 🛠️ CONFIGURAÇÕES TÉCNICAS NECESSÁRIAS
+
+### Tailwind CSS Extensions
+```typescript
+// tailwind.config.ts additions
+theme: {
+  extend: {
+    spacing: {
+      'reddit-xs': '0.5rem',    // 8px
+      'reddit-sm': '0.75rem',   // 12px  
+      'reddit-md': '1rem',      // 16px
+      'reddit-lg': '1.5rem',    // 24px
+    }
+  }
+}
+```
+
+### Custom CSS Classes
+```css
+@layer components {
+  .reddit-post-item {
+    @apply bg-transparent border-0 shadow-none rounded-none;
+    @apply border-b border-border last:border-b-0;
+    @apply px-4 py-3 hover:bg-surface/30 transition-colors;
+  }
+
+  .reddit-vote-buttons {
+    @apply flex flex-row items-center gap-2;
+  }
+
+  .reddit-vote-button {
+    @apply w-6 h-6 p-1 rounded hover:bg-surface-muted/50 transition-colors;
+    @apply border-0 shadow-none bg-transparent;
+  }
+
+  .reddit-vote-score {
+    @apply text-sm font-semibold min-w-[2rem] text-center text-foreground;
+  }
+}
+```
+
+---
+
+## ⚠️ AVALIAÇÃO DE RISCOS
+
+### Riscos Identificados e Mitigações
+
+1. **Risco: Breaking Changes na Funcionalidade de Voto**
+   - **Probabilidade:** Média
+   - **Impacto:** Alto
+   - **Mitigação:** Testes extensivos após Fase 1, validação de todos os estados
+
+2. **Risco: Inconsistência Visual Durante Transição**
+   - **Probabilidade:** Alta
+   - **Impacto:** Baixo
+   - **Mitigação:** Implementação faseada permite correções incrementais
+
+3. **Risco: Performance Degradation em Mobile**
+   - **Probabilidade:** Baixa
+   - **Impacação:** Médio
+   - **Mitigação:** Otimizações específicas para mobile na Fase 4
+
+4. **Risco: Quebra de Acessibilidade**
+   - **Probabilidade:** Baixa
+   - **Impacto:** Alto
+   - **Mitigação:** Validação WCAG em cada fase, manutenção de ARIA labels
+
+---
+
+## 📊 MÉTRICAS DE SUCESSO
+
+### Critérios de Aceitação Final
+- [ ] **Similaridade Visual:** 95%+ match com padrões Reddit
+- [ ] **Preservação Funcional:** 100% das funcionalidades mantidas
+- [ ] **Consistência de Marca:** 100% paleta EVIDENS preservada
+- [ ] **Performance:** Sem degradação measurável
+- [ ] **Acessibilidade:** Compliance WCAG 2.1 AA mantida
+- [ ] **Mobile Experience:** Usabilidade igual ou superior
+
+### KPIs de Monitoramento
+- Tempo de carregamento da página de comunidade
+- Taxa de interação com sistema de votação
+- Bounce rate nas páginas de posts
+- Feedback qualitativo dos usuários
+
+---
+
+## 📝 NOTAS DE IMPLEMENTAÇÃO
+
+### Limitações Rigorosas
+- **Paleta de Cores:** EVIDENS colors APENAS - sem exceções
+- **Escopo:** Conteúdo `/comunidade` APENAS - não tocar app shell
+- **Backward Compatibility:** Todas as funcionalidades devem continuar funcionando
+- **Mobile-First:** Design deve funcionar perfeitamente em dispositivos móveis
+
+### Padrões de Código
+- Usar TypeScript strict mode
+- Seguir convenções de naming EVIDENS
+- Manter file headers "// ABOUTME:"
+- Preservar error boundaries existentes
+- Utilizar hooks de data fetching existentes
+
+---
+
+## 🔄 PRÓXIMOS PASSOS
+
+1. **Aprovação do Plano:** Validar estratégia e cronograma
+2. **Setup de Branch:** Criar feature branch para transformação
+3. **Implementação Fase 1:** Iniciar com sistema de votação
+4. **Iteração e Feedback:** Validar cada fase antes de prosseguir
+5. **Deploy Staged:** Implementar em ambiente de staging primeiro
+
+---
+
+**Status Atual:** ✅ PLANEJAMENTO COMPLETO - PRONTO PARA IMPLEMENTAÇÃO  
+**Última Atualização:** 21 de Junho de 2025  
+**Responsável:** Sistema de Arquitetura EVIDENS  
+**Próxima Revisão:** Após completar Fase 1
+
+---
+
+*Este documento representa o plano mestre para a transformação Reddit-style da Comunidade EVIDENS. Todas as implementações devem seguir rigorosamente este guia para garantir consistência e qualidade.*
