@@ -1,13 +1,12 @@
+import type { Config } from "tailwindcss"
 
-import type { Config } from "tailwindcss";
-
-const config: Config = {
+const config = {
   darkMode: ["class"],
   content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
+    './pages/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './app/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx}',
   ],
   prefix: "",
   theme: {
@@ -21,25 +20,26 @@ const config: Config = {
     extend: {
       colors: {
         border: "hsl(var(--border))",
-        "border-hover": "hsl(var(--border-hover))",
-        "border-strong": "hsl(var(--border-strong))",
-        input: "hsl(var(--input))",
+        'border-hover': "hsl(var(--border-hover))",
+        'border-strong': "hsl(var(--border-strong))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        surface: {
-          DEFAULT: "hsl(var(--surface))",
-          muted: "hsl(var(--surface-muted))",
-          hover: "hsl(var(--surface-hover))",
-        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: "hsl(var(--text-secondary))",
         },
+        tertiary: "hsl(var(--text-tertiary))",
+        surface: {
+          DEFAULT: "hsl(var(--surface))",
+          muted: "hsl(var(--surface-muted))",
+          hover: "hsl(var(--surface-hover))",
+        },
+        'comment-thread': "hsl(var(--comment-thread))",
+        'action-hover': "hsl(var(--action-hover))",
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
@@ -60,15 +60,22 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Add the missing color tokens for Reddit-style UI
-        tertiary: "hsl(var(--text-tertiary))",
-        "comment-thread": "hsl(var(--comment-thread))",
-        "action-hover": "hsl(var(--action-hover))",
+      },
+      spacing: {
+        'reddit-xs': 'var(--spacing-reddit-xs)',
+        'reddit-sm': 'var(--spacing-reddit-sm)', 
+        'reddit-md': 'var(--spacing-reddit-md)',
+        'reddit-lg': 'var(--spacing-reddit-lg)',
+        'reddit-xl': 'var(--spacing-reddit-xl)',
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      fontFamily: {
+        sans: ["var(--font-sans)"],
+        serif: ["var(--font-serif)"],
       },
       keyframes: {
         "accordion-down": {
@@ -86,10 +93,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [
-    require("tailwindcss-animate"),
-    require('@tailwindcss/typography')
-  ],
-};
+  plugins: [require("tailwindcss-animate")],
+} satisfies Config
 
-export default config;
+export default config
