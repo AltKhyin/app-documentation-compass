@@ -1,477 +1,606 @@
 
 # EVIDENS Community Visual Style Guide - Reddit-Inspired Implementation
 
-**Version:** 1.0.0  
+**Version:** 2.0.0  
 **Date:** June 21, 2025  
-**Purpose:** Comprehensive visual specification for implementing Reddit-style interface in EVIDENS Community pages
+**Purpose:** Comprehensive visual specification for implementing Reddit-style interface in EVIDENS Community pages, incorporating authentic Reddit design tokens while maintaining EVIDENS brand identity.
 
 ---
 
 ## 1. EXECUTIVE SUMMARY
 
-After thorough analysis of the provided Reddit interface references and examination of the current EVIDENS codebase, this document establishes the complete visual transformation requirements for implementing a Reddit-inspired community interface. The transformation focuses on two primary pages: the Community Feed (`/comunidade`) and Individual Post pages (`/comunidade/[postId]`).
+This document establishes the complete visual transformation requirements for implementing a Reddit-inspired community interface based on authentic Reddit CSS variables and design tokens. The transformation focuses on two primary pages: the Community Feed (`/comunidade`) and Individual Post pages (`/comunidade/[postId]`), while strictly preserving EVIDENS color palette and excluding any changes to the app shell, navigation sidebar, or header.
 
-**Critical Discovery:** The `docs/CODEBASE_AUDIT_REPORT.md` file appears to be empty or inaccessible, requiring reliance on the provided Reddit interface screenshots and current codebase analysis to derive comprehensive specifications.
-
----
-
-## 2. VISUAL ANALYSIS OF REDDIT INTERFACE REFERENCES
-
-### 2.1 Screenshot Analysis - Primary Feed Interface
-
-**Image 1 Analysis:** `/lovable-uploads/a81b7a7d-9120-4f0f-80f2-658cef529d4a.png`
-
-**Key Visual Elements Identified:**
-- **Background:** Pure dark theme (#1a1a1a approximate)
-- **Post Containers:** No visible card borders or shadows
-- **Separation Method:** Subtle horizontal lines between posts
-- **Vote System:** Horizontal layout with upvote/downvote arrows flanking the score
-- **Content Hierarchy:** Clear visual distinction between title, metadata, and body text
-- **Avatar Integration:** Small circular avatars integrated into the post header
-- **Engagement Metrics:** Comment counts, share buttons positioned horizontally
-
-**Specific Measurements Observed:**
-- Vote buttons appear to be ~24px in height
-- Post content has generous left padding (~16px from vote buttons)
-- Vertical spacing between posts: ~16px with separator lines
-- Avatar size: ~20px diameter in post headers
-
-### 2.2 Screenshot Analysis - Subreddit Header Interface
-
-**Image 2 Analysis:** `/lovable-uploads/b89ec32d-1f8e-476e-bef8-0986666fd36f.png`
-
-**Key Visual Elements Identified:**
-- **Header Banner:** Prominent colored banner with subreddit branding
-- **Subreddit Info:** Large subreddit name with member count and statistics
-- **Action Buttons:** "Create Post", "Joined" buttons with distinct styling
-- **Sort Controls:** Dropdown selectors for post sorting (Best, Hot, New, etc.)
-- **Community Sidebar:** Right-aligned sidebar with community information
-- **Post Layout:** Consistent with Image 1, showing the same horizontal vote system
-
-**Design Patterns Observed:**
-- Strong visual hierarchy with banner → controls → content flow
-- Consistent use of rounded corners on interactive elements
-- Subtle color coding for different types of content (flairs, badges)
+**Critical Design Philosophy:** Extract Reddit's structural and interaction patterns while maintaining EVIDENS brand identity through color adaptation.
 
 ---
 
-## 3. CURRENT EVIDENS CODEBASE STATE ANALYSIS
+## 2. REDDIT DESIGN SYSTEM ANALYSIS
 
-### 3.1 Existing Component Architecture
+### 2.1 Extracted Design Tokens from Reddit CSS
 
-**Current Vote System (`VoteButtons.tsx`):**
+**Spacing System (Reddit Standards):**
+- `--spacer-4xs: 0.125rem` (2px)
+- `--spacer-2xs: 0.25rem` (4px)
+- `--spacer-xs: 0.5rem` (8px)
+- `--spacer-sm: 0.75rem` (12px)
+- `--spacer-md: 1rem` (16px)
+- `--spacer-lg: 1.5rem` (24px)
+- `--spacer-xl: 2rem` (32px)
+- `--spacer-2xl: 3rem` (48px)
+
+**Typography System (Reddit Font Hierarchy):**
+- `--font-12-16-regular: normal 400 0.75rem/1rem var(--font-sans)`
+- `--font-12-16-semibold: normal 600 0.75rem/1rem var(--font-sans)`
+- `--font-14-20-regular: normal 400 0.875rem/1.25rem var(--font-sans)`
+- `--font-14-20-semibold: normal 600 0.875rem/1.25rem var(--font-sans)`
+- `--font-16-20-regular: normal 400 1rem/1.25rem var(--font-sans)`
+
+**Border Radius System:**
+- `--radius-sm: 0.25rem` (4px)
+- `--radius-md: 1.25rem` (20px)
+- `--radius-lg: 2rem` (32px)
+
+**Elevation System:**
+- `--elevation-xs: 0 0.0625rem 0.125rem 0 #000000ab`
+- `--elevation-sm: 0 0.0625rem 0.25rem 0 #00000054,0 0.25rem 0.25rem 0 #00000054`
+- `--elevation-md: 0 0.25rem 0.5rem 0 #00000033,0 0.375rem 0.75rem 0 #00000080`
+
+### 2.2 Reddit Color System (For Reference - NOT to be Implemented)
+
+**Note:** These Reddit colors are analyzed for pattern understanding only. EVIDENS colors will be used instead.
+
+**Reddit Dark Theme Neutrals:**
+- `--color-neutral-background: #0E1113` (Primary background)
+- `--color-neutral-background-strong: #181C1F` (Card backgrounds)
+- `--color-neutral-background-container: #181C1F` (Container backgrounds)
+- `--color-neutral-background-hover: #181C1F` (Hover states)
+- `--color-neutral-border: #FFFFFF33` (Subtle borders)
+- `--color-neutral-content: #B7CAD4` (Primary text)
+- `--color-neutral-content-weak: #8BA2AD` (Secondary text)
+
+**Reddit Vote Colors (Pattern Analysis):**
+- `--color-upvote-plain: #FF895D` (Upvote active)
+- `--color-downvote-plain: #9580FF` (Downvote active)
+- `--color-upvote-background: #D93900` (Upvote background)
+- `--color-downvote-background: #6A5CFF` (Downvote background)
+
+---
+
+## 3. EVIDENS COLOR MAPPING STRATEGY
+
+### 3.1 EVIDENS Brand Color Preservation
+
+**Critical Rule:** All Reddit design patterns will use EVIDENS color palette as defined in `docs/[DOC_7]_VISUAL_SYSTEM.md`.
+
+**EVIDENS Dark Theme Colors (To Be Used):**
+- `--background: 0 0% 7%` (#121212) - Maps to Reddit's primary background
+- `--surface: 0 0% 10%` (#1a1a1a) - Maps to Reddit's card backgrounds
+- `--surface-muted: 0 0% 13%` (#212121) - Maps to Reddit's container backgrounds
+- `--border: 0 0% 16%` (#2a2a2a) - Maps to Reddit's subtle borders
+- `--foreground: 210 40% 95%` - Maps to Reddit's primary text
+- `--text-secondary: 0 0% 28%` (#484848) - Maps to Reddit's secondary text
+
+**Vote System Color Mapping:**
+- Upvote Active: Use EVIDENS success color (`#00C61C` equivalent)
+- Downvote Active: Use EVIDENS primary color (`#648EFC` equivalent)
+- Neutral State: Use EVIDENS muted colors
+
+### 3.2 Component-Specific Color Applications
+
+**Post Containers:**
+- Background: `bg-surface` (#1a1a1a)
+- Hover: `bg-surface-muted` (#212121)
+- Border: `border-border` (#2a2a2a)
+
+**Vote Buttons:**
+- Container: `bg-transparent`
+- Hover: `bg-surface-muted` with opacity
+- Active Upvote: EVIDENS success variant
+- Active Downvote: EVIDENS primary variant
+
+---
+
+## 4. STRUCTURAL LAYOUT SPECIFICATIONS
+
+### 4.1 Post Layout Architecture (Reddit Pattern)
+
+**Current EVIDENS Structure:**
 ```typescript
-// Current implementation uses VERTICAL layout
-<div className="flex flex-col items-center gap-1">
-  <Button>ChevronUp</Button>
-  <span>{netScore}</span>
-  <Button>ChevronDown</Button>
-</div>
-```
-
-**Current Post Layout (`PostCard.tsx`):**
-```typescript
-// Current implementation uses Card wrapper with shadows
 <Card className="hover:shadow-md transition-shadow cursor-pointer">
   <CardContent className="p-4">
     <div className="flex gap-3">
-      <VoteButtons />  // Vertical layout
+      <VoteButtons /> // Vertical layout
       <div className="flex-1">...</div>
     </div>
   </CardContent>
 </Card>
 ```
 
-### 3.2 Identified Transformation Requirements
-
-**Major Structural Changes Required:**
-1. **Vote System Transformation:** Vertical → Horizontal layout conversion
-2. **Card Removal:** Eliminate Card components and shadows
-3. **Separator Implementation:** Add horizontal dividers between posts
-4. **Layout Reflow:** Adjust spacing and positioning for Reddit-style density
-5. **Color Scheme Adaptation:** Enhance dark theme to match Reddit's visual weight
-
----
-
-## 4. DETAILED VISUAL SPECIFICATIONS
-
-### 4.1 Vote Button System Redesign
-
-**Current State:** Vertical stack (up arrow, score, down arrow)
-**Target State:** Horizontal row (up arrow, score, down arrow)
-
-**Specific Implementation Requirements:**
-- **Layout:** `flex flex-row items-center gap-2`
-- **Button Dimensions:** 24px × 24px minimum touch target
-- **Score Display:** Center-aligned between buttons
-- **Hover States:** Subtle background highlight on button hover
-- **Active States:** Distinct color change for user's vote (orange/blue)
-- **Spacing:** 8px gap between elements
-- **Alignment:** Vertically centered with post content
-
-**Color Specifications:**
-- **Upvote Active:** `#ff6b35` (Reddit orange)
-- **Downvote Active:** `#0079d3` (Reddit blue)
-- **Neutral State:** `#878a8c` (Reddit gray)
-- **Hover Background:** `rgba(255, 255, 255, 0.1)` in dark theme
-
-### 4.2 Post Container Redesign
-
-**Current State:** Card-based with shadows and rounded corners
-**Target State:** Borderless with separator lines
-
-**Container Specifications:**
-- **Remove:** Card wrapper, shadows, rounded corners
-- **Background:** Transparent or subtle background color
-- **Borders:** None on container
-- **Separation:** 1px solid horizontal line between posts
-- **Padding:** 16px vertical, 16px horizontal
-- **Hover State:** Subtle background highlight on entire post area
-
-**Separator Line Specifications:**
-- **Color:** `#343536` (Reddit dark theme separator)
-- **Width:** Full width of container
-- **Thickness:** 1px solid
-- **Placement:** Bottom of each post (except last)
-
-### 4.3 Content Layout Restructure
-
-**Header Section:**
-- **User Info:** Avatar (20px) + username + timestamp
-- **Post Actions:** Three-dot menu aligned right
-- **Flair/Category:** Colored badges inline with header
-- **Spacing:** 8px between elements
-
-**Content Section:**
-- **Title:** Bold, larger font size (18px)
-- **Body Text:** Standard weight (14px)
-- **Media Content:** Full-width with rounded corners
-- **Spacing:** 12px between elements
-
-**Footer Section:**
-- **Engagement:** Comments count, share button
-- **Layout:** Horizontal row with 16px spacing
-- **Alignment:** Left-aligned with content
-
-### 4.4 Typography Specifications
-
-**Post Titles:**
-- **Font Weight:** 600 (semibold)
-- **Font Size:** 18px
-- **Line Height:** 1.4
-- **Color:** `#d7dadc` (Reddit light text)
-
-**Body Text:**
-- **Font Weight:** 400 (normal)
-- **Font Size:** 14px
-- **Line Height:** 1.6
-- **Color:** `#d7dadc`
-
-**Metadata Text:**
-- **Font Weight:** 400
-- **Font Size:** 12px
-- **Color:** `#818384` (Reddit secondary text)
-
-**Vote Scores:**
-- **Font Weight:** 600
-- **Font Size:** 14px
-- **Color:** Dynamic based on vote state
-
----
-
-## 5. COMPONENT-SPECIFIC IMPLEMENTATION REQUIREMENTS
-
-### 5.1 VoteButtons Component Transformation
-
-**Required Changes:**
-1. **Layout Change:** `flex-col` → `flex-row`
-2. **Button Sizing:** Uniform 24px × 24px
-3. **Icon Updates:** Maintain ChevronUp/ChevronDown
-4. **State Management:** Preserve existing vote mutation logic
-5. **Accessibility:** Maintain ARIA labels and keyboard navigation
-
-**CSS Classes Required:**
-```css
-.vote-buttons-horizontal {
-  @apply flex flex-row items-center gap-2;
-}
-
-.vote-button {
-  @apply w-6 h-6 p-1 rounded hover:bg-white/10 transition-colors;
-}
-
-.vote-score {
-  @apply text-sm font-semibold min-w-[2rem] text-center;
-}
-```
-
-### 5.2 PostCard Component Restructure
-
-**Required Changes:**
-1. **Remove Card Wrapper:** Replace with simple div
-2. **Add Separator Logic:** Conditional bottom border
-3. **Adjust Padding:** Standardize to Reddit specifications
-4. **Hover States:** Implement subtle background highlighting
-5. **Content Reflow:** Adjust spacing for higher density
-
-**New Structure:**
+**Target Reddit-Style Structure:**
 ```typescript
-<div className="post-item">
-  <div className="post-content">
-    <VoteButtons />  // Now horizontal
-    <div className="post-body">
-      <PostHeader />
-      <PostContent />
-      <PostFooter />
-    </div>
+<div className="post-container">
+  <div className="post-content flex gap-3 p-4">
+    <VoteButtons /> // Horizontal layout
+    <div className="flex-1">...</div>
   </div>
-  <div className="post-separator" />
+  <Separator className="post-separator" />
 </div>
 ```
 
-### 5.3 CommunityFeed Component Updates
+### 4.2 Vote Button Transformation Specifications
 
-**Required Changes:**
-1. **Remove Card Spacing:** Eliminate gaps between posts
-2. **Implement Separators:** Add dividing lines
-3. **Background Adjustments:** Ensure proper contrast
-4. **Responsive Behavior:** Maintain mobile compatibility
+**Current State:** Vertical stack (ChevronUp, score, ChevronDown)
+**Target State:** Horizontal row (ChevronUp, score, ChevronDown)
+
+**Exact Implementation Requirements:**
+- **Layout Class:** `flex flex-row items-center gap-2`
+- **Button Dimensions:** 24px × 24px minimum (Reddit standard)
+- **Spacing:** `gap-2` (8px) between elements
+- **Button Styles:** Remove card-like appearance, use subtle backgrounds
+- **Hover States:** `hover:bg-surface-muted/50` for subtle feedback
+
+**CSS Specifications:**
+```css
+.reddit-vote-buttons {
+  @apply flex flex-row items-center gap-2;
+}
+
+.reddit-vote-button {
+  @apply w-6 h-6 p-1 rounded hover:bg-surface-muted/50 transition-colors;
+  @apply border-0 shadow-none bg-transparent;
+}
+
+.reddit-vote-score {
+  @apply text-sm font-semibold min-w-[2rem] text-center;
+  @apply text-foreground;
+}
+```
+
+### 4.3 Post Container De-boxing Specifications
+
+**Reddit Post Container Pattern:**
+- **Remove:** Card wrapper, box shadows, rounded borders
+- **Add:** Horizontal separator lines between posts
+- **Background:** Transparent or minimal background
+- **Padding:** Consistent with Reddit spacing (`--spacer-md` = 16px)
+
+**Implementation Pattern:**
+```css
+.reddit-post-item {
+  @apply bg-transparent border-0 shadow-none rounded-none;
+  @apply border-b border-border last:border-b-0;
+  @apply px-4 py-3 hover:bg-surface/30 transition-colors;
+}
+```
+
+### 4.4 Content Density Optimization
+
+**Reddit Spacing Standards:**
+- **Post Vertical Padding:** 12px (`--spacer-sm`)
+- **Post Horizontal Padding:** 16px (`--spacer-md`)
+- **Element Gaps:** 8px (`--spacer-xs`) to 12px (`--spacer-sm`)
+- **Vote-to-Content Gap:** 16px (`--spacer-md`)
+
+**Typography Hierarchy:**
+- **Post Titles:** `text-lg font-semibold` (18px, 600 weight)
+- **Post Content:** `text-sm` (14px, 400 weight)
+- **Metadata:** `text-xs text-secondary` (12px, muted color)
+- **Vote Scores:** `text-sm font-semibold` (14px, 600 weight)
 
 ---
 
-## 6. RESPONSIVE DESIGN CONSIDERATIONS
+## 5. INTERACTION DESIGN SPECIFICATIONS
 
-### 6.1 Mobile Adaptations
+### 5.1 Hover State Behaviors
 
-**Vote Button Behavior:**
-- **Maintain horizontal layout on mobile
-- **Increase touch targets to 44px minimum
-- **Ensure adequate spacing for thumb navigation
+**Post Hover Effect (Reddit Standard):**
+- **Duration:** 150ms
+- **Easing:** `ease-out`
+- **Background Change:** `hover:bg-surface/30`
+- **No Scale or Shadow Changes:** Maintain flat design
 
-**Content Adjustments:**
-- **Preserve content hierarchy
-- **Adjust font sizes for mobile readability
-- **Maintain separator lines for visual organization
+**Vote Button Hover:**
+- **Duration:** 100ms
+- **Background:** `hover:bg-surface-muted/50`
+- **Icon Color:** Slight brightness increase
+- **No Scale Effects:** Keep buttons flat
+
+### 5.2 Active State Specifications
+
+**Vote Active States:**
+- **Upvote Active:** EVIDENS success color with background
+- **Downvote Active:** EVIDENS primary color with background
+- **Neutral State:** Default foreground color
+- **Disabled State:** Reduced opacity (40%)
+
+---
+
+## 6. RESPONSIVE DESIGN ADAPTATIONS
+
+### 6.1 Mobile Optimization
+
+**Vote Button Mobile Behavior:**
+- **Maintain Horizontal Layout:** Even on small screens
+- **Increase Touch Targets:** 44px minimum for mobile
+- **Preserve Spacing:** Use relative units for consistency
+- **Stack Adjustments:** Content may wrap but votes stay horizontal
+
+**Content Reflow:**
+- **Title Wrapping:** Allow natural text wrapping
+- **Metadata Stacking:** Stack author info vertically on narrow screens
+- **Action Buttons:** Maintain horizontal layout with adequate spacing
 
 ### 6.2 Desktop Enhancements
 
-**Hover States:**
-- **Implement subtle post highlighting
-- **Enhanced button feedback
-- **Preserve accessibility standards
+**Enhanced Hover Feedback:**
+- **Post Highlighting:** Subtle background change on entire post area
+- **Vote Button Feedback:** Individual button hover states
+- **Cursor Changes:** Appropriate pointer cursors for interactive elements
 
 ---
 
-## 7. COLOR SCHEME SPECIFICATIONS
+## 7. COMPONENT-SPECIFIC IMPLEMENTATION REQUIREMENTS
 
-### 7.1 Dark Theme Enhancements
+### 7.1 VoteButtons Component Transformation
 
-**Background Colors:**
-- **Primary Background:** `#0b1416` (Reddit dark)
-- **Post Background:** `#1a1a1b` (Reddit post bg)
-- **Hover Background:** `#262628` (Reddit hover)
+**Current File:** `src/components/community/VoteButtons.tsx`
 
-**Text Colors:**
-- **Primary Text:** `#d7dadc` (Reddit primary)
-- **Secondary Text:** `#818384` (Reddit secondary)
-- **Accent Text:** `#94a3b8` (Reddit accent)
+**Required Changes:**
+1. **Layout Transformation:** Change `flex-col` to `flex-row`
+2. **Spacing Adjustment:** Use `gap-2` instead of `gap-1`
+3. **Button Styling:** Remove card-like appearance, add subtle hover
+4. **Score Display:** Center between buttons with proper spacing
+5. **Icon Sizing:** Maintain 16px (w-4 h-4) icons
+6. **State Colors:** Map to EVIDENS color system
 
-**Border Colors:**
-- **Separator Lines:** `#343536` (Reddit border)
-- **Hover Borders:** `#474748` (Reddit hover border)
+**New Structure:**
+```typescript
+<div className="flex flex-row items-center gap-2">
+  <Button className="reddit-vote-button">
+    <ChevronUp className="w-4 h-4" />
+  </Button>
+  <span className="reddit-vote-score">{netScore}</span>
+  <Button className="reddit-vote-button">
+    <ChevronDown className="w-4 h-4" />
+  </Button>
+</div>
+```
 
-### 7.2 Interactive Element Colors
+### 7.2 PostCard Component Restructure
 
-**Vote System:**
-- **Upvote:** `#ff6b35` (Reddit orange)
-- **Downvote:** `#0079d3` (Reddit blue)
-- **Neutral:** `#878a8c` (Reddit gray)
+**Current File:** `src/components/community/PostCard.tsx`
 
-**Action Elements:**
-- **Primary Actions:** `#0079d3` (Reddit blue)
-- **Secondary Actions:** `#878a8c` (Reddit gray)
-- **Danger Actions:** `#ea0027` (Reddit red)
+**Required Changes:**
+1. **Remove Card Wrapper:** Replace with simple div
+2. **Add Separator:** Use border-bottom for post separation
+3. **Adjust Padding:** Use Reddit spacing standards
+4. **Update Hover:** Implement subtle background hover
+5. **Content Spacing:** Optimize for higher density
+
+**New Structure:**
+```typescript
+<div className="reddit-post-item">
+  <div className="flex gap-4 p-4">
+    <VoteButtons /> // Now horizontal
+    <div className="flex-1 space-y-2">
+      <PostHeader />
+      <PostContent />
+      <PostActions />
+    </div>
+  </div>
+</div>
+```
+
+### 7.3 CommunityFeed Container Updates
+
+**Current File:** `src/components/community/CommunityFeed.tsx`
+
+**Required Changes:**
+1. **Remove Card Spacing:** Change from `space-y-4` to no spacing
+2. **Container Background:** Ensure proper background inheritance
+3. **Separator Implementation:** Add between posts, not around them
+
+**New Structure:**
+```typescript
+<div className="reddit-feed-container">
+  {posts.map((post, index) => (
+    <React.Fragment key={post.id}>
+      <PostCard post={post} />
+      {index < posts.length - 1 && <Separator />}
+    </React.Fragment>
+  ))}
+</div>
+```
 
 ---
 
-## 8. ANIMATION AND INTERACTION SPECIFICATIONS
+## 8. TAILWIND CSS INTEGRATION
 
-### 8.1 Hover Animations
+### 8.1 Custom Utilities Required
 
-**Post Hover Effect:**
-- **Duration:** 150ms
-- **Easing:** ease-out
-- **Property:** background-color
-- **Value:** `rgba(255, 255, 255, 0.05)`
+**Reddit-Specific Classes:**
+```css
+@layer components {
+  .reddit-post-item {
+    @apply bg-transparent border-0 shadow-none rounded-none;
+    @apply border-b border-border last:border-b-0;
+    @apply px-4 py-3 hover:bg-surface/30 transition-colors;
+  }
 
-**Button Hover Effects:**
-- **Duration:** 100ms
-- **Easing:** ease-in-out
-- **Property:** background-color, transform
-- **Transform:** `scale(1.05)` for vote buttons
+  .reddit-vote-buttons {
+    @apply flex flex-row items-center gap-2;
+  }
 
-### 8.2 Vote Animation
+  .reddit-vote-button {
+    @apply w-6 h-6 p-1 rounded hover:bg-surface-muted/50 transition-colors;
+    @apply border-0 shadow-none bg-transparent;
+  }
 
-**Vote State Change:**
-- **Duration:** 200ms
-- **Easing:** ease-out
-- **Properties:** color, background-color
-- **Feedback:** Subtle scale animation on click
+  .reddit-vote-score {
+    @apply text-sm font-semibold min-w-[2rem] text-center text-foreground;
+  }
+
+  .reddit-post-content {
+    @apply space-y-2;
+  }
+
+  .reddit-post-title {
+    @apply text-lg font-semibold text-foreground leading-tight;
+  }
+
+  .reddit-post-body {
+    @apply text-sm text-foreground/80 leading-relaxed;
+  }
+
+  .reddit-post-meta {
+    @apply text-xs text-secondary flex items-center gap-2;
+  }
+}
+```
+
+### 8.2 Tailwind Config Updates
+
+**Required Extensions:**
+```typescript
+// tailwind.config.ts additions
+theme: {
+  extend: {
+    spacing: {
+      // Reddit spacing tokens
+      'reddit-xs': '0.5rem',    // 8px
+      'reddit-sm': '0.75rem',   // 12px  
+      'reddit-md': '1rem',      // 16px
+      'reddit-lg': '1.5rem',    // 24px
+    }
+  }
+}
+```
 
 ---
 
-## 9. IMPLEMENTATION PRIORITY MATRIX
+## 9. IMPLEMENTATION PHASES
 
-### 9.1 Phase 1: Core Layout Transformation (HIGH PRIORITY)
-1. **VoteButtons horizontal layout conversion
-2. **PostCard card removal and separator implementation
-3. **Basic color scheme application
-4. **Content spacing adjustments
+### 9.1 Phase 1: Vote System Transformation (Priority 1)
+**Estimated Time:** 45 minutes
+**Components:** `VoteButtons.tsx`
+**Changes:**
+- Layout change from vertical to horizontal
+- Styling updates for Reddit appearance
+- Hover state implementations
+- Responsive behavior validation
 
-### 9.2 Phase 2: Enhanced Styling (MEDIUM PRIORITY)
-1. **Hover state implementations
-2. **Animation additions
-3. **Typography refinements
-4. **Responsive optimizations
+### 9.2 Phase 2: Post Container Redesign (Priority 1)
+**Estimated Time:** 60 minutes
+**Components:** `PostCard.tsx`, `PostDetailCard.tsx`
+**Changes:**
+- Remove Card wrappers
+- Implement separator-based layout
+- Content spacing optimization
+- Hover state integration
 
-### 9.3 Phase 3: Polish and Refinement (LOW PRIORITY)
-1. **Micro-interactions
-2. **Advanced hover effects
-3. **Accessibility enhancements
-4. **Performance optimizations
+### 9.3 Phase 3: Feed Layout Updates (Priority 2)
+**Estimated Time:** 30 minutes
+**Components:** `CommunityFeed.tsx`
+**Changes:**
+- Container spacing adjustments
+- Separator integration
+- Background consistency
+
+### 9.4 Phase 4: Responsive Optimization (Priority 3)
+**Estimated Time:** 30 minutes
+**Components:** All updated components
+**Changes:**
+- Mobile layout validation
+- Touch target optimization
+- Content reflow testing
 
 ---
 
 ## 10. QUALITY ASSURANCE SPECIFICATIONS
 
-### 10.1 Visual Consistency Checks
-- **Spacing uniformity across all post elements
-- **Color consistency with Reddit reference
-- **Typography hierarchy maintenance
-- **Interactive state clarity
+### 10.1 Visual Consistency Checklist
+- [ ] All posts use consistent spacing (16px horizontal, 12px vertical)
+- [ ] Vote buttons maintain horizontal layout across all screen sizes
+- [ ] Hover states provide subtle feedback without jarring transitions
+- [ ] Typography hierarchy matches Reddit standards
+- [ ] Color usage follows EVIDENS brand guidelines
+- [ ] Separators appear between all posts except the last
 
 ### 10.2 Functional Validation
-- **Vote functionality preservation
-- **Navigation behavior maintenance
-- **Mobile responsiveness verification
-- **Accessibility compliance
+- [ ] Vote functionality remains unchanged
+- [ ] Post navigation works correctly
+- [ ] Mobile touch interactions function properly
+- [ ] Keyboard navigation maintains accessibility
+- [ ] Loading states integrate with new design
+- [ ] Error states maintain consistency
 
 ### 10.3 Performance Considerations
-- **CSS efficiency optimization
-- **Animation performance validation
-- **Rendering speed maintenance
-- **Memory usage monitoring
+- [ ] CSS animations use transform/opacity for performance
+- [ ] Hover effects don't trigger layout recalculations
+- [ ] Component re-renders remain optimized
+- [ ] Image loading maintains efficiency
 
 ---
 
-## 11. BROWSER COMPATIBILITY REQUIREMENTS
+## 11. ACCESSIBILITY COMPLIANCE
 
-### 11.1 Supported Browsers
-- **Chrome 90+
-- **Firefox 88+
-- **Safari 14+
-- **Edge 90+
+### 11.1 Reddit Pattern Accessibility
+**Maintained Standards:**
+- Vote buttons remain focusable with keyboard navigation
+- Screen reader compatibility for horizontal vote layout
+- Color contrast ratios meet WCAG 2.1 AA standards
+- Touch targets meet minimum 44px requirement on mobile
 
-### 11.2 Fallback Strategies
-- **CSS Grid fallbacks for older browsers
-- **Flexbox alternatives where needed
-- **Color fallbacks for unsupported properties
-- **Animation degradation for reduced motion preferences
+### 11.2 ARIA Requirements
+**Vote System:**
+- `aria-label` for upvote/downvote buttons
+- `aria-describedby` for vote scores
+- `role="group"` for vote button container
 
----
-
-## 12. ACCESSIBILITY COMPLIANCE
-
-### 12.1 ARIA Requirements
-- **Proper labeling for vote buttons
-- **Screen reader compatibility for post structure
-- **Keyboard navigation support
-- **Focus indicator visibility
-
-### 12.2 WCAG 2.1 Compliance
-- **AA level color contrast ratios
-- **Proper heading hierarchy
-- **Alternative text for images
-- **Keyboard accessibility
+**Post Structure:**
+- Proper heading hierarchy maintained
+- `aria-label` for post actions
+- Alternative text for media content
 
 ---
 
-## 13. TESTING SPECIFICATIONS
+## 12. BROWSER COMPATIBILITY
+
+### 12.1 Supported Environments
+- Chrome 90+
+- Firefox 88+ 
+- Safari 14+
+- Edge 90+
+- Mobile browsers (iOS Safari, Chrome Mobile)
+
+### 12.2 Fallback Strategies
+- CSS Grid fallbacks for older browsers
+- Flexbox alternatives where needed
+- Progressive enhancement for hover effects
+- Graceful degradation for animations
+
+---
+
+## 13. TESTING STRATEGY
 
 ### 13.1 Visual Regression Testing
-- **Screenshot comparison with Reddit reference
-- **Cross-browser visual consistency
-- **Responsive design verification
-- **Dark theme accuracy validation
+- Screenshot comparison with Reddit reference interface
+- Cross-browser visual consistency validation
+- Mobile/desktop responsive design verification
+- Dark theme accuracy assessment
 
-### 13.2 Functional Testing
-- **Vote button interaction testing
-- **Post navigation verification
-- **Mobile touch interaction validation
-- **Accessibility tool validation
+### 13.2 User Experience Testing
+- Vote interaction flow validation
+- Post navigation experience testing
+- Mobile touch interaction assessment
+- Keyboard accessibility verification
+
+### 13.3 Performance Testing
+- Animation performance validation
+- Scroll performance with new layout
+- Memory usage monitoring
+- Initial render speed assessment
 
 ---
 
 ## 14. MAINTENANCE CONSIDERATIONS
 
 ### 14.1 Code Organization
-- **Component separation for maintainability
-- **CSS utility class organization
-- **Type safety preservation
-- **Documentation updates
+**File Structure Preservation:**
+- Maintain existing component hierarchy
+- Preserve hook abstractions
+- Keep TypeScript type safety
+- Document all changes in component comments
 
 ### 14.2 Future Scalability
-- **Theme system extensibility
-- **Component reusability
-- **Performance optimization potential
-- **Feature addition flexibility
+**Design System Integration:**
+- Reddit patterns integrate with existing EVIDENS design tokens
+- Component variations support future customization
+- Style utilities remain composable
+- Brand color system remains flexible
 
 ---
 
 ## 15. TECHNICAL IMPLEMENTATION NOTES
 
-### 15.1 CSS Architecture
-- **Utilize Tailwind CSS utility classes
-- **Minimize custom CSS additions
-- **Leverage existing design tokens
-- **Maintain component-scoped styling
+### 15.1 CSS Architecture Strategy
+**Approach:**
+- Maximize Tailwind utility classes
+- Minimize custom CSS additions
+- Leverage existing EVIDENS design tokens
+- Maintain component-scoped styling patterns
 
 ### 15.2 TypeScript Considerations
-- **Preserve existing type definitions
-- **Maintain type safety for new props
-- **Update interface definitions as needed
-- **Ensure compatibility with existing hooks
+**Requirements:**
+- Preserve all existing type definitions
+- Maintain type safety for component props
+- Update interfaces only where necessary
+- Ensure compatibility with existing data hooks
 
 ---
 
 ## 16. VALIDATION CRITERIA
 
-### 16.1 Visual Fidelity
-- **95%+ similarity to Reddit interface patterns
-- **Consistent spacing and typography
-- **Proper color scheme implementation
-- **Smooth interaction feedback
+### 16.1 Design Fidelity Targets
+- **Layout Similarity:** 95%+ match to Reddit post structure
+- **Interaction Patterns:** Identical hover and click behaviors
+- **Content Density:** Similar information density per screen
+- **Visual Hierarchy:** Clear title/content/metadata distinction
 
-### 16.2 Functional Integrity
-- **100% preservation of existing functionality
-- **No regression in user experience
-- **Maintained performance characteristics
-- **Cross-platform compatibility
+### 16.2 Functional Integrity Requirements
+- **Zero Functionality Loss:** All existing features must work identically
+- **Performance Maintenance:** No performance degradation
+- **Accessibility Preservation:** All accessibility features maintained
+- **Mobile Experience:** Equal or improved mobile usability
+
+---
+
+## 17. IMPLEMENTATION CONSTRAINTS
+
+### 17.1 Strict Limitations
+**Forbidden Changes:**
+- App shell modifications
+- Navigation sidebar alterations  
+- Header component changes
+- Authentication page updates
+- Color palette modifications (use EVIDENS colors only)
+
+**Allowed Changes:**
+- Content area within `/comunidade` routes only
+- Post display components
+- Community-specific interactions
+- Layout density optimizations
+
+### 17.2 Brand Preservation Rules
+**EVIDENS Identity Maintenance:**
+- Logo unchanged
+- Color scheme adapted, never replaced
+- Typography system respected
+- Overall brand voice preserved through color choices
 
 ---
 
 ## CONCLUSION
 
-This comprehensive specification provides the complete blueprint for transforming the EVIDENS community interface to match Reddit's visual design patterns. The implementation focuses on maintaining all existing functionality while completely overhauling the visual presentation to achieve the desired Reddit-style aesthetic.
+This comprehensive specification provides the complete blueprint for transforming EVIDENS community interface to match Reddit's interaction patterns and visual density while strictly maintaining EVIDENS brand identity. The implementation focuses on structural changes (horizontal votes, de-boxed posts, separator-based layout) while adapting all colors to the existing EVIDENS palette.
 
-The transformation prioritizes:
-1. **Horizontal vote button layout
-2. **Card-less post presentation with separators
-3. **Reddit-accurate color scheme
-4. **Proper spacing and typography hierarchy
-5. **Responsive design maintenance
+**Implementation Priority:**
+1. **Vote System Horizontal Transformation** (Highest Impact)
+2. **Post Container De-boxing** (Visual Transformation)
+3. **Feed Layout Optimization** (Density Improvement)
+4. **Responsive Polish** (User Experience)
 
-All specifications are designed to be implemented incrementally while maintaining system stability and user experience continuity.
+**Success Metrics:**
+- Visual similarity to Reddit interface patterns: 95%+
+- Functional preservation: 100%
+- Brand consistency: 100%
+- Performance maintenance: No degradation
+- Accessibility compliance: Full WCAG 2.1 AA
 
 **Document Status:** Complete and ready for implementation
-**Next Steps:** Begin Phase 1 implementation with VoteButtons component transformation
+**Next Steps:** Begin Phase 1 with VoteButtons component horizontal transformation
+
+---
+
+**✅ Reddit-inspired design system specification complete with EVIDENS brand preservation.**
