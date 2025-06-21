@@ -22,6 +22,7 @@ const config: Config = {
       colors: {
         border: "hsl(var(--border))",
         "border-hover": "hsl(var(--border-hover))",
+        "border-strong": "hsl(var(--border-strong))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
@@ -29,6 +30,7 @@ const config: Config = {
         surface: {
           DEFAULT: "hsl(var(--surface))",
           muted: "hsl(var(--surface-muted))",
+          hover: "hsl(var(--surface-hover))",
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -58,6 +60,10 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Add the missing color tokens for Reddit-style UI
+        tertiary: "hsl(var(--text-tertiary))",
+        "comment-thread": "hsl(var(--comment-thread))",
+        "action-hover": "hsl(var(--action-hover))",
       },
       borderRadius: {
         lg: "var(--radius)",
