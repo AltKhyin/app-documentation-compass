@@ -20,25 +20,23 @@ export function CommunityPage() {
     : undefined;
 
   return (
-    // This wrapper is the DEFINITIVE FIX.
-    // It makes this page's root structure identical to the working Homepage/Acervo pages.
-    // This stable container prevents the "overflow breakout" that causes the root scrollbar.
-    <div className="h-full flex flex-col">
-      <CommunityLoadingState
+    // The incorrect wrapper <div class="min-h-screen..."> has been removed.
+    // This allows the shell's <main> element to correctly manage its own scrolling,
+    // finally fixing the layout bug.
+    <CommunityLoadingState
+      isLoading={isLoading && allPosts.length === 0}
+      error={error}
+    >
+      <CommunityFeedWithSidebar
+        posts={allPosts}
+        sidebarData={sidebarData}
+        onLoadMore={fetchNextPage}
+        hasMore={hasNextPage}
+        isLoadingMore={isFetchingNextPage}
+        lastSync={lastSync}
         isLoading={isLoading && allPosts.length === 0}
         error={error}
-      >
-        <CommunityFeedWithSidebar
-          posts={allPosts}
-          sidebarData={sidebarData}
-          onLoadMore={fetchNextPage}
-          hasMore={hasNextPage}
-          isLoadingMore={isFetchingNextPage}
-          lastSync={lastSync}
-          isLoading={isLoading && allPosts.length === 0}
-          error={error}
-        />
-      </CommunityLoadingState>
-    </div>
+      />
+    </CommunityLoadingState>
   );
 }
