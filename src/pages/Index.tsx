@@ -18,7 +18,8 @@ const Index = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-6 space-y-8">
+        {/* FIXED: Use max-width constraints to prevent overflow */}
+        <div className="max-w-7xl mx-auto px-4 py-6 space-y-8">
           {/* Featured Review Skeleton */}
           <Skeleton className="w-full h-96 rounded-md" />
           
@@ -26,7 +27,7 @@ const Index = () => {
           {[1, 2, 3].map((i) => (
             <div key={i} className="space-y-4">
               <Skeleton className="h-8 w-64 rounded-md" />
-              <div className="flex gap-4">
+              <div className="flex gap-4 overflow-x-auto">
                 {[1, 2, 3, 4].map((j) => (
                   <Skeleton key={j} className="w-64 h-48 rounded-md flex-shrink-0" />
                 ))}
@@ -127,8 +128,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* STANDARDIZED: Use same container pattern as other pages for consistent responsiveness */}
-      <div className="container mx-auto px-4 py-6 space-y-8">
+      {/* FIXED: Use max-width constraints and proper responsive padding to prevent overflow */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
         {/* Render modules in the order specified by the layout array */}
         {data?.layout?.map((moduleType) => renderModule(moduleType))}
       </div>

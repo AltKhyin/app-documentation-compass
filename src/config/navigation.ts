@@ -55,8 +55,8 @@ export const navigationItems: NavigationItem[] = [
     label: 'Salvos',
     mobileLabel: 'Salvos',
     icon: Bookmark,
-    showOnMobile: true,
-    showOnDesktop: false, // Desktop users access via profile or other means
+    showOnMobile: false, // FIXED: Should NOT show on mobile
+    showOnDesktop: true, // FIXED: Should show on desktop
   },
   {
     path: '/perfil',
@@ -107,8 +107,11 @@ export const getNavigationItems = (
   userRole: string = 'practitioner'
 ): NavigationItem[] => {
   return navigationItems.filter(item => {
-    // Check context visibility
-    const contextVisible = context === 'mobile' ? item.showOnMobile : item.showOnDesktop;
+    // FIXED: Proper context visibility check with explicit defaults
+    const contextVisible = context === 'mobile' 
+      ? (item.showOnMobile ?? false) 
+      : (item.showOnDesktop ?? true);
+    
     if (!contextVisible) return false;
 
     // Check role requirements
