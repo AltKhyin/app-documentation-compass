@@ -1,5 +1,5 @@
-
 // ABOUTME: Unified two-column layout following standard container pattern - matches Homepage/Acervo.
+// CORRECTED: Uses CSS Grid for a robust two-column layout and proper sticky sidebar behavior.
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -58,12 +58,15 @@ export const CommunityFeedWithSidebar = ({
     );
   }
 
-  // Standard container matching other pages (Homepage/Acervo pattern)
+  // Use a robust CSS Grid layout to manage columns and prevent overflow.
+  // 'items-start' is used to align columns to the top.
+  // The grid definition `lg:grid-cols-[minmax(0,1fr)_320px]` creates a flexible main
+  // column and a fixed-width sidebar, which is a more stable pattern for this layout.
   return (
     <div className="container mx-auto px-4 py-6">
-      <div className={`flex gap-8 ${isMobile ? 'flex-col' : 'flex-row'}`}>
-        {/* Main Feed Column - Mobile First */}
-        <div className={`${isMobile ? 'w-full' : 'flex-1'} min-w-0`}>
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+        {/* Main Feed Column */}
+        <div className="min-w-0">
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Comunidade</h1>
@@ -133,8 +136,10 @@ export const CommunityFeedWithSidebar = ({
         </div>
 
         {/* Sidebar Column - Desktop Only */}
+        {/* 'sticky top-6' makes the sidebar sticky relative to the main scrolling container from DesktopShell.
+            The 'top-6' value accounts for the 'py-6' padding of the parent container. */}
         {!isMobile && sidebarData && (
-          <div className="w-80 flex-shrink-0">
+          <div className="sticky top-6 w-full">
             <CommunityErrorBoundary context="sidebar da comunidade">
               <CommunitySidebar 
                 rules={sidebarData.rules}
