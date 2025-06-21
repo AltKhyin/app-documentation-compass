@@ -200,7 +200,7 @@
     -webkit-line-clamp: 3;
   }
 
-  /* Mobile-specific touch targets */
+  /* Mobile-specific touch targets - ENHANCED */
   .touch-target {
     min-height: 44px;
     min-width: 44px;
@@ -217,7 +217,7 @@
   }
 }
 
-/* Reddit-Style Component Utilities */
+/* Reddit-Style Component Utilities - ENHANCED */
 @layer components {
   .reddit-post-item {
     @apply bg-background border-0 shadow-none rounded-none;
@@ -242,7 +242,7 @@
     @apply bg-background border-0 shadow-none;
   }
 
-  /* NEW: Enhanced comment threading styles */
+  /* ENHANCED: Comment threading styles */
   .reddit-comment-thread {
     @apply space-y-1;
   }
@@ -267,21 +267,22 @@
     @apply flex items-center justify-center;
   }
 
-  /* Enhanced action button styling */
+  /* Enhanced action button styling - MOBILE OPTIMIZED */
   .reddit-action-button {
     @apply h-8 px-2 text-xs rounded-md;
     @apply bg-transparent border-0 shadow-none;
     @apply text-muted-foreground hover:text-foreground;
     @apply hover:bg-action-hover transition-all duration-150;
+    @apply font-medium; /* Enhanced readability */
   }
 
-  /* NEW: Typography hierarchy for better contrast */
+  /* ENHANCED: Typography hierarchy for better contrast */
   .reddit-text-primary {
     @apply text-foreground font-medium;
   }
 
   .reddit-text-secondary {
-    @apply text-secondary;
+    @apply text-muted-foreground;
   }
 
   .reddit-text-tertiary {
@@ -300,7 +301,7 @@
     @apply text-tertiary text-sm;
   }
 
-  /* Mobile optimizations for Reddit-style components */
+  /* Mobile optimizations for Reddit-style components - ENHANCED */
   @media (max-width: 767px) {
     .reddit-post-item {
       @apply px-4 py-3;
@@ -308,6 +309,7 @@
     
     .reddit-action-button {
       @apply min-h-[44px] min-w-[44px] touch-target;
+      @apply px-3 text-sm; /* Larger touch targets with better spacing */
     }
 
     .reddit-comment-thread {
@@ -315,11 +317,20 @@
     }
 
     .reddit-thread-toggle {
-      @apply w-6 h-6 text-xs;
+      @apply w-8 h-8 text-sm; /* Larger toggle for mobile */
     }
 
     .reddit-comment-item {
-      @apply px-2 py-1;
+      @apply px-3 py-2; /* Better mobile spacing */
+    }
+
+    /* Enhanced mobile typography */
+    .reddit-post-title {
+      @apply text-base font-semibold; /* Slightly smaller on mobile */
+    }
+    
+    .reddit-post-body {
+      @apply text-sm leading-relaxed;
     }
   }
 }

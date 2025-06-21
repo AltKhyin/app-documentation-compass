@@ -1,5 +1,5 @@
 
-// ABOUTME: Reddit-style detailed post card with unified structure and expanded content display.
+// ABOUTME: Reddit-style detailed post card with unified header structure and consistent styling.
 
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -103,7 +103,7 @@ export const PostDetailCard = ({ post }: PostDetailCardProps) => {
       post.is_pinned && "ring-2 ring-primary/20 bg-primary/5"
     )}>
       <div className="p-6">
-        {/* Header with author info and metadata */}
+        {/* UNIFIED HEADER: Avatar + Author + Time + Badges (matching PostCard) */}
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <Avatar className="w-10 h-10 flex-shrink-0">
@@ -115,11 +115,20 @@ export const PostDetailCard = ({ post }: PostDetailCardProps) => {
             
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <span className="font-semibold text-base">
+                <span className="reddit-post-author text-base font-semibold">
                   {post.author?.full_name || 'Usuário Anônimo'}
                 </span>
                 
-                {/* Moderation indicators */}
+                <span className="text-muted-foreground text-sm">•</span>
+                
+                <span className="reddit-post-timestamp text-sm">
+                  {formatDistanceToNow(new Date(post.created_at), {
+                    addSuffix: true,
+                    locale: ptBR
+                  })}
+                </span>
+
+                {/* Status indicators */}
                 {post.is_pinned && (
                   <>
                     <span className="text-muted-foreground text-sm">•</span>
@@ -139,15 +148,6 @@ export const PostDetailCard = ({ post }: PostDetailCardProps) => {
                     </div>
                   </>
                 )}
-              </div>
-              
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <span>
-                  {formatDistanceToNow(new Date(post.created_at), {
-                    addSuffix: true,
-                    locale: ptBR
-                  })}
-                </span>
               </div>
             </div>
           </div>
@@ -233,7 +233,7 @@ export const PostDetailCard = ({ post }: PostDetailCardProps) => {
         )}
       </div>
 
-      {/* Bottom Action Row - Same as PostCard */}
+      {/* Bottom Action Row - Mobile-Optimized Touch Targets (matching PostCard) */}
       <div className="px-6 pb-4">
         <div className="flex items-center gap-1 text-muted-foreground">
           {/* Vote Section */}
@@ -242,8 +242,8 @@ export const PostDetailCard = ({ post }: PostDetailCardProps) => {
               variant="ghost"
               size="sm"
               className={cn(
-                "h-8 px-2 text-xs hover:bg-surface-muted/50",
-                post.user_vote === 'up' && "text-green-600 bg-green-50 hover:bg-green-100"
+                "reddit-action-button",
+                post.user_vote === 'up' && "text-green-600 bg-green-50 dark:bg-green-950/20 hover:bg-green-100 dark:hover:bg-green-900/30"
               )}
               onClick={() => handleVote('up')}
               disabled={castVoteMutation.isPending}
@@ -256,8 +256,8 @@ export const PostDetailCard = ({ post }: PostDetailCardProps) => {
               variant="ghost"
               size="sm"
               className={cn(
-                "h-8 px-2 text-xs hover:bg-surface-muted/50",
-                post.user_vote === 'down' && "text-red-600 bg-red-50 hover:bg-red-100"
+                "reddit-action-button",
+                post.user_vote === 'down' && "text-red-600 bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-900/30"
               )}
               onClick={() => handleVote('down')}
               disabled={castVoteMutation.isPending}
@@ -271,7 +271,7 @@ export const PostDetailCard = ({ post }: PostDetailCardProps) => {
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 px-2 text-xs hover:bg-surface-muted/50"
+            className="reddit-action-button"
           >
             <MessageCircle className="w-4 h-4 mr-1" />
             {post.reply_count > 0 ? `${post.reply_count} respostas` : 'Nenhuma resposta'}
@@ -282,7 +282,7 @@ export const PostDetailCard = ({ post }: PostDetailCardProps) => {
             variant="ghost"
             size="sm"
             className={cn(
-              "h-8 px-2 text-xs hover:bg-surface-muted/50",
+              "reddit-action-button",
               post.is_saved && "text-primary"
             )}
             onClick={handleSave}
@@ -300,7 +300,7 @@ export const PostDetailCard = ({ post }: PostDetailCardProps) => {
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 px-2 text-xs hover:bg-surface-muted/50"
+            className="reddit-action-button"
             onClick={handleShare}
           >
             <Share2 className="w-4 h-4 mr-1" />

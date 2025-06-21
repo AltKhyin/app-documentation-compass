@@ -1,5 +1,5 @@
 
-// ABOUTME: Reddit-style flat post card with bottom action row and multimedia support.
+// ABOUTME: Reddit-style flat post card with unified header structure and mobile-optimized touch targets.
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +20,13 @@ import { toast } from 'sonner';
 interface PostCardProps {
   post: CommunityPost;
 }
+
+const CATEGORY_LABELS: Record<string, string> = {
+  general: 'Geral',
+  review_discussion: 'Review',
+  question: 'Pergunta',
+  announcement: 'Anúncio'
+};
 
 export const PostCard = ({ post }: PostCardProps) => {
   const navigate = useNavigate();
@@ -91,37 +98,76 @@ export const PostCard = ({ post }: PostCardProps) => {
   };
 
   const getCategoryLabel = (category: string) => {
-    const labels: Record<string, string> = {
-      'general': 'Geral',
-      'review_discussion': 'Discussão de Review',
-      'question': 'Pergunta',
-      'announcement': 'Anúncio'
-    };
-    return labels[category] || category;
+    return CATEGORY_LABELS[category] || category;
   };
 
   const getFlairColor = (color?: string) => {
-    if (!color) return 'bg-gray-100 text-gray-800';
+    if (!color) return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
     
     const colorMap: Record<string, string> = {
-      'blue': 'bg-blue-100 text-blue-800',
-      'green': 'bg-green-100 text-green-800',
-      'red': 'bg-red-100 text-red-800',
-      'yellow': 'bg-yellow-100 text-yellow-800',
-      'purple': 'bg-purple-100 text-purple-800',
+      'blue': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+      'green': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+      'red': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+      'yellow': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+      'purple': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
     };
     
-    return colorMap[color] || 'bg-gray-100 text-gray-800';
+    return colorMap[color] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
   };
-
-  const netScore = post.upvotes - post.downvotes;
 
   return (
     <div className="reddit-post-item">
       <div className="p-4 cursor-pointer" onClick={handlePostClick}>
-        {/* Header with badges and status indicators */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2 flex-wrap">
+        {/* UNIFIED HEADER: Avatar + Author + Time + Badges (top-left alignment) */}
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <Avatar className="w-8 h-8 flex-shrink-0">
+              <AvatarImage src={post.author?.avatar_url || undefined} />
+              <AvatarFallback className="text-xs">
+                {post.author?.full_name?.charAt(0) || '?'}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="reddit-post-author text-sm font-medium">
+                  {post.author?.full_name || 'Usuário Anônimo'}
+                </span>
+                
+                <span className="text-muted-foreground text-sm">•</span>
+                
+                <span className="reddit-post-timestamp text-sm">
+                  {formatDistanceToNow(new Date(post.created_at), { 
+                    addSuffix: true, 
+                    locale: ptBR 
+                  })}
+                </span>
+
+                {/* Status indicators */}
+                {post.is_pinned && (
+                  <>
+                    <span className="text-muted-foreground text-sm">•</span>
+                    <div className="flex items-center gap-1 text-primary">
+                      <Pin className="w-3 h-3" />
+                      <span className="text-xs font-medium">Fixado</span>
+                    </div>
+                  </>
+                )}
+                
+                {post.is_locked && (
+                  <>
+                    <span className="text-muted-foreground text-sm">•</span>
+                    <div className="flex items-center gap-1 text-orange-500">
+                      <Lock className="w-3 h-3" />
+                      <span className="text-xs font-medium">Bloqueado</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Badge variant="outline" className="text-xs">
               {getCategoryLabel(post.category)}
             </Badge>
@@ -131,23 +177,9 @@ export const PostCard = ({ post }: PostCardProps) => {
                 {post.flair_text}
               </Badge>
             )}
-            
-            {post.is_pinned && (
-              <div className="flex items-center text-green-600">
-                <Pin className="w-3 h-3 mr-1" />
-                <span className="text-xs">Fixado</span>
-              </div>
-            )}
-            
-            {post.is_locked && (
-              <div className="flex items-center text-orange-600">
-                <Lock className="w-3 h-3 mr-1" />
-                <span className="text-xs">Bloqueado</span>
-              </div>
-            )}
-          </div>
 
-          <PostActionMenu post={post} />
+            <PostActionMenu post={post} />
+          </div>
         </div>
 
         {/* Title - Always Present */}
@@ -195,33 +227,9 @@ export const PostCard = ({ post }: PostCardProps) => {
             }}
           />
         ) : null}
-
-        {/* Author and timestamp */}
-        <div className="reddit-post-meta mb-4">
-          <div className="flex items-center gap-2">
-            {post.author && (
-              <>
-                <Avatar className="w-4 h-4">
-                  <AvatarImage src={post.author.avatar_url || undefined} />
-                  <AvatarFallback className="text-xs">
-                    {post.author.full_name?.charAt(0) || 'A'}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-xs">{post.author.full_name || 'Anônimo'}</span>
-                <span className="text-xs">•</span>
-              </>
-            )}
-            <span className="text-xs">
-              {formatDistanceToNow(new Date(post.created_at), { 
-                addSuffix: true, 
-                locale: ptBR 
-              })}
-            </span>
-          </div>
-        </div>
       </div>
 
-      {/* Bottom Action Row - Reddit Style */}
+      {/* Bottom Action Row - Mobile-Optimized Touch Targets */}
       <div className="px-4 pb-3">
         <div className="flex items-center gap-1 text-muted-foreground">
           {/* Vote Section */}
@@ -230,8 +238,8 @@ export const PostCard = ({ post }: PostCardProps) => {
               variant="ghost"
               size="sm"
               className={cn(
-                "h-8 px-2 text-xs hover:bg-surface-muted/50",
-                post.user_vote === 'up' && "text-green-600 bg-green-50 hover:bg-green-100"
+                "reddit-action-button",
+                post.user_vote === 'up' && "text-green-600 bg-green-50 dark:bg-green-950/20 hover:bg-green-100 dark:hover:bg-green-900/30"
               )}
               onClick={(e) => {
                 e.stopPropagation();
@@ -247,8 +255,8 @@ export const PostCard = ({ post }: PostCardProps) => {
               variant="ghost"
               size="sm"
               className={cn(
-                "h-8 px-2 text-xs hover:bg-surface-muted/50",
-                post.user_vote === 'down' && "text-red-600 bg-red-50 hover:bg-red-100"
+                "reddit-action-button",
+                post.user_vote === 'down' && "text-red-600 bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-900/30"
               )}
               onClick={(e) => {
                 e.stopPropagation();
@@ -265,7 +273,7 @@ export const PostCard = ({ post }: PostCardProps) => {
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 px-2 text-xs hover:bg-surface-muted/50"
+            className="reddit-action-button"
             onClick={(e) => {
               e.stopPropagation();
               navigate(`/comunidade/${post.id}`);
@@ -280,7 +288,7 @@ export const PostCard = ({ post }: PostCardProps) => {
             variant="ghost"
             size="sm"
             className={cn(
-              "h-8 px-2 text-xs hover:bg-surface-muted/50",
+              "reddit-action-button",
               post.is_saved && "text-primary"
             )}
             onClick={(e) => {
@@ -301,7 +309,7 @@ export const PostCard = ({ post }: PostCardProps) => {
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 px-2 text-xs hover:bg-surface-muted/50"
+            className="reddit-action-button"
             onClick={(e) => {
               e.stopPropagation();
               handleShare();
