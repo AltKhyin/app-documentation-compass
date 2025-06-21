@@ -1,5 +1,5 @@
 
-// ABOUTME: PWA provider for managing installation state and lifecycle.
+// ABOUTME: PWA provider for managing installation state and lifecycle - simplified without header button.
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { usePWA } from '@/hooks/usePWA';

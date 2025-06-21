@@ -1,8 +1,7 @@
 
-// ABOUTME: Mobile shell layout component with bottom navigation and proper header/content separation.
+// ABOUTME: Mobile shell layout component with simplified structure - no header, just content and bottom navigation.
 
 import React from 'react';
-import Header from './Header';
 import BottomTabBar from './BottomTabBar';
 
 interface MobileShellProps {
@@ -12,10 +11,7 @@ interface MobileShellProps {
 const MobileShell = ({ children }: MobileShellProps) => {
   return (
     <div className="flex flex-col h-screen w-full bg-background">
-      {/* Fixed Header - separated from scrollable content */}
-      <Header />
-      
-      {/* Scrollable Main Content - CRITICAL: Proper scroll boundary */}
+      {/* Main Content - simplified without header */}
       <main className="flex-1 overflow-y-auto">
         <div className="p-4 pb-20">
           {children}

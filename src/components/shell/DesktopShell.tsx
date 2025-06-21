@@ -1,9 +1,8 @@
 
-// ABOUTME: Desktop shell layout component with proper sidebar-content relationship and fixed header architecture.
+// ABOUTME: Desktop shell layout component with simplified structure - no header, just sidebar and content.
 
 import React, { useState } from 'react';
 import CollapsibleSidebar from './CollapsibleSidebar';
-import Header from './Header';
 import { cn } from '@/lib/utils';
 
 interface DesktopShellProps {
@@ -29,15 +28,12 @@ const DesktopShell = ({ children }: DesktopShellProps) => {
       {/* Main content wrapper - positioned to avoid sidebar overlap */}
       <div
         className={cn(
-          'flex-1 flex flex-col transition-all duration-300 ease-in-out',
+          'flex-1 transition-all duration-300 ease-in-out',
           isCollapsed ? 'ml-20' : 'ml-60' // Match sidebar widths exactly
         )}
       >
-        {/* Fixed Header - now properly separated from scrollable content */}
-        <Header />
-
-        {/* Scrollable content area - CRITICAL: This is where page content scrolls */}
-        <main className="flex-1 overflow-y-auto">
+        {/* Scrollable content area - simplified without header */}
+        <main className="min-h-screen overflow-y-auto">
           <div className="p-4 md:p-6">
             {children}
           </div>
