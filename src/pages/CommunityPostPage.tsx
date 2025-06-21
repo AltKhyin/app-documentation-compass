@@ -1,69 +1,64 @@
 
-// ABOUTME: Community post detail page with integrated commenting system.
+// ABOUTME: Individual community post page with Reddit-style two-column layout including persistent sidebar.
 
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { usePostWithCommentsQuery } from '../../packages/hooks/usePostWithCommentsQuery';
-import { PostDetailCard } from '@/components/community/PostDetailCard';
-import { CommentThread } from '@/components/community/CommentThread';
-import { CommentEditor } from '@/components/community/CommentEditor';
-import { CommunityErrorBoundary } from '@/components/community/CommunityErrorBoundary';
-import { CommunityLoadingState } from '@/components/community/CommunityLoadingState';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, MessageCircle } from 'lucide-react';
+import { PostDetail } from '../components/community/PostDetail';
+import { CommunitySidebar } from '../components/community/CommunitySidebar';
+import { CommunityErrorBoundary } from '../components/community/CommunityErrorBoundary';
+import { CommunityLoadingState } from '../components/community/CommunityLoadingState';
+import { usePostWithCommentsQuery, usePostDetailQuery } from '../../packages/hooks/usePostDetailQuery';
+import { useCommunityPageQuery } from '../../packages/hooks/useCommunityPageQuery';
+import { useIsMobile } from '../hooks/use-mobile';
+import { Button } from '../components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import type { CommunityPost } from '../types/community';
 
-export default function CommunityPostPage() {
-  const { postId } = useParams<{ postId: string }>();
+export const CommunityPostPage = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
-  // Validate postId
-  const numericPostId = postId ? parseInt(postId, 10) : 0;
-  if (!numericPostId || isNaN(numericPostId)) {
+  const isMobile = useIsMobile();
+  const postId = parseInt(id || '0', 10);
+
+  // Fetch post and comments
+  const { 
+    data: postData, 
+    isLoading: postLoading, 
+    error: postError 
+  } = usePostWithCommentsQuery(postId);
+
+  // Fetch sidebar data (reuse community page query for consistency)
+  const { 
+    data: communityData,
+    isLoading: sidebarLoading 
+  } = useCommunityPageQuery();
+
+  const handleBackToFeed = () => {
+    navigate('/comunidade');
+  };
+
+  if (postLoading) {
     return (
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-destructive mb-4">Post não encontrado</h1>
-          <p className="text-muted-foreground mb-6">O post que você está procurando não existe ou foi removido.</p>
-          <Button onClick={() => navigate('/comunidade')}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar para Comunidade
-          </Button>
+      <div className="min-h-screen">
+        <div className="container mx-auto px-4 py-6">
+          <CommunityLoadingState description="Carregando discussão..." />
         </div>
       </div>
     );
   }
 
-  // Fetch post with comments using the new hook
-  const { data, isLoading, error, refetch } = usePostWithCommentsQuery(numericPostId);
-
-  if (isLoading) {
+  if (postError || !postData) {
     return (
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <CommunityLoadingState 
-          variant="post" 
-          description="Carregando discussão e comentários..."
-        />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-destructive mb-4">Erro ao carregar</h1>
-          <p className="text-muted-foreground mb-6">
-            Não foi possível carregar esta discussão. Tente novamente.
-          </p>
-          <div className="flex gap-4 justify-center">
-            <Button variant="outline" onClick={() => refetch()}>
-              Tentar novamente
-            </Button>
-            <Button onClick={() => navigate('/comunidade')}>
+      <div className="min-h-screen">
+        <div className="container mx-auto px-4 py-6">
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold mb-4">Post não encontrado</h2>
+            <p className="text-muted-foreground mb-6">
+              Este post pode ter sido removido ou você pode não ter permissão para visualizá-lo.
+            </p>
+            <Button onClick={handleBackToFeed} variant="outline">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar para Comunidade
+              Voltar para a comunidade
             </Button>
           </div>
         </div>
@@ -71,68 +66,86 @@ export default function CommunityPostPage() {
     );
   }
 
-  if (!data?.post) {
-    return (
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-destructive mb-4">Post não encontrado</h1>
-          <p className="text-muted-foreground mb-6">Este post não existe ou foi removido.</p>
-          <Button onClick={() => navigate('/comunidade')}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar para Comunidade
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const { post, comments } = data;
+  const { post, comments } = postData;
+  const sidebarData = communityData?.sidebarData;
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
-      {/* Back button */}
-      <div className="mb-6">
-        <Button variant="ghost" onClick={() => navigate('/comunidade')}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Voltar para Comunidade
-        </Button>
-      </div>
-
-      {/* Main post */}
-      <CommunityErrorBoundary context="post principal">
-        <PostDetailCard post={post as CommunityPost} />
-      </CommunityErrorBoundary>
-
-      {/* Comments section */}
-      <div className="mt-8">
-        <div className="flex items-center gap-2 mb-6">
-          <MessageCircle className="w-5 h-5" />
-          <h2 className="text-xl font-bold">
-            Comentários ({comments.length})
-          </h2>
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4 py-6">
+        {/* Back to feed button */}
+        <div className="mb-4">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleBackToFeed}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar para a comunidade
+          </Button>
         </div>
 
-        {/* Comment editor for new top-level comments */}
-        <div className="mb-6">
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">
-            Adicionar comentário
-          </h3>
-          <CommunityErrorBoundary context="editor de comentários">
-            <CommentEditor 
-              parentPostId={numericPostId} 
-              onCommentPosted={() => refetch()} 
-            />
-          </CommunityErrorBoundary>
-        </div>
+        {/* Two-column layout (Reddit-style) */}
+        <div className={`flex gap-8 ${isMobile ? 'flex-col' : 'flex-row'}`}>
+          {/* Main Content Column */}
+          <div className={`${isMobile ? 'w-full' : 'flex-1'} min-w-0`}>
+            <CommunityErrorBoundary context="post detail">
+              <PostDetail post={post} comments={comments} />
+            </CommunityErrorBoundary>
+          </div>
 
-        {/* Comment thread */}
-        <CommunityErrorBoundary context="thread de comentários">
-          <CommentThread 
-            comments={comments} 
-            onCommentPosted={() => refetch()}
-          />
-        </CommunityErrorBoundary>
+          {/* Sidebar Column - Desktop Only per Blueprint 06 */}
+          {!isMobile && sidebarData && (
+            <div className="w-80 flex-shrink-0">
+              <div className="sticky top-6">
+                <CommunityErrorBoundary context="sidebar da comunidade">
+                  <CommunitySidebar 
+                    rules={sidebarData.rules}
+                    links={sidebarData.links}
+                    trendingDiscussions={sidebarData.trendingDiscussions}
+                    featuredPoll={sidebarData.featuredPoll}
+                    recentActivity={sidebarData.recentActivity}
+                  />
+                </CommunityErrorBoundary>
+              </div>
+            </div>
+          )}
+
+          {/* Mobile Sidebar Content Integration */}
+          {isMobile && sidebarData && (
+            <div className="w-full mt-8">
+              <div className="space-y-6">
+                {/* Featured content as horizontal cards */}
+                {sidebarData.featuredPoll && (
+                  <div className="p-4 bg-surface/50 rounded-lg">
+                    <h3 className="font-medium mb-2">Enquete em Destaque</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {sidebarData.featuredPoll.question}
+                    </p>
+                  </div>
+                )}
+
+                {/* Trending discussions */}
+                {sidebarData.trendingDiscussions.length > 0 && (
+                  <div className="p-4 bg-surface/50 rounded-lg">
+                    <h3 className="font-medium mb-3">Em Alta</h3>
+                    <div className="space-y-2">
+                      {sidebarData.trendingDiscussions.slice(0, 3).map((discussion) => (
+                        <div key={discussion.id} className="text-sm">
+                          <div className="font-medium line-clamp-1">{discussion.title}</div>
+                          <div className="text-muted-foreground text-xs">
+                            {discussion.upvotes} votos • {discussion.reply_count} respostas
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
-}
+};

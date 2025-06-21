@@ -21,6 +21,13 @@
 
     --text-primary: 220 10% 15%;
     --text-secondary: 220 10% 35%;
+    
+    /* NEW: Enhanced hierarchy tokens for Reddit-style clarity */
+    --text-tertiary: 220 10% 48%;     /* For less important metadata */
+    --surface-hover: 220 20% 91%;     /* For subtle hover backgrounds */
+    --border-strong: 220 10% 70%;     /* For emphasized separators */
+    --comment-thread: 220 10% 82%;    /* For threading lines */
+    --action-hover: 220 20% 85%;      /* For action button hovers */
 
     /* Legacy tokens for compatibility */
     --card: 220 20% 98%;
@@ -56,6 +63,13 @@
 
     --text-primary: 210 40% 95%;
     --text-secondary: 0 0% 28%;     /* #484848 - Secondary text */
+    
+    /* NEW: Enhanced hierarchy tokens for Reddit-style clarity */
+    --text-tertiary: 0 0% 45%;      /* For less important metadata */
+    --surface-hover: 0 0% 12%;      /* For subtle hover backgrounds */
+    --border-strong: 0 0% 22%;      /* For emphasized separators */
+    --comment-thread: 0 0% 20%;     /* For threading lines */
+    --action-hover: 0 0% 15%;       /* For action button hovers */
 
     /* Legacy tokens for compatibility - updated to match new scheme */
     --card: 0 0% 10%;               /* #1a1a1a */
@@ -228,12 +242,62 @@
     @apply bg-background border-0 shadow-none;
   }
 
-  /* Ensure action buttons have consistent styling */
+  /* NEW: Enhanced comment threading styles */
+  .reddit-comment-thread {
+    @apply space-y-1;
+  }
+
+  .reddit-comment-item {
+    @apply transition-colors duration-150;
+    @apply hover:bg-surface-hover/30;
+  }
+
+  .reddit-comment-collapsed {
+    @apply opacity-60 transition-opacity duration-200;
+  }
+
+  .reddit-thread-line {
+    @apply bg-comment-thread hover:bg-border-strong transition-colors duration-150;
+  }
+
+  .reddit-thread-toggle {
+    @apply bg-background border border-border rounded-sm;
+    @apply hover:bg-surface-muted hover:border-border-hover;
+    @apply transition-all duration-150 cursor-pointer;
+    @apply flex items-center justify-center;
+  }
+
+  /* Enhanced action button styling */
   .reddit-action-button {
     @apply h-8 px-2 text-xs rounded-md;
     @apply bg-transparent border-0 shadow-none;
     @apply text-muted-foreground hover:text-foreground;
-    @apply hover:bg-surface-muted/50 transition-all duration-150;
+    @apply hover:bg-action-hover transition-all duration-150;
+  }
+
+  /* NEW: Typography hierarchy for better contrast */
+  .reddit-text-primary {
+    @apply text-foreground font-medium;
+  }
+
+  .reddit-text-secondary {
+    @apply text-secondary;
+  }
+
+  .reddit-text-tertiary {
+    @apply text-tertiary text-xs;
+  }
+
+  .reddit-post-header {
+    @apply flex items-center gap-2 mb-3;
+  }
+
+  .reddit-post-author {
+    @apply font-medium text-foreground hover:text-primary transition-colors duration-150;
+  }
+
+  .reddit-post-timestamp {
+    @apply text-tertiary text-sm;
   }
 
   /* Mobile optimizations for Reddit-style components */
@@ -244,6 +308,18 @@
     
     .reddit-action-button {
       @apply min-h-[44px] min-w-[44px] touch-target;
+    }
+
+    .reddit-comment-thread {
+      @apply space-y-2;
+    }
+
+    .reddit-thread-toggle {
+      @apply w-6 h-6 text-xs;
+    }
+
+    .reddit-comment-item {
+      @apply px-2 py-1;
     }
   }
 }
