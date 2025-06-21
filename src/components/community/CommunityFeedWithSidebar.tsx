@@ -62,8 +62,8 @@ export const CommunityFeedWithSidebar = ({
   return (
     <div className="container mx-auto px-4 py-6">
       <div className={`flex gap-8 ${isMobile ? 'flex-col' : 'flex-row'}`}>
-        {/* Main Feed Column - Mobile First */}
-        <div className={`${isMobile ? 'w-full' : 'flex-1'} min-w-0`}>
+        {/* Main Feed Column - Mobile First - CRITICAL FIX: Added min-h-0 to prevent flexbox overflow */}
+        <div className={`${isMobile ? 'w-full' : 'flex-1'} min-w-0 min-h-0`}>
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Comunidade</h1>
