@@ -1,7 +1,3 @@
-// ABOUTME: Unified two-column layout following standard container pattern - matches Homepage/Acervo.
-// CORRECTED: Replaced Flexbox with a more robust CSS Grid layout to resolve page overflow issues.
-// The sidebar will scroll with the content feed.
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
@@ -11,7 +7,6 @@ import { CommunitySidebar } from './CommunitySidebar';
 import { CommunityErrorBoundary } from './CommunityErrorBoundary';
 import { CommunityLoadingState } from './CommunityLoadingState';
 import { NetworkAwareFallback, useNetworkStatus } from './NetworkAwareFallback';
-import { useIsMobile } from '../../hooks/use-mobile';
 import type { CommunityPost, SidebarData } from '../../types/community';
 
 interface CommunityFeedWithSidebarProps {
@@ -33,10 +28,9 @@ export const CommunityFeedWithSidebar = ({
   isLoadingMore,
   lastSync,
   isLoading = false,
-  error = null
+  error = null,
 }: CommunityFeedWithSidebarProps) => {
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
   const { isOnline } = useNetworkStatus();
 
   const handleCreatePost = () => {
@@ -47,7 +41,6 @@ export const CommunityFeedWithSidebar = ({
     window.location.reload();
   };
 
-  // Show network-aware fallback for offline scenarios
   if (!isOnline && posts.length === 0) {
     return (
       <NetworkAwareFallback
@@ -59,37 +52,14 @@ export const CommunityFeedWithSidebar = ({
     );
   }
 
-  // If on mobile, use a simpler flex-col layout.
-  if (isMobile) {
-    return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col gap-8">
-          <div className="min-w-0">
-            {/* Header */}
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold">Comunidade</h1>
-              <Button onClick={handleCreatePost} size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Nova
-              </Button>
-            </div>
-            {/* Feed Content ... */}
-            <FeedContent />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // For desktop, use a robust CSS Grid layout to manage columns.
-  // This is more stable for this page structure than flexbox.
-  // It creates a flexible main column and a fixed-width sidebar.
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="grid grid-cols-[minmax(0,1fr)_320px] items-start gap-8">
+    // This `flex-1` class is the second part of the fix.
+    // It tells this component to grow and fill the vertical space provided by its new
+    // full-height parent in `CommunityPage.tsx`.
+    <div className="container mx-auto px-4 py-6 flex-1">
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
         {/* Main Feed Column */}
         <div className="min-w-0">
-          {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Comunidade</h1>
             <Button onClick={handleCreatePost}>
@@ -97,14 +67,62 @@ export const CommunityFeedWithSidebar = ({
               Nova Discussão
             </Button>
           </div>
-          <FeedContent />
+
+          <NetworkAwareFallback
+            isOnline={isOnline}
+            lastSync={lastSync}
+            showCachedBadge={posts.length > 0}
+            context="discussões"
+          />
+
+          <CommunityErrorBoundary context="feed da comunidade" showDetails={false}>
+            <div className="space-y-4">
+              {posts.length === 0 && !isLoading ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground mb-4">
+                    Nenhuma discussão encontrada.
+                  </p>
+                  <Button variant="outline" onClick={handleCreatePost}>
+                    Criar a primeira discussão
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {posts.map(post => (
+                    <CommunityErrorBoundary key={post.id} context={`post ${post.id}`}>
+                      <PostCard post={post} />
+                    </CommunityErrorBoundary>
+                  ))}
+
+                  {hasMore && (
+                    <div className="flex justify-center pt-6">
+                      {isLoadingMore ? (
+                        <CommunityLoadingState
+                          variant="minimal"
+                          description="Carregando mais discussões..."
+                        />
+                      ) : (
+                        <Button
+                          variant="outline"
+                          onClick={onLoadMore}
+                          disabled={!isOnline}
+                        >
+                          {!isOnline ? 'Sem conexão' : 'Carregar mais'}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </CommunityErrorBoundary>
         </div>
 
-        {/* Sidebar Column - Scrolls with the feed */}
+        {/* Sidebar Column - Will now scroll correctly with the feed */}
         {sidebarData && (
-          <div className="w-full">
+          <div className="hidden lg:block w-full">
             <CommunityErrorBoundary context="sidebar da comunidade">
-              <CommunitySidebar 
+              <CommunitySidebar
                 rules={sidebarData.rules}
                 links={sidebarData.links}
                 trendingDiscussions={sidebarData.trendingDiscussions}
@@ -117,64 +135,4 @@ export const CommunityFeedWithSidebar = ({
       </div>
     </div>
   );
-
-  // Helper component to avoid duplicating the feed logic
-  function FeedContent() {
-    return (
-      <>
-        <NetworkAwareFallback
-          isOnline={isOnline}
-          lastSync={lastSync}
-          showCachedBadge={posts.length > 0}
-          context="discussões"
-        />
-        <CommunityErrorBoundary context="feed da comunidade" showDetails={false}>
-          <div className="space-y-4">
-            {posts.length === 0 && !isLoading ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground mb-4">
-                  Nenhuma discussão encontrada.
-                </p>
-                <Button 
-                  variant="outline" 
-                  onClick={handleCreatePost}
-                >
-                  Criar a primeira discussão
-                </Button>
-              </div>
-            ) : (
-              <>
-                {posts.map((post) => (
-                  <CommunityErrorBoundary 
-                    key={post.id} 
-                    context={`post ${post.id}`}
-                  >
-                    <PostCard post={post} />
-                  </CommunityErrorBoundary>
-                ))}
-                {hasMore && (
-                  <div className="flex justify-center pt-6">
-                    {isLoadingMore ? (
-                      <CommunityLoadingState 
-                        variant="minimal" 
-                        description="Carregando mais discussões..."
-                      />
-                    ) : (
-                      <Button
-                        variant="outline"
-                        onClick={onLoadMore}
-                        disabled={!isOnline}
-                      >
-                        {!isOnline ? 'Sem conexão' : 'Carregar mais'}
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </CommunityErrorBoundary>
-      </>
-    );
-  }
 };
