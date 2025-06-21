@@ -21,7 +21,7 @@ const fetchPostWithComments = async (postId: number): Promise<PostWithCommentsDa
   
   if (!postId || postId <= 0) {
     console.error('Invalid postId provided:', postId);
-    throw new Error(`Invalid post ID: ${postId}`);
+    throw new Error(`Invalid post ID: ${postId}. Expected a positive number.`);
   }
 
   // Get the authenticated user ID for personalized data
@@ -138,7 +138,7 @@ const fetchPostWithComments = async (postId: number): Promise<PostWithCommentsDa
         
       if (minimalError || !minimalPost) {
         console.error('All fetch strategies failed. Final error:', minimalError);
-        throw new Error(`Post with ID ${postId} could not be found using any method`);
+        throw new Error(`Post with ID ${postId} could not be found using any method. This may indicate the post doesn't exist or you don't have permission to view it.`);
       }
       
       console.log('Minimal post data retrieved as fallback:', minimalPost);
