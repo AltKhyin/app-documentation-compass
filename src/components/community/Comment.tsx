@@ -7,12 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { VoteButtons } from './VoteButtons';
-import { PostActionMenu } from './PostActionMenu';
 import { CommentEditor } from './CommentEditor';
-import { Award } from 'lucide-react';
+import { PostActionMenu } from './PostActionMenu';
+import { ChevronUp, ChevronDown, Award } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import type { CommunityPost } from '../../types/community';
+import { useCastCommunityVoteMutation } from '../../../packages/hooks/useCastCommunityVoteMutation';
+import { useAuthStore } from '../../store/auth';
 
 interface CommentProps {
   comment: CommunityPost;
@@ -22,6 +24,8 @@ interface CommentProps {
 
 export const Comment = ({ comment, indentationLevel, onCommentPosted }: CommentProps) => {
   const [isReplying, setIsReplying] = useState(false);
+  const { user } = useAuthStore();
+  const castVoteMutation = useCastCommunityVoteMutation();
 
   // Calculate left margin for nesting effect (max 6 levels to prevent UI overflow)
   const effectiveLevel = Math.min(indentationLevel, 6);
@@ -30,6 +34,24 @@ export const Comment = ({ comment, indentationLevel, onCommentPosted }: CommentP
   const handleReplyPosted = () => {
     setIsReplying(false);
     onCommentPosted();
+  };
+
+  const handleVote = async (voteType: 'up' | 'down') => {
+    if (!user) {
+      toast.error('Você precisa estar logado para votar');
+      return;
+    }
+
+    const newVoteType = comment.user_vote === voteType ? null : voteType;
+
+    try {
+      await castVoteMutation.mutateAsync({
+        postId: comment.id,
+        voteType: newVoteType
+      });
+    } catch (error) {
+      toast.error('Erro ao votar. Tente novamente.');
+    }
   };
 
   return (
@@ -43,8 +65,8 @@ export const Comment = ({ comment, indentationLevel, onCommentPosted }: CommentP
 
       <div className="flex-1">
         <div className={cn(
-          "bg-card p-3 rounded-lg border transition-colors",
-          comment.is_rewarded && "border-yellow-500/50 ring-2 ring-yellow-500/20 bg-yellow-50/50 dark:bg-yellow-950/20"
+          "p-3 transition-colors hover:bg-surface/20",
+          comment.is_rewarded && "border-l-2 border-yellow-500 bg-yellow-50/50 dark:bg-yellow-950/20"
         )}>
           {/* Comment Header */}
           <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
@@ -72,19 +94,45 @@ export const Comment = ({ comment, indentationLevel, onCommentPosted }: CommentP
             dangerouslySetInnerHTML={{ __html: comment.content }}
           />
 
-          {/* Comment Actions */}
-          <div className="flex items-center gap-2">
-            <VoteButtons
-              postId={comment.id}
-              upvotes={comment.upvotes || 0}
-              downvotes={comment.downvotes || 0}
-              userVote={comment.user_vote}
-            />
+          {/* Comment Actions - Reddit Style Bottom Row */}
+          <div className="flex items-center gap-1 text-muted-foreground">
+            {/* Vote Section */}
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "h-8 px-2 text-xs hover:bg-surface-muted/50",
+                  comment.user_vote === 'up' && "text-green-600 bg-green-50 hover:bg-green-100"
+                )}
+                onClick={() => handleVote('up')}
+                disabled={castVoteMutation.isPending}
+              >
+                <ChevronUp className="w-4 h-4 mr-1" />
+                {comment.upvotes || 0}
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "h-8 px-2 text-xs hover:bg-surface-muted/50",
+                  comment.user_vote === 'down' && "text-red-600 bg-red-50 hover:bg-red-100"
+                )}
+                onClick={() => handleVote('down')}
+                disabled={castVoteMutation.isPending}
+              >
+                <ChevronDown className="w-4 h-4 mr-1" />
+                {comment.downvotes || 0}
+              </Button>
+            </div>
+
+            {/* Reply Button */}
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => setIsReplying(!isReplying)}
-              className="text-xs"
+              className="h-8 px-2 text-xs hover:bg-surface-muted/50"
             >
               {isReplying ? 'Cancelar' : 'Responder'}
             </Button>
