@@ -1,72 +1,44 @@
 
-// ABOUTME: Rate limiting utilities for Edge Functions with configurable limits and Redis-like functionality
+// ABOUTME: Centralized rate limiting utilities for Edge Functions with comprehensive error handling
 
-interface RateLimitResult {
+export interface RateLimitResult {
   allowed: boolean;
   remaining: number;
   resetTime: number;
-  limit: number;
 }
 
-// Simple in-memory rate limiting (for development - production should use Redis)
+// Rate limiting storage (in-memory for Edge Functions)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
-export async function rateLimitCheck(
-  req: Request,
+export async function checkRateLimit(
+  supabase: any,
   functionName: string,
-  limit: number = 30,
-  windowSeconds: number = 60
+  userId: string,
+  maxRequests: number = 30,
+  windowMs: number = 60 * 1000
 ): Promise<RateLimitResult> {
-  const clientIP = req.headers.get('x-forwarded-for') || 'unknown';
-  const key = `${functionName}:${clientIP}`;
-  const now = Math.floor(Date.now() / 1000);
-  const windowStart = now - windowSeconds;
-
-  // Clean up old entries
-  for (const [k, v] of rateLimitStore.entries()) {
-    if (v.resetTime < now) {
-      rateLimitStore.delete(k);
-    }
-  }
-
-  const current = rateLimitStore.get(key);
+  const now = Date.now();
+  const key = `${functionName}:${userId}`;
+  const userLimit = rateLimitStore.get(key);
   
-  if (!current || current.resetTime < now) {
-    // New window or expired
-    const resetTime = now + windowSeconds;
-    rateLimitStore.set(key, { count: 1, resetTime });
-    return {
-      allowed: true,
-      remaining: limit - 1,
-      resetTime,
-      limit
-    };
+  if (!userLimit || now > userLimit.resetTime) {
+    // Reset window
+    rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
+    return { allowed: true, remaining: maxRequests - 1, resetTime: now + windowMs };
   }
-
-  if (current.count >= limit) {
-    return {
-      allowed: false,
-      remaining: 0,
-      resetTime: current.resetTime,
-      limit
-    };
+  
+  if (userLimit.count >= maxRequests) {
+    return { allowed: false, remaining: 0, resetTime: userLimit.resetTime };
   }
-
-  current.count++;
-  rateLimitStore.set(key, current);
-
-  return {
-    allowed: true,
-    remaining: limit - current.count,
-    resetTime: current.resetTime,
-    limit
-  };
+  
+  // Increment count
+  userLimit.count++;
+  return { allowed: true, remaining: maxRequests - userLimit.count, resetTime: userLimit.resetTime };
 }
 
-export function rateLimitHeaders(result: RateLimitResult): Record<string, string> {
+export function rateLimitHeaders(rateLimit: RateLimitResult) {
   return {
-    'X-RateLimit-Limit': result.limit.toString(),
-    'X-RateLimit-Remaining': result.remaining.toString(),
-    'X-RateLimit-Reset': result.resetTime.toString(),
+    'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+    'X-RateLimit-Reset': Math.ceil(rateLimit.resetTime / 1000).toString(),
   };
 }

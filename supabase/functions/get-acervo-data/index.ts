@@ -1,55 +1,56 @@
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0'
-import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts'
+// ABOUTME: Acervo data Edge Function following [DOC_5] mandatory 7-step pattern
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
+import { corsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  authenticateUser,
+  RateLimitError
+} from '../_shared/api-helpers.ts';
+import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
-serve(async (req) => {
-  // Handle CORS preflight requests
+Deno.serve(async (req) => {
+  // STEP 1: CORS Preflight Handling (MANDATORY FIRST)
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreflightRequest();
   }
 
   try {
+    // STEP 2: Manual Authentication (requires verify_jwt = false in config.toml)
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    );
 
-    // Get user for rate limiting and RLS
-    const authHeader = req.headers.get('Authorization');
+    // Get user for rate limiting and RLS (optional for this endpoint)
     let userId = 'anonymous';
     let userSubscriptionTier = 'free';
     
+    const authHeader = req.headers.get('Authorization');
     if (authHeader) {
-      const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-      if (user) {
+      try {
+        const user = await authenticateUser(supabase, authHeader);
         userId = user.id;
         userSubscriptionTier = user.user_metadata?.subscription_tier || 'free';
+      } catch (authError) {
+        console.warn('Auth verification failed, continuing as anonymous:', authError);
       }
     }
 
-    // Check rate limit (30 requests per 60 seconds) - per [DOC_5]
+    // STEP 3: Rate Limiting Implementation
     const rateLimitResult = await checkRateLimit(supabase, 'get-acervo-data', userId, 30, 60);
     if (!rateLimitResult.allowed) {
-      return new Response(JSON.stringify({
-        error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }
-      }), {
-        status: 429,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-          ...rateLimitHeaders(rateLimitResult)
-        }
-      });
+      throw RateLimitError;
     }
+
+    // STEP 4: Input Parsing & Validation
+    // No input validation needed for this GET-like endpoint
 
     console.log(`Starting Acervo data fetch for user: ${userId}`);
 
+    // STEP 5: Core Business Logic Execution
     // Fetch published reviews with RLS applied through access_level filtering
     const reviewsQuery = supabase
       .from('Reviews')
@@ -83,7 +84,7 @@ serve(async (req) => {
     // Fetch all tags with their hierarchy
     const { data: tags, error: tagsError } = await supabase
       .from('Tags')
-      .select('id, tag_name, parent_id')
+      .select('id, tag_name, parent_id, created_at')
       .order('tag_name');
 
     if (tagsError) {
@@ -144,30 +145,11 @@ serve(async (req) => {
       tags: tags || []
     };
 
-    console.log('Acervo data transformation complete. Returning response.');
-
-    return new Response(JSON.stringify(response), {
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders,
-        ...rateLimitHeaders(rateLimitResult)
-      }
-    });
+    // STEP 6: Standardized Success Response
+    return createSuccessResponse(response, rateLimitHeaders(rateLimitResult));
 
   } catch (error) {
-    console.error('Acervo data fetch error:', error);
-    
-    return new Response(JSON.stringify({
-      error: {
-        message: error.message || 'Internal server error',
-        code: 'INTERNAL_ERROR'
-      }
-    }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders
-      }
-    });
+    // STEP 7: Centralized Error Handling
+    return createErrorResponse(error);
   }
 });

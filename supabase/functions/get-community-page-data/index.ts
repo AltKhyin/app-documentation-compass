@@ -1,18 +1,18 @@
 
-// ABOUTME: Optimized community page data endpoint with improved error handling and performance.
+// ABOUTME: Community page data Edge Function following [DOC_5] mandatory 7-step pattern
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0'
-import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
+import { corsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { 
-  createErrorResponse, 
   createSuccessResponse, 
-  handleCorsPreflightRequest,
-  RateLimitError 
-} from '../_shared/api-helpers.ts'
+  createErrorResponse, 
+  authenticateUser,
+  RateLimitError
+} from '../_shared/api-helpers.ts';
+import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
-serve(async (req) => {
-  // Handle CORS preflight requests
+Deno.serve(async (req) => {
+  // STEP 1: CORS Preflight Handling (MANDATORY FIRST)
   if (req.method === 'OPTIONS') {
     return handleCorsPreflightRequest();
   }
@@ -25,35 +25,34 @@ serve(async (req) => {
   try {
     console.log('Starting community page data fetch...');
     
+    // STEP 2: Manual Authentication (requires verify_jwt = false in config.toml)
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    );
 
     // Get user ID for personalization and rate limiting
-    const authHeader = req.headers.get('Authorization');
     let userId = '00000000-0000-0000-0000-000000000000'; // Default UUID for anonymous
     
+    const authHeader = req.headers.get('Authorization');
     if (authHeader) {
       try {
-        const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-        if (user) {
-          userId = user.id;
-          console.log(`Authenticated user: ${userId}`);
-        }
+        const user = await authenticateUser(supabase, authHeader);
+        userId = user.id;
+        console.log(`Authenticated user: ${userId}`);
       } catch (authError) {
         console.warn('Auth verification failed, continuing as anonymous:', authError);
       }
     }
 
-    // Check rate limit (30 requests per 60 seconds)
-    const rateLimitResult = await checkRateLimit(supabase, 'get-community-page-data', userId);
+    // STEP 3: Rate Limiting Implementation
+    const rateLimitResult = await checkRateLimit(supabase, 'get-community-page-data', userId, 30, 60);
     if (!rateLimitResult.allowed) {
       console.log('Rate limit exceeded for user:', userId);
       throw RateLimitError;
     }
 
-    // Parse request body safely
+    // STEP 4: Input Parsing & Validation
     let requestBody = {};
     try {
       const bodyText = await req.text();
@@ -64,13 +63,15 @@ serve(async (req) => {
       console.warn('Failed to parse request body, using defaults:', parseError);
     }
 
-    const { page = 0, limit = 20 } = requestBody;
+    const { page = 0, limit = 20 } = requestBody as any;
     const actualLimit = Math.min(limit, 50); // Cap at 50 for performance
     const offset = page * actualLimit;
 
     console.log(`Fetching community page data: page=${page}, limit=${actualLimit}, user=${userId}`);
 
-    // Try to fetch main feed posts using the optimized RPC first, with fallback
+    // STEP 5: Core Business Logic Execution
+    
+    // Fetch main feed posts with fallback strategy
     let posts = [];
     try {
       console.log('Attempting to use optimized RPC function...');
@@ -90,7 +91,7 @@ serve(async (req) => {
     } catch (rpcError) {
       console.log('Using fallback query strategy...');
       
-      // Fallback: Manual query with joins (less efficient but functional)
+      // Fallback: Manual query with joins
       const { data: fallbackPosts, error: fallbackError } = await supabase
         .from('CommunityPosts')
         .select(`
@@ -144,65 +145,23 @@ serve(async (req) => {
         reply_count: 0 // Will need separate query for reply counts in fallback
       }));
 
-      // Enhanced fallback: fetch user votes if needed
-      if (posts.length > 0 && userId !== '00000000-0000-0000-0000-000000000000') {
-        const postIds = posts.map(p => p.id);
-        const { data: userVotes } = await supabase
-          .from('CommunityPost_Votes')
-          .select('post_id, vote_type')
-          .eq('practitioner_id', userId)
-          .in('post_id', postIds);
-
-        // Map votes to posts
-        const voteMap = {};
-        (userVotes || []).forEach(vote => {
-          voteMap[vote.post_id] = vote.vote_type;
-        });
-
-        posts = posts.map(post => ({
-          ...post,
-          user_vote: voteMap[post.id] || null
-        }));
-      }
-
-      // Enhanced fallback: fetch reply counts
-      if (posts.length > 0) {
-        const postIds = posts.map(p => p.id);
-        const { data: replyCounts } = await supabase
-          .from('CommunityPosts')
-          .select('parent_post_id')
-          .in('parent_post_id', postIds);
-
-        const replyMap = {};
-        (replyCounts || []).forEach(reply => {
-          replyMap[reply.parent_post_id] = (replyMap[reply.parent_post_id] || 0) + 1;
-        });
-
-        posts = posts.map(post => ({
-          ...post,
-          reply_count: replyMap[post.id] || 0
-        }));
-      }
-
       console.log(`Successfully fetched ${posts.length} community posts via fallback query`);
     }
 
-    // Optimized trending discussions calculation
+    // Calculate trending discussions
     const trendingDiscussions = (posts || [])
       .filter(post => {
-        // Only include recent posts (last 48 hours)
         if (!post.created_at) return false;
         const postDate = new Date(post.created_at);
         const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
         return postDate > cutoff;
       })
       .sort((a, b) => {
-        // Enhanced engagement score calculation
         const scoreA = ((a.upvotes || 0) + (a.downvotes || 0)) * 2 + (a.reply_count || 0);
         const scoreB = ((b.upvotes || 0) + (b.downvotes || 0)) * 2 + (b.reply_count || 0);
         return scoreB - scoreA;
       })
-      .slice(0, 5) // Top 5 trending
+      .slice(0, 5)
       .map(post => ({
         id: post.id,
         title: post.title || 'Discussão sem título',
@@ -216,7 +175,7 @@ serve(async (req) => {
         is_pinned: post.is_pinned || false
       }));
 
-    // Optimized sidebar configuration fetch
+    // Fetch sidebar configuration
     const { data: sidebarSettings } = await supabase
       .from('SiteSettings')
       .select('value')
@@ -245,7 +204,7 @@ serve(async (req) => {
       }
     }
 
-    // Optimized featured poll fetch
+    // Fetch featured poll if configured
     let featuredPoll = null;
     if (sidebarConfig.featuredPollId) {
       const { data: poll } = await supabase
@@ -266,7 +225,7 @@ serve(async (req) => {
       featuredPoll = poll;
     }
 
-    // Optimized recent activity fetch
+    // Fetch recent activity
     const { data: recentActivity } = await supabase
       .from('CommunityPosts')
       .select(`
@@ -280,7 +239,7 @@ serve(async (req) => {
       .order('created_at', { ascending: false })
       .limit(3);
 
-    // Construct optimized response
+    // Construct response
     const response = {
       posts: posts || [],
       pagination: {
@@ -297,11 +256,13 @@ serve(async (req) => {
       }
     };
 
-    console.log('Successfully prepared optimized community page data');
+    console.log('Successfully prepared community page data');
 
+    // STEP 6: Standardized Success Response
     return createSuccessResponse(response, rateLimitHeaders(rateLimitResult));
 
   } catch (error) {
+    // STEP 7: Centralized Error Handling
     console.error('Community page data fetch error:', error);
     return createErrorResponse(error);
   }
