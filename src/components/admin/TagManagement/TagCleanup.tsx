@@ -1,4 +1,3 @@
-
 // ABOUTME: Tag cleanup component for managing unused and orphaned tags
 
 import React, { useState } from 'react';
@@ -13,7 +12,7 @@ import {
   RefreshCw,
   Search
 } from 'lucide-react';
-import { useTagAnalyticsQuery, useTagOperationMutation } from '../../../packages/hooks/useTagManagementQuery';
+import { useTagAnalyticsQuery, useTagOperationMutation } from '../../../../packages/hooks/useTagManagementQuery';
 
 export const TagCleanup = () => {
   const { data: analytics, isLoading, refetch } = useTagAnalyticsQuery();
