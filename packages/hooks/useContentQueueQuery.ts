@@ -25,6 +25,17 @@ export interface ReviewQueueItem {
   access_level: string;
   author_id?: string;
   reviewer_id?: string;
+  publication_notes?: string;
+  author?: {
+    id: string;
+    full_name: string;
+    avatar_url?: string;
+  };
+  reviewer?: {
+    id: string;
+    full_name: string;
+    avatar_url?: string;
+  };
 }
 
 export interface ContentQueueResponse {

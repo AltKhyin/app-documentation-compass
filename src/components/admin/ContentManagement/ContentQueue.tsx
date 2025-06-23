@@ -32,7 +32,7 @@ export const ContentQueue = () => {
   } = useContentQueueQuery(filters);
 
   const allReviews = data?.pages.flatMap(page => page.reviews) || [];
-  const summary = data?.pages[0]?.summary;
+  const stats = data?.pages[0]?.stats;
 
   const handleFilterChange = (newFilters: typeof filters) => {
     setFilters(newFilters);
@@ -78,7 +78,7 @@ export const ContentQueue = () => {
       <FilterPanel 
         filters={filters} 
         onFiltersChange={handleFilterChange}
-        summary={summary}
+        summary={stats}
       />
 
       {/* Bulk Operations */}
