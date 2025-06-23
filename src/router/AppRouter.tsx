@@ -1,4 +1,3 @@
-
 // ABOUTME: Main application router with all route definitions including admin protected routes
 import {
   createBrowserRouter,
@@ -20,6 +19,7 @@ import LoginPage from "@/pages/LoginPage";
 import { AdminProtectedRoute } from '@/components/routes/AdminProtectedRoute';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { AdminDashboard } from '@/pages/AdminDashboard';
+import ContentManagement from '@/pages/ContentManagement';
 
 const router = createBrowserRouter([
   {
@@ -96,10 +96,9 @@ const router = createBrowserRouter([
             index: true,
             element: <AdminDashboard />,
           },
-          // Placeholder routes for future implementation
           {
             path: "content",
-            element: <div className="p-6 text-center text-gray-500">Gestão de Conteúdo - Em desenvolvimento</div>,
+            element: <ContentManagement />,
           },
           {
             path: "users", 
