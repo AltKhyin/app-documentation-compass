@@ -1,8 +1,8 @@
 // ABOUTME: Advanced user list table with filtering, pagination, and bulk operations for admin user management
 
 import React, { useState } from 'react';
-import { useUserListQuery } from '../../../packages/hooks/useUserManagementQuery';
-import { useAvailableRolesQuery } from '../../../packages/hooks/useRoleManagementQuery';
+import { useUserListQuery } from '@/packages/hooks/useUserManagementQuery';
+import { useAvailableRolesQuery } from '@/packages/hooks/useRoleManagementQuery';
 import {
   Table,
   TableBody,

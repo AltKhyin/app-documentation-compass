@@ -1,7 +1,7 @@
 // ABOUTME: Role assignment and management modal for granting and revoking user roles with expiration
 
 import React, { useState } from 'react';
-import { useUserRolesQuery, useAvailableRolesQuery, useAssignRoleMutation, useRevokeRoleMutation } from '../../../packages/hooks/useRoleManagementQuery';
+import { useUserRolesQuery, useAvailableRolesQuery, useAssignRoleMutation, useRevokeRoleMutation } from '@/packages/hooks/useRoleManagementQuery';
 import {
   Dialog,
   DialogContent,
