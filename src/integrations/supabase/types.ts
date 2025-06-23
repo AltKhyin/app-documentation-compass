@@ -705,22 +705,31 @@ export type Database = {
       }
       SiteSettings: {
         Row: {
+          category: string | null
           created_at: string
+          description: string | null
           id: number
+          is_public: boolean | null
           key: string
           updated_at: string
           value: Json
         }
         Insert: {
+          category?: string | null
           created_at?: string
+          description?: string | null
           id?: number
+          is_public?: boolean | null
           key: string
           updated_at?: string
           value: Json
         }
         Update: {
+          category?: string | null
           created_at?: string
+          description?: string | null
           id?: number
+          is_public?: boolean | null
           key?: string
           updated_at?: string
           value?: Json
@@ -815,6 +824,56 @@ export type Database = {
           },
         ]
       }
+      SystemAuditLog: {
+        Row: {
+          action_type: string
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          new_values: Json | null
+          old_values: Json | null
+          performed_by: string
+          resource_id: string | null
+          resource_type: string
+          user_agent: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          new_values?: Json | null
+          old_values?: Json | null
+          performed_by: string
+          resource_id?: string | null
+          resource_type: string
+          user_agent?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          new_values?: Json | null
+          old_values?: Json | null
+          performed_by?: string
+          resource_id?: string | null
+          resource_type?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "SystemAuditLog_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "Practitioners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Tags: {
         Row: {
           created_at: string
@@ -840,6 +899,51 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "Tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      UserRoles: {
+        Row: {
+          expires_at: string | null
+          granted_at: string
+          granted_by: string | null
+          id: string
+          is_active: boolean
+          practitioner_id: string
+          role_name: string
+        }
+        Insert: {
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean
+          practitioner_id: string
+          role_name: string
+        }
+        Update: {
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean
+          practitioner_id?: string
+          role_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "UserRoles_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "Practitioners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "UserRoles_practitioner_id_fkey"
+            columns: ["practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "Practitioners"
             referencedColumns: ["id"]
           },
         ]
@@ -917,13 +1021,37 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_user_roles: {
+        Args: { p_user_id: string }
+        Returns: {
+          role_name: string
+          granted_at: string
+          expires_at: string
+        }[]
+      }
       handle_post_action: {
         Args: { p_post_id: number; p_user_id: string; p_action_type: string }
         Returns: Json
       }
+      log_audit_event: {
+        Args: {
+          p_performed_by: string
+          p_action_type: string
+          p_resource_type: string
+          p_resource_id?: string
+          p_old_values?: Json
+          p_new_values?: Json
+          p_metadata?: Json
+        }
+        Returns: string
+      }
       update_community_stats: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      user_has_role: {
+        Args: { p_user_id: string; p_role_name: string }
+        Returns: boolean
       }
     }
     Enums: {
