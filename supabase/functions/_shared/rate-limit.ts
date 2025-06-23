@@ -1,109 +1,71 @@
 
-// ABOUTME: Centralized rate limiting utility for all edge functions with consistent exports.
-
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+// ABOUTME: Rate limiting utilities for Edge Functions with configurable limits and Redis-like functionality
 
 interface RateLimitResult {
   allowed: boolean;
   remaining: number;
   resetTime: number;
+  limit: number;
 }
 
-/**
- * Check rate limit for a given key and user
- * @param supabase - Supabase client instance
- * @param key - Rate limit key (e.g., 'create-post:user-id')
- * @param limit - Maximum requests allowed
- * @param windowSeconds - Time window in seconds
- * @returns Promise<RateLimitResult>
- */
-export async function checkRateLimit(
-  supabase: any,
-  key: string,
-  limit: number,
-  windowSeconds: number = 60
-): Promise<RateLimitResult> {
-  const now = Math.floor(Date.now() / 1000);
-  const windowStart = now - windowSeconds;
+// Simple in-memory rate limiting (for development - production should use Redis)
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
-  try {
-    // Clean up old entries
-    await supabase
-      .from('rate_limit_log')
-      .delete()
-      .lt('created_at', new Date((now - windowSeconds) * 1000).toISOString());
-
-    // Count recent requests
-    const { data: recentRequests, error } = await supabase
-      .from('rate_limit_log')
-      .select('*')
-      .eq('key', key)
-      .gte('created_at', new Date(windowStart * 1000).toISOString());
-
-    if (error) {
-      console.error('Rate limit check error:', error);
-      // Allow request on error to prevent blocking users
-      return { allowed: true, remaining: limit, resetTime: now + windowSeconds };
-    }
-
-    const requestCount = recentRequests?.length || 0;
-
-    if (requestCount >= limit) {
-      return {
-        allowed: false,
-        remaining: 0,
-        resetTime: now + windowSeconds
-      };
-    }
-
-    // Log this request
-    await supabase
-      .from('rate_limit_log')
-      .insert({
-        key,
-        created_at: new Date().toISOString()
-      });
-
-    return {
-      allowed: true,
-      remaining: limit - requestCount - 1,
-      resetTime: now + windowSeconds
-    };
-  } catch (error) {
-    console.error('Rate limit error:', error);
-    // Allow request on error
-    return { allowed: true, remaining: limit, resetTime: now + windowSeconds };
-  }
-}
-
-/**
- * Alternative function name for backward compatibility and the specific case mentioned in the logs
- */
 export async function rateLimitCheck(
   req: Request,
   functionName: string,
-  limit: number,
+  limit: number = 30,
   windowSeconds: number = 60
 ): Promise<RateLimitResult> {
-  // Create a minimal supabase client for rate limiting
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-  );
-  
-  // Generate a key based on IP and function name for anonymous rate limiting
   const clientIP = req.headers.get('x-forwarded-for') || 'unknown';
   const key = `${functionName}:${clientIP}`;
+  const now = Math.floor(Date.now() / 1000);
+  const windowStart = now - windowSeconds;
+
+  // Clean up old entries
+  for (const [k, v] of rateLimitStore.entries()) {
+    if (v.resetTime < now) {
+      rateLimitStore.delete(k);
+    }
+  }
+
+  const current = rateLimitStore.get(key);
   
-  return checkRateLimit(supabase, key, limit, windowSeconds);
+  if (!current || current.resetTime < now) {
+    // New window or expired
+    const resetTime = now + windowSeconds;
+    rateLimitStore.set(key, { count: 1, resetTime });
+    return {
+      allowed: true,
+      remaining: limit - 1,
+      resetTime,
+      limit
+    };
+  }
+
+  if (current.count >= limit) {
+    return {
+      allowed: false,
+      remaining: 0,
+      resetTime: current.resetTime,
+      limit
+    };
+  }
+
+  current.count++;
+  rateLimitStore.set(key, current);
+
+  return {
+    allowed: true,
+    remaining: limit - current.count,
+    resetTime: current.resetTime,
+    limit
+  };
 }
 
-/**
- * Generate rate limit headers for HTTP responses
- */
 export function rateLimitHeaders(result: RateLimitResult): Record<string, string> {
   return {
-    'X-RateLimit-Limit': '60',
+    'X-RateLimit-Limit': result.limit.toString(),
     'X-RateLimit-Remaining': result.remaining.toString(),
     'X-RateLimit-Reset': result.resetTime.toString(),
   };
