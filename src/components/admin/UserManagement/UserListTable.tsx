@@ -1,3 +1,4 @@
+
 // ABOUTME: Advanced user list table with filtering, pagination, and bulk operations for admin user management
 
 import React, { useState } from 'react';
@@ -48,12 +49,12 @@ interface UserManagementFilters {
   role?: string;
   subscription_tier?: string;
   search?: string;
-  page?: number;
-  limit?: number;
+  page: number;
+  limit: number;
 }
 
 export const UserListTable = () => {
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<UserManagementFilters>({
     page: 1,
     limit: 20
   });
@@ -184,7 +185,7 @@ export const UserListTable = () => {
             </div>
             
             <div className="flex gap-2">
-              <Select value={filters.role || 'all'} onValueChange={(value) => handleFilterChange('role', value === 'all' ? undefined : value)}>
+              <Select value={filters.role || 'all'} onValueChange={(value) => handleFilterChange('role', value === 'all' ? '' : value)}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Filtrar por papel" />
                 </SelectTrigger>
@@ -197,7 +198,7 @@ export const UserListTable = () => {
                 </SelectContent>
               </Select>
 
-              <Select value={filters.subscription_tier || 'all'} onValueChange={(value) => handleFilterChange('subscription_tier', value === 'all' ? undefined : value)}>
+              <Select value={filters.subscription_tier || 'all'} onValueChange={(value) => handleFilterChange('subscription_tier', value === 'all' ? '' : value)}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Filtrar por plano" />
                 </SelectTrigger>
