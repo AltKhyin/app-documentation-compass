@@ -83,7 +83,7 @@ const router = createBrowserRouter([
         element: <LoginPage />,
       },
       
-      // Admin Routes
+      // Admin Routes - English maintained for internal tools
       {
         path: "/admin",
         element: (
