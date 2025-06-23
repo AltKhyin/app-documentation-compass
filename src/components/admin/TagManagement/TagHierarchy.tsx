@@ -18,6 +18,8 @@ import {
   Folder
 } from 'lucide-react';
 import { useTagManagementQuery, useTagOperationMutation, type TagWithStats } from '../../../../packages/hooks/useTagManagementQuery';
+import { TagCreateModal } from './TagCreateModal';
+import { TagEditModal } from './TagEditModal';
 import { cn } from '@/lib/utils';
 
 interface TagNode extends TagWithStats {
@@ -33,6 +35,11 @@ export const TagHierarchy = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedNodes, setExpandedNodes] = useState<Set<number>>(new Set());
   const [selectedTag, setSelectedTag] = useState<number | null>(null);
+  
+  // Modal states
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingTag, setEditingTag] = useState<TagWithStats | null>(null);
 
   // Build hierarchical tree structure
   const tagTree = useMemo(() => {
@@ -89,16 +96,24 @@ export const TagHierarchy = () => {
     });
   };
 
-  const handleTagOperation = async (action: string, tagId?: number, parentId?: number | null) => {
+  const handleDeleteTag = async (tagId: number, tagName: string) => {
+    if (!confirm(`Tem certeza que deseja deletar a tag "${tagName}"?`)) {
+      return;
+    }
+
     try {
       await tagOperationMutation.mutateAsync({
-        action: action as any,
-        tagId,
-        parentId
+        action: 'delete',
+        tagId
       });
     } catch (error) {
-      console.error('Tag operation failed:', error);
+      console.error('Tag deletion failed:', error);
     }
+  };
+
+  const handleEditTag = (tag: TagWithStats) => {
+    setEditingTag(tag);
+    setIsEditModalOpen(true);
   };
 
   const renderTagNode = (node: TagNode) => {
@@ -109,7 +124,7 @@ export const TagHierarchy = () => {
       <div key={node.id} className="select-none">
         <div 
           className={cn(
-            "flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors",
+            "flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors group",
             "hover:bg-gray-50",
             isSelected && "bg-blue-50 border border-blue-200",
             node.level > 0 && "ml-6"
@@ -166,7 +181,7 @@ export const TagHierarchy = () => {
               className="h-6 w-6 p-0"
               onClick={(e) => {
                 e.stopPropagation();
-                handleTagOperation('update', node.id);
+                handleEditTag(node);
               }}
             >
               <Edit className="h-3 w-3" />
@@ -174,23 +189,10 @@ export const TagHierarchy = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-0"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleTagOperation('move', node.id);
-              }}
-            >
-              <Move className="h-3 w-3" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
               className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
               onClick={(e) => {
                 e.stopPropagation();
-                if (confirm(`Tem certeza que deseja deletar a tag "${node.tag_name}"?`)) {
-                  handleTagOperation('delete', node.id);
-                }
+                handleDeleteTag(node.id, node.tag_name);
               }}
             >
               <Trash2 className="h-3 w-3" />
@@ -241,82 +243,91 @@ export const TagHierarchy = () => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Hierarquia de Tags</CardTitle>
-            <CardDescription>
-              Organize tags em uma estrutura hierárquica e gerencie relações
-            </CardDescription>
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Hierarquia de Tags</CardTitle>
+              <CardDescription>
+                Organize tags em uma estrutura hierárquica e gerencie relações
+              </CardDescription>
+            </div>
+            <Button 
+              onClick={() => setIsCreateModalOpen(true)}
+              disabled={tagOperationMutation.isPending}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Nova Tag
+            </Button>
           </div>
-          <Button 
-            onClick={() => handleTagOperation('create')}
-            disabled={tagOperationMutation.isPending}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nova Tag
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Buscar tags..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Buscar tags..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
 
-        {/* Actions Bar */}
-        <div className="flex gap-2 text-sm">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setExpandedNodes(new Set(tags.map(t => t.id)))}
-          >
-            Expandir Tudo
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setExpandedNodes(new Set())}
-          >
-            Recolher Tudo
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => handleTagOperation('cleanup')}
-            disabled={tagOperationMutation.isPending}
-          >
-            Limpar Não Utilizadas
-          </Button>
-        </div>
+          {/* Actions Bar */}
+          <div className="flex gap-2 text-sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setExpandedNodes(new Set(tags.map(t => t.id)))}
+            >
+              Expandir Tudo
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setExpandedNodes(new Set())}
+            >
+              Recolher Tudo
+            </Button>
+          </div>
 
-        {/* Tag Tree */}
-        <div className="border rounded-lg p-4 max-h-96 overflow-y-auto">
-          {filteredTree.length > 0 ? (
-            <div className="space-y-1 group">
-              {filteredTree.map(renderTagNode)}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              {searchTerm ? 'Nenhuma tag encontrada' : 'Nenhuma tag disponível'}
-            </div>
-          )}
-        </div>
+          {/* Tag Tree */}
+          <div className="border rounded-lg p-4 max-h-96 overflow-y-auto">
+            {filteredTree.length > 0 ? (
+              <div className="space-y-1">
+                {filteredTree.map(renderTagNode)}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                {searchTerm ? 'Nenhuma tag encontrada' : 'Nenhuma tag disponível'}
+              </div>
+            )}
+          </div>
 
-        {/* Summary Stats */}
-        <div className="flex gap-4 text-sm text-gray-600 pt-4 border-t">
-          <span>Total: {tags.length} tags</span>
-          <span>Selecionada: {selectedTag ? tags.find(t => t.id === selectedTag)?.tag_name : 'Nenhuma'}</span>
-          {searchTerm && <span>Filtradas: {filteredTree.length} resultados</span>}
-        </div>
-      </CardContent>
-    </Card>
+          {/* Summary Stats */}
+          <div className="flex gap-4 text-sm text-gray-600 pt-4 border-t">
+            <span>Total: {tags.length} tags</span>
+            <span>Selecionada: {selectedTag ? tags.find(t => t.id === selectedTag)?.tag_name : 'Nenhuma'}</span>
+            {searchTerm && <span>Filtradas: {filteredTree.length} resultados</span>}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Modals */}
+      <TagCreateModal 
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
+      
+      <TagEditModal 
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingTag(null);
+        }}
+        tag={editingTag}
+      />
+    </>
   );
 };

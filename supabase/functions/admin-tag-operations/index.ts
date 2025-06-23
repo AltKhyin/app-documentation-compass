@@ -4,7 +4,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { corsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { createSuccessResponse, createErrorResponse, authenticateUser } from '../_shared/api-helpers.ts';
-import { rateLimitCheck, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
 interface TagOperationPayload {
   action: 'create' | 'update' | 'delete' | 'merge' | 'move' | 'cleanup';
@@ -14,6 +13,39 @@ interface TagOperationPayload {
   description?: string;
   mergeTargetId?: number;
   bulkTagIds?: number[];
+}
+
+// Rate limiting storage (in-memory for Edge Functions)
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+function checkRateLimit(userId: string): { allowed: boolean; remaining: number; resetTime: number } {
+  const now = Date.now();
+  const windowMs = 60 * 1000; // 1 minute
+  const maxRequests = 30; // 30 requests per minute per user
+  
+  const key = `tag-ops:${userId}`;
+  const userLimit = rateLimitStore.get(key);
+  
+  if (!userLimit || now > userLimit.resetTime) {
+    // Reset window
+    rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
+    return { allowed: true, remaining: maxRequests - 1, resetTime: now + windowMs };
+  }
+  
+  if (userLimit.count >= maxRequests) {
+    return { allowed: false, remaining: 0, resetTime: userLimit.resetTime };
+  }
+  
+  // Increment count
+  userLimit.count++;
+  return { allowed: true, remaining: maxRequests - userLimit.count, resetTime: userLimit.resetTime };
+}
+
+function getRateLimitHeaders(rateLimit: { remaining: number; resetTime: number }) {
+  return {
+    'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+    'X-RateLimit-Reset': Math.ceil(rateLimit.resetTime / 1000).toString(),
+  };
 }
 
 Deno.serve(async (req) => {
@@ -38,9 +70,9 @@ Deno.serve(async (req) => {
     }
 
     // STEP 3: Rate Limiting Implementation
-    const rateLimitResult = await rateLimitCheck(req, 'admin-tag-operations', 30, 60);
+    const rateLimitResult = checkRateLimit(user.id);
     if (!rateLimitResult.allowed) {
-      throw new Error('RATE_LIMIT_EXCEEDED: Rate limit exceeded');
+      throw new Error('RATE_LIMIT_EXCEEDED: Rate limit exceeded. Please try again later.');
     }
 
     // STEP 4: Input Parsing & Validation
@@ -56,7 +88,7 @@ Deno.serve(async (req) => {
     const result = await handleTagOperation(supabase, payload, user.id);
 
     // STEP 6: Standardized Success Response
-    return createSuccessResponse(result, rateLimitHeaders(rateLimitResult));
+    return createSuccessResponse(result, getRateLimitHeaders(rateLimitResult));
 
   } catch (error) {
     // STEP 7: Centralized Error Handling
