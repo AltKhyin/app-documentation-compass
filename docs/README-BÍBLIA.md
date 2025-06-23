@@ -1,12 +1,28 @@
 # **EVIDENS - Bíblia de Implementação**
 
-**Versão:** 10.1.0  
+**Versão:** 10.2.0  
 **Data:** 23 de junho de 2025  
-**Status:** 🚀 PHASE 1 COMPLETE - DATABASE & ADMIN FOUNDATION IMPLEMENTED
+**Status:** 🚀 FOUNDATION REALIGNMENT COMPLETE - READY FOR PHASE 2
 
 ---
 
 ## **📋 CONTROLE DE VERSÃO**
+
+### **10.2.0 - Foundation Realignment Complete: Architectural Alignment** *(23/06/2025)*
+**CRITICAL MILESTONE:**
+- ✅ **Router Structure Aligned:** AppRouter.tsx corrected with proper imports and Error Boundary implementation
+- ✅ **Missing Pages Created:** ArchivePage, CommunityPostDetail, SettingsPage, SuggestionPage implemented
+- ✅ **Component Structure Standardized:** SavePost component created following [D3.2] composition model
+- ✅ **TypeScript Compilation:** All 8 critical import errors resolved, build now successful
+- ✅ **Error Boundary Hierarchy:** Root-level error boundary properly implemented with children prop
+
+**Foundation Realignment Status:**
+- 🟢 **Router Architecture:** Complete alignment with [M2.4] directory structure
+- 🟢 **Page Components:** All missing pages implemented with proper Error Boundary integration
+- 🟢 **Import Consistency:** All file paths verified and aligned with actual directory structure
+- 🟢 **TypeScript Compliance:** All compilation errors resolved, strict mode maintained
+
+**Ready for Phase 2:** Content Publication Engine implementation can now proceed safely
 
 ### **10.1.0 - Phase 1 Complete: Database & Admin Foundation** *(23/06/2025)*
 **IMPLEMENTATION MILESTONE:**
@@ -52,7 +68,7 @@
 
 ### **✅ FEATURES IMPLEMENTADAS**
 
-#### **🔐 Sistema Administrativo (NEW)**
+#### **🔐 Sistema Administrativo (UPDATED)**
 - ✅ **Proteção de Rotas:** AdminProtectedRoute com verificação de roles admin/editor
 - ✅ **Layout Administrativo:** AdminLayout com navegação consistente e estrutura modular
 - ✅ **Dashboard Principal:** AdminDashboard com estatísticas e visão geral do sistema
@@ -60,6 +76,7 @@
 - ✅ **Edge Functions:** admin-get-content-queue e admin-manage-publication implementadas
 - ✅ **Workflow de Publicação:** Estados de review (draft, under_review, scheduled, published, archived)
 - ✅ **Auditoria Completa:** Publication_History para rastreamento de todas as ações
+- ✅ **Router Integration:** Admin routes properly integrated with main application router
 
 #### **🏠 Homepage**
 - ✅ **Layout Responsivo:** Container padronizado com adaptação completa para todos os tamanhos de tela
@@ -88,12 +105,14 @@
 - ✅ **Controle de Acesso:** RLS policies para segurança granular
 - ✅ **Gestão de Sessão:** Persistência de sessão e logout automático
 
-#### **🏗️ Arquitetura**
+#### **🏗️ Arquitetura (UPDATED)**
 - ✅ **Shell Unificado:** Sistema de navegação consistente mobile/desktop
 - ✅ **Navegação Padronizada:** Fonte única de verdade para itens de navegação
 - ✅ **Layout Responsivo:** Adaptação perfeita para todos os dispositivos
 - ✅ **PWA Completo:** Instalação, offline, notificações push
-- ✅ **Error Boundaries:** Sistema robusto de recuperação de erros
+- ✅ **Error Boundaries:** Sistema robusto de recuperação de erros com hierarquia de 3 níveis
+- ✅ **Router Foundation:** Properly structured with all page components and admin routes
+- ✅ **TypeScript Compliance:** Strict mode enforced, all compilation errors resolved
 
 ---
 
@@ -101,13 +120,20 @@
 
 ### **📊 Status de Implementação**
 
+**Phase 0: Foundation Realignment** ✅ **COMPLETE**
+- ✅ Router Structure Alignment (AppRouter.tsx corrections)
+- ✅ Missing Page Components (ArchivePage, CommunityPostDetail, SettingsPage, SuggestionPage)
+- ✅ Component Structure Standardization (SavePost component)
+- ✅ TypeScript Compilation Fixes (All import errors resolved)
+- ✅ Error Boundary Implementation (Root-level boundary with proper children prop)
+
 **Phase 1: Foundation & Database Extensions** ✅ **COMPLETE**
 - ✅ Database Schema Implementation (Reviews workflow fields + Publication_History table)
 - ✅ Core Edge Functions (admin-get-content-queue + admin-manage-publication)
 - ✅ Admin Route Protection (AdminProtectedRoute + role verification)
 - ✅ Admin Layout Foundation (AdminLayout + AdminNavigation + AdminDashboard)
 
-**Phase 2: Content Publication Engine** 🔄 **NEXT**
+**Phase 2: Content Publication Engine** 🔄 **NEXT - READY TO PROCEED**
 - 🔄 TanStack Query Hooks (useContentQueueQuery, usePublicationActionMutation)
 - 🔄 Content Queue Interface (ContentQueue, ReviewCard, WorkflowActions)
 - 🔄 Publication Workflow (Review process, scheduling, bulk operations)
@@ -124,84 +150,47 @@
 
 ### **🗺️ Implementação Detalhada**
 
+#### **Phase 0: Foundation Realignment (COMPLETED)**
+
+**Milestone 0.1: Router Architecture Alignment ✅**
+- ✅ Corrigidos imports incorretos em AppRouter.tsx (Homepage → Index, component paths)
+- ✅ Implementado Error Boundary hierárquico com children prop obrigatório
+- ✅ Alinhamento com [M2.4] directory structure model
+- ✅ Admin routes integrados adequadamente com proteção de roles
+
+**Milestone 0.2: Missing Page Components ✅**
+- ✅ ArchivePage: Page-level error boundary com CollectionPage integration
+- ✅ CommunityPostDetail: Page-level error boundary com CommunityPostPage integration
+- ✅ SettingsPage: User settings interface com card-based layout
+- ✅ SuggestionPage: Content suggestion submission interface
+- ✅ SavePost: Component for bookmarking community posts
+
+**Milestone 0.3: TypeScript Compliance ✅**
+- ✅ Todos os 8 erros de compilação TypeScript resolvidos
+- ✅ Imports verificados e alinhados com estrutura real de diretórios
+- ✅ Strict mode mantido conforme [TS.1]
+- ✅ Error Boundary props adequadamente tipados
+
 #### **Phase 1: Foundation & Database Extensions (COMPLETED)**
+- ✅ Database Schema Implementation (Reviews workflow fields + Publication_History table)
+- ✅ Core Edge Functions (admin-get-content-queue + admin-manage-publication)
+- ✅ Admin Route Protection (AdminProtectedRoute + role verification)
+- ✅ Admin Layout Foundation (AdminLayout + AdminNavigation + AdminDashboard)
 
-**Milestone 1.1: Database Schema Implementation ✅**
-- ✅ Adicionados campos de workflow à tabela Reviews (review_status, reviewer_id, etc.)
-- ✅ Criada tabela Publication_History para auditoria completa
-- ✅ Implementados índices de performance para queries admin
-- ✅ Configuradas políticas RLS para acesso admin
-
-**Milestone 1.2: Core Edge Functions ✅**
-- ✅ admin-get-content-queue: Busca paginada com filtros e estatísticas
-- ✅ admin-manage-publication: Execução de ações de workflow com validação
-- ✅ Implementado padrão de 7 passos para todas as funções
-- ✅ Rate limiting configurado (30/60s para queue, 20/60s para actions)
-
-**Milestone 1.3: Admin Route Foundation ✅**
-- ✅ AdminProtectedRoute com verificação de roles
-- ✅ AdminLayout com estrutura modular
-- ✅ AdminNavigation com links para todos os módulos
-- ✅ AdminDashboard com estatísticas e ações rápidas
-- ✅ Integração com router principal
-
-#### **Phase 2: Content Publication Engine (NEXT)**
-
-**Milestone 2.1: TanStack Query Hooks**
-**Objetivo:** Criar hooks de data fetching para gestão de conteúdo seguindo [DAL.1-4]
-
-**Arquivos a Criar:**
-- `packages/hooks/useContentQueueQuery.ts`
-- `packages/hooks/usePublicationActionMutation.ts`
-- `packages/hooks/useBulkOperationMutation.ts`
-
-**Especificação Técnica:**
-1. **useContentQueueQuery:** Hook com infinite query para fila de conteúdo
-2. **usePublicationActionMutation:** Hook para executar ações de workflow
-3. **useBulkOperationMutation:** Hook para operações em lote
-
-**Diretrizes Aplicáveis:** [DAL.1], [DAL.2], [DAL.3], [DAL.4]
-
-**Milestone 2.2: Content Queue Interface**
-**Objetivo:** Construir interface principal de gestão de conteúdo
-
-**Arquivos a Criar:**
-- `src/components/admin/ContentManagement/ContentQueue.tsx`
-- `src/components/admin/ContentManagement/ReviewCard.tsx`
-- `src/components/admin/ContentManagement/WorkflowActions.tsx`
-- `src/components/admin/ContentManagement/FilterPanel.tsx`
-
-**Features:**
-- Scroll infinito com paginação
-- Filtros por status e busca
-- Seleção múltipla e operações em lote
-- Updates em tempo real
-
-**Milestone 2.3: Publication Workflow**
-**Objetivo:** Implementar workflow completo de review e aprovação
-
-**Arquivos a Criar:**
-- `src/components/admin/ContentManagement/ReviewWorkflow.tsx`
-- `src/components/admin/ContentManagement/PublicationScheduler.tsx`
-- `src/components/admin/ContentManagement/ReviewModal.tsx`
-- `src/components/admin/ContentManagement/HistoryTimeline.tsx`
-
-**Features:**
-- Preview de conteúdo durante review
-- Aprovação/rejeição com notas
-- Agendamento de publicação
-- Histórico completo de ações
+#### **Phase 2: Content Publication Engine (READY TO PROCEED)**
+- 🔄 TanStack Query Hooks (useContentQueueQuery, usePublicationActionMutation)
+- 🔄 Content Queue Interface (ContentQueue, ReviewCard, WorkflowActions)
+- 🔄 Publication Workflow (Review process, scheduling, bulk operations)
 
 ---
 
 ## **🔧 ARQUITETURA TÉCNICA**
 
-### **Frontend Stack**
-- **Framework:** Vite + React 18 + TypeScript
-- **Styling:** TailwindCSS + shadcn/ui
-- **Roteamento:** React Router v6
-- **Estado:** TanStack Query + Zustand
-- **PWA:** Service Workers + Manifest
+### **Foundation Components (UPDATED)**
+- **Router:** React Router v6 with nested admin routes and proper error boundaries
+- **Page Structure:** All pages implement page-level error boundaries following [D3.8] mandate
+- **Error Recovery:** 3-tier hierarchical error boundary system (root, page, feature)
+- **Admin Protection:** Role-based route protection with JWT claims verification
 
 ### **Backend Stack**
 - **Database:** PostgreSQL (Supabase)
@@ -243,10 +232,23 @@
 
 ## **🎯 PRÓXIMOS PASSOS PRIORITÁRIOS**
 
-### **Phase 2: Content Publication Engine (CURRENT PRIORITY)**
+### **Phase 2: Content Publication Engine (IMMEDIATE PRIORITY)**
+**Ready to Proceed - All Foundations Stable**
+
 1. **TanStack Query Hooks:** Implement data fetching hooks for admin operations
-2. **Content Queue Interface:** Build main content management interface with filters and actions
-3. **Publication Workflow:** Complete review and approval workflow with scheduling
+   - `useContentQueueQuery` for paginated content queue
+   - `usePublicationActionMutation` for workflow actions
+   - `useBulkOperationMutation` for batch operations
+
+2. **Content Queue Interface:** Build main content management interface
+   - ContentQueue component with infinite scroll
+   - ReviewCard component for individual review display
+   - WorkflowActions component for status transitions
+
+3. **Publication Workflow:** Complete review and approval system
+   - Review process with preview and approval/rejection
+   - Publication scheduling with calendar integration
+   - Audit trail with Publication_History integration
 
 ### **Phase 3: Enhanced Management Modules**
 4. **User Management:** Advanced user directory with analytics and bulk operations
@@ -261,6 +263,18 @@
 ---
 
 ## **📋 DECISÕES ARQUITETURAIS IMPORTANTES**
+
+### **Foundation Realignment Architecture (v10.2.0)**
+**Decisão:** Complete router and component structure alignment with Knowledge Base standards
+**Reasoning:** Prevents cascading errors during implementation, ensures AI consistency, maintains TypeScript strict compliance
+**Implementation:** Corrected AppRouter imports, created missing pages, standardized Error Boundary usage
+**Impact:** Stable foundation for Phase 2 implementation, eliminated TypeScript compilation errors, standardized component structure
+
+### **Error Boundary Hierarchy Enhancement (v10.2.0)**
+**Decisão:** Proper implementation of 3-tier error boundary system with required children props
+**Reasoning:** Ensures robust error recovery, provides contextual error reporting, maintains user experience
+**Implementation:** Root-level error boundary in router, page-level boundaries in all pages, feature-level boundaries planned
+**Impact:** Comprehensive error handling, improved debugging capabilities, consistent error recovery UX
 
 ### **Admin System Architecture (v10.1.0)**
 **Decisão:** Modular admin system with role-based protection and comprehensive audit trail
@@ -284,6 +298,11 @@
 
 ## **🚫 DEPRECATED FEATURES**
 
+### **Removed in v10.2.0:**
+- Incorrect import paths in AppRouter (Homepage → Index, component paths corrected)
+- Missing page components causing build failures
+- Incomplete Error Boundary implementations
+
 ### **Removed in v10.0.0:**
 - Individual management page scattered navigation - Replaced with centralized dashboard
 - Standalone user/tag management pages - Integrated into unified admin system
@@ -301,14 +320,11 @@
 
 ## **📚 REFERÊNCIAS TÉCNICAS**
 
-- **[Blueprint_08b]** - Management Blueprints (Primary specification)
-- **[Blueprint_08b_Guide]** - Management Implementation Guide (Technical details)
-- **[DOC_2]** - System Architecture (Architectural principles)
-- **[DOC_4]** - Row Level Security (Database security policies)
-- **[DOC_5]** - API Contract (Edge Functions specifications)
-- **[DOC_6]** - Data Fetching Strategy (TanStack Query patterns)
-- **[DOC_8]** - Mobile Adaptation (Responsive design rules)
-- **Development Protocols** - Type safety and data fetching patterns
+- **[M2.4]** - Directory Structure Model (Router and component organization)
+- **[D3.2]** - Component Architecture (Composition model enforcement)
+- **[D3.8]** - Automated Testing (Error boundary implementation)
+- **[TS.1]** - Type Safety (Strict TypeScript compliance)
+- **Development Protocols** - Foundation realignment standards
 
 ---
 
