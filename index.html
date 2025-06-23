@@ -71,18 +71,28 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- Register Service Worker -->
+    <!-- Enhanced Service Worker Registration -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
           navigator.serviceWorker.register('/sw.js')
             .then(function(registration) {
               console.log('ServiceWorker registration successful with scope: ', registration.scope);
-            }, function(err) {
+            })
+            .catch(function(err) {
               console.log('ServiceWorker registration failed: ', err);
             });
         });
       }
+
+      // Add global error handling for better debugging
+      window.addEventListener('error', function(e) {
+        console.error('Global error:', e.error, e.filename, e.lineno);
+      });
+
+      window.addEventListener('unhandledrejection', function(e) {
+        console.error('Unhandled promise rejection:', e.reason);
+      });
     </script>
   </body>
 </html>

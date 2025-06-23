@@ -22,22 +22,51 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Fetch event - serve cached content when offline
+// Fetch event - serve cached content when offline with proper error handling
 self.addEventListener('fetch', (event) => {
+  // Skip non-GET requests and chrome-extension requests
+  if (event.request.method !== 'GET' || event.request.url.startsWith('chrome-extension://')) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Return cached version or fetch from network
+        // Return cached version if available
         if (response) {
           return response;
         }
-        return fetch(event.request);
+
+        // Clone the request because it's a stream
+        const fetchRequest = event.request.clone();
+
+        return fetch(fetchRequest).then((response) => {
+          // Check if we received a valid response
+          if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response;
+          }
+
+          // Clone the response because it's a stream
+          const responseToCache = response.clone();
+
+          caches.open(CACHE_NAME)
+            .then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+
+          return response;
+        });
       })
       .catch(() => {
         // Return fallback page for navigation requests when offline
         if (event.request.destination === 'document') {
           return caches.match('/');
         }
+        // For other requests, return a basic response to avoid console errors
+        return new Response('Network error', {
+          status: 408,
+          statusText: 'Network error'
+        });
       })
   );
 });
@@ -66,8 +95,8 @@ self.addEventListener('sync', (event) => {
 });
 
 function doBackgroundSync() {
-  // Implement background sync logic here
   console.log('Background sync triggered');
+  return Promise.resolve();
 }
 
 // Handle push notifications
