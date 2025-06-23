@@ -4,12 +4,8 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
-  FileText, 
-  Users, 
-  Tags, 
-  Layout, 
   BarChart3,
-  Settings
+  FileText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -25,26 +21,6 @@ const navigationItems = [
     href: '/admin/content',
     icon: FileText
   },
-  {
-    label: 'Gestão de Usuários',
-    href: '/admin/users',
-    icon: Users
-  },
-  {
-    label: 'Gestão de Tags',
-    href: '/admin/tags',
-    icon: Tags
-  },
-  {
-    label: 'Gestão de Layout',
-    href: '/admin/layout',
-    icon: Layout
-  },
-  {
-    label: 'Analytics',
-    href: '/admin/analytics',
-    icon: BarChart3
-  }
 ];
 
 export const AdminNavigation = () => {

@@ -1,3 +1,4 @@
+
 // ABOUTME: Main application router with all route definitions including admin protected routes
 import {
   createBrowserRouter,
@@ -66,6 +67,16 @@ const router = createBrowserRouter([
         path: "perfil/:userId",
         element: <ProfilePage />,
       },
+      // Redirect /perfil to current user's profile
+      {
+        path: "perfil",
+        element: <ProfilePage />,
+      },
+      {
+        path: "definicoes",
+        element: <SettingsPage />,
+      },
+      // Legacy redirect for old configuracoes path
       {
         path: "configuracoes",
         element: <SettingsPage />,
@@ -74,6 +85,11 @@ const router = createBrowserRouter([
         path: "sugestoes",
         element: <SuggestionPage />,
       },
+      {
+        path: "acesso-negado",
+        element: <UnauthorizedPage />,
+      },
+      // Legacy redirect for old nao-autorizado path
       {
         path: "nao-autorizado",
         element: <UnauthorizedPage />,
@@ -99,22 +115,6 @@ const router = createBrowserRouter([
           {
             path: "content",
             element: <ContentManagement />,
-          },
-          {
-            path: "users", 
-            element: <div className="p-6 text-center text-gray-500">Gestão de Usuários - Em desenvolvimento</div>,
-          },
-          {
-            path: "tags",
-            element: <div className="p-6 text-center text-gray-500">Gestão de Tags - Em desenvolvimento</div>,
-          },
-          {
-            path: "layout",
-            element: <div className="p-6 text-center text-gray-500">Gestão de Layout - Em desenvolvimento</div>,
-          },
-          {
-            path: "analytics",
-            element: <div className="p-6 text-center text-gray-500">Analytics - Em desenvolvimento</div>,
           },
         ],
       },

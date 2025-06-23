@@ -14,15 +14,22 @@ interface CollapsibleSidebarProps {
 }
 
 const CollapsibleSidebar = ({ isCollapsed, onToggle }: CollapsibleSidebarProps) => {
-  const { session } = useAuthStore();
+  const { user } = useAuthStore();
   
   // Get unified navigation items for desktop context
-  const userRole = session?.user?.app_metadata?.role || 'practitioner';
+  const userRole = user?.app_metadata?.role || 'practitioner';
   const allDesktopItems = getNavigationItems('desktop', userRole);
   
   // Separate core items from admin items for visual grouping
   const coreItems = allDesktopItems.filter(item => !item.requiredRoles?.length);
   const adminItems = allDesktopItems.filter(item => item.requiredRoles?.length);
+
+  console.log('CollapsibleSidebar state:', { 
+    userRole, 
+    totalItems: allDesktopItems.length,
+    coreItems: coreItems.length,
+    adminItems: adminItems.length 
+  });
 
   return (
     <aside className={`fixed left-0 top-0 z-40 h-screen bg-background border-r border-border transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-60'} hidden md:flex flex-col`}>

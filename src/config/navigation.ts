@@ -9,7 +9,9 @@ import {
   Settings,
   Shield,
   BarChart3,
-  FileText
+  FileText,
+  Tags,
+  Layout
 } from 'lucide-react';
 import { LucideIcon } from 'lucide-react';
 
@@ -57,34 +59,18 @@ export const navigationItems: NavigationItem[] = [
     showOnMobile: true,
     showOnDesktop: true,
   },
-  // Admin items - desktop only
+  // Admin items - desktop only (ONLY implemented routes)
   {
-    path: '/admin/settings',
-    label: 'Configurações',
-    icon: Settings,
-    requiredRoles: ['admin'],
-    showOnMobile: false,
-    showOnDesktop: true,
-  },
-  {
-    path: '/admin/moderation',
-    label: 'Moderação',
-    icon: Shield,
+    path: '/admin',
+    label: 'Dashboard',
+    icon: BarChart3,
     requiredRoles: ['admin', 'editor'],
     showOnMobile: false,
     showOnDesktop: true,
   },
   {
-    path: '/admin/analytics',
-    label: 'Analytics',
-    icon: BarChart3,
-    requiredRoles: ['admin'],
-    showOnMobile: false,
-    showOnDesktop: true,
-  },
-  {
     path: '/admin/content',
-    label: 'Conteúdo',
+    label: 'Gestão de Conteúdo',
     icon: FileText,
     requiredRoles: ['admin', 'editor'],
     showOnMobile: false,
@@ -98,7 +84,7 @@ export const getNavigationItems = (
   userRole: string = 'practitioner'
 ): NavigationItem[] => {
   return navigationItems.filter(item => {
-    // FIXED: Proper context visibility check with explicit defaults
+    // Check context visibility
     const contextVisible = context === 'mobile' 
       ? (item.showOnMobile ?? false) 
       : (item.showOnDesktop ?? true);
@@ -111,7 +97,7 @@ export const getNavigationItems = (
   });
 };
 
-// Legacy support - DEPRECATED: Use getNavigationItems instead
+// DEPRECATED: Remove these after components are updated
 export const getVisibleNavigationItems = (
   items: NavigationItem[], 
   userRole: string
@@ -122,7 +108,3 @@ export const getVisibleNavigationItems = (
     return item.requiredRoles.includes(userRole);
   });
 };
-
-// DEPRECATED: Remove these after components are updated
-export const mobileNavigationItems = getNavigationItems('mobile');
-export const adminNavigationItems = navigationItems.filter(item => item.requiredRoles?.length);
