@@ -16,7 +16,7 @@ import {
   Calendar,
   Activity
 } from 'lucide-react';
-import { useAnalyticsQuery, useAnalyticsExportMutation } from '@/packages/hooks/useAnalyticsQuery';
+import { useAnalyticsQuery } from '../../../packages/hooks/useAnalyticsQuery';
 import { AnalyticsCharts } from '@/components/admin/Analytics/AnalyticsCharts';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
