@@ -487,6 +487,51 @@ export type Database = {
         }
         Relationships: []
       }
+      Publication_History: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          notes: string | null
+          performed_by: string
+          review_id: number
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          performed_by: string
+          review_id: number
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          performed_by?: string
+          review_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Publication_History_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "Practitioners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Publication_History_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "Reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rate_limit_log: {
         Row: {
           created_at: string | null
@@ -517,7 +562,13 @@ export type Database = {
           created_at: string
           description: string | null
           id: number
+          publication_notes: string | null
           published_at: string | null
+          review_requested_at: string | null
+          review_status: string | null
+          reviewed_at: string | null
+          reviewer_id: string | null
+          scheduled_publish_at: string | null
           status: string
           structured_content: Json
           title: string
@@ -531,7 +582,13 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: number
+          publication_notes?: string | null
           published_at?: string | null
+          review_requested_at?: string | null
+          review_status?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          scheduled_publish_at?: string | null
           status?: string
           structured_content?: Json
           title: string
@@ -545,7 +602,13 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: number
+          publication_notes?: string | null
           published_at?: string | null
+          review_requested_at?: string | null
+          review_status?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          scheduled_publish_at?: string | null
           status?: string
           structured_content?: Json
           title?: string
@@ -555,6 +618,13 @@ export type Database = {
           {
             foreignKeyName: "Reviews_author_id_fkey"
             columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "Practitioners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
             isOneToOne: false
             referencedRelation: "Practitioners"
             referencedColumns: ["id"]

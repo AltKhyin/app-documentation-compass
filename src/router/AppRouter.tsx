@@ -1,57 +1,118 @@
+// ABOUTME: Main application router with all route definitions including admin protected routes
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Route,
+  createRoutesFromElements,
+} from "react-router-dom";
+import AppShell from "@/components/layout/AppShell";
+import Homepage from "@/pages/Homepage";
+import CommunityPage from "@/pages/CommunityPage";
+import ArchivePage from "@/pages/ArchivePage";
+import ReviewDetailPage from "@/pages/ReviewDetailPage";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import CommunityPostDetail from "@/pages/CommunityPostDetail";
+import SavePost from "@/components/community/SavePost";
+import { useEffect } from "react";
+import { useAuthStore } from "@/store/auth";
+import ProfilePage from "@/pages/ProfilePage";
+import SettingsPage from "@/pages/SettingsPage";
+import SuggestionPage from "@/pages/SuggestionPage";
+import UnauthorizedPage from "@/pages/UnauthorizedPage";
+import LoginPage from "@/pages/LoginPage";
+import { AdminProtectedRoute } from '@/components/routes/AdminProtectedRoute';
+import { AdminLayout } from '@/components/admin/AdminLayout';
+import { AdminDashboard } from '@/pages/AdminDashboard';
 
-// ABOUTME: Main application router with decoupled data providers scoped to specific routes.
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <AppShell />,
+    errorElement: <ErrorBoundary />,
+    children: [
+      {
+        index: true,
+        element: <Homepage />,
+      },
+      {
+        path: "community",
+        element: <CommunityPage />,
+      },
+      {
+        path: "community/:postId",
+        element: <CommunityPostDetail />,
+      },
+      {
+        path: "archive",
+        element: <ArchivePage />,
+      },
+      {
+        path: "reviews/:reviewSlug",
+        element: <ReviewDetailPage />,
+      },
+      {
+        path: "profile/:userId",
+        element: <ProfilePage />,
+      },
+      {
+        path: "settings",
+        element: <SettingsPage />,
+      },
+      {
+        path: "suggestions",
+        element: <SuggestionPage />,
+      },
+      {
+        path: "unauthorized",
+        element: <UnauthorizedPage />,
+      },
+      {
+        path: "login",
+        element: <LoginPage />,
+      },
+      
+      // Admin Routes
+      {
+        path: "/admin",
+        element: (
+          <AdminProtectedRoute requiredRoles={['admin', 'editor']}>
+            <AdminLayout />
+          </AdminProtectedRoute>
+        ),
+        children: [
+          {
+            index: true,
+            element: <AdminDashboard />,
+          },
+          // Placeholder routes for future implementation
+          {
+            path: "content",
+            element: <div className="p-6 text-center text-gray-500">Gestão de Conteúdo - Em desenvolvimento</div>,
+          },
+          {
+            path: "users", 
+            element: <div className="p-6 text-center text-gray-500">Gestão de Usuários - Em desenvolvimento</div>,
+          },
+          {
+            path: "tags",
+            element: <div className="p-6 text-center text-gray-500">Gestão de Tags - Em desenvolvimento</div>,
+          },
+          {
+            path: "layout",
+            element: <div className="p-6 text-center text-gray-500">Gestão de Layout - Em desenvolvimento</div>,
+          },
+          {
+            path: "analytics",
+            element: <div className="p-6 text-center text-gray-500">Analytics - Em desenvolvimento</div>,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    path: "/save-post",
+    element: <SavePost />,
+  },
+]);
 
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import AuthSessionProvider from '@/components/auth/AuthSessionProvider';
-import { ProtectedAppRoute } from '@/components/routes/ProtectedAppRoute';
-import AppShell from '@/components/shell/AppShell';
-import { AppDataProvider } from '@/contexts/AppDataContext';
-
-// Pages
-import Index from '@/pages/Index';
-import CommunityPage from '@/pages/CommunityPage';
-import CommunityPostPage from '@/pages/CommunityPostPage';
-import CollectionPage from '@/pages/CollectionPage';
-import ReviewDetailPage from '@/pages/ReviewDetailPage';
-import LoginPage from '@/pages/LoginPage';
-import SignupPage from '@/pages/SignupPage';
-
-export const AppRouter = () => {
-  return (
-    <BrowserRouter>
-      <AuthSessionProvider>
-        <Routes>
-          {/* Authentication Routes */}
-          <Route path="/auth" element={<LoginPage />} />
-          <Route path="/auth/signup" element={<SignupPage />} />
-          
-          {/* Protected Application Routes */}
-          <Route path="/" element={
-            <ProtectedAppRoute>
-              <AppShell />
-            </ProtectedAppRoute>
-          }>
-            {/* Homepage with scoped data provider */}
-            <Route index element={
-              <AppDataProvider>
-                <Index />
-              </AppDataProvider>
-            } />
-            
-            {/* Community routes */}
-            <Route path="comunidade" element={<CommunityPage />} />
-            <Route path="comunidade/:postId" element={<CommunityPostPage />} />
-            
-            {/* Collection routes */}
-            <Route path="acervo" element={<CollectionPage />} />
-            <Route path="reviews/:slug" element={<ReviewDetailPage />} />
-          </Route>
-          
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </AuthSessionProvider>
-    </BrowserRouter>
-  );
-};
+export default router;
