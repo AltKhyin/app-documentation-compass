@@ -1,8 +1,8 @@
 // ABOUTME: Detailed user management modal with comprehensive user information and editing capabilities
 
 import React, { useState } from 'react';
-import { useUserDetailQuery, useUpdateUserMutation } from '@/packages/hooks/useUserManagementQuery';
-import { useUserRolesQuery } from '@/packages/hooks/useRoleManagementQuery';
+import { useUserDetailQuery, useUpdateUserMutation } from '../../../../packages/hooks/useUserManagementQuery';
+import { useUserRolesQuery } from '../../../../packages/hooks/useRoleManagementQuery';
 import {
   Dialog,
   DialogContent,

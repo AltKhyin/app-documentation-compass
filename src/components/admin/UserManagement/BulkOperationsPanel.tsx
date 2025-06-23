@@ -1,8 +1,8 @@
 // ABOUTME: Bulk operations panel for performing mass actions on selected users efficiently
 
 import React, { useState } from 'react';
-import { useUpdateUserMutation, useUserStatusMutation } from '@/packages/hooks/useUserManagementQuery';
-import { useAssignRoleMutation } from '@/packages/hooks/useRoleManagementQuery';
+import { useUpdateUserMutation, useUserStatusMutation } from '../../../../packages/hooks/useUserManagementQuery';
+import { useAssignRoleMutation } from '../../../../packages/hooks/useRoleManagementQuery';
 import {
   Dialog,
   DialogContent,
