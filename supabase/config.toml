@@ -166,3 +166,6 @@ verify_jwt = false
 
 [functions.admin-assign-roles]
 verify_jwt = false
+
+[functions.admin-tag-operations]
+verify_jwt = false
