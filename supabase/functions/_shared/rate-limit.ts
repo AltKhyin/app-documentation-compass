@@ -11,14 +11,19 @@ export interface RateLimitResult {
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
 export async function checkRateLimit(
-  supabase: any,
+  req: Request,
   functionName: string,
-  userId: string,
   maxRequests: number = 30,
   windowMs: number = 60 * 1000
 ): Promise<RateLimitResult> {
   const now = Date.now();
-  const key = `${functionName}:${userId}`;
+  
+  // Extract user identifier from request (IP or user ID)
+  const userIdentifier = req.headers.get('x-forwarded-for') || 
+                        req.headers.get('cf-connecting-ip') || 
+                        'anonymous';
+  
+  const key = `${functionName}:${userIdentifier}`;
   const userLimit = rateLimitStore.get(key);
   
   if (!userLimit || now > userLimit.resetTime) {
@@ -42,3 +47,6 @@ export function rateLimitHeaders(rateLimit: RateLimitResult) {
     'X-RateLimit-Reset': Math.ceil(rateLimit.resetTime / 1000).toString(),
   };
 }
+
+// Legacy export for backward compatibility (will be removed in future)
+export const rateLimitCheck = checkRateLimit;

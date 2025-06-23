@@ -2,9 +2,15 @@
 // ABOUTME: Admin Edge Function for content queue management following the mandatory 7-step pattern
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { corsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
-import { createSuccessResponse, createErrorResponse } from '../_shared/api-helpers.ts';
-import { rateLimitCheck, rateLimitHeaders } from '../_shared/rate-limit.ts';
+import { corsHeaders } from '../_shared/cors.ts';
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  authenticateUser,
+  handleCorsPreflightRequest,
+  RateLimitError
+} from '../_shared/api-helpers.ts';
+import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
 Deno.serve(async (req) => {
   // STEP 1: CORS Preflight Handling (MANDATORY FIRST)
@@ -21,63 +27,43 @@ Deno.serve(async (req) => {
     
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({
-        error: { message: 'Authorization header is required', code: 'UNAUTHORIZED' }
-      }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
+      throw new Error('UNAUTHORIZED: Authorization header is required');
     }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      return new Response(JSON.stringify({
-        error: { message: 'Invalid authentication token', code: 'UNAUTHORIZED' }
-      }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
-    }
+    const user = await authenticateUser(supabase, authHeader);
     
     // Verify admin/editor role using JWT claims
     const userRole = user.app_metadata?.role;
     if (!userRole || !['admin', 'editor'].includes(userRole)) {
-      return new Response(JSON.stringify({
-        error: { message: 'Content queue access requires admin or editor role', code: 'FORBIDDEN' }
-      }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
+      throw new Error('FORBIDDEN: Content queue access requires admin or editor role');
     }
 
     // STEP 3: Rate Limiting Implementation
-    const rateLimitResult = await rateLimitCheck(req, 'admin-get-content-queue', 30, 60);
+    const rateLimitResult = await checkRateLimit(req, 'admin-get-content-queue', 30, 60000);
     if (!rateLimitResult.allowed) {
-      return new Response(JSON.stringify({
-        error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }
-      }), {
-        status: 429,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-          ...rateLimitHeaders(rateLimitResult)
-        }
-      });
+      throw RateLimitError;
     }
 
     // STEP 4: Input Parsing & Validation
     const body = await req.json().catch(() => ({}));
-    const page = body.page || 1;
-    const limit = Math.min(body.limit || 20, 100);
+    const page = Math.max(1, body.page || 1);
+    const limit = Math.min(Math.max(1, body.limit || 20), 100);
     const status = body.status || 'all';
+    const search = body.search || '';
+    const authorId = body.authorId;
+    const reviewerId = body.reviewerId;
 
-    console.log('Content queue request:', { page, limit, status, userRole });
+    console.log('Content queue request:', { page, limit, status, search, userRole });
 
     // STEP 5: Core Business Logic Execution
-    const result = await handleGetContentQueue(supabase, { page, limit, status });
+    const result = await handleGetContentQueue(supabase, { 
+      page, 
+      limit, 
+      status, 
+      search, 
+      authorId, 
+      reviewerId 
+    });
 
     // STEP 6: Standardized Success Response
     return createSuccessResponse(result, rateLimitHeaders(rateLimitResult));
@@ -108,12 +94,36 @@ async function handleGetContentQueue(supabase: any, filters: any) {
         reviewed_at,
         access_level,
         author_id,
-        reviewer_id
+        reviewer_id,
+        publication_notes
       `);
 
     // Apply status filtering
     if (filters.status !== 'all') {
-      reviewsQuery = reviewsQuery.eq('review_status', filters.status);
+      if (filters.status === 'under_review') {
+        reviewsQuery = reviewsQuery.eq('review_status', 'under_review');
+      } else if (filters.status === 'scheduled') {
+        reviewsQuery = reviewsQuery.eq('review_status', 'scheduled');
+      } else if (filters.status === 'published') {
+        reviewsQuery = reviewsQuery.eq('status', 'published');
+      } else if (filters.status === 'draft') {
+        reviewsQuery = reviewsQuery.eq('status', 'draft');
+      }
+    }
+
+    // Apply search filtering
+    if (filters.search) {
+      reviewsQuery = reviewsQuery.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+    }
+
+    // Apply author filtering
+    if (filters.authorId) {
+      reviewsQuery = reviewsQuery.eq('author_id', filters.authorId);
+    }
+
+    // Apply reviewer filtering
+    if (filters.reviewerId) {
+      reviewsQuery = reviewsQuery.eq('reviewer_id', filters.reviewerId);
     }
 
     // Apply pagination
@@ -129,7 +139,7 @@ async function handleGetContentQueue(supabase: any, filters: any) {
       throw new Error(`Failed to fetch content queue: ${reviewsError.message}`);
     }
 
-    // Get pending community posts
+    // Get community posts with similar filtering
     const { data: posts, error: postsError } = await supabase
       .from('CommunityPosts')
       .select(`
@@ -151,7 +161,7 @@ async function handleGetContentQueue(supabase: any, filters: any) {
       console.error('Error fetching community posts:', postsError);
     }
 
-    // Get total counts
+    // Get total counts for pagination
     const { count: totalReviews } = await supabase
       .from('Reviews')
       .select('*', { count: 'exact', head: true });
