@@ -1,4 +1,3 @@
-
 // ABOUTME: Enhanced admin analytics page with real data fetching and interactive charts
 
 import React, { useState } from 'react';
@@ -16,7 +15,7 @@ import {
   Calendar,
   Activity
 } from 'lucide-react';
-import { useAnalyticsQuery } from '../../../packages/hooks/useAnalyticsQuery';
+import { useAnalyticsQuery } from '@packages/hooks/useAnalyticsQuery';
 import { AnalyticsCharts } from '@/components/admin/Analytics/AnalyticsCharts';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
