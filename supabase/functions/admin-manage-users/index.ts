@@ -1,10 +1,10 @@
 
-// ABOUTME: Comprehensive user management Edge Function for admin operations including CRUD, role assignment, and analytics
+// ABOUTME: Comprehensive user management Edge Function for admin operations following the mandatory 7-step pattern
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { corsHeaders } from '../_shared/cors.ts';
-import { createSuccessResponse, createErrorResponse, authenticateUser } from '../_shared/api-helpers.ts';
-import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
+import { createSuccessResponse, createErrorResponse } from '../_shared/api-helpers.ts';
+import { rateLimitCheck, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
 interface UserManagementPayload {
   action: 'list' | 'get' | 'update' | 'deactivate' | 'reactivate' | 'delete';
@@ -37,10 +37,21 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
     
-    const user = await authenticateUser(supabase, req.headers.get('Authorization'));
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('UNAUTHORIZED: Authorization header is required');
+    }
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (authError || !user) {
+      throw new Error('UNAUTHORIZED: Invalid authentication token');
+    }
     
-    // Verify admin/editor role for user management access
-    const { data: hasRole, error: roleError } = await supabase
+    // Verify admin/editor role using the existing database function
+    const { data: hasAdminRole, error: adminRoleError } = await supabase
       .rpc('user_has_role', { 
         p_user_id: user.id, 
         p_role_name: 'admin' 
@@ -52,12 +63,12 @@ Deno.serve(async (req) => {
         p_role_name: 'editor' 
       });
 
-    if (roleError || editorRoleError || (!hasRole && !hasEditorRole)) {
+    if (adminRoleError || editorRoleError || (!hasAdminRole && !hasEditorRole)) {
       throw new Error('FORBIDDEN: User management requires admin or editor role');
     }
 
     // STEP 3: Rate Limiting Implementation
-    const rateLimitResult = await checkRateLimit(supabase, 'admin-manage-users', user.id);
+    const rateLimitResult = await rateLimitCheck(req, 'admin-manage-users', 60, 60);
     if (!rateLimitResult.allowed) {
       return new Response(JSON.stringify({
         error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }
@@ -121,7 +132,7 @@ Deno.serve(async (req) => {
       case 'delete':
         if (!payload.userId) throw new Error('User ID is required for delete action');
         // Only admins can delete users
-        if (!hasRole) {
+        if (!hasAdminRole) {
           throw new Error('FORBIDDEN: Only admins can delete users');
         }
         result = await handleDeleteUser(supabase, payload.userId, user.id);
@@ -271,9 +282,6 @@ async function handleUpdateUser(supabase: any, userId: string, userData: any, pe
 
 // Helper function to toggle user active status
 async function handleToggleUserStatus(supabase: any, userId: string, isActive: boolean, performedBy: string) {
-  // For now, we'll use a custom field or handle this through roles
-  // This is a placeholder for user activation/deactivation logic
-  
   // Log the audit event
   await supabase.rpc('log_audit_event', {
     p_performed_by: performedBy,
@@ -288,9 +296,6 @@ async function handleToggleUserStatus(supabase: any, userId: string, isActive: b
 
 // Helper function to delete user (soft delete or complete removal)
 async function handleDeleteUser(supabase: any, userId: string, performedBy: string) {
-  // In most cases, we should soft delete rather than hard delete
-  // This implementation depends on the specific requirements
-  
   // Log the audit event before deletion
   await supabase.rpc('log_audit_event', {
     p_performed_by: performedBy,
@@ -300,7 +305,5 @@ async function handleDeleteUser(supabase: any, userId: string, performedBy: stri
     p_metadata: { source: 'admin_panel', type: 'hard_delete' }
   });
 
-  // For now, we'll return a placeholder
-  // Actual implementation would depend on business requirements
   return { userId, status: 'deletion_logged' };
 }

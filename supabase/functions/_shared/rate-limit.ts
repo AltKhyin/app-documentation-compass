@@ -77,10 +77,26 @@ export async function checkRateLimit(
 }
 
 /**
- * Legacy export for backward compatibility
- * @deprecated Use checkRateLimit instead
+ * Alternative function name for backward compatibility and the specific case mentioned in the logs
  */
-export const rateLimit = checkRateLimit;
+export async function rateLimitCheck(
+  req: Request,
+  functionName: string,
+  limit: number,
+  windowSeconds: number = 60
+): Promise<RateLimitResult> {
+  // Create a minimal supabase client for rate limiting
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
+  
+  // Generate a key based on IP and function name for anonymous rate limiting
+  const clientIP = req.headers.get('x-forwarded-for') || 'unknown';
+  const key = `${functionName}:${clientIP}`;
+  
+  return checkRateLimit(supabase, key, limit, windowSeconds);
+}
 
 /**
  * Generate rate limit headers for HTTP responses

@@ -1,64 +1,27 @@
 
-// ABOUTME: Admin Edge Function to fetch paginated content queue with filtering and summary statistics
+// ABOUTME: Admin Edge Function for content queue management following the mandatory 7-step pattern
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { corsHeaders } from '../_shared/cors.ts'
-import { rateLimitCheck } from '../_shared/rate-limit.ts'
-import { sendSuccess, sendError } from '../_shared/api-helpers.ts'
-
-interface ContentQueueParams {
-  status?: string;
-  page?: number;
-  limit?: number;
-  search?: string;
-  author_id?: string;
-}
-
-interface ReviewQueueItem {
-  id: number;
-  title: string;
-  description: string;
-  review_status: string;
-  created_at: string;
-  review_requested_at: string | null;
-  reviewed_at: string | null;
-  scheduled_publish_at: string | null;
-  publication_notes: string | null;
-  author: {
-    id: string;
-    full_name: string;
-    avatar_url: string | null;
-  } | null;
-  reviewer: {
-    id: string;
-    full_name: string;
-    avatar_url: string | null;
-  } | null;
-}
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
+import { corsHeaders } from '../_shared/cors.ts';
+import { createSuccessResponse, createErrorResponse } from '../_shared/api-helpers.ts';
+import { rateLimitCheck, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
+  // STEP 1: CORS Preflight Handling (MANDATORY FIRST)
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Step 1: Rate limiting check (30 requests per 60 seconds)
-    const rateLimitResult = await rateLimitCheck(req, 'admin-get-content-queue', 30, 60);
-    if (!rateLimitResult.allowed) {
-      return sendError('RATE_LIMIT_EXCEEDED', 'Too many requests. Please try again later.', 429);
-    }
-
-    // Step 2: Initialize Supabase client
+    // STEP 2: Manual Authentication (requires verify_jwt = false in config.toml)
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-
-    // Step 3: Verify user authentication and authorization
+    
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return sendError('UNAUTHORIZED', 'Authorization header is required', 401);
+      throw new Error('UNAUTHORIZED: Authorization header is required');
     }
 
     const { data: { user }, error: authError } = await supabase.auth.getUser(
@@ -66,137 +29,139 @@ Deno.serve(async (req) => {
     );
 
     if (authError || !user) {
-      return sendError('UNAUTHORIZED', 'Invalid authentication token', 401);
+      throw new Error('UNAUTHORIZED: Invalid authentication token');
+    }
+    
+    // Verify admin/editor role using the existing database function
+    const { data: hasAdminRole, error: adminRoleError } = await supabase
+      .rpc('user_has_role', { 
+        p_user_id: user.id, 
+        p_role_name: 'admin' 
+      });
+    
+    const { data: hasEditorRole, error: editorRoleError } = await supabase
+      .rpc('user_has_role', { 
+        p_user_id: user.id, 
+        p_role_name: 'editor' 
+      });
+
+    if (adminRoleError || editorRoleError || (!hasAdminRole && !hasEditorRole)) {
+      throw new Error('FORBIDDEN: Content queue access requires admin or editor role');
     }
 
-    // Step 4: Verify admin/editor role
-    const userRole = user.app_metadata?.role;
-    if (!userRole || !['admin', 'editor'].includes(userRole)) {
-      return sendError('FORBIDDEN', 'Admin or editor role required', 403);
+    // STEP 3: Rate Limiting Implementation
+    const rateLimitResult = await rateLimitCheck(req, 'admin-get-content-queue', 30, 60);
+    if (!rateLimitResult.allowed) {
+      return new Response(JSON.stringify({
+        error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }
+      }), {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders,
+          ...rateLimitHeaders(rateLimitResult)
+        }
+      });
     }
 
-    // Step 5: Parse request parameters
+    // STEP 4: Input Parsing & Validation
     const url = new URL(req.url);
-    const params: ContentQueueParams = {
-      status: url.searchParams.get('status') || undefined,
-      page: parseInt(url.searchParams.get('page') || '1'),
-      limit: Math.min(parseInt(url.searchParams.get('limit') || '20'), 50), // Cap at 50
-      search: url.searchParams.get('search') || undefined,
-      author_id: url.searchParams.get('author_id') || undefined,
-    };
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 100);
+    const status = url.searchParams.get('status') || undefined;
 
-    // Step 6: Build query with filters
-    let query = supabase
-      .from('Reviews')
-      .select(`
-        id,
-        title,
-        description,
-        review_status,
-        created_at,
-        review_requested_at,
-        reviewed_at,
-        scheduled_publish_at,
-        publication_notes,
-        author:author_id (
-          id,
-          full_name,
-          avatar_url
-        ),
-        reviewer:reviewer_id (
-          id,
-          full_name,
-          avatar_url
-        )
-      `, { count: 'exact' });
+    console.log('Content queue request:', { page, limit, status });
 
-    // Apply filters
-    if (params.status && params.status !== 'all') {
-      query = query.eq('review_status', params.status);
-    }
+    // STEP 5: Core Business Logic Execution
+    const result = await handleGetContentQueue(supabase, { page, limit, status });
 
-    if (params.search) {
-      query = query.or(`title.ilike.%${params.search}%,description.ilike.%${params.search}%`);
-    }
-
-    if (params.author_id) {
-      query = query.eq('author_id', params.author_id);
-    }
-
-    // Apply pagination
-    const offset = (params.page - 1) * params.limit;
-    const { data: reviews, error: reviewsError, count } = await query
-      .order('created_at', { ascending: false })
-      .range(offset, offset + params.limit - 1);
-
-    if (reviewsError) {
-      console.error('Error fetching reviews:', reviewsError);
-      return sendError('DATABASE_ERROR', 'Failed to fetch content queue', 500);
-    }
-
-    // Step 7: Get summary statistics
-    const { data: summaryStats, error: summaryError } = await supabase
-      .from('Reviews')
-      .select('review_status')
-      .not('review_status', 'is', null);
-
-    if (summaryError) {
-      console.error('Error fetching summary stats:', summaryError);
-      return sendError('DATABASE_ERROR', 'Failed to fetch summary statistics', 500);
-    }
-
-    const summary = summaryStats?.reduce((acc: Record<string, number>, review) => {
-      acc[review.review_status] = (acc[review.review_status] || 0) + 1;
-      return acc;
-    }, {}) || {};
-
-    // Get recent publication history
-    const { data: recentHistory, error: historyError } = await supabase
-      .from('Publication_History')
-      .select(`
-        id,
-        action,
-        notes,
-        created_at,
-        review:review_id (
-          id,
-          title
-        ),
-        performer:performed_by (
-          id,
-          full_name
-        )
-      `)
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    if (historyError) {
-      console.error('Error fetching recent history:', historyError);
-    }
-
-    const totalPages = Math.ceil((count || 0) / params.limit);
-
-    return sendSuccess({
-      reviews: reviews as ReviewQueueItem[],
-      pagination: {
-        page: params.page,
-        limit: params.limit,
-        total: count || 0,
-        totalPages,
-        hasMore: params.page < totalPages
-      },
-      summary: {
-        draft: summary.draft || 0,
-        under_review: summary.under_review || 0,
-        scheduled: summary.scheduled || 0,
-        published: summary.published || 0,
-        archived: summary.archived || 0
-      },
-      recentHistory: recentHistory || []
-    });
+    // STEP 6: Standardized Success Response
+    return createSuccessResponse(result, rateLimitHeaders(rateLimitResult));
 
   } catch (error) {
-    console.error('Unexpected error in admin-get-content-queue:', error);
-    return sendError('INTERNAL_ERROR', 'An unexpected error occurred', 500);
+    // STEP 7: Centralized Error Handling
+    console.error('Content queue error:', error);
+    return createErrorResponse(error);
   }
 });
+
+// Helper function to get content queue with filtering and pagination
+async function handleGetContentQueue(supabase: any, filters: any) {
+  // Get pending community posts
+  let postsQuery = supabase
+    .from('CommunityPosts')
+    .select(`
+      id,
+      title,
+      content,
+      category,
+      created_at,
+      upvotes,
+      downvotes,
+      author_id,
+      is_pinned,
+      is_locked
+    `);
+
+  // Apply status filtering if needed (for future moderation features)
+  if (filters.status === 'reported') {
+    // Future: filter by reported content
+  }
+
+  // Apply pagination
+  const offset = (filters.page - 1) * filters.limit;
+  postsQuery = postsQuery
+    .range(offset, offset + filters.limit - 1)
+    .order('created_at', { ascending: false });
+
+  const { data: posts, error: postsError } = await postsQuery;
+  
+  if (postsError) {
+    console.error('Error fetching content queue:', postsError);
+    throw new Error(`Failed to fetch content queue: ${postsError.message}`);
+  }
+
+  // Get pending reviews
+  let reviewsQuery = supabase
+    .from('Reviews')
+    .select(`
+      id,
+      source_article_title,
+      source_article_citation,
+      status,
+      created_at,
+      access_level
+    `)
+    .eq('status', 'draft');
+
+  const { data: reviews, error: reviewsError } = await reviewsQuery;
+  
+  if (reviewsError) {
+    console.error('Error fetching pending reviews:', reviewsError);
+  }
+
+  // Get total counts
+  const { count: totalPosts } = await supabase
+    .from('CommunityPosts')
+    .select('*', { count: 'exact', head: true });
+
+  const { count: totalReviews } = await supabase
+    .from('Reviews')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'draft');
+
+  return {
+    posts: posts || [],
+    reviews: reviews || [],
+    pagination: {
+      page: filters.page,
+      limit: filters.limit,
+      total: totalPosts || 0,
+      hasMore: (totalPosts || 0) > offset + filters.limit
+    },
+    stats: {
+      totalPosts: totalPosts || 0,
+      pendingReviews: totalReviews || 0
+    }
+  };
+}

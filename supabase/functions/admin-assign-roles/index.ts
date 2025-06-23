@@ -39,9 +39,14 @@ Deno.serve(async (req) => {
       return sendError('UNAUTHORIZED', 'Invalid authentication token', 401);
     }
 
-    // Verify admin role for role management access
-    const userRole = user.app_metadata?.role;
-    if (!userRole || userRole !== 'admin') {
+    // Verify admin role using the existing database function
+    const { data: hasAdminRole, error: roleError } = await supabase
+      .rpc('user_has_role', { 
+        p_user_id: user.id, 
+        p_role_name: 'admin' 
+      });
+
+    if (roleError || !hasAdminRole) {
       return sendError('FORBIDDEN', 'Admin role required for role management', 403);
     }
 
@@ -123,10 +128,11 @@ async function handleListUserRoles(supabase: any, userId: string) {
 async function handleAssignRole(supabase: any, userId: string, roleName: string, expiresAt: string | undefined, performedBy: string) {
   // Insert into UserRoles table
   const roleData: any = {
-    user_id: userId,
+    practitioner_id: userId,
     role_name: roleName,
     granted_by: performedBy,
-    granted_at: new Date().toISOString()
+    granted_at: new Date().toISOString(),
+    is_active: true
   };
 
   if (expiresAt) {
@@ -184,7 +190,7 @@ async function handleRevokeRole(supabase: any, userId: string, roleName: string,
   const { error: deleteError } = await supabase
     .from('UserRoles')
     .delete()
-    .eq('user_id', userId)
+    .eq('practitioner_id', userId)
     .eq('role_name', roleName);
 
   if (deleteError) {
@@ -196,7 +202,8 @@ async function handleRevokeRole(supabase: any, userId: string, roleName: string,
   const { data: remainingRoles, error: rolesError } = await supabase
     .from('UserRoles')
     .select('role_name')
-    .eq('user_id', userId)
+    .eq('practitioner_id', userId)
+    .eq('is_active', true)
     .or('expires_at.is.null,expires_at.gt.now()'); // Only active roles
 
   if (!rolesError) {
