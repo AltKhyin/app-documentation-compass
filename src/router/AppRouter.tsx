@@ -1,20 +1,17 @@
+
 // ABOUTME: Main application router with all route definitions including admin protected routes
 import {
   createBrowserRouter,
   RouterProvider,
-  Route,
-  createRoutesFromElements,
 } from "react-router-dom";
 import AppShell from "@/components/shell/AppShell";
-import Homepage from "@/pages/Homepage";
+import Index from "@/pages/Index";
 import CommunityPage from "@/pages/CommunityPage";
 import ArchivePage from "@/pages/ArchivePage";
 import ReviewDetailPage from "@/pages/ReviewDetailPage";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import CommunityPostDetail from "@/pages/CommunityPostDetail";
 import SavePost from "@/components/community/SavePost";
-import { useEffect } from "react";
-import { useAuthStore } from "@/store/auth";
 import ProfilePage from "@/pages/ProfilePage";
 import SettingsPage from "@/pages/SettingsPage";
 import SuggestionPage from "@/pages/SuggestionPage";
@@ -28,11 +25,19 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <AppShell />,
-    errorElement: <ErrorBoundary />,
+    errorElement: (
+      <ErrorBoundary 
+        tier="root"
+        context="aplicação completa"
+        showDetails={process.env.NODE_ENV === 'development'}
+        showHomeButton={false}
+        showBackButton={false}
+      />
+    ),
     children: [
       {
         index: true,
-        element: <Homepage />,
+        element: <Index />,
       },
       {
         path: "community",
@@ -115,4 +120,8 @@ const router = createBrowserRouter([
   },
 ]);
 
-export default router;
+export function AppRouter() {
+  return <RouterProvider router={router} />;
+}
+
+export default AppRouter;
