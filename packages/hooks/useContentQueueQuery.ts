@@ -16,43 +16,35 @@ export interface ReviewQueueItem {
   title: string;
   description?: string;
   review_status: string;
+  status: string;
   created_at: string;
   published_at?: string;
   scheduled_publish_at?: string;
   review_requested_at?: string;
   reviewed_at?: string;
-  publication_notes?: string;
-  author: {
-    id: string;
-    full_name: string;
-    avatar_url?: string;
-  } | null;
-  reviewer: {
-    id: string;
-    full_name: string;
-    avatar_url?: string;
-  } | null;
+  access_level: string;
+  author_id?: string;
+  reviewer_id?: string;
 }
 
 export interface ContentQueueResponse {
   reviews: ReviewQueueItem[];
+  posts: any[];
   pagination: {
     page: number;
     limit: number;
     total: number;
-    totalPages: number;
     hasMore: boolean;
   };
-  summary: {
-    draft: number;
-    under_review: number;
-    scheduled: number;
-    published: number;
-    archived: number;
+  stats: {
+    totalReviews: number;
+    totalPosts: number;
   };
 }
 
 const fetchContentQueue = async (params: ContentQueueParams & { page: number }): Promise<ContentQueueResponse> => {
+  console.log('Fetching content queue...', params);
+  
   const { data, error } = await supabase.functions.invoke('admin-get-content-queue', {
     body: {
       page: params.page,
@@ -65,7 +57,8 @@ const fetchContentQueue = async (params: ContentQueueParams & { page: number }):
   });
 
   if (error) {
-    throw new Error(error.message);
+    console.error('Content queue fetch error:', error);
+    throw new Error(`Failed to fetch content queue: ${error.message}`);
   }
 
   return data;
@@ -80,5 +73,10 @@ export const useContentQueueQuery = (params: ContentQueueParams) => {
       lastPage.pagination.hasMore ? lastPage.pagination.page + 1 : undefined,
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    retry: (failureCount, error) => {
+      console.error('Content queue query failed:', error);
+      return failureCount < 2;
+    }
   });
 };

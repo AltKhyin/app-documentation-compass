@@ -1,109 +1,75 @@
 
-// ABOUTME: Filter and search panel for content queue with status filtering and search capabilities
+// ABOUTME: Filter panel for content queue with status and search filtering
 
 import React from 'react';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface FilterPanelProps {
   filters: {
-    status: 'all' | 'draft' | 'under_review' | 'scheduled' | 'published' | 'archived';
+    status: string;
     search: string;
     authorId: string;
     reviewerId: string;
   };
-  onFiltersChange: (filters: FilterPanelProps['filters']) => void;
+  onFiltersChange: (filters: any) => void;
   summary?: {
-    draft: number;
-    under_review: number;
-    scheduled: number;
-    published: number;
-    archived: number;
+    totalReviews: number;
+    totalPosts: number;
   };
 }
 
 export const FilterPanel = ({ filters, onFiltersChange, summary }: FilterPanelProps) => {
-  const handleStatusChange = (status: string) => {
-    onFiltersChange({
-      ...filters,
-      status: status as FilterPanelProps['filters']['status'],
-    });
-  };
-
-  const handleSearchChange = (search: string) => {
-    onFiltersChange({
-      ...filters,
-      search,
-    });
-  };
-
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'draft': return 'secondary';
-      case 'under_review': return 'default';
-      case 'scheduled': return 'outline';
-      case 'published': return 'default';
-      case 'archived': return 'secondary';
-      default: return 'default';
-    }
-  };
-
   return (
-    <div className="bg-white rounded-lg border p-4 space-y-4">
-      <div className="flex flex-col md:flex-row gap-4">
-        {/* Search */}
-        <div className="flex-1">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+    <Card>
+      <CardHeader>
+        <CardTitle>Filtros da Fila de Conteúdo</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">Status</label>
+            <Select
+              value={filters.status}
+              onValueChange={(value) => onFiltersChange({ ...filters, status: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Todos os status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="draft">Rascunho</SelectItem>
+                <SelectItem value="under_review">Em Revisão</SelectItem>
+                <SelectItem value="scheduled">Agendado</SelectItem>
+                <SelectItem value="published">Publicado</SelectItem>
+                <SelectItem value="archived">Arquivado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-2 block">Buscar</label>
             <Input
-              placeholder="Search by title or author..."
+              placeholder="Buscar por título..."
               value={filters.search}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-10"
+              onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
             />
           </div>
-        </div>
 
-        {/* Status Filter */}
-        <div className="w-full md:w-48">
-          <Select value={filters.status} onValueChange={handleStatusChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="under_review">Under Review</SelectItem>
-              <SelectItem value="scheduled">Scheduled</SelectItem>
-              <SelectItem value="published">Published</SelectItem>
-              <SelectItem value="archived">Archived</SelectItem>
-            </SelectContent>
-          </Select>
+          <div>
+            <label className="text-sm font-medium mb-2 block">Estatísticas</label>
+            <div className="text-sm text-gray-600">
+              {summary && (
+                <>
+                  <div>Reviews: {summary.totalReviews}</div>
+                  <div>Posts: {summary.totalPosts}</div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* Summary Badges */}
-      {summary && (
-        <div className="flex flex-wrap gap-2">
-          <Badge variant={getStatusBadgeVariant('draft')}>
-            Draft: {summary.draft}
-          </Badge>
-          <Badge variant={getStatusBadgeVariant('under_review')}>
-            Under Review: {summary.under_review}
-          </Badge>
-          <Badge variant={getStatusBadgeVariant('scheduled')}>
-            Scheduled: {summary.scheduled}
-          </Badge>
-          <Badge variant={getStatusBadgeVariant('published')}>
-            Published: {summary.published}
-          </Badge>
-          <Badge variant={getStatusBadgeVariant('archived')}>
-            Archived: {summary.archived}
-          </Badge>
-        </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };

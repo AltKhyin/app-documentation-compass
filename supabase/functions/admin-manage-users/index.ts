@@ -1,8 +1,7 @@
-
 // ABOUTME: Comprehensive user management Edge Function for admin operations following the mandatory 7-step pattern
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { corsHeaders } from '../_shared/cors.ts';
+import { corsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { createSuccessResponse, createErrorResponse } from '../_shared/api-helpers.ts';
 import { rateLimitCheck, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
@@ -27,7 +26,7 @@ interface UserManagementPayload {
 Deno.serve(async (req) => {
   // STEP 1: CORS Preflight Handling (MANDATORY FIRST)
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreflightRequest();
   }
 
   try {
@@ -39,7 +38,12 @@ Deno.serve(async (req) => {
     
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('UNAUTHORIZED: Authorization header is required');
+      return new Response(JSON.stringify({
+        error: { message: 'Authorization header is required', code: 'UNAUTHORIZED' }
+      }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
     }
 
     const { data: { user }, error: authError } = await supabase.auth.getUser(
@@ -47,24 +51,23 @@ Deno.serve(async (req) => {
     );
 
     if (authError || !user) {
-      throw new Error('UNAUTHORIZED: Invalid authentication token');
+      return new Response(JSON.stringify({
+        error: { message: 'Invalid authentication token', code: 'UNAUTHORIZED' }
+      }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
     }
     
-    // Verify admin/editor role using the existing database function
-    const { data: hasAdminRole, error: adminRoleError } = await supabase
-      .rpc('user_has_role', { 
-        p_user_id: user.id, 
-        p_role_name: 'admin' 
+    // Verify admin/editor role using JWT claims
+    const userRole = user.app_metadata?.role;
+    if (!userRole || !['admin', 'editor'].includes(userRole)) {
+      return new Response(JSON.stringify({
+        error: { message: 'User management requires admin or editor role', code: 'FORBIDDEN' }
+      }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
       });
-    
-    const { data: hasEditorRole, error: editorRoleError } = await supabase
-      .rpc('user_has_role', { 
-        p_user_id: user.id, 
-        p_role_name: 'editor' 
-      });
-
-    if (adminRoleError || editorRoleError || (!hasAdminRole && !hasEditorRole)) {
-      throw new Error('FORBIDDEN: User management requires admin or editor role');
     }
 
     // STEP 3: Rate Limiting Implementation
@@ -131,9 +134,13 @@ Deno.serve(async (req) => {
       
       case 'delete':
         if (!payload.userId) throw new Error('User ID is required for delete action');
-        // Only admins can delete users
-        if (!hasAdminRole) {
-          throw new Error('FORBIDDEN: Only admins can delete users');
+        if (userRole !== 'admin') {
+          return new Response(JSON.stringify({
+            error: { message: 'Only admins can delete users', code: 'FORBIDDEN' }
+          }), {
+            status: 403,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
+          });
         }
         result = await handleDeleteUser(supabase, payload.userId, user.id);
         break;
@@ -168,7 +175,6 @@ async function handleListUsers(supabase: any, filters: any) {
       created_at
     `);
 
-  // Apply filters
   if (filters?.role) {
     query = query.eq('role', filters.role);
   }
@@ -181,22 +187,20 @@ async function handleListUsers(supabase: any, filters: any) {
     query = query.ilike('full_name', `%${filters.search}%`);
   }
 
-  // Apply pagination
   const page = filters?.page || 1;
-  const limit = Math.min(filters?.limit || 20, 100); // Cap at 100
+  const limit = Math.min(filters?.limit || 20, 100);
   const offset = (page - 1) * limit;
   
   query = query.range(offset, offset + limit - 1);
   query = query.order('created_at', { ascending: false });
 
-  const { data: users, error, count } = await query;
+  const { data: users, error } = await query;
   
   if (error) {
     console.error('Error fetching users:', error);
     throw new Error(`Failed to fetch users: ${error.message}`);
   }
 
-  // Get total count for pagination
   const { count: totalCount, error: countError } = await supabase
     .from('Practitioners')
     .select('*', { count: 'exact', head: true });
@@ -239,7 +243,6 @@ async function handleGetUser(supabase: any, userId: string) {
     throw new Error(`Failed to fetch user: ${error.message}`);
   }
 
-  // Get user roles from UserRoles table
   const { data: userRoles, error: rolesError } = await supabase
     .rpc('get_user_roles', { p_user_id: userId });
 
@@ -267,7 +270,6 @@ async function handleUpdateUser(supabase: any, userId: string, userData: any, pe
     throw new Error(`Failed to update user: ${error.message}`);
   }
 
-  // Log the audit event
   await supabase.rpc('log_audit_event', {
     p_performed_by: performedBy,
     p_action_type: 'UPDATE',
@@ -282,7 +284,6 @@ async function handleUpdateUser(supabase: any, userId: string, userData: any, pe
 
 // Helper function to toggle user active status
 async function handleToggleUserStatus(supabase: any, userId: string, isActive: boolean, performedBy: string) {
-  // Log the audit event
   await supabase.rpc('log_audit_event', {
     p_performed_by: performedBy,
     p_action_type: isActive ? 'REACTIVATE' : 'DEACTIVATE',
@@ -296,7 +297,6 @@ async function handleToggleUserStatus(supabase: any, userId: string, isActive: b
 
 // Helper function to delete user (soft delete or complete removal)
 async function handleDeleteUser(supabase: any, userId: string, performedBy: string) {
-  // Log the audit event before deletion
   await supabase.rpc('log_audit_event', {
     p_performed_by: performedBy,
     p_action_type: 'DELETE',

@@ -1,9 +1,15 @@
 
-// ABOUTME: Shared CORS headers configuration for all edge functions.
+// ABOUTME: Centralized CORS configuration for all Edge Functions following DOC_5 specifications
 
 export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Max-Age': '86400', // 24 hours
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, PUT, DELETE',
+};
+
+export const handleCorsPreflightRequest = () => {
+  return new Response(null, { 
+    headers: corsHeaders,
+    status: 200 
+  });
 };

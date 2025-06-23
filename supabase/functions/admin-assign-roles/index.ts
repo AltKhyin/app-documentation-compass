@@ -2,9 +2,9 @@
 // ABOUTME: Admin Edge Function for role assignment and management operations following the canonical 7-step pattern
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { corsHeaders } from '../_shared/cors.ts';
-import { rateLimitCheck } from '../_shared/rate-limit.ts';
-import { sendSuccess, sendError } from '../_shared/api-helpers.ts';
+import { corsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { createSuccessResponse, createErrorResponse } from '../_shared/api-helpers.ts';
+import { rateLimitCheck, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
 interface RoleManagementPayload {
   action: 'assign_role' | 'revoke_role' | 'list_user_roles' | 'list_available_roles';
@@ -16,7 +16,7 @@ interface RoleManagementPayload {
 Deno.serve(async (req) => {
   // STEP 1: CORS Preflight Handling (MANDATORY FIRST)
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreflightRequest();
   }
 
   try {
@@ -28,7 +28,12 @@ Deno.serve(async (req) => {
     
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return sendError('UNAUTHORIZED', 'Authorization header is required', 401);
+      return new Response(JSON.stringify({
+        error: { message: 'Authorization header is required', code: 'UNAUTHORIZED' }
+      }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
     }
 
     const { data: { user }, error: authError } = await supabase.auth.getUser(
@@ -36,24 +41,38 @@ Deno.serve(async (req) => {
     );
 
     if (authError || !user) {
-      return sendError('UNAUTHORIZED', 'Invalid authentication token', 401);
+      return new Response(JSON.stringify({
+        error: { message: 'Invalid authentication token', code: 'UNAUTHORIZED' }
+      }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
     }
 
-    // Verify admin role using the existing database function
-    const { data: hasAdminRole, error: roleError } = await supabase
-      .rpc('user_has_role', { 
-        p_user_id: user.id, 
-        p_role_name: 'admin' 
+    // Verify admin role using JWT claims
+    const userRole = user.app_metadata?.role;
+    if (!userRole || userRole !== 'admin') {
+      return new Response(JSON.stringify({
+        error: { message: 'Admin role required for role management', code: 'FORBIDDEN' }
+      }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
       });
-
-    if (roleError || !hasAdminRole) {
-      return sendError('FORBIDDEN', 'Admin role required for role management', 403);
     }
 
     // STEP 3: Rate Limiting Implementation
     const rateLimitResult = await rateLimitCheck(req, 'admin-assign-roles', 30, 60);
     if (!rateLimitResult.allowed) {
-      return sendError('RATE_LIMIT_EXCEEDED', 'Too many requests. Please try again later.', 429);
+      return new Response(JSON.stringify({
+        error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }
+      }), {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders,
+          ...rateLimitHeaders(rateLimitResult)
+        }
+      });
     }
 
     // STEP 4: Input Parsing & Validation
@@ -92,24 +111,22 @@ Deno.serve(async (req) => {
     }
 
     // STEP 6: Standardized Success Response
-    return sendSuccess(result);
+    return createSuccessResponse(result, rateLimitHeaders(rateLimitResult));
 
   } catch (error) {
     // STEP 7: Centralized Error Handling
     console.error('Role management error:', error);
-    return sendError('INTERNAL_ERROR', error.message || 'An unexpected error occurred', 500);
+    return createErrorResponse(error);
   }
 });
 
 // Helper function to list available roles
 async function handleListAvailableRoles() {
-  // Return static list of available roles based on system design
   return {
     availableRoles: ['editor', 'moderator']
   };
 }
 
-// Helper function to list user roles
 async function handleListUserRoles(supabase: any, userId: string) {
   const { data: userRoles, error } = await supabase
     .rpc('get_user_roles', { p_user_id: userId });
@@ -124,9 +141,7 @@ async function handleListUserRoles(supabase: any, userId: string) {
   };
 }
 
-// Helper function to assign role
 async function handleAssignRole(supabase: any, userId: string, roleName: string, expiresAt: string | undefined, performedBy: string) {
-  // Insert into UserRoles table
   const roleData: any = {
     practitioner_id: userId,
     role_name: roleName,
@@ -150,7 +165,6 @@ async function handleAssignRole(supabase: any, userId: string, roleName: string,
     throw new Error(`Failed to assign role: ${roleError.message}`);
   }
 
-  // Update user's primary role in Practitioners table if this is a higher role
   const roleHierarchy = { 'admin': 4, 'editor': 3, 'moderator': 2, 'practitioner': 1 };
   const newRoleLevel = roleHierarchy[roleName as keyof typeof roleHierarchy] || 1;
 
@@ -171,7 +185,6 @@ async function handleAssignRole(supabase: any, userId: string, roleName: string,
     }
   }
 
-  // Log the audit event
   await supabase.rpc('log_audit_event', {
     p_performed_by: performedBy,
     p_action_type: 'ASSIGN_ROLE',
@@ -184,9 +197,7 @@ async function handleAssignRole(supabase: any, userId: string, roleName: string,
   return { success: true, role: newRole };
 }
 
-// Helper function to revoke role
 async function handleRevokeRole(supabase: any, userId: string, roleName: string, performedBy: string) {
-  // Remove from UserRoles table
   const { error: deleteError } = await supabase
     .from('UserRoles')
     .delete()
@@ -198,13 +209,12 @@ async function handleRevokeRole(supabase: any, userId: string, roleName: string,
     throw new Error(`Failed to revoke role: ${deleteError.message}`);
   }
 
-  // Update user's primary role in Practitioners table to highest remaining role
   const { data: remainingRoles, error: rolesError } = await supabase
     .from('UserRoles')
     .select('role_name')
     .eq('practitioner_id', userId)
     .eq('is_active', true)
-    .or('expires_at.is.null,expires_at.gt.now()'); // Only active roles
+    .or('expires_at.is.null,expires_at.gt.now()');
 
   if (!rolesError) {
     const roleHierarchy = { 'admin': 4, 'editor': 3, 'moderator': 2, 'practitioner': 1 };
@@ -225,7 +235,6 @@ async function handleRevokeRole(supabase: any, userId: string, roleName: string,
       .eq('id', userId);
   }
 
-  // Log the audit event
   await supabase.rpc('log_audit_event', {
     p_performed_by: performedBy,
     p_action_type: 'REVOKE_ROLE',

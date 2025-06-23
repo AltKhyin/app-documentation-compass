@@ -1,31 +1,8 @@
 
-// ABOUTME: Shared API helpers for Edge Functions including authentication, CORS, and response formatting
+// ABOUTME: Shared API response helpers for consistent Edge Function responses
 
 import { corsHeaders } from './cors.ts';
 
-// Helper for handling CORS preflight requests
-export function handleCorsPreflightRequest() {
-  return new Response(null, { headers: corsHeaders });
-}
-
-// Helper for authenticating users manually
-export async function authenticateUser(supabase: any, authHeader: string | null) {
-  if (!authHeader) {
-    throw new Error('UNAUTHORIZED: Authorization header is required');
-  }
-
-  const { data: { user }, error } = await supabase.auth.getUser(
-    authHeader.replace('Bearer ', '')
-  );
-
-  if (error || !user) {
-    throw new Error('UNAUTHORIZED: Invalid authentication token');
-  }
-
-  return user;
-}
-
-// Helper for creating standardized success responses
 export function createSuccessResponse(data: any, additionalHeaders: Record<string, string> = {}) {
   return new Response(JSON.stringify(data), {
     status: 200,
@@ -37,17 +14,16 @@ export function createSuccessResponse(data: any, additionalHeaders: Record<strin
   });
 }
 
-// Helper for sending success responses (alias for backward compatibility)
-export function sendSuccess(data: any, additionalHeaders: Record<string, string> = {}) {
-  return createSuccessResponse(data, additionalHeaders);
-}
+export function createErrorResponse(error: any, additionalHeaders: Record<string, string> = {}) {
+  const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+  const errorCode = determineErrorCode(errorMessage);
+  const statusCode = determineStatusCode(errorMessage);
 
-// Helper for creating standardized error responses
-export function createErrorResponse(error: any, statusCode: number = 500) {
-  const errorMessage = error instanceof Error ? error.message : String(error);
-  const errorCode = error.code || 'INTERNAL_ERROR';
-
-  console.error('API Error:', { errorMessage, errorCode, statusCode });
+  console.error('API Error:', {
+    errorMessage,
+    errorCode,
+    statusCode
+  });
 
   return new Response(JSON.stringify({
     error: {
@@ -58,31 +34,29 @@ export function createErrorResponse(error: any, statusCode: number = 500) {
     status: statusCode,
     headers: {
       'Content-Type': 'application/json',
-      ...corsHeaders
+      ...corsHeaders,
+      ...additionalHeaders
     }
   });
 }
 
-// Helper for sending error responses with specific codes
-export function sendError(code: string, message: string, statusCode: number = 500) {
-  return new Response(JSON.stringify({
-    error: {
-      message,
-      code
-    }
-  }), {
-    status: statusCode,
-    headers: {
-      'Content-Type': 'application/json',
-      ...corsHeaders
-    }
-  });
+function determineErrorCode(message: string): string {
+  if (message.includes('UNAUTHORIZED')) return 'UNAUTHORIZED';
+  if (message.includes('FORBIDDEN')) return 'FORBIDDEN';
+  if (message.includes('Rate limit')) return 'RATE_LIMIT_EXCEEDED';
+  if (message.includes('Invalid') || message.includes('required')) return 'VALIDATION_FAILED';
+  return 'INTERNAL_ERROR';
 }
 
-// Rate limit error class
-export class RateLimitError extends Error {
-  constructor(message: string = 'Rate limit exceeded') {
-    super(message);
-    this.name = 'RateLimitError';
-  }
+function determineStatusCode(message: string): number {
+  if (message.includes('UNAUTHORIZED')) return 401;
+  if (message.includes('FORBIDDEN')) return 403;
+  if (message.includes('Rate limit')) return 429;
+  if (message.includes('Invalid') || message.includes('required')) return 400;
+  return 500;
 }
+
+// Legacy function names for backward compatibility
+export const sendSuccess = createSuccessResponse;
+export const sendError = (code: string, message: string, status: number) => 
+  createErrorResponse(new Error(`${code}: ${message}`));
