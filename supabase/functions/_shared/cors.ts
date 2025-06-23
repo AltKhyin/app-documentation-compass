@@ -1,15 +1,15 @@
 
-// ABOUTME: Centralized CORS configuration for all Edge Functions following DOC_5 specifications
+// ABOUTME: CORS utilities for Edge Functions with standardized headers
 
 export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, PUT, DELETE',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 };
 
-export const handleCorsPreflightRequest = () => {
-  return new Response(null, { 
+export function handleCorsPreflightRequest(): Response {
+  return new Response(null, {
+    status: 200,
     headers: corsHeaders,
-    status: 200 
   });
-};
+}

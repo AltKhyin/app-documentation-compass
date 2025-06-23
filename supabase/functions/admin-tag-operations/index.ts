@@ -1,9 +1,9 @@
 
-// ABOUTME: Admin Edge Function for tag operations including hierarchy management and cleanup
+// ABOUTME: Admin Edge Function for tag operations following the mandatory 7-step pattern from DOC_5
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { corsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
-import { createSuccessResponse, createErrorResponse } from '../_shared/api-helpers.ts';
+import { createSuccessResponse, createErrorResponse, authenticateUser } from '../_shared/api-helpers.ts';
 import { rateLimitCheck, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
 interface TagOperationPayload {
@@ -29,36 +29,25 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
     
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return createErrorResponse(new Error('UNAUTHORIZED: Authorization header is required'));
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      return createErrorResponse(new Error('UNAUTHORIZED: Invalid authentication token'));
-    }
+    const user = await authenticateUser(supabase, req.headers.get('Authorization'));
     
     // Verify admin/editor role for tag management
     const userRole = user.app_metadata?.role;
     if (!userRole || !['admin', 'editor'].includes(userRole)) {
-      return createErrorResponse(new Error('FORBIDDEN: Tag management requires admin or editor role'));
+      throw new Error('FORBIDDEN: Tag management requires admin or editor role');
     }
 
     // STEP 3: Rate Limiting Implementation
     const rateLimitResult = await rateLimitCheck(req, 'admin-tag-operations', 30, 60);
     if (!rateLimitResult.allowed) {
-      return createErrorResponse(new Error('RATE_LIMIT_EXCEEDED: Rate limit exceeded'), rateLimitHeaders(rateLimitResult));
+      throw new Error('RATE_LIMIT_EXCEEDED: Rate limit exceeded');
     }
 
     // STEP 4: Input Parsing & Validation
     const payload: TagOperationPayload = await req.json().catch(() => ({}));
     
     if (!payload.action) {
-      return createErrorResponse(new Error('VALIDATION_FAILED: action is required'));
+      throw new Error('VALIDATION_FAILED: action is required');
     }
 
     console.log('Tag operation request:', { payload, userRole, userId: user.id });
@@ -93,7 +82,7 @@ async function handleTagOperation(supabase: any, payload: TagOperationPayload, u
       case 'cleanup':
         return await cleanupTags(supabase, payload, userId);
       default:
-        throw new Error(`Invalid tag operation: ${payload.action}`);
+        throw new Error(`VALIDATION_FAILED: Invalid tag operation: ${payload.action}`);
     }
   } catch (error) {
     console.error('Error in handleTagOperation:', error);
@@ -103,7 +92,7 @@ async function handleTagOperation(supabase: any, payload: TagOperationPayload, u
 
 async function createTag(supabase: any, payload: TagOperationPayload, userId: string) {
   if (!payload.name) {
-    throw new Error('Tag name is required for creation');
+    throw new Error('VALIDATION_FAILED: Tag name is required for creation');
   }
 
   // Check if tag already exists
@@ -114,7 +103,7 @@ async function createTag(supabase: any, payload: TagOperationPayload, userId: st
     .single();
 
   if (existingTag) {
-    throw new Error('Tag with this name already exists');
+    throw new Error('VALIDATION_FAILED: Tag with this name already exists');
   }
 
   const { data: newTag, error } = await supabase
@@ -135,7 +124,7 @@ async function createTag(supabase: any, payload: TagOperationPayload, userId: st
 
 async function updateTag(supabase: any, payload: TagOperationPayload, userId: string) {
   if (!payload.tagId) {
-    throw new Error('Tag ID is required for update');
+    throw new Error('VALIDATION_FAILED: Tag ID is required for update');
   }
 
   const updates: any = {};
@@ -160,7 +149,7 @@ async function deleteTag(supabase: any, payload: TagOperationPayload, userId: st
   const tagIds = payload.bulkTagIds || (payload.tagId ? [payload.tagId] : []);
   
   if (tagIds.length === 0) {
-    throw new Error('No tags specified for deletion');
+    throw new Error('VALIDATION_FAILED: No tags specified for deletion');
   }
 
   // Check if any tags have children or are in use
@@ -182,7 +171,7 @@ async function deleteTag(supabase: any, payload: TagOperationPayload, userId: st
   );
 
   if (tagsInUse.length > 0) {
-    throw new Error(`Cannot delete tags that are in use: ${tagsInUse.map(t => t.tag_name).join(', ')}`);
+    throw new Error(`VALIDATION_FAILED: Cannot delete tags that are in use: ${tagsInUse.map(t => t.tag_name).join(', ')}`);
   }
 
   // Delete the tags
@@ -200,7 +189,7 @@ async function deleteTag(supabase: any, payload: TagOperationPayload, userId: st
 
 async function mergeTags(supabase: any, payload: TagOperationPayload, userId: string) {
   if (!payload.tagId || !payload.bulkTagIds || payload.bulkTagIds.length === 0) {
-    throw new Error('Target tag and source tags are required for merge');
+    throw new Error('VALIDATION_FAILED: Target tag and source tags are required for merge');
   }
 
   // Update all ReviewTags to point to the target tag
@@ -242,7 +231,7 @@ async function mergeTags(supabase: any, payload: TagOperationPayload, userId: st
 
 async function moveTag(supabase: any, payload: TagOperationPayload, userId: string) {
   if (!payload.tagId) {
-    throw new Error('Tag ID is required for move operation');
+    throw new Error('VALIDATION_FAILED: Tag ID is required for move operation');
   }
 
   const { data: updatedTag, error } = await supabase

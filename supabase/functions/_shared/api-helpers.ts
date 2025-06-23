@@ -1,29 +1,31 @@
 
-// ABOUTME: Shared API response helpers for consistent Edge Function responses
+// ABOUTME: Standardized API helpers for Edge Functions with authentication and response formatting
 
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { corsHeaders } from './cors.ts';
 
-export function createSuccessResponse(data: any, additionalHeaders: Record<string, string> = {}) {
+export function createSuccessResponse(data: any, additionalHeaders: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(data), {
     status: 200,
     headers: {
       'Content-Type': 'application/json',
       ...corsHeaders,
-      ...additionalHeaders
-    }
+      ...additionalHeaders,
+    },
   });
 }
 
-export function createErrorResponse(error: any, additionalHeaders: Record<string, string> = {}) {
-  const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-  const errorCode = determineErrorCode(errorMessage);
-  const statusCode = determineStatusCode(errorMessage);
-
-  console.error('API Error:', {
-    errorMessage,
-    errorCode,
-    statusCode
-  });
+export function createErrorResponse(error: any, additionalHeaders: Record<string, string> = {}): Response {
+  console.error('Edge Function Error:', error);
+  
+  const errorMessage = error?.message || 'An unexpected error occurred';
+  const errorCode = error?.code || 'INTERNAL_SERVER_ERROR';
+  
+  let status = 500;
+  if (errorMessage.includes('UNAUTHORIZED')) status = 401;
+  else if (errorMessage.includes('FORBIDDEN')) status = 403;
+  else if (errorMessage.includes('VALIDATION_FAILED')) status = 400;
+  else if (errorMessage.includes('RATE_LIMIT_EXCEEDED')) status = 429;
 
   return new Response(JSON.stringify({
     error: {
@@ -31,32 +33,27 @@ export function createErrorResponse(error: any, additionalHeaders: Record<string
       code: errorCode
     }
   }), {
-    status: statusCode,
+    status,
     headers: {
       'Content-Type': 'application/json',
       ...corsHeaders,
-      ...additionalHeaders
-    }
+      ...additionalHeaders,
+    },
   });
 }
 
-function determineErrorCode(message: string): string {
-  if (message.includes('UNAUTHORIZED')) return 'UNAUTHORIZED';
-  if (message.includes('FORBIDDEN')) return 'FORBIDDEN';
-  if (message.includes('Rate limit')) return 'RATE_LIMIT_EXCEEDED';
-  if (message.includes('Invalid') || message.includes('required')) return 'VALIDATION_FAILED';
-  return 'INTERNAL_ERROR';
-}
+export async function authenticateUser(supabase: any, authHeader: string | null) {
+  if (!authHeader) {
+    throw new Error('UNAUTHORIZED: Authorization header is required');
+  }
 
-function determineStatusCode(message: string): number {
-  if (message.includes('UNAUTHORIZED')) return 401;
-  if (message.includes('FORBIDDEN')) return 403;
-  if (message.includes('Rate limit')) return 429;
-  if (message.includes('Invalid') || message.includes('required')) return 400;
-  return 500;
-}
+  const { data: { user }, error: authError } = await supabase.auth.getUser(
+    authHeader.replace('Bearer ', '')
+  );
 
-// Legacy function names for backward compatibility
-export const sendSuccess = createSuccessResponse;
-export const sendError = (code: string, message: string, status: number) => 
-  createErrorResponse(new Error(`${code}: ${message}`));
+  if (authError || !user) {
+    throw new Error('UNAUTHORIZED: Invalid authentication token');
+  }
+
+  return user;
+}
