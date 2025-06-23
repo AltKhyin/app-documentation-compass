@@ -1,14 +1,8 @@
 
-// ABOUTME: TanStack Query hooks for role assignment and management operations
+// ABOUTME: TanStack Query hooks for role management operations including assignment, revocation, and available roles
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-
-interface RoleAssignment {
-  role_name: string;
-  granted_at: string;
-  expires_at?: string;
-}
 
 interface RoleAssignmentPayload {
   userId: string;
@@ -16,38 +10,31 @@ interface RoleAssignmentPayload {
   expiresAt?: string;
 }
 
-// Hook for listing available roles
-export const useAvailableRolesQuery = () => {
-  return useQuery({
-    queryKey: ['admin-roles', 'available'],
-    queryFn: async (): Promise<{ availableRoles: string[] }> => {
-      console.log('Fetching available roles...');
-      
-      const { data, error } = await supabase.functions.invoke('admin-assign-roles', {
-        body: {
-          action: 'list_available_roles'
-        }
-      });
-      
-      if (error) {
-        console.error('Error fetching available roles:', error);
-        throw new Error(`Failed to fetch roles: ${error.message}`);
-      }
+interface RoleRevocationPayload {
+  userId: string;
+  roleName: string;
+}
 
-      return data;
-    },
-    staleTime: 10 * 60 * 1000, // 10 minutes (roles don't change often)
-    gcTime: 30 * 60 * 1000, // 30 minutes
-    refetchOnWindowFocus: false
-  });
-};
+interface UserRole {
+  role_name: string;
+  granted_at: string;
+  expires_at?: string;
+}
 
-// Hook for listing a user's roles
+interface UserRolesResponse {
+  roles: UserRole[];
+}
+
+interface AvailableRolesResponse {
+  availableRoles: string[];
+}
+
+// Hook for fetching user roles
 export const useUserRolesQuery = (userId: string) => {
   return useQuery({
-    queryKey: ['admin-roles', 'user', userId],
-    queryFn: async (): Promise<{ userId: string; roles: RoleAssignment[] }> => {
-      console.log('Fetching user roles...', { userId });
+    queryKey: ['admin', 'user-roles', userId],
+    queryFn: async (): Promise<UserRolesResponse> => {
+      console.log('Fetching user roles via Edge Function...', { userId });
       
       const { data, error } = await supabase.functions.invoke('admin-assign-roles', {
         body: {
@@ -61,7 +48,7 @@ export const useUserRolesQuery = (userId: string) => {
         throw new Error(`Failed to fetch user roles: ${error.message}`);
       }
 
-      return data;
+      return data as UserRolesResponse;
     },
     enabled: !!userId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -74,20 +61,50 @@ export const useUserRolesQuery = (userId: string) => {
   });
 };
 
-// Hook for assigning roles to users
+// Hook for fetching available roles
+export const useAvailableRolesQuery = () => {
+  return useQuery({
+    queryKey: ['admin', 'available-roles'],
+    queryFn: async (): Promise<AvailableRolesResponse> => {
+      console.log('Fetching available roles via Edge Function...');
+      
+      const { data, error } = await supabase.functions.invoke('admin-assign-roles', {
+        body: {
+          action: 'list_available_roles'
+        }
+      });
+      
+      if (error) {
+        console.error('Error fetching available roles:', error);
+        throw new Error(`Failed to fetch available roles: ${error.message}`);
+      }
+
+      return data as AvailableRolesResponse;
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes (roles don't change often)
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: false,
+    retry: (failureCount, error) => {
+      console.error('Available roles query failed:', error);
+      return failureCount < 2;
+    }
+  });
+};
+
+// Hook for assigning roles
 export const useAssignRoleMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ userId, roleName, expiresAt }: RoleAssignmentPayload) => {
-      console.log('Assigning role via Edge Function...', { userId, roleName, expiresAt });
+    mutationFn: async (payload: RoleAssignmentPayload) => {
+      console.log('Assigning role via Edge Function...', payload);
       
       const { data, error } = await supabase.functions.invoke('admin-assign-roles', {
         body: {
-          action: 'assign',
-          userId,
-          roleName,
-          expiresAt
+          action: 'assign_role',
+          userId: payload.userId,
+          roleName: payload.roleName,
+          expiresAt: payload.expiresAt
         }
       });
       
@@ -98,9 +115,9 @@ export const useAssignRoleMutation = () => {
 
       return data;
     },
-    onSuccess: (data, { userId }) => {
+    onSuccess: (data, variables) => {
       // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: ['admin-roles', 'user', userId] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'user-roles', variables.userId] });
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       console.log('Role assigned successfully:', data);
     },
@@ -110,19 +127,19 @@ export const useAssignRoleMutation = () => {
   });
 };
 
-// Hook for revoking roles from users
+// Hook for revoking roles
 export const useRevokeRoleMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ userId, roleName }: { userId: string; roleName: string }) => {
-      console.log('Revoking role via Edge Function...', { userId, roleName });
+    mutationFn: async (payload: RoleRevocationPayload) => {
+      console.log('Revoking role via Edge Function...', payload);
       
       const { data, error } = await supabase.functions.invoke('admin-assign-roles', {
         body: {
-          action: 'revoke',
-          userId,
-          roleName
+          action: 'revoke_role',
+          userId: payload.userId,
+          roleName: payload.roleName
         }
       });
       
@@ -133,9 +150,9 @@ export const useRevokeRoleMutation = () => {
 
       return data;
     },
-    onSuccess: (data, { userId }) => {
+    onSuccess: (data, variables) => {
       // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: ['admin-roles', 'user', userId] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'user-roles', variables.userId] });
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       console.log('Role revoked successfully:', data);
     },

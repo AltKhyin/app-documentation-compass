@@ -30,7 +30,8 @@ import {
   Users, 
   UserCheck,
   Shield,
-  Calendar
+  Calendar,
+  Award
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -52,7 +53,7 @@ interface UserManagementFilters {
 }
 
 export const UserListTable = () => {
-  const [filters, setFilters] = useState<UserManagementFilters>({
+  const [filters, setFilters] = useState({
     page: 1,
     limit: 20
   });
@@ -161,7 +162,7 @@ export const UserListTable = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header with Search and Filters */}
+      {/* Filter and Search Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -170,7 +171,7 @@ export const UserListTable = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Search and Filters Row */}
+          {/* Search and Filters */}
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -183,35 +184,25 @@ export const UserListTable = () => {
             </div>
             
             <div className="flex gap-2">
-              <Select 
-                value={filters.role || ''} 
-                onValueChange={(value) => handleFilterChange('role', value)}
-              >
+              <Select value={filters.role || 'all'} onValueChange={(value) => handleFilterChange('role', value === 'all' ? undefined : value)}>
                 <SelectTrigger className="w-40">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Papel" />
+                  <SelectValue placeholder="Filtrar por papel" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os papéis</SelectItem>
-                  {rolesData?.availableRoles.map((role) => (
-                    <SelectItem key={role} value={role}>
-                      {role === 'admin' ? 'Admin' :
-                       role === 'editor' ? 'Editor' :
-                       role === 'moderator' ? 'Moderador' : 'Praticante'}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="all">Todos os papéis</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="editor">Editor</SelectItem>
+                  <SelectItem value="moderator">Moderador</SelectItem>
+                  <SelectItem value="practitioner">Praticante</SelectItem>
                 </SelectContent>
               </Select>
 
-              <Select 
-                value={filters.subscription_tier || ''} 
-                onValueChange={(value) => handleFilterChange('subscription_tier', value)}
-              >
+              <Select value={filters.subscription_tier || 'all'} onValueChange={(value) => handleFilterChange('subscription_tier', value === 'all' ? undefined : value)}>
                 <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Assinatura" />
+                  <SelectValue placeholder="Filtrar por plano" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas</SelectItem>
+                  <SelectItem value="all">Todos os planos</SelectItem>
                   <SelectItem value="free">Gratuito</SelectItem>
                   <SelectItem value="premium">Premium</SelectItem>
                 </SelectContent>
@@ -219,170 +210,157 @@ export const UserListTable = () => {
             </div>
           </div>
 
-          {/* Bulk Operations Panel */}
+          {/* Bulk Operations */}
           {hasSelectedUsers && (
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">
-                  {selectedUserIds.length} usuário(s) selecionado(s)
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowBulkOperations(true)}
-                >
-                  Ações em Massa
-                </Button>
-              </div>
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <span className="text-sm text-blue-700">
+                {selectedUserIds.length} usuário(s) selecionado(s)
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowBulkOperations(true)}
+              >
+                Operações em Massa
+              </Button>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Users Table */}
+      {/* User Table */}
       <Card>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
-                  <Checkbox
-                    checked={
-                      userListData?.users.length > 0 && 
-                      selectedUserIds.length === userListData?.users.length
-                    }
-                    onCheckedChange={handleSelectAll}
-                  />
-                </TableHead>
-                <TableHead>Usuário</TableHead>
-                <TableHead>Papel</TableHead>
-                <TableHead>Assinatura</TableHead>
-                <TableHead>Contribuição</TableHead>
-                <TableHead>Cadastro</TableHead>
-                <TableHead className="w-12">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                // Loading skeleton
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell colSpan={7}>
-                      <div className="animate-pulse bg-gray-200 h-4 rounded"></div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : userListData?.users.length === 0 ? (
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    Nenhum usuário encontrado
-                  </TableCell>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={userListData?.users?.length > 0 && selectedUserIds.length === userListData.users.length}
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead>Usuário</TableHead>
+                  <TableHead>Papel</TableHead>
+                  <TableHead>Plano</TableHead>
+                  <TableHead>Pontuação</TableHead>
+                  <TableHead>Cadastrado em</TableHead>
+                  <TableHead className="w-16">Ações</TableHead>
                 </TableRow>
-              ) : (
-                userListData?.users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedUserIds.includes(user.id)}
-                        onCheckedChange={(checked) => 
-                          handleUserSelection(user.id, checked as boolean)
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                          {user.avatar_url ? (
-                            <img 
-                              src={user.avatar_url} 
-                              alt={user.full_name}
-                              className="w-8 h-8 rounded-full"
-                            />
-                          ) : (
-                            <UserCheck className="h-4 w-4 text-gray-500" />
-                          )}
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  // Loading rows
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                          <span className="ml-2">Carregando usuários...</span>
                         </div>
-                        <div>
-                          <div className="font-medium">{user.full_name}</div>
-                          {user.profession_flair && (
-                            <div className="text-xs text-muted-foreground">
-                              {user.profession_flair}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {formatRole(user.role)}
-                    </TableCell>
-                    <TableCell>
-                      {formatSubscriptionTier(user.subscription_tier)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Shield className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-sm">{user.contribution_score}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        {new Date(user.created_at).toLocaleDateString('pt-BR')}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleUserAction(user.id, 'view')}>
-                            Ver Detalhes
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleUserAction(user.id, 'assign-role')}>
-                            Gerenciar Papéis
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleUserAction(user.id, 'edit')}>
-                            Editar Usuário
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : userListData?.users?.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      Nenhum usuário encontrado
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  userListData?.users?.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedUserIds.includes(user.id)}
+                          onCheckedChange={(checked) => handleUserSelection(user.id, checked as boolean)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                          </div>
+                          <div>
+                            <div className="font-medium">{user.full_name || 'Nome não informado'}</div>
+                            <div className="text-sm text-muted-foreground">ID: {user.id.slice(0, 8)}...</div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {formatRole(user.role)}
+                      </TableCell>
+                      <TableCell>
+                        {formatSubscriptionTier(user.subscription_tier)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Award className="h-4 w-4 text-yellow-500" />
+                          {user.contribution_score}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(user.created_at).toLocaleDateString('pt-BR')}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleUserAction(user.id, 'view')}>
+                              Ver Detalhes
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUserAction(user.id, 'assign-role')}>
+                              Gerenciar Papéis
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleUserAction(user.id, 'edit')}>
+                              Editar Usuário
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
 
           {/* Pagination */}
           {userListData?.pagination && userListData.pagination.total > userListData.pagination.limit && (
-            <div className="flex items-center justify-between pt-4">
+            <div className="flex items-center justify-between p-4 border-t">
               <div className="text-sm text-muted-foreground">
-                Mostrando {((userListData.pagination.page - 1) * userListData.pagination.limit) + 1} até{' '}
-                {Math.min(
-                  userListData.pagination.page * userListData.pagination.limit,
-                  userListData.pagination.total
-                )} de {userListData.pagination.total} usuários
+                Mostrando {((userListData.pagination.page - 1) * userListData.pagination.limit) + 1} a{' '}
+                {Math.min(userListData.pagination.page * userListData.pagination.limit, userListData.pagination.total)} de{' '}
+                {userListData.pagination.total} usuários
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled={userListData.pagination.page <= 1}
                   onClick={() => handlePageChange(userListData.pagination.page - 1)}
+                  disabled={userListData.pagination.page <= 1}
                 >
                   Anterior
                 </Button>
+                <span className="text-sm">
+                  Página {userListData.pagination.page} de {Math.ceil(userListData.pagination.total / userListData.pagination.limit)}
+                </span>
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled={!userListData.pagination.hasMore}
                   onClick={() => handlePageChange(userListData.pagination.page + 1)}
+                  disabled={!userListData.pagination.hasMore}
                 >
-                  Próximo
+                  Próxima
                 </Button>
               </div>
             </div>
@@ -391,33 +369,36 @@ export const UserListTable = () => {
       </Card>
 
       {/* Modals */}
-      {showUserDetail && selectedUserId && (
-        <UserDetailModal
-          userId={selectedUserId}
-          open={showUserDetail}
-          onOpenChange={setShowUserDetail}
-        />
+      {selectedUserId && (
+        <>
+          <UserDetailModal
+            userId={selectedUserId}
+            open={showUserDetail}
+            onOpenChange={(open) => {
+              setShowUserDetail(open);
+              if (!open) setSelectedUserId(null);
+            }}
+          />
+          <RoleAssignmentModal
+            userId={selectedUserId}
+            open={showRoleAssignment}
+            onOpenChange={(open) => {
+              setShowRoleAssignment(open);
+              if (!open) setSelectedUserId(null);
+            }}
+          />
+        </>
       )}
 
-      {showRoleAssignment && selectedUserId && (
-        <RoleAssignmentModal
-          userId={selectedUserId}
-          open={showRoleAssignment}
-          onOpenChange={setShowRoleAssignment}
-        />
-      )}
-
-      {showBulkOperations && (
-        <BulkOperationsPanel
-          selectedUserIds={selectedUserIds}
-          open={showBulkOperations}
-          onOpenChange={setShowBulkOperations}
-          onComplete={() => {
-            setSelectedUserIds([]);
-            setShowBulkOperations(false);
-          }}
-        />
-      )}
+      <BulkOperationsPanel
+        selectedUserIds={selectedUserIds}
+        open={showBulkOperations}
+        onOpenChange={setShowBulkOperations}
+        onComplete={() => {
+          setSelectedUserIds([]);
+          setShowBulkOperations(false);
+        }}
+      />
     </div>
   );
 };
