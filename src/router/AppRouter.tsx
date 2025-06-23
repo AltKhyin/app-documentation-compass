@@ -21,6 +21,10 @@ import { AdminProtectedRoute } from '@/components/routes/AdminProtectedRoute';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { AdminDashboard } from '@/pages/AdminDashboard';
 import ContentManagement from '@/pages/ContentManagement';
+import AdminUserManagement from '@/pages/AdminUserManagement';
+import AdminTagManagement from '@/pages/AdminTagManagement';
+import AdminLayoutManagement from '@/pages/AdminLayoutManagement';
+import AdminAnalytics from '@/pages/AdminAnalytics';
 
 const router = createBrowserRouter([
   {
@@ -115,6 +119,22 @@ const router = createBrowserRouter([
           {
             path: "content",
             element: <ContentManagement />,
+          },
+          {
+            path: "users",
+            element: <AdminUserManagement />,
+          },
+          {
+            path: "tags",
+            element: <AdminTagManagement />,
+          },
+          {
+            path: "layout",
+            element: <AdminLayoutManagement />,
+          },
+          {
+            path: "analytics",
+            element: <AdminAnalytics />,
           },
         ],
       },

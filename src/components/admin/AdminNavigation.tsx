@@ -5,7 +5,11 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   BarChart3,
-  FileText
+  FileText,
+  Users,
+  Tags,
+  Layout,
+  TrendingUp
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -20,6 +24,26 @@ const navigationItems = [
     label: 'Gestão de Conteúdo',
     href: '/admin/content',
     icon: FileText
+  },
+  {
+    label: 'Gestão de Usuários',
+    href: '/admin/users',
+    icon: Users
+  },
+  {
+    label: 'Gestão de Tags',
+    href: '/admin/tags',
+    icon: Tags
+  },
+  {
+    label: 'Gestão de Layout',
+    href: '/admin/layout',
+    icon: Layout
+  },
+  {
+    label: 'Analytics',
+    href: '/admin/analytics',
+    icon: TrendingUp
   },
 ];
 

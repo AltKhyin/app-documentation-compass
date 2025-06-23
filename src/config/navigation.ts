@@ -11,7 +11,8 @@ import {
   BarChart3,
   FileText,
   Tags,
-  Layout
+  Layout,
+  TrendingUp
 } from 'lucide-react';
 import { LucideIcon } from 'lucide-react';
 
@@ -59,7 +60,7 @@ export const navigationItems: NavigationItem[] = [
     showOnMobile: true,
     showOnDesktop: true,
   },
-  // Admin items - desktop only (ONLY implemented routes)
+  // Admin items - desktop only (ALL implemented routes)
   {
     path: '/admin',
     label: 'Dashboard',
@@ -72,6 +73,38 @@ export const navigationItems: NavigationItem[] = [
     path: '/admin/content',
     label: 'Gestão de Conteúdo',
     icon: FileText,
+    requiredRoles: ['admin', 'editor'],
+    showOnMobile: false,
+    showOnDesktop: true,
+  },
+  {
+    path: '/admin/users',
+    label: 'Gestão de Usuários',
+    icon: Users,
+    requiredRoles: ['admin', 'editor'],
+    showOnMobile: false,
+    showOnDesktop: true,
+  },
+  {
+    path: '/admin/tags',
+    label: 'Gestão de Tags',
+    icon: Tags,
+    requiredRoles: ['admin', 'editor'],
+    showOnMobile: false,
+    showOnDesktop: true,
+  },
+  {
+    path: '/admin/layout',
+    label: 'Gestão de Layout',
+    icon: Layout,
+    requiredRoles: ['admin', 'editor'],
+    showOnMobile: false,
+    showOnDesktop: true,
+  },
+  {
+    path: '/admin/analytics',
+    label: 'Analytics',
+    icon: TrendingUp,
     requiredRoles: ['admin', 'editor'],
     showOnMobile: false,
     showOnDesktop: true,
