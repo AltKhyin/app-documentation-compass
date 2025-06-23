@@ -17,7 +17,7 @@ import {
   FolderOpen,
   Folder
 } from 'lucide-react';
-import { useTagManagementQuery, useTagOperationMutation, type TagWithStats } from '@/packages/hooks/useTagManagementQuery';
+import { useTagManagementQuery, useTagOperationMutation, type TagWithStats } from '../../../packages/hooks/useTagManagementQuery';
 import { cn } from '@/lib/utils';
 
 interface TagNode extends TagWithStats {

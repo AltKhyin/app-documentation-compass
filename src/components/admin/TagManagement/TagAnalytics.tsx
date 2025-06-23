@@ -1,4 +1,3 @@
-
 // ABOUTME: Tag analytics and reporting component with usage statistics and insights
 
 import React from 'react';
@@ -13,7 +12,7 @@ import {
   Calendar,
   AlertTriangle
 } from 'lucide-react';
-import { useTagAnalyticsQuery, type TagWithStats } from '@/packages/hooks/useTagManagementQuery';
+import { useTagAnalyticsQuery, type TagWithStats } from '../../../packages/hooks/useTagManagementQuery';
 
 export const TagAnalytics = () => {
   const { data: analytics, isLoading, error } = useTagAnalyticsQuery();
