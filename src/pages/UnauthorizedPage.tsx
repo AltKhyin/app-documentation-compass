@@ -1,64 +1,56 @@
 
-// ABOUTME: Page shown when user lacks sufficient permissions for a protected route.
+// ABOUTME: Unauthorized access page with proper Portuguese messaging and navigation
+
 import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { AlertTriangle, Home, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Shield, ArrowLeft } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const UnauthorizedPage = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const { requiredRole, userRole } = location.state || {};
-
-  const handleGoBack = () => {
-    navigate(-1);
-  };
 
   const handleGoHome = () => {
     navigate('/');
   };
 
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6">
-      <div className="max-w-md w-full text-center space-y-6">
-        <div className="flex justify-center">
-          <div className="p-4 bg-destructive/10 rounded-full">
-            <Shield className="h-12 w-12 text-destructive" />
-          </div>
-        </div>
-        
-        <div className="space-y-3">
-          <h1 className="text-2xl font-bold text-foreground font-serif">
-            Acesso Negado
-          </h1>
-          <p className="text-muted-foreground">
-            Você não possui permissão para acessar esta página.
-          </p>
-          {requiredRole && userRole && (
-            <p className="text-sm text-muted-foreground bg-muted p-3 rounded-md">
-              <strong>Necessário:</strong> {requiredRole} <br />
-              <strong>Seu nível:</strong> {userRole}
-            </p>
-          )}
-        </div>
+  const handleGoBack = () => {
+    navigate(-1);
+  };
 
-        <div className="flex flex-col sm:flex-row gap-3 pt-4">
-          <Button 
-            variant="outline" 
-            onClick={handleGoBack}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar
-          </Button>
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+            <AlertTriangle className="h-6 w-6 text-red-600" />
+          </div>
+          <CardTitle className="text-xl font-bold text-gray-900">
+            Acesso Negado
+          </CardTitle>
+          <CardDescription>
+            Você não tem permissão para acessar esta página. Entre em contato com um administrador se acredita que isso é um erro.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <Button 
             onClick={handleGoHome}
-            className="flex items-center gap-2"
+            className="w-full"
+            variant="default"
           >
+            <Home className="h-4 w-4 mr-2" />
             Ir para Início
           </Button>
-        </div>
-      </div>
+          <Button 
+            onClick={handleGoBack}
+            className="w-full"
+            variant="outline"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 };

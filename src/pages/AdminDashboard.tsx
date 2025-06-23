@@ -86,7 +86,7 @@ export const AdminDashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-center justify-between p-3 border rounded-lg">
+            <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
               <div>
                 <h3 className="font-medium">Fila de Publicação</h3>
                 <p className="text-sm text-gray-600">3 reviews aguardando aprovação</p>
@@ -94,7 +94,7 @@ export const AdminDashboard = () => {
               <FileText className="h-5 w-5 text-gray-400" />
             </div>
             
-            <div className="flex items-center justify-between p-3 border rounded-lg">
+            <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
               <div>
                 <h3 className="font-medium">Moderação</h3>
                 <p className="text-sm text-gray-600">2 posts reportados</p>
