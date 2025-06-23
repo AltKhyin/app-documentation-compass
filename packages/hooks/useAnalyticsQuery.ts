@@ -1,5 +1,5 @@
 
-// ABOUTME: TanStack Query hooks for admin analytics data fetching
+// ABOUTME: TanStack Query hooks for admin analytics data fetching via Edge Functions
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,58 +40,17 @@ export const useAnalyticsQuery = () => {
   return useQuery({
     queryKey: ['admin-analytics'],
     queryFn: async (): Promise<AnalyticsData> => {
-      console.log('Fetching analytics data...');
+      console.log('Fetching analytics data via Edge Function...');
       
-      // Fetch user statistics
-      const { data: userStats, error: userError } = await supabase.rpc('get_user_analytics');
-      if (userError) {
-        console.error('Error fetching user analytics:', userError);
-        throw userError;
+      // Use Edge Function instead of direct RPC calls per Blueprint 09
+      const { data, error } = await supabase.functions.invoke('get-analytics-dashboard-data');
+      
+      if (error) {
+        console.error('Error fetching analytics via Edge Function:', error);
+        throw new Error(`Analytics fetch failed: ${error.message}`);
       }
 
-      // Fetch content statistics
-      const { data: contentStats, error: contentError } = await supabase.rpc('get_content_analytics');
-      if (contentError) {
-        console.error('Error fetching content analytics:', contentError);
-        throw contentError;
-      }
-
-      // Fetch engagement statistics
-      const { data: engagementStats, error: engagementError } = await supabase.rpc('get_engagement_analytics');
-      if (engagementError) {
-        console.error('Error fetching engagement analytics:', engagementError);
-        throw engagementError;
-      }
-
-      // Mock system stats for now - would be replaced with actual monitoring
-      const systemStats = {
-        dbSize: '2.4 GB',
-        apiCalls: 15420,
-        errorRate: 0.02,
-        uptime: '99.9%'
-      };
-
-      return {
-        userStats: userStats || {
-          totalUsers: 0,
-          activeToday: 0,
-          newThisWeek: 0,
-          premiumUsers: 0
-        },
-        contentStats: contentStats || {
-          totalReviews: 0,
-          publishedReviews: 0,
-          draftReviews: 0,
-          totalPosts: 0
-        },
-        engagementStats: engagementStats || {
-          totalViews: 0,
-          totalVotes: 0,
-          avgEngagement: 0,
-          topContent: []
-        },
-        systemStats
-      };
+      return data as AnalyticsData;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
@@ -107,9 +66,13 @@ export const useAnalyticsExportMutation = () => {
   return useQuery({
     queryKey: ['analytics-export'],
     queryFn: async () => {
-      console.log('Exporting analytics data...');
+      console.log('Exporting analytics data via Edge Function...');
       
-      const { data, error } = await supabase.rpc('export_analytics_data');
+      // Use Edge Function for exports as well
+      const { data, error } = await supabase.functions.invoke('get-analytics-dashboard-data', {
+        body: { export: true }
+      });
+      
       if (error) {
         console.error('Error exporting analytics:', error);
         throw error;

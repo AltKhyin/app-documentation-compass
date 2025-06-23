@@ -869,6 +869,10 @@ export type Database = {
           success: boolean
         }[]
       }
+      export_analytics_data: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_comments_for_post: {
         Args: { p_post_id: number; p_user_id: string }
         Returns: {
@@ -885,6 +889,14 @@ export type Database = {
           nesting_level: number
         }[]
       }
+      get_content_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_engagement_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_homepage_suggestions: {
         Args: { p_user_id: string }
         Returns: {
@@ -900,6 +912,10 @@ export type Database = {
       get_my_claim: {
         Args: { claim: string }
         Returns: string
+      }
+      get_user_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       handle_post_action: {
         Args: { p_post_id: number; p_user_id: string; p_action_type: string }
