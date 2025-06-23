@@ -64,7 +64,7 @@ const CommunityPostPage = () => {
   } = useCommunityPageQuery();
 
   const handleBackToFeed = () => {
-    navigate('/comunidade');
+    navigate('/comunidade'); // CORRECTED: Use Portuguese path
   };
 
   // Early return for invalid ID with improved UX

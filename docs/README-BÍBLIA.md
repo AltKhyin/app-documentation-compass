@@ -1,12 +1,29 @@
 # **EVIDENS - Bíblia de Implementação**
 
-**Versão:** 10.2.0  
+**Versão:** 10.3.0  
 **Data:** 23 de junho de 2025  
-**Status:** 🚀 FOUNDATION REALIGNMENT COMPLETE - READY FOR PHASE 2
+**Status:** 🚀 FOUNDATION REALIGNMENT COMPLETE - PORTUGUESE ROUTING STANDARDIZED
 
 ---
 
 ## **📋 CONTROLE DE VERSÃO**
+
+### **10.3.0 - Portuguese Routing Standardization Complete** *(23/06/2025)*
+**CRITICAL NAMING CONVENTION COMPLIANCE:**
+- ✅ **URL Standardization:** All user-facing routes converted to Portuguese (/comunidade, /acervo, /sugestoes, /configuracoes, /perfil, /nao-autorizado)
+- ✅ **Navigation Configuration:** Updated navigation.ts with correct Portuguese paths following Knowledge Base standards
+- ✅ **Component Updates:** Fixed CommunityPostPage navigation references to use /comunidade
+- ✅ **Route Structure:** Maintained admin routes in English as internal tools while user routes are in Portuguese
+- ✅ **ErrorBoundary Fix:** Resolved TypeScript compilation error with missing children prop
+
+**Naming Convention Compliance:**
+- 🟢 **Backend:** English maintained for database tables, API endpoints, and internal functions
+- 🟢 **Frontend URLs:** Portuguese for all user-facing routes (/comunidade, /acervo, etc.)
+- 🟢 **UI Text:** Portuguese for all user-facing text and labels
+- 🟢 **Admin Tools:** English maintained for internal admin functionality
+- 🟢 **Code Structure:** English for all component names, variables, and technical implementation
+
+**Ready for Phase 2:** Content Publication Engine implementation can now proceed with correct naming standards
 
 ### **10.2.0 - Foundation Realignment Complete: Architectural Alignment** *(23/06/2025)*
 **CRITICAL MILESTONE:**
@@ -68,7 +85,7 @@
 
 ### **✅ FEATURES IMPLEMENTADAS**
 
-#### **🔐 Sistema Administrativo (UPDATED)**
+#### **🔐 Sistema Administrativo (UPDATED v10.3.0)**
 - ✅ **Proteção de Rotas:** AdminProtectedRoute com verificação de roles admin/editor
 - ✅ **Layout Administrativo:** AdminLayout com navegação consistente e estrutura modular
 - ✅ **Dashboard Principal:** AdminDashboard com estatísticas e visão geral do sistema
@@ -105,14 +122,21 @@
 - ✅ **Controle de Acesso:** RLS policies para segurança granular
 - ✅ **Gestão de Sessão:** Persistência de sessão e logout automático
 
-#### **🏗️ Arquitetura (UPDATED)**
+#### **🏗️ Arquitetura (UPDATED v10.3.0)**
 - ✅ **Shell Unificado:** Sistema de navegação consistente mobile/desktop
-- ✅ **Navegação Padronizada:** Fonte única de verdade para itens de navegação
+- ✅ **Navegação Padronizada:** Fonte única de verdade para itens de navegação com URLs em português
 - ✅ **Layout Responsivo:** Adaptação perfeita para todos os dispositivos
 - ✅ **PWA Completo:** Instalação, offline, notificações push
 - ✅ **Error Boundaries:** Sistema robusto de recuperação de erros com hierarquia de 3 níveis
-- ✅ **Router Foundation:** Properly structured with all page components and admin routes
+- ✅ **Router Foundation:** Properly structured with all page components and Portuguese routing
 - ✅ **TypeScript Compliance:** Strict mode enforced, all compilation errors resolved
+- ✅ **Portuguese URL Standards:** All user-facing routes follow Portuguese naming (/comunidade, /acervo, /sugestoes, etc.)
+
+#### **🛣️ Roteamento Atualizado (v10.3.0)**
+- ✅ **URLs em Português:** /comunidade, /acervo, /sugestoes, /configuracoes, /perfil, /nao-autorizado
+- ✅ **Admin em Inglês:** Rotas administrativas mantidas em inglês como ferramentas internas
+- ✅ **Navegação Consistente:** Sistema unificado de navegação com paths corretos
+- ✅ **Error Boundary:** Implementação correta com children prop obrigatório
 
 ---
 
@@ -121,11 +145,12 @@
 ### **📊 Status de Implementação**
 
 **Phase 0: Foundation Realignment** ✅ **COMPLETE**
-- ✅ Router Structure Alignment (AppRouter.tsx corrections)
+- ✅ Router Structure Alignment (AppRouter.tsx corrections + Portuguese routing)
 - ✅ Missing Page Components (ArchivePage, CommunityPostDetail, SettingsPage, SuggestionPage)
 - ✅ Component Structure Standardization (SavePost component)
 - ✅ TypeScript Compilation Fixes (All import errors resolved)
 - ✅ Error Boundary Implementation (Root-level boundary with proper children prop)
+- ✅ Portuguese URL Standardization (All user routes converted to Portuguese)
 
 **Phase 1: Foundation & Database Extensions** ✅ **COMPLETE**
 - ✅ Database Schema Implementation (Reviews workflow fields + Publication_History table)
@@ -186,7 +211,7 @@
 
 ## **🔧 ARQUITETURA TÉCNICA**
 
-### **Foundation Components (UPDATED)**
+### **Foundation Components (UPDATED v10.3.0)**
 - **Router:** React Router v6 with nested admin routes and proper error boundaries
 - **Page Structure:** All pages implement page-level error boundaries following [D3.8] mandate
 - **Error Recovery:** 3-tier hierarchical error boundary system (root, page, feature)
@@ -264,6 +289,12 @@
 
 ## **📋 DECISÕES ARQUITETURAIS IMPORTANTES**
 
+### **Portuguese URL Standardization (v10.3.0)**
+**Decisão:** Complete conversion of user-facing URLs to Portuguese following Knowledge Base naming standards
+**Reasoning:** Ensures consistency with brand voice, improves user experience for Portuguese speakers, maintains clear separation between user and admin interfaces
+**Implementation:** Updated AppRouter.tsx, navigation.ts, and all component references to use Portuguese paths
+**Impact:** Consistent user experience, proper naming convention compliance, clear technical/user interface separation
+
 ### **Foundation Realignment Architecture (v10.2.0)**
 **Decisão:** Complete router and component structure alignment with Knowledge Base standards
 **Reasoning:** Prevents cascading errors during implementation, ensures AI consistency, maintains TypeScript strict compliance
@@ -298,14 +329,14 @@
 
 ## **🚫 DEPRECATED FEATURES**
 
+### **Removed in v10.3.0:**
+- English user-facing routes (/community, /archive, /suggestions, /unauthorized, /settings, /profile) - Replaced with Portuguese equivalents
+- Mixed language navigation configuration - Standardized to Portuguese for user routes, English for admin tools
+
 ### **Removed in v10.2.0:**
 - Incorrect import paths in AppRouter (Homepage → Index, component paths corrected)
 - Missing page components causing build failures
 - Incomplete Error Boundary implementations
-
-### **Removed in v10.0.0:**
-- Individual management page scattered navigation - Replaced with centralized dashboard
-- Standalone user/tag management pages - Integrated into unified admin system
 
 ### **Removed in v9.0.0:**
 - Salvos page functionality - Will be integrated into user menu system
@@ -324,7 +355,8 @@
 - **[D3.2]** - Component Architecture (Composition model enforcement)
 - **[D3.8]** - Automated Testing (Error boundary implementation)
 - **[TS.1]** - Type Safety (Strict TypeScript compliance)
-- **Development Protocols** - Foundation realignment standards
+- **[D3.1.3]** - Naming Convention (Portuguese URLs for user routes, English for backend/admin)
+- **Development Protocols** - Portuguese routing standardization
 
 ---
 

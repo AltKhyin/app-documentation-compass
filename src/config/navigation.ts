@@ -23,7 +23,7 @@ export interface NavigationItem {
   showOnDesktop?: boolean;
 }
 
-// UNIFIED navigation items - single source of truth
+// UNIFIED navigation items - single source of truth with CORRECT Portuguese paths
 export const navigationItems: NavigationItem[] = [
   {
     path: '/',

@@ -47,15 +47,15 @@ const router = createBrowserRouter([
         element: <Index />,
       },
       {
-        path: "community",
+        path: "comunidade",
         element: <CommunityPage />,
       },
       {
-        path: "community/:postId",
+        path: "comunidade/:postId",
         element: <CommunityPostDetail />,
       },
       {
-        path: "archive",
+        path: "acervo",
         element: <ArchivePage />,
       },
       {
@@ -63,19 +63,19 @@ const router = createBrowserRouter([
         element: <ReviewDetailPage />,
       },
       {
-        path: "profile/:userId",
+        path: "perfil/:userId",
         element: <ProfilePage />,
       },
       {
-        path: "settings",
+        path: "configuracoes",
         element: <SettingsPage />,
       },
       {
-        path: "suggestions",
+        path: "sugestoes",
         element: <SuggestionPage />,
       },
       {
-        path: "unauthorized",
+        path: "nao-autorizado",
         element: <UnauthorizedPage />,
       },
       {
@@ -122,7 +122,7 @@ const router = createBrowserRouter([
     ],
   },
   {
-    path: "/save-post",
+    path: "/salvar-post",
     element: <SavePost />,
   },
 ]);
