@@ -16,7 +16,7 @@ import {
   Settings
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
-import { useTagAnalyticsQuery } from '../packages/hooks/useTagManagementQuery';
+import { useTagAnalyticsQuery } from '../../packages/hooks/useTagManagementQuery';
 import { TagHierarchy } from '@/components/admin/TagManagement/TagHierarchy';
 import { TagAnalytics } from '@/components/admin/TagManagement/TagAnalytics';
 import { TagCleanup } from '@/components/admin/TagManagement/TagCleanup';
