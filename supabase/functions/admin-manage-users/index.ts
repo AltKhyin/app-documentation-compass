@@ -52,24 +52,24 @@ Deno.serve(async (req) => {
 
       console.log('Fetching users:', { page, limit, search, role });
 
-      // Build query
+      // Build query - removed email column as it doesn't exist in Practitioners table
       let query = supabase
         .from('Practitioners')
         .select(`
           id,
           full_name,
-          email,
           avatar_url,
           role,
           subscription_tier,
+          profession_flair,
+          display_hover_card,
           contribution_score,
-          created_at,
-          last_active_at
+          created_at
         `);
 
       // Apply filters
       if (search) {
-        query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`);
+        query = query.or(`full_name.ilike.%${search}%`);
       }
 
       if (role && role !== 'all') {
@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
         .select('id', { count: 'exact', head: true });
 
       if (search) {
-        countQuery = countQuery.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`);
+        countQuery = countQuery.or(`full_name.ilike.%${search}%`);
       }
 
       if (role && role !== 'all') {
