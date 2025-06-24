@@ -1,63 +1,56 @@
 
-// ABOUTME: Analytics dashboard Edge Function using standardized pattern
+// ABOUTME: Edge Function to fetch consolidated analytics dashboard data per Blueprint 09
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { corsHeaders, handleCorsPrelight } from '../_shared/cors.ts';
-import { checkAnalyticsRateLimit } from '../_shared/rate-limit.ts';
-import { authenticateRequest, requireRole } from '../_shared/auth.ts';
+import { corsHeaders } from '../_shared/cors.ts';
+import { createSuccessResponse, createErrorResponse, authenticateUser } from '../_shared/api-helpers.ts';
+import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
 Deno.serve(async (req) => {
-  // Step 1: Handle CORS preflight
-  const corsResponse = handleCorsPrelight(req);
-  if (corsResponse) return corsResponse;
+  // STEP 1: CORS Preflight Handling (MANDATORY FIRST)
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
 
   try {
-    // Step 2: Rate limiting
-    const rateLimitResult = await checkAnalyticsRateLimit(req);
-    if (!rateLimitResult.success) {
-      return new Response(JSON.stringify({ 
-        error: rateLimitResult.error || 'Rate limit exceeded',
-        details: 'Too many analytics requests'
-      }), {
-        status: 429,
-        headers: { ...corsHeaders, ...rateLimitResult.headers, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Step 3: Authentication
-    const authResult = await authenticateRequest(req);
-    if (!authResult.success) {
-      return new Response(JSON.stringify({ 
-        error: authResult.error || 'Authentication failed',
-        details: 'Invalid or missing authentication'
-      }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Step 4: Authorization (admin or editor only)
-    const roleCheck = requireRole(authResult.user, ['admin', 'editor']);
-    if (!roleCheck.success) {
-      return new Response(JSON.stringify({ 
-        error: roleCheck.error || 'Insufficient permissions',
-        details: 'Admin or editor role required for analytics access'
-      }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Step 5: Create Supabase client
+    // STEP 2: Manual Authentication (requires verify_jwt = false in config.toml)
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+    
+    const user = await authenticateUser(supabase, req.headers.get('Authorization'));
+    
+    // Verify admin role for analytics access
+    const userRole = user.app_metadata?.role || 'practitioner';
+    if (userRole !== 'admin' && userRole !== 'editor') {
+      throw new Error('FORBIDDEN: Analytics access requires admin or editor role');
+    }
 
-    // Step 6: Execute business logic
-    console.log('Fetching analytics dashboard data...');
+    // STEP 3: Rate Limiting Implementation
+    const rateLimitResult = await checkRateLimit(supabase, 'get-analytics-dashboard-data', user.id);
+    if (!rateLimitResult.allowed) {
+      return new Response(JSON.stringify({
+        error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }
+      }), {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders,
+          ...rateLimitHeaders(rateLimitResult)
+        }
+      });
+    }
 
-    // Fetch analytics data using the RPC functions
+    // STEP 4: Input Parsing & Validation
+    const url = new URL(req.url);
+    const startDate = url.searchParams.get('start_date');
+    const endDate = url.searchParams.get('end_date');
+    
+    console.log('Fetching analytics dashboard data...', { startDate, endDate });
+
+    // STEP 5: Core Business Logic Execution
+    // Fetch analytics data using the RPC functions we just created
     const [userStatsResult, contentStatsResult, engagementStatsResult] = await Promise.all([
       supabase.rpc('get_user_analytics'),
       supabase.rpc('get_content_analytics'),
@@ -109,30 +102,12 @@ Deno.serve(async (req) => {
       systemStats
     };
 
-    console.log('Analytics dashboard response prepared successfully');
-
-    // Step 7: Return success response
-    return new Response(JSON.stringify(analyticsData), {
-      headers: { 
-        ...corsHeaders, 
-        ...rateLimitResult.headers,
-        'Content-Type': 'application/json' 
-      },
-    });
+    // STEP 6: Standardized Success Response
+    return createSuccessResponse(analyticsData, rateLimitHeaders(rateLimitResult));
 
   } catch (error) {
+    // STEP 7: Centralized Error Handling
     console.error('Analytics dashboard error:', error);
-    
-    const errorMessage = error.message || 'Unknown error occurred';
-    const statusCode = errorMessage.includes('authentication') ? 401 :
-                      errorMessage.includes('permissions') ? 403 : 500;
-
-    return new Response(JSON.stringify({ 
-      error: errorMessage,
-      details: 'Analytics dashboard fetch failed'
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: statusCode,
-    });
+    return createErrorResponse(error);
   }
 });

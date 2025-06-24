@@ -1,5 +1,5 @@
 
-// ABOUTME: Standardized CORS headers for all Edge Functions
+// ABOUTME: CORS configuration for Edge Functions following security best practices
 
 export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,19 +8,9 @@ export const corsHeaders = {
   'Access-Control-Max-Age': '86400',
 };
 
-export const handleCorsPrelight = (req: Request): Response | null => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { 
-      status: 200,
-      headers: corsHeaders 
-    });
-  }
-  return null;
-};
-
-export const handleCorsPreflightRequest = (): Response => {
+export function handleCorsPreflightRequest(): Response {
   return new Response(null, {
     status: 200,
     headers: corsHeaders,
   });
-};
+}
