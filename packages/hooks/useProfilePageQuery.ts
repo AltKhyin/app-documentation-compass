@@ -3,7 +3,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { UserProfile } from './useUserProfileQuery';
+import type { UserProfile } from '@/types';
 
 interface ProfilePageData {
   userProfile: UserProfile | null;
@@ -32,9 +32,8 @@ export const useProfilePageQuery = (userId?: string) => {
           avatar_url,
           role,
           subscription_tier,
-          profession,
-          affiliation,
-          biography,
+          profession_flair,
+          display_hover_card,
           contribution_score,
           created_at
         `)

@@ -1,3 +1,4 @@
+
 // ABOUTME: Detailed user management modal with comprehensive user information and editing capabilities
 
 import React, { useState } from 'react';
@@ -64,7 +65,7 @@ export const UserDetailModal = ({ userId, open, onOpenChange }: UserDetailModalP
     try {
       await updateUserMutation.mutateAsync({
         userId,
-        userData: editForm
+        ...editForm
       });
       
       toast({
