@@ -8,27 +8,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { useUpdateUserMutation } from '@/packages/hooks/useUserManagementQuery';
+import { useUpdateUserMutation, useUserListQuery } from '../../../../packages/hooks/useUserManagementQuery';
 import { toast } from 'sonner';
 
 interface UserDetailModalProps {
-  user: {
-    id: string;
-    full_name: string | null;
-    avatar_url: string | null;
-    role: string;
-    subscription_tier: string;
-    contribution_score: number;
-    created_at: string;
-  } | null;
-  isOpen: boolean;
-  onClose: () => void;
+  userId: string | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export const UserDetailModal: React.FC<UserDetailModalProps> = ({
-  user,
-  isOpen,
-  onClose,
+  userId,
+  open,
+  onOpenChange,
 }) => {
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState({
@@ -37,6 +29,10 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
   });
 
   const updateUserMutation = useUpdateUserMutation();
+  
+  // Fetch user list to find the current user data
+  const { data: userListData } = useUserListQuery();
+  const user = userListData?.users?.find(u => u.id === userId) || null;
 
   React.useEffect(() => {
     if (user) {
@@ -59,7 +55,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
       
       toast.success('User updated successfully');
       setEditMode(false);
-      onClose();
+      onOpenChange(false);
     } catch (error) {
       toast.error('Failed to update user');
       console.error('Error updating user:', error);
@@ -69,7 +65,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
   if (!user) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>User Details</DialogTitle>
@@ -149,7 +145,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={onClose}>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Close
               </Button>
               <Button onClick={() => setEditMode(true)}>
