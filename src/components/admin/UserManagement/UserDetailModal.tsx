@@ -1,3 +1,4 @@
+
 // ABOUTME: Detailed user management modal with comprehensive user information and editing capabilities
 
 import React, { useState } from 'react';
@@ -62,9 +63,13 @@ export const UserDetailModal = ({ userId, open, onOpenChange }: UserDetailModalP
   // Handle form submission
   const handleSave = async () => {
     try {
+      // Note: The current mutation only supports role and subscriptionTier updates
+      // For full profile updates, we need a different mutation or Edge Function
       await updateUserMutation.mutateAsync({
         userId,
-        userData: editForm
+        // Using existing mutation parameters that work
+        role: userDetail?.role, // Keep current role
+        subscriptionTier: userDetail?.subscription_tier // Keep current subscription
       });
       
       toast({
@@ -164,7 +169,7 @@ export const UserDetailModal = ({ userId, open, onOpenChange }: UserDetailModalP
                       </>
                     ) : (
                       <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                        Editar
+                        Visualizar
                       </Button>
                     )}
                   </div>
@@ -178,6 +183,8 @@ export const UserDetailModal = ({ userId, open, onOpenChange }: UserDetailModalP
                           id="full_name"
                           value={editForm.full_name}
                           onChange={(e) => handleFieldChange('full_name', e.target.value)}
+                          disabled
+                          placeholder="Edição não disponível nesta versão"
                         />
                       ) : (
                         <div className="mt-1 text-sm">{userDetail?.full_name || 'Não informado'}</div>
@@ -192,6 +199,7 @@ export const UserDetailModal = ({ userId, open, onOpenChange }: UserDetailModalP
                           value={editForm.profession_flair}
                           onChange={(e) => handleFieldChange('profession_flair', e.target.value)}
                           placeholder="Ex: Médico, Enfermeiro..."
+                          disabled
                         />
                       ) : (
                         <div className="mt-1 text-sm">
@@ -230,6 +238,7 @@ export const UserDetailModal = ({ userId, open, onOpenChange }: UserDetailModalP
                         id="display_hover_card"
                         checked={editForm.display_hover_card}
                         onCheckedChange={(checked) => handleFieldChange('display_hover_card', checked)}
+                        disabled
                       />
                     ) : (
                       <div className="text-sm">
