@@ -1,3 +1,4 @@
+
 // ABOUTME: Detailed user management modal with comprehensive user information and editing capabilities
 
 import React, { useState } from 'react';
@@ -64,7 +65,9 @@ export const UserDetailModal = ({ userId, open, onOpenChange }: UserDetailModalP
     try {
       await updateUserMutation.mutateAsync({
         userId,
-        userData: editForm
+        full_name: editForm.full_name,
+        profession_flair: editForm.profession_flair,
+        display_hover_card: editForm.display_hover_card
       });
       
       toast({
