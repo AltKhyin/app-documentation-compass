@@ -2,9 +2,15 @@
 // ABOUTME: Admin Edge Function for analytics dashboard data following the mandatory 7-step pattern
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { corsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
-import { createSuccessResponse, createErrorResponse } from '../_shared/api-helpers.ts';
-import { rateLimitCheck, rateLimitHeaders } from '../_shared/rate-limit.ts';
+import { corsHeaders } from '../_shared/cors.ts';
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  authenticateUser,
+  handleCorsPreflightRequest,
+  RateLimitError
+} from '../_shared/api-helpers.ts';
+import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
 Deno.serve(async (req) => {
   // STEP 1: CORS Preflight Handling (MANDATORY FIRST)
@@ -19,29 +25,18 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
     
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return createErrorResponse(new Error('UNAUTHORIZED: Authorization header is required'));
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      return createErrorResponse(new Error('UNAUTHORIZED: Invalid authentication token'));
-    }
+    const user = await authenticateUser(supabase, req.headers.get('Authorization'));
     
     // Verify admin/editor role for analytics access
     const userRole = user.app_metadata?.role;
     if (!userRole || !['admin', 'editor'].includes(userRole)) {
-      return createErrorResponse(new Error('FORBIDDEN: Analytics access requires admin or editor role'));
+      throw new Error('FORBIDDEN: Analytics access requires admin or editor role');
     }
 
     // STEP 3: Rate Limiting Implementation
-    const rateLimitResult = await rateLimitCheck(req, 'admin-analytics', 30, 60);
+    const rateLimitResult = await checkRateLimit(req, 'admin-analytics', 30, 60000);
     if (!rateLimitResult.allowed) {
-      return createErrorResponse(new Error('RATE_LIMIT_EXCEEDED: Rate limit exceeded'), rateLimitHeaders(rateLimitResult));
+      throw RateLimitError;
     }
 
     // STEP 4: Input Parsing & Validation

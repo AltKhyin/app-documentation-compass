@@ -1,58 +1,26 @@
 
-// ABOUTME: Standardized API helpers following [DOC_5] mandatory 7-step Edge Function pattern
+// ABOUTME: Centralized API helper functions for Edge Functions with consistent error handling and responses
 
 import { corsHeaders } from './cors.ts';
 
-// Standardized error responses
-export function createErrorResponse(error: Error, status: number = 500): Response {
-  console.error('Edge Function Error:', error);
-  
-  // Parse error types for standardized responses
-  let errorCode = 'INTERNAL_ERROR';
-  let errorMessage = error.message || 'Internal server error';
-  
-  if (error.message.includes('VALIDATION_FAILED')) {
-    status = 400;
-    errorCode = 'VALIDATION_FAILED';
-    errorMessage = error.message.replace('VALIDATION_FAILED: ', '');
-  } else if (error.message.includes('UNAUTHORIZED')) {
-    status = 401;
-    errorCode = 'UNAUTHORIZED';
-    errorMessage = error.message.replace('UNAUTHORIZED: ', '');
-  } else if (error.message.includes('FORBIDDEN')) {
-    status = 403;
-    errorCode = 'FORBIDDEN';
-    errorMessage = error.message.replace('FORBIDDEN: ', '');
-  } else if (error.message.includes('RATE_LIMIT_EXCEEDED')) {
-    status = 429;
-    errorCode = 'RATE_LIMIT_EXCEEDED';
-    errorMessage = 'Rate limit exceeded. Please try again later.';
+// Standard error types
+export const RateLimitError = new Error('RATE_LIMIT_EXCEEDED: Rate limit exceeded. Please try again later.');
+
+// Enhanced authentication helper
+export async function authenticateUser(supabase: any, authHeader: string | null) {
+  if (!authHeader) {
+    throw new Error('UNAUTHORIZED: Authorization header is required');
   }
 
-  return new Response(JSON.stringify({
-    error: {
-      message: errorMessage,
-      code: errorCode
-    }
-  }), {
-    status,
-    headers: {
-      'Content-Type': 'application/json',
-      ...corsHeaders
-    }
-  });
-}
+  const { data: { user }, error: authError } = await supabase.auth.getUser(
+    authHeader.replace('Bearer ', '')
+  );
 
-// Standardized success responses
-export function createSuccessResponse(data: any, additionalHeaders: Record<string, string> = {}): Response {
-  return new Response(JSON.stringify(data), {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      ...corsHeaders,
-      ...additionalHeaders
-    }
-  });
+  if (authError || !user) {
+    throw new Error('UNAUTHORIZED: Invalid authentication token');
+  }
+
+  return user;
 }
 
 // CORS preflight handler
@@ -63,31 +31,58 @@ export function handleCorsPreflightRequest(): Response {
   });
 }
 
-// Authentication helper
-export async function authenticateUser(supabase: any, authHeader: string | null) {
-  if (!authHeader) {
-    throw new Error('UNAUTHORIZED: Authentication required');
-  }
-
-  const { data: { user }, error: authError } = await supabase.auth.getUser(
-    authHeader.replace('Bearer ', '')
-  );
-  
-  if (authError || !user) {
-    throw new Error('UNAUTHORIZED: Invalid authentication');
-  }
-
-  return user;
+// Standardized success response
+export function createSuccessResponse(data: any, additionalHeaders: Record<string, string> = {}) {
+  return new Response(JSON.stringify({
+    success: true,
+    data
+  }), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      ...corsHeaders,
+      ...additionalHeaders
+    }
+  });
 }
 
-// Rate limit error (standardized)
-export const RateLimitError = new Error('RATE_LIMIT_EXCEEDED: Rate limit exceeded');
+// Standardized error response with proper error handling
+export function createErrorResponse(error: any, additionalHeaders: Record<string, string> = {}) {
+  let status = 500;
+  let code = 'INTERNAL_ERROR';
+  let message = 'An unexpected error occurred';
 
-// Input validation helper
-export function validateRequiredFields(body: any, requiredFields: string[]) {
-  for (const field of requiredFields) {
-    if (!body[field]) {
-      throw new Error(`VALIDATION_FAILED: ${field} is required`);
+  if (error instanceof Error) {
+    message = error.message;
+    
+    // Extract status and code from structured error messages
+    if (message.startsWith('UNAUTHORIZED:')) {
+      status = 401;
+      code = 'UNAUTHORIZED';
+      message = message.replace('UNAUTHORIZED: ', '');
+    } else if (message.startsWith('FORBIDDEN:')) {
+      status = 403;
+      code = 'FORBIDDEN';
+      message = message.replace('FORBIDDEN: ', '');
+    } else if (message.startsWith('VALIDATION_FAILED:')) {
+      status = 400;
+      code = 'VALIDATION_FAILED';
+      message = message.replace('VALIDATION_FAILED: ', '');
+    } else if (message.startsWith('RATE_LIMIT_EXCEEDED:')) {
+      status = 429;
+      code = 'RATE_LIMIT_EXCEEDED';
+      message = message.replace('RATE_LIMIT_EXCEEDED: ', '');
     }
   }
+
+  return new Response(JSON.stringify({
+    error: { message, code }
+  }), {
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+      ...corsHeaders,
+      ...additionalHeaders
+    }
+  });
 }

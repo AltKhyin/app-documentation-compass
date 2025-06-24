@@ -2,9 +2,15 @@
 // ABOUTME: Admin Edge Function for role assignment and management operations following the canonical 7-step pattern
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { corsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
-import { createSuccessResponse, createErrorResponse } from '../_shared/api-helpers.ts';
-import { rateLimitCheck, rateLimitHeaders } from '../_shared/rate-limit.ts';
+import { corsHeaders } from '../_shared/cors.ts';
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  authenticateUser,
+  handleCorsPreflightRequest,
+  RateLimitError
+} from '../_shared/api-helpers.ts';
+import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
 interface RoleManagementPayload {
   action: 'assign_role' | 'revoke_role' | 'list_user_roles' | 'list_available_roles';
@@ -26,53 +32,18 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
     
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({
-        error: { message: 'Authorization header is required', code: 'UNAUTHORIZED' }
-      }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      return new Response(JSON.stringify({
-        error: { message: 'Invalid authentication token', code: 'UNAUTHORIZED' }
-      }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
-    }
+    const user = await authenticateUser(supabase, req.headers.get('Authorization'));
 
     // Verify admin role using JWT claims
     const userRole = user.app_metadata?.role;
     if (!userRole || userRole !== 'admin') {
-      return new Response(JSON.stringify({
-        error: { message: 'Admin role required for role management', code: 'FORBIDDEN' }
-      }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
+      throw new Error('FORBIDDEN: Admin role required for role management');
     }
 
     // STEP 3: Rate Limiting Implementation
-    const rateLimitResult = await rateLimitCheck(req, 'admin-assign-roles', 30, 60);
+    const rateLimitResult = await checkRateLimit(req, 'admin-assign-roles', 30, 60000);
     if (!rateLimitResult.allowed) {
-      return new Response(JSON.stringify({
-        error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }
-      }), {
-        status: 429,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-          ...rateLimitHeaders(rateLimitResult)
-        }
-      });
+      throw RateLimitError;
     }
 
     // STEP 4: Input Parsing & Validation
@@ -88,26 +59,26 @@ Deno.serve(async (req) => {
         break;
       
       case 'list_user_roles':
-        if (!payload.userId) throw new Error('User ID is required for listing user roles');
+        if (!payload.userId) throw new Error('VALIDATION_FAILED: User ID is required for listing user roles');
         result = await handleListUserRoles(supabase, payload.userId);
         break;
       
       case 'assign_role':
         if (!payload.userId || !payload.roleName) {
-          throw new Error('User ID and role name are required for role assignment');
+          throw new Error('VALIDATION_FAILED: User ID and role name are required for role assignment');
         }
         result = await handleAssignRole(supabase, payload.userId, payload.roleName, payload.expiresAt, user.id);
         break;
       
       case 'revoke_role':
         if (!payload.userId || !payload.roleName) {
-          throw new Error('User ID and role name are required for role revocation');
+          throw new Error('VALIDATION_FAILED: User ID and role name are required for role revocation');
         }
         result = await handleRevokeRole(supabase, payload.userId, payload.roleName, user.id);
         break;
       
       default:
-        throw new Error(`Invalid action: ${payload.action}`);
+        throw new Error(`VALIDATION_FAILED: Invalid action: ${payload.action}`);
     }
 
     // STEP 6: Standardized Success Response

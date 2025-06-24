@@ -2,9 +2,15 @@
 // ABOUTME: Admin Edge Function for audit log access following the mandatory 7-step pattern
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { corsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
-import { createSuccessResponse, createErrorResponse } from '../_shared/api-helpers.ts';
-import { rateLimitCheck, rateLimitHeaders } from '../_shared/rate-limit.ts';
+import { corsHeaders } from '../_shared/cors.ts';
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  authenticateUser,
+  handleCorsPreflightRequest,
+  RateLimitError
+} from '../_shared/api-helpers.ts';
+import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
 Deno.serve(async (req) => {
   // STEP 1: CORS Preflight Handling (MANDATORY FIRST)
@@ -19,29 +25,18 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
     
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return createErrorResponse(new Error('UNAUTHORIZED: Authorization header is required'));
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      return createErrorResponse(new Error('UNAUTHORIZED: Invalid authentication token'));
-    }
+    const user = await authenticateUser(supabase, req.headers.get('Authorization'));
     
     // Verify admin role for audit log access
     const userRole = user.app_metadata?.role;
     if (!userRole || userRole !== 'admin') {
-      return createErrorResponse(new Error('FORBIDDEN: Audit log access requires admin role'));
+      throw new Error('FORBIDDEN: Audit log access requires admin role');
     }
 
     // STEP 3: Rate Limiting Implementation
-    const rateLimitResult = await rateLimitCheck(req, 'admin-audit-logs', 60, 60);
+    const rateLimitResult = await checkRateLimit(req, 'admin-audit-logs', 60, 60000);
     if (!rateLimitResult.allowed) {
-      return createErrorResponse(new Error('RATE_LIMIT_EXCEEDED: Rate limit exceeded'), rateLimitHeaders(rateLimitResult));
+      throw RateLimitError;
     }
 
     // STEP 4: Input Parsing & Validation
