@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -18,5 +19,13 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+    // Ensure React is deduplicated to prevent multiple instances
+    dedupe: ['react', 'react-dom', '@tanstack/react-query']
   },
+  optimizeDeps: {
+    // Force pre-bundling of these dependencies to ensure consistent versions
+    include: ['react', 'react-dom', '@tanstack/react-query'],
+    // Force Vite to re-optimize dependencies
+    force: true
+  }
 }));

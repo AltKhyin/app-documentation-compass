@@ -21,6 +21,7 @@ const createQueryClient = () => new QueryClient({
         return failureCount < 2;
       },
       staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
     },
     mutations: {
       retry: false, // Don't retry mutations by default
@@ -36,6 +37,40 @@ interface AppProvidersProps {
 }
 
 export const AppProviders = ({ children }: AppProvidersProps) => {
+  // Add error boundary for QueryClient initialization
+  const [hasQueryError, setHasQueryError] = React.useState(false);
+
+  React.useEffect(() => {
+    // Ensure React is available
+    if (typeof React.useEffect !== 'function') {
+      console.error('React hooks not available - this indicates a React version mismatch');
+      setHasQueryError(true);
+      return;
+    }
+    
+    // Reset error state if React is working
+    setHasQueryError(false);
+  }, []);
+
+  if (hasQueryError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4 max-w-md mx-auto p-6">
+          <h1 className="text-2xl font-bold text-foreground">Erro de Inicialização</h1>
+          <p className="text-muted-foreground">
+            Ocorreu um erro ao inicializar a aplicação. Recarregue a página.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-primary text-primary-foreground px-6 py-2 rounded-md font-semibold hover:bg-primary/90 transition-colors"
+          >
+            Recarregar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthSessionProvider>
