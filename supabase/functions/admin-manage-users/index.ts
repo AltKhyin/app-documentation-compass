@@ -1,165 +1,204 @@
 
-// ABOUTME: Admin endpoint for comprehensive user management with role assignments and data updates
+// ABOUTME: User management Edge Function using simplified pattern proven to work in production
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import {
-  createSuccessResponse,
-  createErrorResponse,
-  authenticateUser,
-  handleCorsPreflightRequest,
-  RateLimitError
-} from '../_shared/api-helpers.ts';
-import { checkAdminRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 Deno.serve(async (req) => {
-  // STEP 1: CORS Preflight Handling
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return handleCorsPreflightRequest();
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // STEP 2: Authentication & Authorization
+    // Create Supabase client with service role
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-    const user = await authenticateUser(supabase, req.headers.get('Authorization'));
 
-    // Verify admin privileges
-    const { data: practitioner, error: practitionerError } = await supabase
-      .from('Practitioners')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (practitionerError || !practitioner || practitioner.role !== 'admin') {
-      throw new Error('FORBIDDEN: Admin access required');
+    // Get the authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Missing authorization header');
     }
 
-    // STEP 3: Rate Limiting
-    const rateLimitResult = await checkAdminRateLimit(req);
-    if (!rateLimitResult.success) {
-      throw RateLimitError;
+    // Verify user authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (authError || !user) {
+      throw new Error('Invalid authentication');
     }
 
-    console.log(`Admin user management request from: ${user.id}, method: ${req.method}`);
+    // Check if user has admin role (user management requires admin)
+    const userRole = user.app_metadata?.role;
+    if (!userRole || userRole !== 'admin') {
+      throw new Error('Insufficient permissions: Admin role required');
+    }
 
     if (req.method === 'GET') {
-      // STEP 4: Input Validation (GET - query parameters)
+      // Handle GET request - fetch users list
       const url = new URL(req.url);
       const page = parseInt(url.searchParams.get('page') || '1');
-      const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 100);
+      const limit = parseInt(url.searchParams.get('limit') || '20');
       const search = url.searchParams.get('search') || '';
-      const roleFilter = url.searchParams.get('role') || '';
+      const role = url.searchParams.get('role') || '';
 
-      // STEP 5: Core Business Logic - Fetch Users
+      console.log('Fetching users:', { page, limit, search, role });
+
+      // Build query - removed email column as it doesn't exist in Practitioners table
       let query = supabase
         .from('Practitioners')
-        .select('id, full_name, avatar_url, role, subscription_tier, contribution_score, created_at', { count: 'exact' });
+        .select(`
+          id,
+          full_name,
+          avatar_url,
+          role,
+          subscription_tier,
+          profession_flair,
+          display_hover_card,
+          contribution_score,
+          created_at
+        `);
 
+      // Apply filters
       if (search) {
-        query = query.ilike('full_name', `%${search}%`);
-      }
-      if (roleFilter) {
-        query = query.eq('role', roleFilter);
+        query = query.or(`full_name.ilike.%${search}%`);
       }
 
-      const { data: users, error: usersError, count } = await query
+      if (role && role !== 'all') {
+        query = query.eq('role', role);
+      }
+
+      // Apply pagination
+      const offset = (page - 1) * limit;
+      query = query
         .order('created_at', { ascending: false })
-        .range((page - 1) * limit, page * limit - 1);
+        .range(offset, offset + limit - 1);
+
+      const { data: users, error: usersError } = await query;
 
       if (usersError) {
-        throw new Error(`Failed to fetch users: ${usersError.message}`);
+        console.error('Error fetching users:', usersError);
+        throw new Error(`Database error: ${usersError.message}`);
       }
 
-      const result = {
+      // Get total count
+      let countQuery = supabase
+        .from('Practitioners')
+        .select('id', { count: 'exact', head: true });
+
+      if (search) {
+        countQuery = countQuery.or(`full_name.ilike.%${search}%`);
+      }
+
+      if (role && role !== 'all') {
+        countQuery = countQuery.eq('role', role);
+      }
+
+      const { count, error: countError } = await countQuery;
+
+      if (countError) {
+        console.error('Error getting user count:', countError);
+        throw new Error(`Count error: ${countError.message}`);
+      }
+
+      const total = count || 0;
+      const totalPages = Math.ceil(total / limit);
+
+      const response = {
         users: users || [],
         pagination: {
           page,
           limit,
-          total: count || 0,
-          totalPages: Math.ceil((count || 0) / limit)
-        }
+          total,
+          totalPages,
+          hasMore: page < totalPages,
+        },
       };
 
-      // STEP 6: Standardized Success Response
-      return createSuccessResponse(result, rateLimitHeaders(rateLimitResult));
+      return new Response(JSON.stringify(response), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
 
     } else if (req.method === 'POST') {
-      // STEP 4: Input Validation (POST - body data)
-      const { userId, role, subscriptionTier } = await req.json();
-      
-      if (!userId || typeof userId !== 'string') {
-        throw new Error('VALIDATION_FAILED: userId is required and must be a string');
+      // Handle POST request - update user role/subscription
+      const body = await req.json();
+      const { userId, role: newRole, subscriptionTier } = body;
+
+      if (!userId) {
+        throw new Error('User ID is required');
       }
 
+      console.log('Updating user:', { userId, newRole, subscriptionTier });
+
+      // Update user in Practitioners table
       const updateData: any = {};
-      if (role) {
-        if (!['practitioner', 'editor', 'admin'].includes(role)) {
-          throw new Error('VALIDATION_FAILED: role must be practitioner, editor, or admin');
-        }
-        updateData.role = role;
-      }
-      if (subscriptionTier) {
-        if (!['free', 'premium'].includes(subscriptionTier)) {
-          throw new Error('VALIDATION_FAILED: subscriptionTier must be free or premium');
-        }
-        updateData.subscription_tier = subscriptionTier;
-      }
+      if (newRole) updateData.role = newRole;
+      if (subscriptionTier) updateData.subscription_tier = subscriptionTier;
 
-      if (Object.keys(updateData).length === 0) {
-        throw new Error('VALIDATION_FAILED: At least one field (role or subscriptionTier) must be provided');
-      }
-
-      // STEP 5: Core Business Logic - Update User (Hardened)
-      const { data: updatedUsers, error: updateError } = await supabase
+      const { data: updatedUser, error: updateError } = await supabase
         .from('Practitioners')
         .update(updateData)
         .eq('id', userId)
-        .select(); // Use .select() without .single() to avoid crashes
+        .select()
+        .single();
 
       if (updateError) {
         console.error('Error updating user:', updateError);
         throw new Error(`Update error: ${updateError.message}`);
       }
 
-      // Check if the user was actually found and updated
-      if (!updatedUsers || updatedUsers.length === 0) {
-        throw new Error(`User not found with ID: ${userId}`);
-      }
-
-      const updatedUser = updatedUsers[0];
-
       // If role was updated, also update auth.users metadata
-      if (role) {
+      if (newRole) {
         const { error: authUpdateError } = await supabase.auth.admin.updateUserById(
           userId,
           {
-            app_metadata: { role: role }
+            app_metadata: {
+              role: newRole,
+              subscription_tier: subscriptionTier || updatedUser.subscription_tier,
+            },
           }
         );
 
         if (authUpdateError) {
           console.error('Error updating auth metadata:', authUpdateError);
-          // Don't fail the entire operation, but log the issue
+          // Don't throw here, as the main update succeeded
         }
       }
 
-      const result = {
+      return new Response(JSON.stringify({
+        success: true,
+        user: updatedUser,
         message: 'User updated successfully',
-        user: updatedUser
-      };
-
-      // STEP 6: Standardized Success Response
-      return createSuccessResponse(result, rateLimitHeaders(rateLimitResult));
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
 
     } else {
-      throw new Error('METHOD_NOT_ALLOWED: Only GET and POST methods are supported');
+      throw new Error('Method not allowed');
     }
 
   } catch (error) {
-    // STEP 7: Centralized Error Handling
-    console.error('Error in admin-manage-users:', error);
-    return createErrorResponse(error);
+    console.error('User management error:', error);
+    
+    const errorMessage = error.message || 'Unknown error occurred';
+    const statusCode = errorMessage.includes('authentication') ? 401 :
+                      errorMessage.includes('permissions') ? 403 :
+                      errorMessage.includes('Method not allowed') ? 405 : 500;
+
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: 'User management operation failed'
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: statusCode,
+    });
   }
 });
