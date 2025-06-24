@@ -8,7 +8,7 @@ import { CustomThemeProvider } from '../theme/CustomThemeProvider';
 import PWAProvider from '../pwa/PWAProvider';
 
 // Create QueryClient with stable reference and proper error handling
-const createQueryClient = () => new QueryClient({
+const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
@@ -27,9 +27,6 @@ const createQueryClient = () => new QueryClient({
     },
   },
 });
-
-// Stable client instance to prevent re-creation on re-renders
-const queryClient = createQueryClient();
 
 interface AppProvidersProps {
   children: React.ReactNode;
