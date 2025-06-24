@@ -1,286 +1,167 @@
 
-// ABOUTME: Edge function for creating new community posts and comments with auto-upvote and comprehensive validation.
+// ABOUTME: Create community post Edge Function following mandatory 7-step pattern
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
-import { corsHeaders } from '../_shared/cors.ts'
-import { checkRateLimit } from '../_shared/rate-limit.ts'
-
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-)
-
-interface CreatePostRequest {
-  title?: string;
-  content: string;
-  category: string;
-  post_type?: 'text' | 'image' | 'video' | 'poll';
-  image_url?: string;
-  video_url?: string;
-  poll_data?: Record<string, any>;
-  review_id?: number;
-  parent_post_id?: number; // This makes it a comment if provided
-}
-
-interface CreatePostResponse {
-  success: boolean;
-  post_id: number;
-  message: string;
-}
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
+import { corsHeaders, handleCorsPrelight } from '../_shared/cors.ts';
+import { checkRateLimit } from '../_shared/rate-limit.ts';
+import { authenticateRequest } from '../_shared/auth.ts';
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  // STEP 1: Handle CORS preflight
+  const corsResponse = handleCorsPrelight(req);
+  if (corsResponse) return corsResponse;
 
   try {
-    // Authentication check - required for post creation
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({
-          error: {
-            message: 'Authentication required to create posts',
-            code: 'UNAUTHORIZED'
-          }
-        }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+    // STEP 2: Rate limiting (community post creation - 5 requests per 300 seconds)
+    const rateLimitResult = await checkRateLimit(req, { windowMs: 300000, maxRequests: 5 });
+    if (!rateLimitResult.success) {
+      return new Response(JSON.stringify({ 
+        error: rateLimitResult.error || 'Rate limit exceeded',
+        details: 'Too many post creation requests'
+      }), {
+        status: 429,
+        headers: { ...corsHeaders, ...rateLimitResult.headers, 'Content-Type': 'application/json' },
+      });
     }
 
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
+    // STEP 3: Authentication (required for post creation)
+    const authResult = await authenticateRequest(req);
+    if (!authResult.success) {
+      return new Response(JSON.stringify({ 
+        error: authResult.error || 'Authentication failed',
+        details: 'Authentication required to create posts'
+      }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // STEP 4: Authorization (authenticated users can create posts)
+    // No additional authorization required
+
+    // STEP 5: Create Supabase client
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({
-          error: {
-            message: 'Invalid authentication token',
-            code: 'UNAUTHORIZED'
-          }
-        }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+    // STEP 6: Business Logic - Post creation with auto-upvote
+    const body = await req.json();
+    const { review_id, parent_post_id, title, content, category, poll } = body;
+
+    // Validate required fields
+    if (!content || typeof content !== 'string' || content.trim().length === 0) {
+      throw new Error('VALIDATION_FAILED: Content is required');
     }
 
-    // Rate limiting check - 10 posts per minute
-    const rateLimitResult = await checkRateLimit(supabase, `create-post:${user.id}`, 10, 60);
-    
-    if (!rateLimitResult.allowed) {
-      return new Response(
-        JSON.stringify({
-          error: {
-            message: 'Rate limit exceeded. Please wait before creating another post.',
-            code: 'RATE_LIMIT_EXCEEDED'
-          }
-        }),
-        { 
-          status: 429, 
-          headers: { 
-            ...corsHeaders, 
-            'Content-Type': 'application/json',
-            'X-RateLimit-Remaining': rateLimitResult.remaining.toString()
-          }
-        }
-      );
+    if (!category || typeof category !== 'string') {
+      throw new Error('VALIDATION_FAILED: Category is required');
     }
 
-    // Parse request body
-    const body: CreatePostRequest = await req.json();
-    
-    // Validation
-    if (!body.content || body.content.trim().length === 0) {
-      return new Response(
-        JSON.stringify({
-          error: {
-            message: 'Post content is required',
-            code: 'VALIDATION_ERROR'
-          }
-        }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+    console.log(`Creating community post by user: ${authResult.user.id}`);
+
+    // Start transaction-like operations
+    // 1. Create the post with initial upvote
+    const { data: newPost, error: postError } = await supabase
+      .from('CommunityPosts')
+      .insert({
+        author_id: authResult.user.id,
+        review_id: review_id || null,
+        parent_post_id: parent_post_id || null,
+        title: title || null,
+        content: content.trim(),
+        category,
+        upvotes: 1, // Auto-upvote
+        downvotes: 0,
+        poll_data: poll ? { question: poll.question, options: poll.options } : null,
+        post_type: poll ? 'poll' : 'text'
+      })
+      .select()
+      .single();
+
+    if (postError) {
+      console.error('Post creation error:', postError);
+      throw new Error(`Failed to create post: ${postError.message}`);
     }
 
-    if (!body.category || body.category.trim().length === 0) {
-      return new Response(
-        JSON.stringify({
-          error: {
-            message: 'Post category is required',
-            code: 'VALIDATION_ERROR'
-          }
-        }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Validate category
-    const validCategories = ['general', 'review_discussion', 'question', 'announcement', 'comment'];
-    if (!validCategories.includes(body.category)) {
-      return new Response(
-        JSON.stringify({
-          error: {
-            message: 'Invalid category provided',
-            code: 'VALIDATION_ERROR'
-          }
-        }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Content length validation
-    if (body.content.length > 10000) {
-      return new Response(
-        JSON.stringify({
-          error: {
-            message: 'Post content exceeds maximum length (10,000 characters)',
-            code: 'VALIDATION_ERROR'
-          }
-        }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Title validation (if provided)
-    if (body.title && body.title.length > 200) {
-      return new Response(
-        JSON.stringify({
-          error: {
-            message: 'Post title exceeds maximum length (200 characters)',
-            code: 'VALIDATION_ERROR'
-          }
-        }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Use database function for post/comment creation with auto-upvote
-    const { data: result, error: createError } = await supabase
-      .rpc('create_post_and_auto_vote', {
-        p_author_id: user.id,
-        p_title: body.title || null,
-        p_content: body.content,
-        p_category: body.category,
-        p_parent_id: body.parent_post_id || null // Support for comments
+    // 2. Add the auto-upvote
+    const { error: voteError } = await supabase
+      .from('CommunityPost_Votes')
+      .insert({
+        post_id: newPost.id,
+        practitioner_id: authResult.user.id,
+        vote_type: 'up'
       });
 
-    if (createError || !result || result.length === 0) {
-      console.error('Error creating post:', createError);
-      return new Response(
-        JSON.stringify({
-          error: {
-            message: 'Failed to create post',
-            code: 'DATABASE_ERROR'
-          }
-        }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+    if (voteError) {
+      console.error('Auto-upvote error:', voteError);
+      // Don't fail the post creation for vote error
     }
 
-    const newPostId = result[0].post_id;
+    // 3. Update contribution score
+    const { error: scoreError } = await supabase
+      .from('Practitioners')
+      .update({ 
+        contribution_score: supabase.raw('contribution_score + 1') 
+      })
+      .eq('id', authResult.user.id);
 
-    // Update post with multimedia fields if provided
-    if (body.post_type || body.image_url || body.video_url || body.poll_data) {
-      const updateData: any = {};
-      
-      if (body.post_type) updateData.post_type = body.post_type;
-      if (body.image_url) updateData.image_url = body.image_url;
-      if (body.video_url) updateData.video_url = body.video_url;
-      if (body.poll_data) updateData.poll_data = body.poll_data;
+    if (scoreError) {
+      console.error('Contribution score update error:', scoreError);
+      // Don't fail the post creation for score error
+    }
 
-      const { error: updateError } = await supabase
-        .from('CommunityPosts')
-        .update(updateData)
-        .eq('id', newPostId);
+    // 4. Create poll options if poll data exists
+    if (poll && poll.options && Array.isArray(poll.options)) {
+      const pollOptions = poll.options.map((option: string, index: number) => ({
+        post_id: newPost.id,
+        option_text: option,
+        option_order: index,
+        vote_count: 0
+      }));
 
-      if (updateError) {
-        console.error('Error updating post with multimedia:', updateError);
-        // Don't fail the entire operation, just log the error
+      const { error: pollError } = await supabase
+        .from('Poll_Options')
+        .insert(pollOptions);
+
+      if (pollError) {
+        console.error('Poll options creation error:', pollError);
+        // Don't fail the post creation for poll error
       }
     }
 
-    // Notification logic for comments
-    if (body.parent_post_id) {
-      // Get the parent post/comment to find its author
-      const { data: parentContent } = await supabase
-        .from('CommunityPosts')
-        .select('author_id')
-        .eq('id', body.parent_post_id)
-        .single();
+    console.log(`Successfully created community post with ID: ${newPost.id}`);
 
-      // Ensure we don't notify a user for replying to themselves
-      if (parentContent && parentContent.author_id !== user.id) {
-        // Get user's full name for the notification
-        const { data: userData } = await supabase
-          .from('Practitioners')
-          .select('full_name')
-          .eq('id', user.id)
-          .single();
-
-        const userName = userData?.full_name || 'Um usuário';
-
-        // Insert the notification
-        await supabase.from('Notifications').insert({
-          practitioner_id: parentContent.author_id,
-          content: `${userName} respondeu ao seu comentário.`,
-          link: `/comunidade/${body.parent_post_id}#comment-${newPostId}`,
-        });
-      }
-    }
-
-    const response: CreatePostResponse = {
-      success: true,
-      post_id: newPostId,
-      message: body.parent_post_id ? 'Comment created successfully' : 'Post created successfully'
+    const response = {
+      post_id: newPost.id,
+      post: newPost,
+      message: 'Post created successfully'
     };
 
-    return new Response(
-      JSON.stringify(response),
-      { 
-        status: 201, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    // STEP 7: Return structured success response
+    return new Response(JSON.stringify(response), {
+      headers: { 
+        ...corsHeaders, 
+        ...rateLimitResult.headers,
+        'Content-Type': 'application/json' 
+      },
+      status: 201,
+    });
 
   } catch (error) {
-    console.error('Unexpected error in create-community-post function:', error);
-    return new Response(
-      JSON.stringify({
-        error: {
-          message: 'Internal server error',
-          code: 'INTERNAL_ERROR'
-        }
-      }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    console.error('Community post creation error:', error);
+    
+    const errorMessage = error.message || 'Unknown error occurred';
+    const statusCode = errorMessage.includes('VALIDATION_FAILED') ? 400 :
+                      errorMessage.includes('authentication') ? 401 :
+                      errorMessage.includes('permissions') ? 403 : 500;
+
+    return new Response(JSON.stringify({ 
+      error: errorMessage.replace('VALIDATION_FAILED: ', ''),
+      details: 'Post creation failed'
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: statusCode,
+    });
   }
 });
