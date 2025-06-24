@@ -1,45 +1,48 @@
 
-// ABOUTME: Admin Edge Function for analytics dashboard data following the mandatory 7-step pattern
+// ABOUTME: Admin Edge Function for analytics dashboard data following the simplified pattern that works
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { corsHeaders } from '../_shared/cors.ts';
-import { 
-  createSuccessResponse, 
-  createErrorResponse, 
-  authenticateUser,
-  handleCorsPreflightRequest,
-  RateLimitError
-} from '../_shared/api-helpers.ts';
-import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 Deno.serve(async (req) => {
-  // STEP 1: CORS Preflight Handling (MANDATORY FIRST)
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return handleCorsPreflightRequest();
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // STEP 2: Manual Authentication (requires verify_jwt = false in config.toml)
+    // Create Supabase client
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-    
-    const user = await authenticateUser(supabase, req.headers.get('Authorization'));
-    
-    // Verify admin/editor role for analytics access
+
+    // Get the authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Missing authorization header');
+    }
+
+    // Set the auth header for this request
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (authError || !user) {
+      throw new Error('Invalid authentication');
+    }
+
+    // Check if user has admin or editor role
     const userRole = user.app_metadata?.role;
     if (!userRole || !['admin', 'editor'].includes(userRole)) {
-      throw new Error('FORBIDDEN: Analytics access requires admin or editor role');
+      throw new Error('Insufficient permissions: Admin or editor role required');
     }
 
-    // STEP 3: Rate Limiting Implementation
-    const rateLimitResult = await checkRateLimit(req, 'admin-analytics', 30, 60000);
-    if (!rateLimitResult.allowed) {
-      throw RateLimitError;
-    }
-
-    // STEP 4: Input Parsing & Validation
+    // Parse request parameters
     const url = new URL(req.url);
     const params = {
       timeframe: url.searchParams.get('timeframe') || '30d',
@@ -48,22 +51,6 @@ Deno.serve(async (req) => {
 
     console.log('Analytics request:', params);
 
-    // STEP 5: Core Business Logic Execution
-    const result = await fetchAnalytics(supabase, params);
-
-    // STEP 6: Standardized Success Response
-    return createSuccessResponse(result, rateLimitHeaders(rateLimitResult));
-
-  } catch (error) {
-    // STEP 7: Centralized Error Handling
-    console.error('Analytics error:', error);
-    return createErrorResponse(error);
-  }
-});
-
-// Helper function to fetch analytics data
-async function fetchAnalytics(supabase: any, params: any) {
-  try {
     const analytics: any = {};
 
     // Calculate date range based on timeframe
@@ -159,14 +146,35 @@ async function fetchAnalytics(supabase: any, params: any) {
       }
     }
 
-    return {
+    const result = {
       timeframe: params.timeframe,
       generated_at: new Date().toISOString(),
       ...analytics
     };
 
+    console.log('Analytics response:', {
+      timeframe: result.timeframe,
+      metricsIncluded: params.metrics,
+      overviewKeys: analytics.overview ? Object.keys(analytics.overview) : []
+    });
+
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
   } catch (error) {
-    console.error('Error in fetchAnalytics:', error);
-    throw error;
+    console.error('Analytics error:', error);
+    
+    const errorMessage = error.message || 'Unknown error occurred';
+    const statusCode = errorMessage.includes('authentication') ? 401 :
+                      errorMessage.includes('permissions') ? 403 : 500;
+
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: 'Analytics fetch failed'
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: statusCode,
+    });
   }
-}
+});

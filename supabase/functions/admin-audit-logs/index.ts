@@ -1,45 +1,48 @@
 
-// ABOUTME: Admin Edge Function for audit log access following the mandatory 7-step pattern
+// ABOUTME: Admin Edge Function for audit log access following the simplified pattern that works
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { corsHeaders } from '../_shared/cors.ts';
-import { 
-  createSuccessResponse, 
-  createErrorResponse, 
-  authenticateUser,
-  handleCorsPreflightRequest,
-  RateLimitError
-} from '../_shared/api-helpers.ts';
-import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 Deno.serve(async (req) => {
-  // STEP 1: CORS Preflight Handling (MANDATORY FIRST)
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return handleCorsPreflightRequest();
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // STEP 2: Manual Authentication (requires verify_jwt = false in config.toml)
+    // Create Supabase client
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-    
-    const user = await authenticateUser(supabase, req.headers.get('Authorization'));
-    
-    // Verify admin role for audit log access
+
+    // Get the authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Missing authorization header');
+    }
+
+    // Set the auth header for this request
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (authError || !user) {
+      throw new Error('Invalid authentication');
+    }
+
+    // Check if user has admin role
     const userRole = user.app_metadata?.role;
     if (!userRole || userRole !== 'admin') {
-      throw new Error('FORBIDDEN: Audit log access requires admin role');
+      throw new Error('Insufficient permissions: Admin role required');
     }
 
-    // STEP 3: Rate Limiting Implementation
-    const rateLimitResult = await checkRateLimit(req, 'admin-audit-logs', 60, 60000);
-    if (!rateLimitResult.allowed) {
-      throw RateLimitError;
-    }
-
-    // STEP 4: Input Parsing & Validation
+    // Parse request parameters
     const url = new URL(req.url);
     const params = {
       page: parseInt(url.searchParams.get('page') || '1'),
@@ -53,22 +56,6 @@ Deno.serve(async (req) => {
 
     console.log('Audit log request:', params);
 
-    // STEP 5: Core Business Logic Execution
-    const result = await fetchAuditLogs(supabase, params);
-
-    // STEP 6: Standardized Success Response
-    return createSuccessResponse(result, rateLimitHeaders(rateLimitResult));
-
-  } catch (error) {
-    // STEP 7: Centralized Error Handling
-    console.error('Audit log error:', error);
-    return createErrorResponse(error);
-  }
-});
-
-// Helper function to fetch audit logs with filtering and pagination
-async function fetchAuditLogs(supabase: any, params: any) {
-  try {
     let query = supabase
       .from('SystemAuditLog')
       .select(`
@@ -114,7 +101,7 @@ async function fetchAuditLogs(supabase: any, params: any) {
       console.error('Failed to get total count:', countError);
     }
 
-    return {
+    const result = {
       logs: logs || [],
       pagination: {
         page: params.page,
@@ -124,8 +111,29 @@ async function fetchAuditLogs(supabase: any, params: any) {
       }
     };
 
+    console.log('Audit log response:', {
+      logCount: result.logs.length,
+      page: params.page,
+      total: result.pagination.total
+    });
+
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
   } catch (error) {
-    console.error('Error in fetchAuditLogs:', error);
-    throw error;
+    console.error('Audit log error:', error);
+    
+    const errorMessage = error.message || 'Unknown error occurred';
+    const statusCode = errorMessage.includes('authentication') ? 401 :
+                      errorMessage.includes('permissions') ? 403 : 500;
+
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: 'Audit log fetch failed'
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: statusCode,
+    });
   }
-}
+});

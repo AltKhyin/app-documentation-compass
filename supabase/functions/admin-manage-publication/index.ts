@@ -1,60 +1,56 @@
 
-// ABOUTME: Publication management Edge Function for admin content workflow following the mandatory 7-step pattern
+// ABOUTME: Publication management Edge Function for admin content workflow following the simplified pattern that works
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { 
-  createSuccessResponse, 
-  createErrorResponse, 
-  authenticateUser,
-  handleCorsPreflightRequest,
-  RateLimitError
-} from '../_shared/api-helpers.ts';
-import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
-interface PublicationPayload {
-  action: 'schedule' | 'publish' | 'reject' | 'request_changes';
-  reviewId: number;
-  scheduledDate?: string;
-  notes?: string;
-  metadata?: Record<string, any>;
-}
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 Deno.serve(async (req) => {
-  // STEP 1: CORS Preflight Handling (MANDATORY FIRST)
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return handleCorsPreflightRequest();
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // STEP 2: Manual Authentication (requires verify_jwt = false in config.toml)
+    // Create Supabase client
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-    
-    const user = await authenticateUser(supabase, req.headers.get('Authorization'));
-    
-    // Verify admin/editor role using JWT claims
+
+    // Get the authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Missing authorization header');
+    }
+
+    // Set the auth header for this request
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (authError || !user) {
+      throw new Error('Invalid authentication');
+    }
+
+    // Check if user has admin or editor role
     const userRole = user.app_metadata?.role;
     if (!userRole || !['admin', 'editor'].includes(userRole)) {
-      throw new Error('FORBIDDEN: Publication management requires admin or editor role');
+      throw new Error('Insufficient permissions: Admin or editor role required');
     }
 
-    // STEP 3: Rate Limiting Implementation
-    const rateLimitResult = await checkRateLimit(req, 'admin-manage-publication', 30, 60000);
-    if (!rateLimitResult.allowed) {
-      throw RateLimitError;
-    }
-
-    // STEP 4: Input Parsing & Validation
-    const payload: PublicationPayload = await req.json();
+    // Parse request body
+    const payload = await req.json();
     
     if (!payload.action || !payload.reviewId) {
-      throw new Error('VALIDATION_FAILED: Action and reviewId are required');
+      throw new Error('Action and reviewId are required');
     }
 
     if (payload.action === 'schedule' && !payload.scheduledDate) {
-      throw new Error('VALIDATION_FAILED: Scheduled date is required for schedule action');
+      throw new Error('Scheduled date is required for schedule action');
     }
 
     console.log('Publication management request:', { 
@@ -63,22 +59,6 @@ Deno.serve(async (req) => {
       userRole 
     });
 
-    // STEP 5: Core Business Logic Execution
-    const result = await handlePublicationAction(supabase, payload, user.id);
-
-    // STEP 6: Standardized Success Response
-    return createSuccessResponse(result, rateLimitHeaders(rateLimitResult));
-
-  } catch (error) {
-    // STEP 7: Centralized Error Handling
-    console.error('Publication management error:', error);
-    return createErrorResponse(error);
-  }
-});
-
-// Helper function to handle publication actions
-async function handlePublicationAction(supabase: any, payload: PublicationPayload, performedBy: string) {
-  try {
     // First, verify the review exists and get current state
     const { data: currentReview, error: fetchError } = await supabase
       .from('Reviews')
@@ -98,7 +78,7 @@ async function handlePublicationAction(supabase: any, payload: PublicationPayloa
         updateData = {
           status: 'published',
           published_at: new Date().toISOString(),
-          reviewer_id: performedBy,
+          reviewer_id: user.id,
           reviewed_at: new Date().toISOString(),
           review_status: 'approved'
         };
@@ -109,7 +89,7 @@ async function handlePublicationAction(supabase: any, payload: PublicationPayloa
         updateData = {
           status: 'scheduled',
           scheduled_publish_at: payload.scheduledDate,
-          reviewer_id: performedBy,
+          reviewer_id: user.id,
           reviewed_at: new Date().toISOString(),
           review_status: 'approved'
         };
@@ -119,7 +99,7 @@ async function handlePublicationAction(supabase: any, payload: PublicationPayloa
       case 'reject':
         updateData = {
           review_status: 'rejected',
-          reviewer_id: performedBy,
+          reviewer_id: user.id,
           reviewed_at: new Date().toISOString(),
           publication_notes: payload.notes
         };
@@ -129,7 +109,7 @@ async function handlePublicationAction(supabase: any, payload: PublicationPayloa
       case 'request_changes':
         updateData = {
           review_status: 'changes_requested',
-          reviewer_id: performedBy,
+          reviewer_id: user.id,
           reviewed_at: new Date().toISOString(),
           publication_notes: payload.notes
         };
@@ -158,7 +138,7 @@ async function handlePublicationAction(supabase: any, payload: PublicationPayloa
       .insert({
         review_id: payload.reviewId,
         action: historyAction,
-        performed_by: performedBy,
+        performed_by: user.id,
         notes: payload.notes,
         metadata: {
           ...payload.metadata,
@@ -174,7 +154,7 @@ async function handlePublicationAction(supabase: any, payload: PublicationPayloa
 
     // Log audit event
     await supabase.rpc('log_audit_event', {
-      p_performed_by: performedBy,
+      p_performed_by: user.id,
       p_action_type: payload.action.toUpperCase(),
       p_resource_type: 'Reviews',
       p_resource_id: payload.reviewId.toString(),
@@ -187,7 +167,7 @@ async function handlePublicationAction(supabase: any, payload: PublicationPayloa
       }
     });
 
-    return {
+    const result = {
       reviewId: payload.reviewId,
       action: payload.action,
       previousStatus: currentReview.status,
@@ -197,8 +177,29 @@ async function handlePublicationAction(supabase: any, payload: PublicationPayloa
       updatedAt: new Date().toISOString()
     };
 
+    console.log('Publication management response:', {
+      reviewId: result.reviewId,
+      action: result.action,
+      statusChange: `${result.previousStatus} -> ${result.newStatus}`
+    });
+
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
   } catch (error) {
-    console.error('Error in handlePublicationAction:', error);
-    throw error;
+    console.error('Publication management error:', error);
+    
+    const errorMessage = error.message || 'Unknown error occurred';
+    const statusCode = errorMessage.includes('authentication') ? 401 :
+                      errorMessage.includes('permissions') ? 403 : 500;
+
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: 'Publication management operation failed'
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: statusCode,
+    });
   }
-}
+});

@@ -1,65 +1,53 @@
 
-// ABOUTME: Content analytics Edge Function for admin dashboard data following the mandatory 7-step pattern
+// ABOUTME: Content analytics Edge Function for admin dashboard data following the simplified pattern that works
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { 
-  createSuccessResponse, 
-  createErrorResponse, 
-  authenticateUser,
-  handleCorsPreflightRequest,
-  RateLimitError
-} from '../_shared/api-helpers.ts';
-import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 Deno.serve(async (req) => {
-  // STEP 1: CORS Preflight Handling (MANDATORY FIRST)
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return handleCorsPreflightRequest();
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // STEP 2: Manual Authentication (requires verify_jwt = false in config.toml)
+    // Create Supabase client
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-    
-    const user = await authenticateUser(supabase, req.headers.get('Authorization'));
-    
-    // Verify admin/editor role using JWT claims
+
+    // Get the authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Missing authorization header');
+    }
+
+    // Set the auth header for this request
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (authError || !user) {
+      throw new Error('Invalid authentication');
+    }
+
+    // Check if user has admin or editor role
     const userRole = user.app_metadata?.role;
     if (!userRole || !['admin', 'editor'].includes(userRole)) {
-      throw new Error('FORBIDDEN: Content analytics access requires admin or editor role');
+      throw new Error('Insufficient permissions: Admin or editor role required');
     }
 
-    // STEP 3: Rate Limiting Implementation
-    const rateLimitResult = await checkRateLimit(req, 'admin-content-analytics', 60, 60000);
-    if (!rateLimitResult.allowed) {
-      throw RateLimitError;
-    }
-
-    // STEP 4: Input Parsing & Validation
+    // Parse request parameters
     const url = new URL(req.url);
     const timeRange = url.searchParams.get('timeRange') || '30d';
     
     console.log('Content analytics request:', { timeRange, userRole });
 
-    // STEP 5: Core Business Logic Execution
-    const result = await fetchContentAnalytics(supabase, timeRange);
-
-    // STEP 6: Standardized Success Response
-    return createSuccessResponse(result, rateLimitHeaders(rateLimitResult));
-
-  } catch (error) {
-    // STEP 7: Centralized Error Handling
-    console.error('Content analytics error:', error);
-    return createErrorResponse(error);
-  }
-});
-
-// Helper function to fetch content analytics data
-async function fetchContentAnalytics(supabase: any, timeRange: string) {
-  try {
     // Calculate date range
     const days = parseInt(timeRange.replace('d', '')) || 30;
     const startDate = new Date();
@@ -123,7 +111,7 @@ async function fetchContentAnalytics(supabase: any, timeRange: string) {
       console.error('Error fetching top content:', topError);
     }
 
-    return {
+    const result = {
       summary: contentStats || {
         totalReviews: 0,
         publishedReviews: 0,
@@ -137,8 +125,29 @@ async function fetchContentAnalytics(supabase: any, timeRange: string) {
       generatedAt: new Date().toISOString()
     };
 
+    console.log('Content analytics response:', {
+      summaryKeys: Object.keys(result.summary),
+      activityCount: result.recentActivity.length,
+      timeRange: result.timeRange,
+    });
+
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
   } catch (error) {
-    console.error('Error in fetchContentAnalytics:', error);
-    throw error;
+    console.error('Content analytics error:', error);
+    
+    const errorMessage = error.message || 'Unknown error occurred';
+    const statusCode = errorMessage.includes('authentication') ? 401 :
+                      errorMessage.includes('permissions') ? 403 : 500;
+
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: 'Content analytics fetch failed'
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: statusCode,
+    });
   }
-}
+});

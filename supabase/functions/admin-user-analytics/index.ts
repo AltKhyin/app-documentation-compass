@@ -1,66 +1,54 @@
 
-// ABOUTME: User analytics Edge Function for admin dashboard user insights following the mandatory 7-step pattern
+// ABOUTME: User analytics Edge Function for admin dashboard user insights following the simplified pattern that works
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { 
-  createSuccessResponse, 
-  createErrorResponse, 
-  authenticateUser,
-  handleCorsPreflightRequest,
-  RateLimitError
-} from '../_shared/api-helpers.ts';
-import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 Deno.serve(async (req) => {
-  // STEP 1: CORS Preflight Handling (MANDATORY FIRST)
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return handleCorsPreflightRequest();
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // STEP 2: Manual Authentication (requires verify_jwt = false in config.toml)
+    // Create Supabase client
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-    
-    const user = await authenticateUser(supabase, req.headers.get('Authorization'));
-    
-    // Verify admin role for user analytics access
+
+    // Get the authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Missing authorization header');
+    }
+
+    // Set the auth header for this request
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (authError || !user) {
+      throw new Error('Invalid authentication');
+    }
+
+    // Check if user has admin role
     const userRole = user.app_metadata?.role;
     if (!userRole || userRole !== 'admin') {
-      throw new Error('FORBIDDEN: User analytics access requires admin role');
+      throw new Error('Insufficient permissions: Admin role required');
     }
 
-    // STEP 3: Rate Limiting Implementation
-    const rateLimitResult = await checkRateLimit(req, 'admin-user-analytics', 60, 60000);
-    if (!rateLimitResult.allowed) {
-      throw RateLimitError;
-    }
-
-    // STEP 4: Input Parsing & Validation
+    // Parse request parameters
     const url = new URL(req.url);
     const timeRange = url.searchParams.get('timeRange') || '30d';
     const includeDetails = url.searchParams.get('includeDetails') === 'true';
     
     console.log('User analytics request:', { timeRange, includeDetails });
 
-    // STEP 5: Core Business Logic Execution
-    const result = await fetchUserAnalytics(supabase, timeRange, includeDetails);
-
-    // STEP 6: Standardized Success Response
-    return createSuccessResponse(result, rateLimitHeaders(rateLimitResult));
-
-  } catch (error) {
-    // STEP 7: Centralized Error Handling
-    console.error('User analytics error:', error);
-    return createErrorResponse(error);
-  }
-});
-
-// Helper function to fetch user analytics data
-async function fetchUserAnalytics(supabase: any, timeRange: string, includeDetails: boolean) {
-  try {
     // Calculate date range
     const days = parseInt(timeRange.replace('d', '')) || 30;
     const startDate = new Date();
@@ -157,7 +145,7 @@ async function fetchUserAnalytics(supabase: any, timeRange: string, includeDetai
       }
     }
 
-    return {
+    const result = {
       summary: userStats || {
         totalUsers: 0,
         activeToday: 0,
@@ -182,8 +170,30 @@ async function fetchUserAnalytics(supabase: any, timeRange: string, includeDetai
       generatedAt: new Date().toISOString()
     };
 
+    console.log('User analytics response:', {
+      summaryKeys: Object.keys(result.summary),
+      trendsCount: result.trends.dailyRegistrations.length,
+      activeUsers: result.engagement.activeUsers,
+      timeRange: result.timeRange
+    });
+
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
   } catch (error) {
-    console.error('Error in fetchUserAnalytics:', error);
-    throw error;
+    console.error('User analytics error:', error);
+    
+    const errorMessage = error.message || 'Unknown error occurred';
+    const statusCode = errorMessage.includes('authentication') ? 401 :
+                      errorMessage.includes('permissions') ? 403 : 500;
+
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: 'User analytics fetch failed'
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: statusCode,
+    });
   }
-}
+});

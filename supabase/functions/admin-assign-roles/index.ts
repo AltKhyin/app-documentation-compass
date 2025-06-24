@@ -1,56 +1,51 @@
 
-// ABOUTME: Admin Edge Function for role assignment and management operations following the canonical 7-step pattern
+// ABOUTME: Admin Edge Function for role assignment and management operations following the simplified pattern that works
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { corsHeaders } from '../_shared/cors.ts';
-import { 
-  createSuccessResponse, 
-  createErrorResponse, 
-  authenticateUser,
-  handleCorsPreflightRequest,
-  RateLimitError
-} from '../_shared/api-helpers.ts';
-import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
-interface RoleManagementPayload {
-  action: 'assign_role' | 'revoke_role' | 'list_user_roles' | 'list_available_roles';
-  userId?: string;
-  roleName?: string;
-  expiresAt?: string;
-}
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 Deno.serve(async (req) => {
-  // STEP 1: CORS Preflight Handling (MANDATORY FIRST)
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return handleCorsPreflightRequest();
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // STEP 2: Manual Authentication (requires verify_jwt = false in config.toml)
+    // Create Supabase client
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-    
-    const user = await authenticateUser(supabase, req.headers.get('Authorization'));
 
-    // Verify admin role using JWT claims
+    // Get the authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Missing authorization header');
+    }
+
+    // Set the auth header for this request
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (authError || !user) {
+      throw new Error('Invalid authentication');
+    }
+
+    // Check if user has admin role
     const userRole = user.app_metadata?.role;
     if (!userRole || userRole !== 'admin') {
-      throw new Error('FORBIDDEN: Admin role required for role management');
+      throw new Error('Insufficient permissions: Admin role required');
     }
 
-    // STEP 3: Rate Limiting Implementation
-    const rateLimitResult = await checkRateLimit(req, 'admin-assign-roles', 30, 60000);
-    if (!rateLimitResult.allowed) {
-      throw RateLimitError;
-    }
-
-    // STEP 4: Input Parsing & Validation
-    const payload: RoleManagementPayload = await req.json();
+    // Parse request body
+    const payload = await req.json();
     console.log('Role management request:', { action: payload.action, userId: payload.userId });
 
-    // STEP 5: Core Business Logic Execution
     let result;
 
     switch (payload.action) {
@@ -59,35 +54,48 @@ Deno.serve(async (req) => {
         break;
       
       case 'list_user_roles':
-        if (!payload.userId) throw new Error('VALIDATION_FAILED: User ID is required for listing user roles');
+        if (!payload.userId) throw new Error('User ID is required for listing user roles');
         result = await handleListUserRoles(supabase, payload.userId);
         break;
       
       case 'assign_role':
         if (!payload.userId || !payload.roleName) {
-          throw new Error('VALIDATION_FAILED: User ID and role name are required for role assignment');
+          throw new Error('User ID and role name are required for role assignment');
         }
         result = await handleAssignRole(supabase, payload.userId, payload.roleName, payload.expiresAt, user.id);
         break;
       
       case 'revoke_role':
         if (!payload.userId || !payload.roleName) {
-          throw new Error('VALIDATION_FAILED: User ID and role name are required for role revocation');
+          throw new Error('User ID and role name are required for role revocation');
         }
         result = await handleRevokeRole(supabase, payload.userId, payload.roleName, user.id);
         break;
       
       default:
-        throw new Error(`VALIDATION_FAILED: Invalid action: ${payload.action}`);
+        throw new Error(`Invalid action: ${payload.action}`);
     }
 
-    // STEP 6: Standardized Success Response
-    return createSuccessResponse(result, rateLimitHeaders(rateLimitResult));
+    console.log('Role management response:', { action: payload.action, success: true });
+
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
   } catch (error) {
-    // STEP 7: Centralized Error Handling
     console.error('Role management error:', error);
-    return createErrorResponse(error);
+    
+    const errorMessage = error.message || 'Unknown error occurred';
+    const statusCode = errorMessage.includes('authentication') ? 401 :
+                      errorMessage.includes('permissions') ? 403 : 500;
+
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: 'Role management operation failed'
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: statusCode,
+    });
   }
 });
 
