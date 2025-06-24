@@ -53,6 +53,7 @@ export const useUserListQuery = (filters?: UserManagementFilters) => {
     queryFn: async (): Promise<PaginatedUsers> => {
       console.log('Fetching user list via Edge Function...');
       
+      // Build query parameters
       const params = new URLSearchParams();
       if (filters?.role) params.append('role', filters.role);
       if (filters?.subscription_tier) params.append('subscription_tier', filters.subscription_tier);
@@ -60,12 +61,11 @@ export const useUserListQuery = (filters?: UserManagementFilters) => {
       if (filters?.page) params.append('page', filters.page.toString());
       if (filters?.limit) params.append('limit', filters.limit.toString());
 
-      const { data, error } = await supabase.functions.invoke('admin-manage-users', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: params.toString()
+      // Use GET request with query parameters
+      const functionUrl = `admin-manage-users${params.toString() ? `?${params.toString()}` : ''}`;
+      
+      const { data, error } = await supabase.functions.invoke(functionUrl, {
+        method: 'GET'
       });
       
       if (error) {

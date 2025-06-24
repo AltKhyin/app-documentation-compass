@@ -1,9 +1,15 @@
+
 // ABOUTME: Comprehensive user management Edge Function for admin operations following the mandatory 7-step pattern
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { corsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
-import { createSuccessResponse, createErrorResponse } from '../_shared/api-helpers.ts';
-import { rateLimitCheck, rateLimitHeaders } from '../_shared/rate-limit.ts';
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  authenticateUser,
+  handleCorsPreflightRequest,
+  RateLimitError
+} from '../_shared/api-helpers.ts';
+import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
 interface UserManagementPayload {
   action: 'list' | 'get' | 'update' | 'deactivate' | 'reactivate' | 'delete';
@@ -36,53 +42,18 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
     
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({
-        error: { message: 'Authorization header is required', code: 'UNAUTHORIZED' }
-      }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      return new Response(JSON.stringify({
-        error: { message: 'Invalid authentication token', code: 'UNAUTHORIZED' }
-      }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
-    }
+    const user = await authenticateUser(supabase, req.headers.get('Authorization'));
     
     // Verify admin/editor role using JWT claims
     const userRole = user.app_metadata?.role;
     if (!userRole || !['admin', 'editor'].includes(userRole)) {
-      return new Response(JSON.stringify({
-        error: { message: 'User management requires admin or editor role', code: 'FORBIDDEN' }
-      }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
+      throw new Error('FORBIDDEN: User management requires admin or editor role');
     }
 
     // STEP 3: Rate Limiting Implementation
-    const rateLimitResult = await rateLimitCheck(req, 'admin-manage-users', 60, 60);
+    const rateLimitResult = await checkRateLimit(req, 'admin-manage-users', 60, 60000);
     if (!rateLimitResult.allowed) {
-      return new Response(JSON.stringify({
-        error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }
-      }), {
-        status: 429,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-          ...rateLimitHeaders(rateLimitResult)
-        }
-      });
+      throw RateLimitError;
     }
 
     // STEP 4: Input Parsing & Validation
@@ -115,38 +86,33 @@ Deno.serve(async (req) => {
         break;
       
       case 'get':
-        if (!payload.userId) throw new Error('User ID is required for get action');
+        if (!payload.userId) throw new Error('VALIDATION_FAILED: User ID is required for get action');
         result = await handleGetUser(supabase, payload.userId);
         break;
       
       case 'update':
         if (!payload.userId || !payload.userData) {
-          throw new Error('User ID and user data are required for update action');
+          throw new Error('VALIDATION_FAILED: User ID and user data are required for update action');
         }
         result = await handleUpdateUser(supabase, payload.userId, payload.userData, user.id);
         break;
       
       case 'deactivate':
       case 'reactivate':
-        if (!payload.userId) throw new Error('User ID is required for activation actions');
+        if (!payload.userId) throw new Error('VALIDATION_FAILED: User ID is required for activation actions');
         result = await handleToggleUserStatus(supabase, payload.userId, payload.action === 'reactivate', user.id);
         break;
       
       case 'delete':
-        if (!payload.userId) throw new Error('User ID is required for delete action');
+        if (!payload.userId) throw new Error('VALIDATION_FAILED: User ID is required for delete action');
         if (userRole !== 'admin') {
-          return new Response(JSON.stringify({
-            error: { message: 'Only admins can delete users', code: 'FORBIDDEN' }
-          }), {
-            status: 403,
-            headers: { 'Content-Type': 'application/json', ...corsHeaders }
-          });
+          throw new Error('FORBIDDEN: Only admins can delete users');
         }
         result = await handleDeleteUser(supabase, payload.userId, user.id);
         break;
       
       default:
-        throw new Error(`Invalid action: ${payload.action}`);
+        throw new Error(`VALIDATION_FAILED: Invalid action: ${payload.action}`);
     }
 
     // STEP 6: Standardized Success Response
