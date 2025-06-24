@@ -1,8 +1,8 @@
 
-// ABOUTME: Zustand store for managing authentication state without making API calls.
+// ABOUTME: Zustand store for managing authentication state - TEMPORARILY DISABLED for emergency stabilization.
+
 import { create } from 'zustand';
 import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
 
 type AuthState = {
   session: Session | null;
@@ -13,32 +13,22 @@ type AuthState = {
 };
 
 /**
- * Auth store that ONLY manages authentication state.
- * Does NOT fetch user profile data - that comes from AppDataContext.
- * Follows the principle of minimal API calls.
+ * EMERGENCY STABILIZATION MODE:
+ * This auth store is temporarily disabled to isolate React context issues.
+ * Use SimpleAuthProvider in src/components/auth/SimpleAuthProvider.tsx instead.
  */
 export const useAuthStore = create<AuthState>((set, get) => ({
   session: null,
   user: null,
   isLoading: true,
   setSession: (session) => {
-    console.log('AuthStore: Setting session', { hasSession: !!session, hasUser: !!session?.user });
-    set({ session, user: session?.user ?? null });
+    console.warn('AuthStore: DISABLED during emergency stabilization');
   },
   initialize: () => {
-    console.log('AuthStore: Initializing auth listener');
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('AuthStore: Auth state changed', { event, hasSession: !!session });
-        set({ session, user: session?.user ?? null, isLoading: false });
-        // NOTE: We do NOT fetch practitioner data here anymore
-        // That is handled by AppDataContext via the consolidated hook
-      }
-    );
-
-    return () => {
-      console.log('AuthStore: Cleaning up auth subscription');
-      subscription.unsubscribe();
-    };
+    console.warn('AuthStore: DISABLED during emergency stabilization');
+    return () => {}; // No-op cleanup function
   },
 }));
+
+// Export a warning for any existing usage
+export const EMERGENCY_MODE_WARNING = 'Auth store disabled during emergency stabilization. Use SimpleAuthProvider instead.';

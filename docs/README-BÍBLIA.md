@@ -1,19 +1,25 @@
-
 # EVIDENS AI Development Bible v6.0
 
-**Version:** 6.0.2 (Canon - Phase 4A Critical Fixes)
+**Version:** 6.0.3 (EMERGENCY STABILIZATION MODE)
 **Date:** June 24, 2025
 **Purpose:** This document contains the complete, authoritative, and machine-optimized set of rules, architectural models, and implementation directives for the EVIDENS project.
 
 ---
 
-## CRITICAL UPDATES v6.0.2
+## 🚨 CRITICAL UPDATES v6.0.3 - EMERGENCY STABILIZATION
 
-### 🔧 Phase 4A Critical Error Resolution - IN PROGRESS
-- **RESOLVED**: UserDetailModal TypeScript build error (incorrect mutation interface)
-- **RESOLVED**: Analytics dashboard Promise.all syntax error causing runtime failures
-- **IN PROGRESS**: Missing database functions for community feed operations
-- **STANDARDIZED**: All Edge Functions now follow proper error handling patterns
+### 🔧 EMERGENCY MODE ACTIVATED - IN PROGRESS
+- **CRITICAL ISSUE**: React context corruption causing `TypeError: Cannot read properties of null (reading 'useRef')`
+- **IMPACT**: Complete application failure with blank screen
+- **SOLUTION**: Strategic 3-phase recovery plan implemented
+- **STATUS**: Phase 1 (Immediate Stabilization) - ACTIVE
+
+### Emergency Measures Applied:
+- **Simplified Provider Chain**: Removed complex nested providers temporarily
+- **Isolated Auth System**: Created `SimpleAuthProvider` without Zustand store
+- **Disabled Zustand Auth Store**: Temporarily disabled to prevent React context conflicts
+- **Minimal Dependencies**: Reduced to essential providers only (QueryClient + Theme)
+- **Enhanced Error Handling**: Added emergency fallback rendering
 
 ---
 
@@ -63,15 +69,19 @@
 *   **P1.2.2 (Trunk-Based Development):** All changes are merged directly into the `main` branch.
 *   **P1.2.3 (Feature Flags):** Use feature flags to enable/disable new features in production.
 
-### [P1.3] — Pre-Flight Checklist (Mandatory) - UPDATED v6.0.2
+### [P1.3] — Pre-Flight Checklist (Mandatory) - UPDATED v6.0.3
+
+**🚨 EMERGENCY MODE ADDITIONS:**
+* **P1.3.0 (Emergency Stabilization Check):** Before any task, verify if emergency stabilization mode is still active. If yes, prioritize stability over new features.
 
 * **P1.3.1 (Verification Algorithm):** Before executing any task, you **MUST** perform the following verification steps in sequence:
     1.  **Analyze Intent:** Deconstruct the user's prompt to establish the primary goal.
-    2.  **Analyze Context:** Identify and fully read the specific `/docs` files relevant to the prompt's goal.
-    3.  **Analyze Security:** Cross-reference the task with `[DOC_4]` and `[D3.5]` to identify all applicable RLS policies, roles, and API security constraints.
-    4.  **Analyze Conflicts:** Scan the codebase for code duplication or logical conflicts. If the user's request violates a directive in this document, proceed to `[P1.4]`.
-    5.  **Verify Shared Utilities:** Ensure all Edge Functions use standardized shared utilities from `supabase/functions/_shared/`
-    6.  **Verify Database Dependencies:** Ensure all referenced RPC functions and database operations exist
+    2.  **Emergency Mode Check:** Verify if the application is in emergency stabilization mode and adapt accordingly.
+    3.  **Analyze Context:** Identify and fully read the specific `/docs` files relevant to the prompt's goal.
+    4.  **Analyze Security:** Cross-reference the task with `[DOC_4]` and `[D3.5]` to identify all applicable RLS policies, roles, and API security constraints.
+    5.  **Analyze Conflicts:** Scan the codebase for code duplication or logical conflicts. If the user's request violates a directive in this document, proceed to `[P1.4]`.
+    6.  **Verify Shared Utilities:** Ensure all Edge Functions use standardized shared utilities from `supabase/functions/_shared/`
+    7.  **Verify Database Dependencies:** Ensure all referenced RPC functions and database operations exist
 
 *   **P1.3.2 (Enforcement):** If any step in the verification algorithm fails or results in ambiguity, you **MUST** stop and ask for clarification.
 
@@ -201,7 +211,13 @@ supabase/
 
 ---
 
-## CURRENT IMPLEMENTATION STATUS v6.0.2
+## CURRENT IMPLEMENTATION STATUS v6.0.3
+
+### 🚨 EMERGENCY STABILIZATION - PHASE 1 ACTIVE
+- **React Context Corruption**: 🔄 RESOLVING - Simplified provider chain implemented
+- **Auth System Isolation**: 🔄 ACTIVE - SimpleAuthProvider replacing Zustand temporarily
+- **Application Stability**: 🔄 MONITORING - Basic rendering restored
+- **Provider Chain Simplification**: ✅ COMPLETED - Minimal dependencies active
 
 ### ✅ PHASE 1: INFRASTRUCTURE REPAIR & STANDARDIZATION - COMPLETED
 - **Rate Limiting Architecture**: ✅ Standardized with proper Deno Request handling
@@ -214,11 +230,11 @@ supabase/
 - **Admin Components**: ✅ Fixed TypeScript build errors
 - **Component Audit & Fixes**: ✅ Mutation interface corrections applied
 
-### 🔄 PHASE 4A: CRITICAL ERROR RESOLUTION - IN PROGRESS
-- **UserDetailModal Build Error**: ✅ RESOLVED - Fixed mutation interface
-- **Analytics Dashboard Runtime Error**: ✅ RESOLVED - Fixed Promise.all syntax
-- **Missing Database Functions**: 🔄 PENDING - Community feed RPC functions
-- **Edge Function Verification**: 🔄 PENDING - Comprehensive testing
+### 🔄 PHASE 4A: CRITICAL ERROR RESOLUTION - EMERGENCY MODE
+- **React Context Issues**: 🔄 RESOLVING - Emergency stabilization measures active
+- **Auth System Recovery**: 🔄 PENDING - Rebuilding with simplified approach
+- **Missing Database Functions**: ⏸️ PAUSED - Focus on stability first
+- **Edge Function Verification**: ⏸️ PAUSED - Resume after React recovery
 
 ### 🔄 PHASE 4B: SYSTEMATIC VERIFICATION - READY
 - **Function Deployment Verification**: Ready to start
@@ -227,27 +243,51 @@ supabase/
 
 ---
 
-## CRITICAL ARCHITECTURE COMPLIANCE STATUS v6.0.2
+## CRITICAL ARCHITECTURE COMPLIANCE STATUS v6.0.3
 
-### ✅ FULLY COMPLIANT
+### 🚨 EMERGENCY COMPLIANCE ADJUSTMENTS
+- **TEMPORARY DEVIATION**: Auth system using React Context instead of Zustand during recovery
+- **MAINTAINED**: Data access layer patterns still enforced
+- **MAINTAINED**: Edge Function 7-step pattern still active
+- **MAINTAINED**: Security and RLS policies unchanged
+
+### ✅ FULLY COMPLIANT (MAINTAINED DURING EMERGENCY)
 - [D3.4] Data Access Layer - All admin functions use proper hooks
 - [D3.5] Security & API - Rate limiting, authentication enforced universally
 - [SEC.3] Edge Function Guardrails - 7-step pattern with shared utilities
 - [DOC_5] API Contract - All Edge Functions follow mandatory structure
-- [P1.3] Pre-Flight Checklist - Complete verification implemented
-
-### 🔄 PARTIALLY COMPLIANT  
-- [SEC.5] Database Function Dependencies - Some missing RPC functions identified
-- [DOC_7] Visual System - Admin components theme compliance needed
-
-### ❌ NON-COMPLIANT
-- None identified (critical violations resolved in v6.0.2)
 
 ---
 
-## TECHNICAL DEBT STATUS v6.0.2
+## EMERGENCY RECOVERY PLAN v6.0.3
 
-### ✅ RESOLVED
+### Phase 1: Immediate Stabilization (ACTIVE)
+1. ✅ **Simplify Provider Chain**: Reduced to essential providers only
+2. ✅ **Isolate Auth System**: Created SimpleAuthProvider without Zustand
+3. ✅ **Verify React Imports**: Ensured consistent React import patterns
+4. 🔄 **Test Basic Rendering**: Monitoring application stability
+
+### Phase 2: Systematic Restoration (NEXT)
+1. **Rebuild Auth Store**: Recreate Zustand store with explicit React context handling
+2. **Progressive Provider Addition**: Add providers incrementally with testing
+3. **Verify Dependencies**: Check for React version conflicts or bundling issues
+4. **Implement Auth Flow**: Restore full authentication with simplified state management
+
+### Phase 3: Edge Function Continuation (LATER)
+1. **Complete Missing Database Functions**: Create required RPC functions for community operations
+2. **Verify All Edge Functions**: Test deployment and functionality
+3. **Update Documentation**: Sync with current state
+
+---
+
+## TECHNICAL DEBT STATUS v6.0.3
+
+### 🚨 EMERGENCY ADDITIONS
+- **CRITICAL**: React context corruption - Emergency stabilization measures active
+- **HIGH**: Temporary deviation from Zustand auth pattern - Requires restoration
+- **MEDIUM**: Provider chain simplification - Needs systematic rebuilding
+
+### ✅ RESOLVED (MAINTAINED)
 - **CRITICAL**: Edge Function CORS failures - Fixed with standardized utilities
 - **CRITICAL**: Rate limiting boot errors - Resolved with proper Deno Request handling
 - **CRITICAL**: Analytics dashboard Promise.all error - Fixed syntax and error handling
@@ -260,20 +300,28 @@ supabase/
 
 ---
 
-## NEXT IMMEDIATE ACTIONS v6.0.2
+## NEXT IMMEDIATE ACTIONS v6.0.3
 
-1. **🔄 Complete Phase 4A**: Create missing database functions for community operations
-2. **🔄 Begin Phase 4B**: Comprehensive Edge Function verification and testing
-3. **🔄 Apply theme compliance** to admin components per [DOC_7]
-
----
-
-**Last Updated**: June 24, 2025 - v6.0.2  
-**Next Review**: After Phase 4A completion and database function implementation
+1. **🚨 Complete Phase 1**: Monitor application stability and verify basic rendering works
+2. **🔄 Begin Phase 2**: Systematically rebuild auth system with improved React context handling
+3. **⏸️ Resume Phase 4A**: Complete missing database functions after React recovery
 
 ---
 
-## SHARED UTILITIES REFERENCE v6.0.2
+**Last Updated**: June 24, 2025 - v6.0.3 (EMERGENCY STABILIZATION)  
+**Next Review**: After Phase 1 completion and application stability verification
+
+---
+
+**✅ Emergency Stabilization Measures: ACTIVE**  
+**🔄 React Context Recovery: IN PROGRESS**  
+**⏸️ Feature Development: PAUSED until stability restored**
+
+**Overall Project Status: ~90% Infrastructure + Backend | EMERGENCY RECOVERY MODE**
+
+---
+
+## SHARED UTILITIES REFERENCE v6.0.3
 
 ### Rate Limiting Functions
 ```typescript
@@ -292,7 +340,7 @@ import { authenticateRequest, requireRole } from '../_shared/auth.ts';
 
 ---
 
-## IMPLEMENTATION PROGRESS FLOWCHART v6.0.2
+## IMPLEMENTATION PROGRESS FLOWCHART v6.0.3
 
 ```
 PHASE 1: INFRASTRUCTURE REPAIR ✅ COMPLETED
