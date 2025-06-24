@@ -1,58 +1,56 @@
 
-// ABOUTME: Acervo data Edge Function following mandatory 7-step pattern from DOC_5
+// ABOUTME: Acervo data Edge Function following [DOC_5] mandatory 7-step pattern
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { corsHeaders, handleCorsPrelight } from '../_shared/cors.ts';
-import { checkRateLimit } from '../_shared/rate-limit.ts';
-import { authenticateRequest, requireRole } from '../_shared/auth.ts';
+import { corsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  authenticateUser,
+  RateLimitError
+} from '../_shared/api-helpers.ts';
+import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
 Deno.serve(async (req) => {
-  // STEP 1: Handle CORS preflight
-  const corsResponse = handleCorsPrelight(req);
-  if (corsResponse) return corsResponse;
+  // STEP 1: CORS Preflight Handling (MANDATORY FIRST)
+  if (req.method === 'OPTIONS') {
+    return handleCorsPreflightRequest();
+  }
 
   try {
-    // STEP 2: Rate limiting (acervo-specific - 30 requests per 60 seconds)
-    const rateLimitResult = await checkRateLimit(req, { windowMs: 60000, maxRequests: 30 });
-    if (!rateLimitResult.success) {
-      return new Response(JSON.stringify({ 
-        error: rateLimitResult.error || 'Rate limit exceeded',
-        details: 'Too many acervo requests'
-      }), {
-        status: 429,
-        headers: { ...corsHeaders, ...rateLimitResult.headers, 'Content-Type': 'application/json' },
-      });
-    }
+    // STEP 2: Manual Authentication (requires verify_jwt = false in config.toml)
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
 
-    // STEP 3: Authentication (optional for acervo data)
+    // Get user for rate limiting and RLS (optional for this endpoint)
     let userId = 'anonymous';
     let userSubscriptionTier = 'free';
     
     const authHeader = req.headers.get('Authorization');
     if (authHeader) {
       try {
-        const authResult = await authenticateRequest(req);
-        if (authResult.success) {
-          userId = authResult.user.id;
-          userSubscriptionTier = authResult.user.user_metadata?.subscription_tier || 'free';
-        }
+        const user = await authenticateUser(supabase, authHeader);
+        userId = user.id;
+        userSubscriptionTier = user.user_metadata?.subscription_tier || 'free';
       } catch (authError) {
         console.warn('Auth verification failed, continuing as anonymous:', authError);
       }
     }
 
-    // STEP 4: Authorization (not required - public endpoint with subscription-based filtering)
-    // No authorization required for acervo data
+    // STEP 3: Rate Limiting Implementation
+    const rateLimitResult = await checkRateLimit(supabase, 'get-acervo-data', userId, 30, 60);
+    if (!rateLimitResult.allowed) {
+      throw RateLimitError;
+    }
 
-    // STEP 5: Create Supabase client
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    // STEP 4: Input Parsing & Validation
+    // No input validation needed for this GET-like endpoint
 
-    // STEP 6: Business Logic - Acervo data fetching
     console.log(`Starting Acervo data fetch for user: ${userId}`);
 
+    // STEP 5: Core Business Logic Execution
     // Fetch published reviews with RLS applied through access_level filtering
     const reviewsQuery = supabase
       .from('Reviews')
@@ -147,28 +145,11 @@ Deno.serve(async (req) => {
       tags: tags || []
     };
 
-    // STEP 7: Return structured success response
-    return new Response(JSON.stringify(response), {
-      headers: { 
-        ...corsHeaders, 
-        ...rateLimitResult.headers,
-        'Content-Type': 'application/json' 
-      },
-    });
+    // STEP 6: Standardized Success Response
+    return createSuccessResponse(response, rateLimitHeaders(rateLimitResult));
 
   } catch (error) {
-    console.error('Acervo data fetch error:', error);
-    
-    const errorMessage = error.message || 'Unknown error occurred';
-    const statusCode = errorMessage.includes('authentication') ? 401 :
-                      errorMessage.includes('permissions') ? 403 : 500;
-
-    return new Response(JSON.stringify({ 
-      error: errorMessage,
-      details: 'Acervo data fetch failed'
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: statusCode,
-    });
+    // STEP 7: Centralized Error Handling
+    return createErrorResponse(error);
   }
 });

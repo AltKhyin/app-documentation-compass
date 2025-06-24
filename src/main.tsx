@@ -1,12 +1,10 @@
 
 // ABOUTME: Application entry point with React 18 StrictMode and proper root element mounting with enhanced error handling.
 
-import * as React from 'react';
-import * as ReactDOM from 'react-dom/client';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
-
-console.log('main.tsx: Starting application with React:', typeof React, !!React.useEffect);
 
 // Enhanced error logging
 window.addEventListener('error', (event) => {
@@ -28,9 +26,7 @@ const root = ReactDOM.createRoot(rootElement);
 
 // Render with enhanced error boundary
 try {
-  console.log('main.tsx: Rendering App component...');
   root.render(<App />);
-  console.log('main.tsx: App rendered successfully');
 } catch (error) {
   console.error('Failed to render React app:', error);
   

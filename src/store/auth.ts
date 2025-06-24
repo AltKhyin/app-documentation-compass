@@ -21,15 +21,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   session: null,
   user: null,
   isLoading: true,
-  setSession: (session) => {
-    console.log('AuthStore: Setting session', { hasSession: !!session, hasUser: !!session?.user });
-    set({ session, user: session?.user ?? null });
-  },
+  setSession: (session) => set({ session, user: session?.user ?? null }),
   initialize: () => {
-    console.log('AuthStore: Initializing auth listener');
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('AuthStore: Auth state changed', { event, hasSession: !!session });
+      (_event, session) => {
         set({ session, user: session?.user ?? null, isLoading: false });
         // NOTE: We do NOT fetch practitioner data here anymore
         // That is handled by AppDataContext via the consolidated hook
@@ -37,7 +32,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     );
 
     return () => {
-      console.log('AuthStore: Cleaning up auth subscription');
       subscription.unsubscribe();
     };
   },

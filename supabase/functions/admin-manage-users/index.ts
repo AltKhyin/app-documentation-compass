@@ -146,37 +146,20 @@ Deno.serve(async (req) => {
       });
 
     } else if (req.method === 'POST') {
-      // Handle POST request - update user role/subscription and profile data
+      // Handle POST request - update user role/subscription
       const body = await req.json();
-      const { 
-        userId, 
-        role: newRole, 
-        subscriptionTier,
-        full_name,
-        profession_flair,
-        display_hover_card
-      } = body;
+      const { userId, role: newRole, subscriptionTier } = body;
 
       if (!userId) {
         throw new Error('User ID is required');
       }
 
-      console.log('Updating user:', { 
-        userId, 
-        newRole, 
-        subscriptionTier,
-        full_name,
-        profession_flair,
-        display_hover_card
-      });
+      console.log('Updating user:', { userId, newRole, subscriptionTier });
 
       // Update user in Practitioners table
       const updateData: any = {};
-      if (newRole !== undefined) updateData.role = newRole;
-      if (subscriptionTier !== undefined) updateData.subscription_tier = subscriptionTier;
-      if (full_name !== undefined) updateData.full_name = full_name;
-      if (profession_flair !== undefined) updateData.profession_flair = profession_flair;
-      if (display_hover_card !== undefined) updateData.display_hover_card = display_hover_card;
+      if (newRole) updateData.role = newRole;
+      if (subscriptionTier) updateData.subscription_tier = subscriptionTier;
 
       const { data: updatedUser, error: updateError } = await supabase
         .from('Practitioners')

@@ -14,21 +14,21 @@
 - [x] **auth.ts**: Centralized authentication and authorization
 - [x] **rate-limit.ts**: Proper Deno Request handling with database fallback
 
-### Phase 2: Critical Admin Functions ✅ COMPLETED
-- [x] **admin-analytics/index.ts**: Analytics dashboard (PRIORITY 1)
-- [x] **get-analytics-dashboard-data/index.ts**: Dashboard data fetching
-- [x] **admin-manage-users/index.ts**: User management operations
+### Phase 2: Critical Admin Functions 🔄 IN PROGRESS
+- [ ] **admin-analytics/index.ts**: Analytics dashboard (PRIORITY 1)
+- [ ] **get-analytics-dashboard-data/index.ts**: Dashboard data fetching
+- [ ] **admin-manage-users/index.ts**: User management operations
 
-### Phase 3: Core Application Functions ✅ COMPLETED
-- [x] **get-acervo-data/index.ts**: Acervo filtering (CRITICAL - Boot failures fixed)
-- [x] **get-community-page-data/index.ts**: Community feed
-- [x] **create-community-post/index.ts**: Post creation with auto-upvote
-- [x] **cast-vote/index.ts**: Voting system with atomic updates
-- [x] **get-homepage-feed/index.ts**: Homepage data (already standardized)
+### Phase 3: Core Application Functions ⏳ PENDING
+- [ ] **get-homepage-feed/index.ts**: Homepage data
+- [ ] **get-community-page-data/index.ts**: Community feed
+- [ ] **get-acervo-data/index.ts**: Acervo filtering
+- [ ] **create-community-post/index.ts**: Post creation
+- [ ] **cast-vote/index.ts**: Voting system
 
 ### Phase 4: Verification & Testing ⏳ PENDING
 - [ ] Function deployment verification
-- [ ] End-to-end testing of critical user flows
+- [ ] End-to-end testing of admin dashboard
 - [ ] Performance optimization review
 
 ---
@@ -88,64 +88,29 @@ try {
 - **Solution**: Centralized authenticateRequest and requireRole functions
 - **Status**: ✅ FIXED
 
-### 4. Boot Failures in get-acervo-data
-- **Problem**: Import errors causing function boot failures
-- **Solution**: Fixed import paths and standardized to 7-step pattern
-- **Status**: ✅ FIXED
-
----
-
-## FUNCTION-SPECIFIC IMPLEMENTATIONS
-
-### get-acervo-data/index.ts
-- **Rate Limit**: 30 requests per 60 seconds
-- **Authentication**: Optional (subscription-based filtering)
-- **Business Logic**: Reviews with access level filtering, tags hierarchy
-- **Special Features**: Anonymous access with subscription tiers
-
-### get-community-page-data/index.ts
-- **Rate Limit**: 40 requests per 60 seconds
-- **Authentication**: Optional (personalized data when authenticated)
-- **Business Logic**: Community posts + trending discussions
-- **Special Features**: Uses optimized RPC for performance
-
-### create-community-post/index.ts
-- **Rate Limit**: 5 requests per 300 seconds (5 minutes)
-- **Authentication**: Required
-- **Business Logic**: Post creation with auto-upvote, contribution score update
-- **Special Features**: Supports polls, auto-upvote mechanism
-
-### cast-vote/index.ts
-- **Rate Limit**: 20 requests per 60 seconds
-- **Authentication**: Required
-- **Business Logic**: Atomic vote updates with contribution score changes
-- **Special Features**: Handles vote changes, removes votes with 'none' type
-
 ---
 
 ## NEXT IMMEDIATE ACTIONS
 
-1. **PRIORITY 1**: Verify all functions deploy successfully
-2. **PRIORITY 2**: Test critical user flows (vote, post creation, acervo access)
-3. **PRIORITY 3**: Monitor performance and optimize if needed
+1. **PRIORITY 1**: Fix admin-analytics function (user currently on /admin/analytics)
+2. **PRIORITY 2**: Standardize get-analytics-dashboard-data
+3. **PRIORITY 3**: Apply pattern to remaining functions
 
 ---
 
 ## COMPLIANCE CHECKLIST
 
 For each function, verify:
-- [x] Uses handleCorsPrelight() for CORS
-- [x] Implements proper rate limiting with checkRateLimit()
-- [x] Uses authenticateRequest() for auth when required
-- [x] Uses requireRole() for authorization when needed
-- [x] Returns structured responses with proper error handling
-- [x] Follows [D3.5] Security directives
-- [x] Has proper console logging for debugging
+- [ ] Uses handleCorsPrelight() for CORS
+- [ ] Implements proper rate limiting
+- [ ] Uses authenticateRequest() for auth
+- [ ] Uses requireRole() for authorization
+- [ ] Returns structured responses
+- [ ] Has proper error handling
+- [ ] Follows [D3.5] Security directives
 
 ---
 
 **Last Updated**: June 24, 2025  
-**Progress**: Phase 3 Complete - ALL CORE FUNCTIONS STANDARDIZED  
-**Next Review**: After deployment verification and testing
-
-**CRITICAL MILESTONE**: All Edge Functions now follow the canonical 7-step pattern. Boot failures resolved. System is ready for production use.
+**Progress**: Phase 1 Complete, Phase 2 In Progress  
+**Next Review**: After Phase 2 completion

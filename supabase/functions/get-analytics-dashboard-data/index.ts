@@ -57,33 +57,21 @@ Deno.serve(async (req) => {
     // STEP 6: Execute business logic
     console.log('Fetching analytics dashboard data...');
 
-    // Fetch analytics data using the RPC functions with proper error handling
-    const userStatsPromise = supabase.rpc('get_user_analytics')
-      .then(result => ({ success: true, data: result.data, error: result.error }))
-      .catch(err => ({ success: false, data: null, error: err }));
-
-    const contentStatsPromise = supabase.rpc('get_content_analytics')
-      .then(result => ({ success: true, data: result.data, error: result.error }))
-      .catch(err => ({ success: false, data: null, error: err }));
-
-    const engagementStatsPromise = supabase.rpc('get_engagement_analytics')
-      .then(result => ({ success: true, data: result.data, error: result.error }))
-      .catch(err => ({ success: false, data: null, error: err }));
-
+    // Fetch analytics data using the RPC functions
     const [userStatsResult, contentStatsResult, engagementStatsResult] = await Promise.all([
-      userStatsPromise,
-      contentStatsPromise,
-      engagementStatsPromise
+      supabase.rpc('get_user_analytics').catch(err => ({ error: err, data: null })),
+      supabase.rpc('get_content_analytics').catch(err => ({ error: err, data: null })),
+      supabase.rpc('get_engagement_analytics').catch(err => ({ error: err, data: null }))
     ]);
 
     // Handle errors gracefully with fallback data
-    if (!userStatsResult.success || userStatsResult.error) {
+    if (userStatsResult.error) {
       console.warn('User analytics error (using fallback):', userStatsResult.error);
     }
-    if (!contentStatsResult.success || contentStatsResult.error) {
+    if (contentStatsResult.error) {
       console.warn('Content analytics error (using fallback):', contentStatsResult.error);
     }
-    if (!engagementStatsResult.success || engagementStatsResult.error) {
+    if (engagementStatsResult.error) {
       console.warn('Engagement analytics error (using fallback):', engagementStatsResult.error);
     }
 
