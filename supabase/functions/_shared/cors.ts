@@ -17,3 +17,10 @@ export const handleCorsPrelight = (req: Request): Response | null => {
   }
   return null;
 };
+
+export const handleCorsPreflightRequest = (): Response => {
+  return new Response(null, {
+    status: 200,
+    headers: corsHeaders,
+  });
+};
