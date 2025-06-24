@@ -1,12 +1,12 @@
 
 // ABOUTME: Provider component to initialize the auth state listener on app startup.
-import { useEffect } from 'react';
+import * as React from 'react';
 import { useAuthStore } from '@/store/auth';
 
 const AuthSessionProvider = ({ children }: { children: React.ReactNode }) => {
   const initialize = useAuthStore((state) => state.initialize);
 
-  useEffect(() => {
+  React.useEffect(() => {
     console.log('AuthSessionProvider: Initializing auth...');
     try {
       const unsubscribe = initialize();
