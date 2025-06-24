@@ -1,17 +1,22 @@
 
-// ABOUTME: Admin Edge Function for publication workflow management following the mandatory 7-step pattern
+// ABOUTME: Publication management Edge Function for admin content workflow following the mandatory 7-step pattern
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { corsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
-import { createSuccessResponse, createErrorResponse } from '../_shared/api-helpers.ts';
-import { rateLimitCheck, rateLimitHeaders } from '../_shared/rate-limit.ts';
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  authenticateUser,
+  handleCorsPreflightRequest,
+  RateLimitError
+} from '../_shared/api-helpers.ts';
+import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
-interface PublicationAction {
+interface PublicationPayload {
+  action: 'schedule' | 'publish' | 'reject' | 'request_changes';
   reviewId: number;
-  action: 'submit_for_review' | 'approve' | 'reject' | 'schedule' | 'publish_now' | 'unpublish' | 'archive';
   scheduledDate?: string;
   notes?: string;
-  reviewerId?: string;
+  metadata?: Record<string, any>;
 }
 
 Deno.serve(async (req) => {
@@ -27,169 +32,119 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
     
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return createErrorResponse(new Error('UNAUTHORIZED: Authorization header is required'));
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      return createErrorResponse(new Error('UNAUTHORIZED: Invalid authentication token'));
-    }
+    const user = await authenticateUser(supabase, req.headers.get('Authorization'));
     
     // Verify admin/editor role using JWT claims
     const userRole = user.app_metadata?.role;
     if (!userRole || !['admin', 'editor'].includes(userRole)) {
-      return createErrorResponse(new Error('FORBIDDEN: Publication management requires admin or editor role'));
+      throw new Error('FORBIDDEN: Publication management requires admin or editor role');
     }
 
     // STEP 3: Rate Limiting Implementation
-    const rateLimitResult = await rateLimitCheck(req, 'admin-manage-publication', 30, 60);
+    const rateLimitResult = await checkRateLimit(req, 'admin-manage-publication', 30, 60000);
     if (!rateLimitResult.allowed) {
-      return createErrorResponse(new Error('RATE_LIMIT_EXCEEDED: Rate limit exceeded'), rateLimitHeaders(rateLimitResult));
+      throw RateLimitError;
     }
 
     // STEP 4: Input Parsing & Validation
-    const body = await req.json().catch(() => ({}));
-    const action: PublicationAction = {
-      reviewId: body.reviewId,
-      action: body.action,
-      scheduledDate: body.scheduledDate,
-      notes: body.notes,
-      reviewerId: body.reviewerId
-    };
-
-    if (!action.reviewId || !action.action) {
-      return createErrorResponse(new Error('VALIDATION_FAILED: reviewId and action are required'));
+    const payload: PublicationPayload = await req.json();
+    
+    if (!payload.action || !payload.reviewId) {
+      throw new Error('VALIDATION_FAILED: Action and reviewId are required');
     }
 
-    console.log('Publication action request:', { action, userRole, userId: user.id });
+    if (payload.action === 'schedule' && !payload.scheduledDate) {
+      throw new Error('VALIDATION_FAILED: Scheduled date is required for schedule action');
+    }
+
+    console.log('Publication management request:', { 
+      action: payload.action, 
+      reviewId: payload.reviewId,
+      userRole 
+    });
 
     // STEP 5: Core Business Logic Execution
-    const result = await handlePublicationAction(supabase, action, user.id);
+    const result = await handlePublicationAction(supabase, payload, user.id);
 
     // STEP 6: Standardized Success Response
     return createSuccessResponse(result, rateLimitHeaders(rateLimitResult));
 
   } catch (error) {
     // STEP 7: Centralized Error Handling
-    console.error('Publication action error:', error);
+    console.error('Publication management error:', error);
     return createErrorResponse(error);
   }
 });
 
-// Helper function to handle publication workflow actions
-async function handlePublicationAction(supabase: any, action: PublicationAction, performedBy: string) {
+// Helper function to handle publication actions
+async function handlePublicationAction(supabase: any, payload: PublicationPayload, performedBy: string) {
   try {
-    // Get current review state
-    const { data: review, error: reviewError } = await supabase
+    // First, verify the review exists and get current state
+    const { data: currentReview, error: fetchError } = await supabase
       .from('Reviews')
       .select('*')
-      .eq('id', action.reviewId)
+      .eq('id', payload.reviewId)
       .single();
 
-    if (reviewError || !review) {
-      throw new Error(`Review with ID ${action.reviewId} not found`);
+    if (fetchError || !currentReview) {
+      throw new Error(`Review not found: ${payload.reviewId}`);
     }
 
-    // Validate state transitions
-    const validTransitions = {
-      'draft': ['submit_for_review', 'archive'],
-      'under_review': ['approve', 'reject', 'archive'],
-      'scheduled': ['publish_now', 'unpublish', 'archive'],
-      'published': ['unpublish', 'archive'],
-      'archived': ['submit_for_review']
-    };
+    let updateData: any = {};
+    let historyAction = '';
 
-    const currentStatus = review.review_status || 'draft';
-    if (!validTransitions[currentStatus]?.includes(action.action)) {
-      throw new Error(`Invalid transition: Cannot ${action.action} from ${currentStatus} state`);
-    }
-
-    // Execute action
-    let updates: any = {};
-    let newStatus = currentStatus;
-
-    switch (action.action) {
-      case 'submit_for_review':
-        newStatus = 'under_review';
-        updates = {
-          review_status: newStatus,
-          review_requested_at: new Date().toISOString(),
-          reviewer_id: action.reviewerId
-        };
-        break;
-
-      case 'approve':
-        newStatus = action.scheduledDate ? 'scheduled' : 'published';
-        updates = {
-          review_status: newStatus,
-          reviewed_at: new Date().toISOString(),
+    switch (payload.action) {
+      case 'publish':
+        updateData = {
+          status: 'published',
+          published_at: new Date().toISOString(),
           reviewer_id: performedBy,
-          publication_notes: action.notes,
-          ...(action.scheduledDate && { scheduled_publish_at: action.scheduledDate }),
-          ...(newStatus === 'published' && { published_at: new Date().toISOString() })
-        };
-        break;
-
-      case 'reject':
-        newStatus = 'draft';
-        updates = {
-          review_status: newStatus,
           reviewed_at: new Date().toISOString(),
-          reviewer_id: performedBy,
-          publication_notes: action.notes
+          review_status: 'approved'
         };
+        historyAction = 'published';
         break;
 
       case 'schedule':
-        if (!action.scheduledDate) {
-          throw new Error('Scheduled date is required for schedule action');
-        }
-        newStatus = 'scheduled';
-        updates = {
-          review_status: newStatus,
-          scheduled_publish_at: action.scheduledDate,
-          publication_notes: action.notes
+        updateData = {
+          status: 'scheduled',
+          scheduled_publish_at: payload.scheduledDate,
+          reviewer_id: performedBy,
+          reviewed_at: new Date().toISOString(),
+          review_status: 'approved'
         };
+        historyAction = 'scheduled';
         break;
 
-      case 'publish_now':
-        newStatus = 'published';
-        updates = {
-          review_status: newStatus,
-          published_at: new Date().toISOString(),
-          scheduled_publish_at: null,
-          publication_notes: action.notes
+      case 'reject':
+        updateData = {
+          review_status: 'rejected',
+          reviewer_id: performedBy,
+          reviewed_at: new Date().toISOString(),
+          publication_notes: payload.notes
         };
+        historyAction = 'rejected';
         break;
 
-      case 'unpublish':
-        newStatus = 'draft';
-        updates = {
-          review_status: newStatus,
-          published_at: null,
-          publication_notes: action.notes
+      case 'request_changes':
+        updateData = {
+          review_status: 'changes_requested',
+          reviewer_id: performedBy,
+          reviewed_at: new Date().toISOString(),
+          publication_notes: payload.notes
         };
+        historyAction = 'changes_requested';
         break;
 
-      case 'archive':
-        newStatus = 'archived';
-        updates = {
-          review_status: newStatus,
-          publication_notes: action.notes
-        };
-        break;
+      default:
+        throw new Error(`Invalid action: ${payload.action}`);
     }
 
-    // Update review
+    // Update the review
     const { data: updatedReview, error: updateError } = await supabase
       .from('Reviews')
-      .update(updates)
-      .eq('id', action.reviewId)
+      .update(updateData)
+      .eq('id', payload.reviewId)
       .select()
       .single();
 
@@ -197,18 +152,19 @@ async function handlePublicationAction(supabase: any, action: PublicationAction,
       throw new Error(`Failed to update review: ${updateError.message}`);
     }
 
-    // Log publication history
+    // Log the action in publication history
     const { error: historyError } = await supabase
       .from('Publication_History')
       .insert({
-        review_id: action.reviewId,
-        action: action.action,
+        review_id: payload.reviewId,
+        action: historyAction,
         performed_by: performedBy,
-        notes: action.notes,
+        notes: payload.notes,
         metadata: {
-          previous_status: currentStatus,
-          new_status: newStatus,
-          scheduled_date: action.scheduledDate
+          ...payload.metadata,
+          scheduled_date: payload.scheduledDate,
+          previous_status: currentReview.status,
+          previous_review_status: currentReview.review_status
         }
       });
 
@@ -216,10 +172,29 @@ async function handlePublicationAction(supabase: any, action: PublicationAction,
       console.error('Failed to log publication history:', historyError);
     }
 
+    // Log audit event
+    await supabase.rpc('log_audit_event', {
+      p_performed_by: performedBy,
+      p_action_type: payload.action.toUpperCase(),
+      p_resource_type: 'Reviews',
+      p_resource_id: payload.reviewId.toString(),
+      p_old_values: currentReview,
+      p_new_values: updatedReview,
+      p_metadata: { 
+        source: 'admin_panel',
+        action: payload.action,
+        notes: payload.notes
+      }
+    });
+
     return {
-      success: true,
-      review: updatedReview,
-      message: `Review ${action.action} completed successfully`
+      reviewId: payload.reviewId,
+      action: payload.action,
+      previousStatus: currentReview.status,
+      newStatus: updatedReview.status,
+      scheduledDate: payload.scheduledDate,
+      notes: payload.notes,
+      updatedAt: new Date().toISOString()
     };
 
   } catch (error) {

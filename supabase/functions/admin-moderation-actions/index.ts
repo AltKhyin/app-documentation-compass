@@ -1,17 +1,23 @@
 
-// ABOUTME: Admin Edge Function for content moderation workflow following the mandatory 7-step pattern
+// ABOUTME: Moderation actions Edge Function for admin community management following the mandatory 7-step pattern
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { corsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
-import { createSuccessResponse, createErrorResponse } from '../_shared/api-helpers.ts';
-import { rateLimitCheck, rateLimitHeaders } from '../_shared/rate-limit.ts';
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  authenticateUser,
+  handleCorsPreflightRequest,
+  RateLimitError
+} from '../_shared/api-helpers.ts';
+import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
-interface ModerationAction {
-  type: 'community_post' | 'review' | 'comment';
-  targetId: number;
-  action: 'approve' | 'reject' | 'hide' | 'delete' | 'pin' | 'unpin' | 'lock' | 'unlock';
+interface ModerationPayload {
+  action: 'pin' | 'unpin' | 'lock' | 'unlock' | 'delete' | 'feature' | 'warn_user';
+  targetType: 'post' | 'comment' | 'user';
+  targetId: string;
   reason?: string;
-  notes?: string;
+  duration?: number; // in hours for temporary actions
+  metadata?: Record<string, any>;
 }
 
 Deno.serve(async (req) => {
@@ -27,49 +33,46 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
     
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return createErrorResponse(new Error('UNAUTHORIZED: Authorization header is required'));
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      return createErrorResponse(new Error('UNAUTHORIZED: Invalid authentication token'));
-    }
+    const user = await authenticateUser(supabase, req.headers.get('Authorization'));
     
-    // Verify admin/editor role for moderation
+    // Verify admin/editor role using JWT claims
     const userRole = user.app_metadata?.role;
     if (!userRole || !['admin', 'editor'].includes(userRole)) {
-      return createErrorResponse(new Error('FORBIDDEN: Moderation requires admin or editor role'));
+      throw new Error('FORBIDDEN: Moderation actions require admin or editor role');
     }
 
     // STEP 3: Rate Limiting Implementation
-    const rateLimitResult = await rateLimitCheck(req, 'admin-moderation-actions', 60, 60);
+    const rateLimitResult = await checkRateLimit(req, 'admin-moderation-actions', 60, 60000);
     if (!rateLimitResult.allowed) {
-      return createErrorResponse(new Error('RATE_LIMIT_EXCEEDED: Rate limit exceeded'), rateLimitHeaders(rateLimitResult));
+      throw RateLimitError;
     }
 
     // STEP 4: Input Parsing & Validation
-    const body = await req.json().catch(() => ({}));
-    const moderationAction: ModerationAction = {
-      type: body.type,
-      targetId: body.targetId,
-      action: body.action,
-      reason: body.reason,
-      notes: body.notes
-    };
-
-    if (!moderationAction.type || !moderationAction.targetId || !moderationAction.action) {
-      return createErrorResponse(new Error('VALIDATION_FAILED: type, targetId, and action are required'));
+    const payload: ModerationPayload = await req.json();
+    
+    if (!payload.action || !payload.targetType || !payload.targetId) {
+      throw new Error('VALIDATION_FAILED: Action, targetType, and targetId are required');
     }
 
-    console.log('Moderation action request:', { moderationAction, userRole, userId: user.id });
+    const validActions = ['pin', 'unpin', 'lock', 'unlock', 'delete', 'feature', 'warn_user'];
+    if (!validActions.includes(payload.action)) {
+      throw new Error(`VALIDATION_FAILED: Invalid action: ${payload.action}`);
+    }
+
+    const validTargetTypes = ['post', 'comment', 'user'];
+    if (!validTargetTypes.includes(payload.targetType)) {
+      throw new Error(`VALIDATION_FAILED: Invalid targetType: ${payload.targetType}`);
+    }
+
+    console.log('Moderation action request:', { 
+      action: payload.action, 
+      targetType: payload.targetType,
+      targetId: payload.targetId,
+      userRole 
+    });
 
     // STEP 5: Core Business Logic Execution
-    const result = await handleModerationAction(supabase, moderationAction, user.id);
+    const result = await handleModerationAction(supabase, payload, user.id);
 
     // STEP 6: Standardized Success Response
     return createSuccessResponse(result, rateLimitHeaders(rateLimitResult));
@@ -82,36 +85,35 @@ Deno.serve(async (req) => {
 });
 
 // Helper function to handle moderation actions
-async function handleModerationAction(supabase: any, action: ModerationAction, moderatorId: string) {
+async function handleModerationAction(supabase: any, payload: ModerationPayload, moderatorId: string) {
   try {
-    let result: any = {};
+    let result;
 
-    switch (action.type) {
-      case 'community_post':
-        result = await moderateCommunityPost(supabase, action, moderatorId);
-        break;
-      case 'review':
-        result = await moderateReview(supabase, action, moderatorId);
-        break;
+    switch (payload.targetType) {
+      case 'post':
       case 'comment':
-        result = await moderateComment(supabase, action, moderatorId);
+        result = await moderatePost(supabase, payload, moderatorId);
+        break;
+      case 'user':
+        result = await moderateUser(supabase, payload, moderatorId);
         break;
       default:
-        throw new Error(`Invalid moderation type: ${action.type}`);
+        throw new Error(`Unsupported target type: ${payload.targetType}`);
     }
 
-    // Log moderation action
+    // Log the moderation action
     const { error: logError } = await supabase
       .from('CommunityModerationActions')
       .insert({
-        post_id: action.type === 'community_post' ? action.targetId : null,
+        post_id: payload.targetType === 'post' ? parseInt(payload.targetId) : null,
         moderator_id: moderatorId,
-        action_type: action.action,
-        reason: action.reason,
+        action_type: payload.action,
+        reason: payload.reason,
         metadata: {
-          type: action.type,
-          target_id: action.targetId,
-          notes: action.notes
+          ...payload.metadata,
+          target_type: payload.targetType,
+          target_id: payload.targetId,
+          duration: payload.duration
         }
       });
 
@@ -119,14 +121,29 @@ async function handleModerationAction(supabase: any, action: ModerationAction, m
       console.error('Failed to log moderation action:', logError);
     }
 
+    // Log audit event
+    await supabase.rpc('log_audit_event', {
+      p_performed_by: moderatorId,
+      p_action_type: `MODERATE_${payload.action.toUpperCase()}`,
+      p_resource_type: payload.targetType === 'post' ? 'CommunityPosts' : 'Practitioners',
+      p_resource_id: payload.targetId,
+      p_metadata: { 
+        source: 'admin_panel',
+        moderation_action: payload.action,
+        target_type: payload.targetType,
+        reason: payload.reason,
+        duration: payload.duration
+      }
+    });
+
     return {
-      success: true,
-      action: action.action,
-      target: {
-        type: action.type,
-        id: action.targetId
-      },
-      result
+      action: payload.action,
+      targetType: payload.targetType,
+      targetId: payload.targetId,
+      reason: payload.reason,
+      moderatorId,
+      result,
+      timestamp: new Date().toISOString()
     };
 
   } catch (error) {
@@ -135,103 +152,75 @@ async function handleModerationAction(supabase: any, action: ModerationAction, m
   }
 }
 
-async function moderateCommunityPost(supabase: any, action: ModerationAction, moderatorId: string) {
-  const updates: any = {};
+// Helper function to moderate posts/comments
+async function moderatePost(supabase: any, payload: ModerationPayload, moderatorId: string) {
+  const postId = parseInt(payload.targetId);
 
-  switch (action.action) {
+  switch (payload.action) {
     case 'pin':
-      updates.is_pinned = true;
-      break;
+      return await supabase.rpc('handle_post_action', {
+        p_post_id: postId,
+        p_user_id: moderatorId,
+        p_action_type: 'pin'
+      });
+
     case 'unpin':
-      updates.is_pinned = false;
-      break;
+      return await supabase.rpc('handle_post_action', {
+        p_post_id: postId,
+        p_user_id: moderatorId,
+        p_action_type: 'unpin'
+      });
+
     case 'lock':
-      updates.is_locked = true;
-      break;
+      return await supabase.rpc('handle_post_action', {
+        p_post_id: postId,
+        p_user_id: moderatorId,
+        p_action_type: 'lock'
+      });
+
     case 'unlock':
-      updates.is_locked = false;
-      break;
+      return await supabase.rpc('handle_post_action', {
+        p_post_id: postId,
+        p_user_id: moderatorId,
+        p_action_type: 'unlock'
+      });
+
     case 'delete':
-      const { error: deleteError } = await supabase
-        .from('CommunityPosts')
-        .delete()
-        .eq('id', action.targetId);
-      
-      if (deleteError) {
-        throw new Error(`Failed to delete post: ${deleteError.message}`);
-      }
-      
-      return { deleted: true };
+      return await supabase.rpc('handle_post_action', {
+        p_post_id: postId,
+        p_user_id: moderatorId,
+        p_action_type: 'delete'
+      });
+
     default:
-      throw new Error(`Invalid community post action: ${action.action}`);
+      throw new Error(`Unsupported post action: ${payload.action}`);
   }
-
-  const { data: updatedPost, error: updateError } = await supabase
-    .from('CommunityPosts')
-    .update(updates)
-    .eq('id', action.targetId)
-    .select()
-    .single();
-
-  if (updateError) {
-    throw new Error(`Failed to update post: ${updateError.message}`);
-  }
-
-  return updatedPost;
 }
 
-async function moderateReview(supabase: any, action: ModerationAction, moderatorId: string) {
-  // For now, focus on basic review moderation
-  const updates: any = {};
+// Helper function to moderate users
+async function moderateUser(supabase: any, payload: ModerationPayload, moderatorId: string) {
+  const userId = payload.targetId;
 
-  switch (action.action) {
-    case 'approve':
-      updates.review_status = 'published';
-      updates.published_at = new Date().toISOString();
-      updates.reviewer_id = moderatorId;
-      break;
-    case 'reject':
-      updates.review_status = 'draft';
-      updates.reviewer_id = moderatorId;
-      updates.publication_notes = action.notes;
-      break;
-    case 'hide':
-      updates.status = 'draft';
-      break;
-    default:
-      throw new Error(`Invalid review action: ${action.action}`);
-  }
+  switch (payload.action) {
+    case 'warn_user':
+      // Create a notification for the user
+      const { data, error } = await supabase
+        .from('Notifications')
+        .insert({
+          practitioner_id: userId,
+          content: `Moderator warning: ${payload.reason || 'Please review community guidelines'}`,
+          link: '/community/guidelines'
+        })
+        .select()
+        .single();
 
-  const { data: updatedReview, error: updateError } = await supabase
-    .from('Reviews')
-    .update(updates)
-    .eq('id', action.targetId)
-    .select()
-    .single();
-
-  if (updateError) {
-    throw new Error(`Failed to update review: ${updateError.message}`);
-  }
-
-  return updatedReview;
-}
-
-async function moderateComment(supabase: any, action: ModerationAction, moderatorId: string) {
-  // Comments are stored as CommunityPosts with parent_post_id
-  switch (action.action) {
-    case 'delete':
-      const { error: deleteError } = await supabase
-        .from('CommunityPosts')
-        .delete()
-        .eq('id', action.targetId)
-        .not('parent_post_id', 'is', null);
-      
-      if (deleteError) {
-        throw new Error(`Failed to delete comment: ${deleteError.message}`);
+      if (error) {
+        throw new Error(`Failed to warn user: ${error.message}`);
       }
-      
-      return { deleted: true };
+
+      return { notificationId: data.id, warned: true };
+
     default:
-      throw new Error(`Invalid comment action: ${action.action}`);
+      throw new Error(`Unsupported user action: ${payload.action}`);
   }
 }
