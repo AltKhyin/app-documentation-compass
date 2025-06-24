@@ -1,6 +1,5 @@
 
-// ABOUTME: Main application router with all route definitions including authentication routes
-
+// ABOUTME: Main application router with all route definitions including admin protected routes
 import {
   createBrowserRouter,
   RouterProvider,
@@ -18,7 +17,6 @@ import SettingsPage from "@/pages/SettingsPage";
 import SuggestionPage from "@/pages/SuggestionPage";
 import UnauthorizedPage from "@/pages/UnauthorizedPage";
 import LoginPage from "@/pages/LoginPage";
-import SignupPage from "@/pages/SignupPage";
 import { AdminProtectedRoute } from '@/components/routes/AdminProtectedRoute';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { AdminDashboard } from '@/pages/AdminDashboard';
@@ -100,6 +98,10 @@ const router = createBrowserRouter([
         path: "nao-autorizado",
         element: <UnauthorizedPage />,
       },
+      {
+        path: "login",
+        element: <LoginPage />,
+      },
       
       // Admin Routes - English maintained for internal tools
       {
@@ -137,19 +139,6 @@ const router = createBrowserRouter([
         ],
       },
     ],
-  },
-  // Authentication routes - Outside AppShell for clean auth experience
-  {
-    path: "/auth",
-    element: <LoginPage />,
-  },
-  {
-    path: "/auth/login",
-    element: <LoginPage />,
-  },
-  {
-    path: "/auth/signup",
-    element: <SignupPage />,
   },
   {
     path: "/salvar-post",

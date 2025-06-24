@@ -1,7 +1,7 @@
 
 // ABOUTME: PWA provider for managing installation state and lifecycle - simplified without header button.
 
-import * as React from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { usePWA } from '@/hooks/usePWA';
 import PWAInstallPrompt from './PWAInstallPrompt';
 
@@ -12,10 +12,10 @@ interface PWAContextType {
   isInstallable: boolean;
 }
 
-const PWAContext = React.createContext<PWAContextType | undefined>(undefined);
+const PWAContext = createContext<PWAContextType | undefined>(undefined);
 
 export const usePWAContext = () => {
-  const context = React.useContext(PWAContext);
+  const context = useContext(PWAContext);
   if (context === undefined) {
     throw new Error('usePWAContext must be used within a PWAProvider');
   }
@@ -28,9 +28,9 @@ interface PWAProviderProps {
 
 const PWAProvider: React.FC<PWAProviderProps> = ({ children }) => {
   const { isInstalled, isInstallable, isStandalone } = usePWA();
-  const [showInstallPrompt, setShowInstallPrompt] = React.useState(false);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Register service worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -54,12 +54,12 @@ const PWAProvider: React.FC<PWAProviderProps> = ({ children }) => {
     }
   }, [isInstalled, isStandalone, isInstallable]);
 
-  const contextValue: PWAContextType = React.useMemo(() => ({
+  const contextValue: PWAContextType = {
     showInstallPrompt,
     setShowInstallPrompt,
     isInstalled,
     isInstallable,
-  }), [showInstallPrompt, setShowInstallPrompt, isInstalled, isInstallable]);
+  };
 
   return (
     <PWAContext.Provider value={contextValue}>

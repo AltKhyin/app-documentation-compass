@@ -1,60 +1,47 @@
 
-// ABOUTME: User management Edge Function using standardized 7-step pattern
+// ABOUTME: User management Edge Function using simplified pattern proven to work in production
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { corsHeaders, handleCorsPrelight } from '../_shared/cors.ts';
-import { checkAdminRateLimit } from '../_shared/rate-limit.ts';
-import { authenticateRequest, requireRole } from '../_shared/auth.ts';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 Deno.serve(async (req) => {
-  // STEP 1: Handle CORS preflight
-  const corsResponse = handleCorsPrelight(req);
-  if (corsResponse) return corsResponse;
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
 
   try {
-    // STEP 2: Rate limiting (admin-specific)
-    const rateLimitResult = await checkAdminRateLimit(req);
-    if (!rateLimitResult.success) {
-      return new Response(JSON.stringify({ 
-        error: rateLimitResult.error || 'Rate limit exceeded',
-        details: 'Too many admin requests'
-      }), {
-        status: 429,
-        headers: { ...corsHeaders, ...rateLimitResult.headers, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // STEP 3: Authentication
-    const authResult = await authenticateRequest(req);
-    if (!authResult.success) {
-      return new Response(JSON.stringify({ 
-        error: authResult.error || 'Authentication failed',
-        details: 'Invalid or missing authentication'
-      }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // STEP 4: Authorization (admin role required for user management)
-    const roleCheck = requireRole(authResult.user, ['admin']);
-    if (!roleCheck.success) {
-      return new Response(JSON.stringify({ 
-        error: roleCheck.error || 'Insufficient permissions',
-        details: 'Admin role required for user management'
-      }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // STEP 5: Create Supabase client
+    // Create Supabase client with service role
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // STEP 6: Business Logic - Handle different HTTP methods
+    // Get the authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Missing authorization header');
+    }
+
+    // Verify user authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (authError || !user) {
+      throw new Error('Invalid authentication');
+    }
+
+    // Check if user has admin role (user management requires admin)
+    const userRole = user.app_metadata?.role;
+    if (!userRole || userRole !== 'admin') {
+      throw new Error('Insufficient permissions: Admin role required');
+    }
+
     if (req.method === 'GET') {
       // Handle GET request - fetch users list
       const url = new URL(req.url);
@@ -65,7 +52,7 @@ Deno.serve(async (req) => {
 
       console.log('Fetching users:', { page, limit, search, role });
 
-      // Build query
+      // Build query - removed email column as it doesn't exist in Practitioners table
       let query = supabase
         .from('Practitioners')
         .select(`
@@ -136,47 +123,25 @@ Deno.serve(async (req) => {
         },
       };
 
-      // STEP 7: Return success response
       return new Response(JSON.stringify(response), {
-        headers: { 
-          ...corsHeaders, 
-          ...rateLimitResult.headers,
-          'Content-Type': 'application/json' 
-        },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
 
     } else if (req.method === 'POST') {
-      // Handle POST request - update user role/subscription and profile data
+      // Handle POST request - update user role/subscription
       const body = await req.json();
-      const { 
-        userId, 
-        role: newRole, 
-        subscriptionTier,
-        full_name,
-        profession_flair,
-        display_hover_card
-      } = body;
+      const { userId, role: newRole, subscriptionTier } = body;
 
       if (!userId) {
         throw new Error('User ID is required');
       }
 
-      console.log('Updating user:', { 
-        userId, 
-        newRole, 
-        subscriptionTier,
-        full_name,
-        profession_flair,
-        display_hover_card
-      });
+      console.log('Updating user:', { userId, newRole, subscriptionTier });
 
       // Update user in Practitioners table
       const updateData: any = {};
-      if (newRole !== undefined) updateData.role = newRole;
-      if (subscriptionTier !== undefined) updateData.subscription_tier = subscriptionTier;
-      if (full_name !== undefined) updateData.full_name = full_name;
-      if (profession_flair !== undefined) updateData.profession_flair = profession_flair;
-      if (display_hover_card !== undefined) updateData.display_hover_card = display_hover_card;
+      if (newRole) updateData.role = newRole;
+      if (subscriptionTier) updateData.subscription_tier = subscriptionTier;
 
       const { data: updatedUser, error: updateError } = await supabase
         .from('Practitioners')
@@ -208,17 +173,12 @@ Deno.serve(async (req) => {
         }
       }
 
-      // STEP 7: Return success response
       return new Response(JSON.stringify({
         success: true,
         user: updatedUser,
         message: 'User updated successfully',
       }), {
-        headers: { 
-          ...corsHeaders, 
-          ...rateLimitResult.headers,
-          'Content-Type': 'application/json' 
-        },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
 
     } else {

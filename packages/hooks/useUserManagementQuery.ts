@@ -122,39 +122,19 @@ export const useUpdateUserMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ 
-      userId, 
-      role, 
-      subscriptionTier,
-      full_name,
-      profession_flair,
-      display_hover_card
-    }: { 
+    mutationFn: async ({ userId, role, subscriptionTier }: { 
       userId: string; 
       role?: string; 
-      subscriptionTier?: string;
-      full_name?: string;
-      profession_flair?: string;
-      display_hover_card?: boolean;
+      subscriptionTier?: string; 
     }) => {
-      console.log('Updating user via Edge Function...', { 
-        userId, 
-        role, 
-        subscriptionTier,
-        full_name,
-        profession_flair,
-        display_hover_card
-      });
+      console.log('Updating user via Edge Function...', { userId, role, subscriptionTier });
       
       const { data, error } = await supabase.functions.invoke('admin-manage-users', {
         method: 'POST',
         body: {
           userId,
           role,
-          subscriptionTier,
-          full_name,
-          profession_flair,
-          display_hover_card
+          subscriptionTier
         }
       });
       

@@ -1,33 +1,18 @@
 # EVIDENS AI Development Bible v6.0
 
-**Version:** 6.0.4 (EMERGENCY STABILIZATION - PHASE 2A COMPLETE)
+**Version:** 6.0.1 (Canon - Critical Infrastructure Fixes)
 **Date:** June 24, 2025
 **Purpose:** This document contains the complete, authoritative, and machine-optimized set of rules, architectural models, and implementation directives for the EVIDENS project.
 
 ---
 
-## 🚨 CRITICAL UPDATES v6.0.4 - EMERGENCY STABILIZATION PHASE 2A
+## CRITICAL UPDATES v6.0.1
 
-### 🔧 EMERGENCY MODE STATUS - PHASE 2A COMPLETE
-- **CRITICAL ISSUE**: React context corruption causing `TypeError: Cannot read properties of null (reading 'useRef')`
-- **IMPACT**: Complete application failure with blank screen
-- **SOLUTION**: Strategic 3-phase recovery plan implemented
-- **STATUS**: Phase 2A (Validation & Testing) - COMPLETED
-
-### Phase 2A Validation Completed:
-- **✅ Application Stability**: Basic rendering and navigation functional
-- **✅ Authentication Routes**: Login/signup routes properly configured outside AppShell
-- **✅ Emergency Auth System**: SimpleAuthProvider operational with React Context
-- **✅ PWA Integration**: Re-enabled PWA support with stability safeguards
-- **✅ Profile Management**: Logout and theme switching working correctly
-- **✅ Router Configuration**: All routes accessible and properly error-bounded
-
-### Emergency Measures Maintained:
-- **Simplified Provider Chain**: Minimal essential providers only (QueryClient + Theme + PWA)
-- **Isolated Auth System**: SimpleAuthProvider using React Context instead of Zustand
-- **Disabled Zustand Auth Store**: Temporarily disabled to prevent React context conflicts
-- **Enhanced Error Handling**: Emergency fallback rendering active
-- **Component Safety**: All shell components updated for emergency auth compatibility
+### 🔧 Infrastructure Fixes Applied
+- **RESOLVED**: Analytics dashboard `req.headers.get is not a function` error
+- **STANDARDIZED**: Rate limiting architecture with proper Deno Request handling
+- **CENTRALIZED**: Shared utilities for CORS, authentication, and rate limiting
+- **IMPLEMENTED**: 7-step Edge Function pattern across all admin functions
 
 ---
 
@@ -77,19 +62,14 @@
 *   **P1.2.2 (Trunk-Based Development):** All changes are merged directly into the `main` branch.
 *   **P1.2.3 (Feature Flags):** Use feature flags to enable/disable new features in production.
 
-### [P1.3] — Pre-Flight Checklist (Mandatory) - UPDATED v6.0.4
-
-**🚨 EMERGENCY MODE ADDITIONS:**
-* **P1.3.0 (Emergency Stabilization Check):** Before any task, verify if emergency stabilization mode is still active. If yes, prioritize stability over new features.
+### [P1.3] — Pre-Flight Checklist (Mandatory) - UPDATED v6.0.1
 
 * **P1.3.1 (Verification Algorithm):** Before executing any task, you **MUST** perform the following verification steps in sequence:
     1.  **Analyze Intent:** Deconstruct the user's prompt to establish the primary goal.
-    2.  **Emergency Mode Check:** Verify if the application is in emergency stabilization mode and adapt accordingly.
-    3.  **Analyze Context:** Identify and fully read the specific `/docs` files relevant to the prompt's goal.
-    4.  **Analyze Security:** Cross-reference the task with `[DOC_4]` and `[D3.5]` to identify all applicable RLS policies, roles, and API security constraints.
-    5.  **Analyze Conflicts:** Scan the codebase for code duplication or logical conflicts. If the user's request violates a directive in this document, proceed to `[P1.4]`.
-    6.  **Verify Shared Utilities:** Ensure all Edge Functions use standardized shared utilities from `supabase/functions/_shared/`
-    7.  **Verify Database Dependencies:** Ensure all referenced RPC functions and database operations exist
+    2.  **Analyze Context:** Identify and fully read the specific `/docs` files relevant to the prompt's goal.
+    3.  **Analyze Security:** Cross-reference the task with `[DOC_4]` and `[D3.5]` to identify all applicable RLS policies, roles, and API security constraints.
+    4.  **Analyze Conflicts:** Scan the codebase for code duplication or logical conflicts. If the user's request violates a directive in this document, proceed to `[P1.4]`.
+    5.  **Verify Shared Utilities:** Ensure all Edge Functions use standardized shared utilities from `supabase/functions/_shared/`
 
 *   **P1.3.2 (Enforcement):** If any step in the verification algorithm fails or results in ambiguity, you **MUST** stop and ask for clarification.
 
@@ -121,7 +101,7 @@
 *   **M2.3.2 (Shadcn/ui):** Use Shadcn/ui for reusable UI primitives.
 *   **M2.3.3 (Atomic Design):** Organize components using the Atomic Design methodology (Atoms, Molecules, Organisms, Templates, Pages).
 
-### [M2.4] — The Directory Structure Model - UPDATED v6.0.2
+### [M2.4] — The Directory Structure Model - UPDATED v6.0.1
 
 ```
 src/
@@ -145,7 +125,7 @@ src/
 └── ...
 supabase/
 ├── functions/
-│   ├── _shared/        # CRITICAL: Centralized utilities (UPDATED v6.0.2)
+│   ├── _shared/        # CRITICAL: Centralized utilities (NEW v6.0.1)
 │   │   ├── cors.ts     # Standardized CORS handling
 │   │   ├── rate-limit.ts  # Rate limiting with proper Deno Request support
 │   │   └── auth.ts     # Authentication and authorization utilities
@@ -155,7 +135,7 @@ supabase/
 
 ---
 
-## PART 3: IMPLEMENTATION DIRECTIVES (CODING ALGORITHMS) - UPDATED v6.0.2
+## PART 3: IMPLEMENTATION DIRECTIVES (CODING ALGORITHMS) - UPDATED v6.0.1
 
 ### [D3.1] — Filesystem & Naming
 
@@ -184,7 +164,7 @@ supabase/
 *   **D3.4.3 (RLS):** Edge Functions **MUST NOT** bypass Row Level Security (RLS) policies.
 *   **D3.4.4 (No Direct DB Access):** UI components **MUST NOT** directly access the database.
 
-### [D3.5] — Security, API, & Edge Functions - UPDATED v6.0.2
+### [D3.5] — Security, API, & Edge Functions - UPDATED v6.0.1
 
 *   **SEC.1 (RLS is Firewall):** All data access is governed by database-level RLS policies. Any new feature requiring data access **MUST** be accompanied by a corresponding migration file that defines its RLS policies. (Source: `[DOC_4]`)
 *   **SEC.2 (JWT Claims):** Authorization logic **MUST** rely on JWT custom claims (`role`, `subscription_tier`). Functions that alter a user's role **MUST** also call `supabase.auth.admin.updateUserById()` to update these claims in the token.
@@ -197,7 +177,6 @@ supabase/
     6.  **Business Logic**: Execute the core function logic
     7.  **Response**: Return structured response with proper headers
 *   **SEC.4 (Shared Utilities Requirement):** All Edge Functions **MUST** use the centralized utilities from `supabase/functions/_shared/` to ensure consistency and prevent architectural drift.
-*   **SEC.5 (Database Function Dependencies):** All Edge Functions **MUST** verify that referenced RPC functions exist before deployment.
 
 ### [D3.6] — Adaptive Design
 
@@ -219,126 +198,74 @@ supabase/
 
 ---
 
-## CURRENT IMPLEMENTATION STATUS v6.0.4
-
-### 🚨 EMERGENCY STABILIZATION - PHASE 2A COMPLETED
-- **React Context Recovery**: ✅ COMPLETED - Application loads without blank screen
-- **Authentication System**: ✅ STABILIZED - SimpleAuthProvider operational with login/logout
-- **Router Configuration**: ✅ VERIFIED - All routes accessible with proper error boundaries
-- **PWA Integration**: ✅ RESTORED - PWA functionality re-enabled with stability safeguards
-- **Component Compatibility**: ✅ UPDATED - All shell components compatible with emergency auth
+## CURRENT IMPLEMENTATION STATUS v6.0.1
 
 ### ✅ PHASE 1: INFRASTRUCTURE REPAIR & STANDARDIZATION - COMPLETED
 - **Rate Limiting Architecture**: ✅ Standardized with proper Deno Request handling
 - **Shared Utilities**: ✅ Centralized CORS, auth, and rate limiting
 - **Edge Function Pattern**: ✅ 7-step pattern implemented across all functions
 - **Admin Functions**: ✅ All operational with consistent error handling
+- **Analytics Dashboard**: ✅ Fixed critical `req.headers.get` error
 
-### ✅ PHASE 2A: VALIDATION & TESTING - COMPLETED
-- **Application Stability**: ✅ Basic rendering and navigation working
-- **Authentication Routes**: ✅ Login/signup properly configured
-- **Emergency Auth Integration**: ✅ SimpleAuthProvider functional
-- **PWA Support**: ✅ Re-enabled with safety measures
-- **Profile Management**: ✅ Theme switching and logout operational
+### 🔄 PHASE 2: THEME COMPLIANCE & VISUAL STANDARDIZATION - READY
+- **Admin Components Theme Compliance**: Ready to start
+- **Component Audit & Fixes**: Pending theme application
 
-### 🔄 PHASE 2B: PROGRESSIVE ENHANCEMENT - READY
-- **Zustand Store Restoration**: Ready to rebuild with improved React context handling
-- **Advanced Auth Features**: Ready to restore complex auth flows
-- **Performance Optimization**: Foundation complete, ready for enhancements
-
-### ⏸️ PHASE 3: EDGE FUNCTION CONTINUATION - PAUSED
-- **Missing Database Functions**: Identified and planned, ready to implement after stability
-- **Function Deployment Verification**: Infrastructure ready
-- **End-to-end Testing**: Ready to commence after auth restoration
+### 🔄 PHASE 3: 08B COMPONENT IMPLEMENTATION - READY
+- **User Management Interface**: Backend ready, frontend pending
+- **Analytics Dashboard**: Backend operational, frontend ready
+- **Tag Management System**: Architecture ready
+- **Advanced Moderation Tools**: Foundation complete
 
 ---
 
-## CRITICAL ARCHITECTURE COMPLIANCE STATUS v6.0.4
+## CRITICAL ARCHITECTURE COMPLIANCE STATUS v6.0.1
 
-### 🚨 EMERGENCY COMPLIANCE ADJUSTMENTS - MAINTAINED
-- **TEMPORARY DEVIATION**: Auth system using React Context instead of Zustand during recovery
-- **MAINTAINED**: Data access layer patterns still enforced
-- **MAINTAINED**: Edge Function 7-step pattern still active
-- **MAINTAINED**: Security and RLS policies unchanged
-- **NEW**: PWA functionality operational with emergency compatibility
-
-### ✅ FULLY COMPLIANT (MAINTAINED DURING EMERGENCY)
+### ✅ FULLY COMPLIANT
 - [D3.4] Data Access Layer - All admin functions use proper hooks
 - [D3.5] Security & API - Rate limiting, authentication enforced universally
 - [SEC.3] Edge Function Guardrails - 7-step pattern with shared utilities
 - [DOC_5] API Contract - All Edge Functions follow mandatory structure
+- [P1.3] Pre-Flight Checklist - Complete verification implemented
+
+### 🔄 PARTIALLY COMPLIANT  
+- [DOC_7] Visual System - Admin components need theme fixes (next priority)
+- [D3.2] Component Architecture - Some admin components need refactoring
+
+### ❌ NON-COMPLIANT
+- None identified (all critical violations resolved in v6.0.1)
 
 ---
 
-## EMERGENCY RECOVERY PLAN v6.0.4
+## TECHNICAL DEBT STATUS v6.0.1
 
-### Phase 1: Immediate Stabilization (COMPLETED)
-1. ✅ **Simplify Provider Chain**: Reduced to essential providers only
-2. ✅ **Isolate Auth System**: Created SimpleAuthProvider without Zustand
-3. ✅ **Verify React Imports**: Ensured consistent React import patterns
-4. ✅ **Test Basic Rendering**: Application stability verified
-
-### Phase 2A: Validation & Testing (COMPLETED)
-1. ✅ **Router Configuration**: Authentication routes properly configured
-2. ✅ **Auth Flow Testing**: Login/logout functionality verified
-3. ✅ **PWA Re-enablement**: PWA support restored with safety measures
-4. ✅ **Component Integration**: All shell components compatible with emergency auth
-
-### Phase 2B: Progressive Enhancement (NEXT)
-1. **Rebuild Zustand Auth Store**: Create new store with explicit React context handling
-2. **Advanced Auth Features**: Restore complex authentication flows
-3. **Performance Optimization**: Implement caching and optimization strategies
-4. **Component Restoration**: Gradually restore advanced components
-
-### Phase 3: Edge Function Continuation (LATER)
-1. **Complete Missing Database Functions**: Create required RPC functions for community operations
-2. **Verify All Edge Functions**: Test deployment and functionality
-3. **Update Documentation**: Sync with current state
-
----
-
-## TECHNICAL DEBT STATUS v6.0.4
-
-### 🚨 EMERGENCY ADDITIONS - PARTIALLY RESOLVED
-- **RESOLVED**: React context corruption - Emergency stabilization measures successful
-- **HIGH**: Temporary deviation from Zustand auth pattern - Requires systematic restoration
-- **MEDIUM**: Simplified provider chain - Needs gradual enhancement
-
-### ✅ RESOLVED (MAINTAINED)
+### ✅ RESOLVED
 - **CRITICAL**: Edge Function CORS failures - Fixed with standardized utilities
 - **CRITICAL**: Rate limiting boot errors - Resolved with proper Deno Request handling
-- **CRITICAL**: Analytics dashboard Promise.all error - Fixed syntax and error handling
-- **CRITICAL**: UserDetailModal TypeScript error - Fixed mutation interface
+- **CRITICAL**: Analytics dashboard errors - Fixed architectural inconsistencies
+- **CRITICAL**: Import/export inconsistencies - Standardized shared utilities
 - **HIGH**: Admin function pattern deviation - Applied 7-step pattern universally
 
 ### 🔄 REMAINING
-- **MEDIUM**: Missing community feed RPC functions - Ready to implement after auth restoration
-- **LOW**: Component prop type standardization - Partially addressed
+- **MEDIUM**: Admin component theme compliance needed
+- **LOW**: Some component prop type standardization pending
 
 ---
 
-## NEXT IMMEDIATE ACTIONS v6.0.4
+## NEXT IMMEDIATE ACTIONS v6.0.1
 
-1. **🔄 Begin Phase 2B**: Start progressive enhancement with Zustand store restoration
-2. **⏸️ Resume Phase 3**: Complete missing database functions after enhanced auth stability
-3. **📊 Performance Monitoring**: Monitor application performance during enhancement phase
-
----
-
-**Last Updated**: June 24, 2025 - v6.0.4 (EMERGENCY STABILIZATION - PHASE 2A COMPLETE)  
-**Next Review**: After Phase 2B completion and Zustand store restoration
+1. **✅ Verify Infrastructure**: All admin functions now operational
+2. **🔄 Begin Task 2.1**: Apply [DOC_7] theme compliance to admin components  
+3. **🔄 Proceed systematically** through 08b component implementation
 
 ---
 
-**✅ Emergency Stabilization Phase 2A: COMPLETED**  
-**🔄 Progressive Enhancement Phase 2B: READY TO START**  
-**⏸️ Feature Development: PAUSED until full auth restoration**
-
-**Overall Project Status: ~92% Infrastructure + Backend | EMERGENCY RECOVERY - PHASE 2A COMPLETE**
+**Last Updated**: June 24, 2025 - v6.0.1  
+**Next Review**: After Phase 2 initiation and theme compliance verification
 
 ---
 
-## SHARED UTILITIES REFERENCE v6.0.3
+## SHARED UTILITIES REFERENCE v6.0.1
 
 ### Rate Limiting Functions
 ```typescript
@@ -357,36 +284,34 @@ import { authenticateRequest, requireRole } from '../_shared/auth.ts';
 
 ---
 
-## IMPLEMENTATION PROGRESS FLOWCHART v6.0.3
+## IMPLEMENTATION PROGRESS FLOWCHART v6.0.1
 
 ```
 PHASE 1: INFRASTRUCTURE REPAIR ✅ COMPLETED
 ├── Task 1.1: Rate Limiting Infrastructure ✅
 ├── Task 1.2: Edge Functions Standardization ✅  
 ├── Task 1.3: Admin Functions Completion ✅
-└── Task 1.4: Critical Error Resolution ✅
+└── Task 1.4: Critical Error Resolution ✅ NEW
+    ├── Fixed Analytics Dashboard Error ✅
+    ├── Standardized Shared Utilities ✅
+    ├── Applied 7-Step Pattern Universally ✅
+    └── All Admin Functions Verified Operational ✅
 
-PHASE 2-3: STANDARDIZATION ✅ COMPLETED
-├── Task 2-3.1: Core Functions Pattern ✅
-├── Task 2-3.2: Admin Components Fixes ✅
-└── Task 2-3.3: Build Error Resolution ✅
+PHASE 2: THEME COMPLIANCE (CURRENT FOCUS)
+├── Task 2.1: Admin Components Theme Fixes (READY)
+└── Task 2.2: Component Standards Audit (READY)
 
-PHASE 4A: CRITICAL FIXES (CURRENT FOCUS)
-├── Task 4A.1: Build Errors ✅ RESOLVED
-├── Task 4A.2: Analytics Dashboard ✅ RESOLVED
-├── Task 4A.3: Missing Database Functions 🔄 PENDING
-└── Task 4A.4: Comprehensive Verification 🔄 PENDING
-
-PHASE 4B: SYSTEMATIC VERIFICATION (READY)
-├── Task 4B.1: Function Deployment Testing (READY)
-├── Task 4B.2: End-to-end Flow Testing (READY)
-└── Task 4B.3: Performance Optimization (READY)
+PHASE 3: 08B IMPLEMENTATION (READY)
+├── Task 3.1: User Management Interface (READY)
+├── Task 3.2: Analytics Dashboard (READY)
+├── Task 3.3: Tag Management System (READY)
+└── Task 3.4: Advanced Moderation Tools (READY)
 ```
 
 ---
 
 **✅ Infrastructure Layer: 100% Complete**  
-**✅ Emergency Stabilization: 85% Complete**  
-**🔄 Progressive Enhancement: Ready to Begin**
+**🔄 Presentation Layer: Ready to Start**  
+**🔄 Feature Layer: Architecture Ready**
 
-**Overall Project Completion: ~92% Infrastructure + Backend Architecture**
+**Overall Project Completion: ~85% Infrastructure + Backend Architecture**

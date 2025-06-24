@@ -1,19 +1,16 @@
 
-// ABOUTME: Main application component with hierarchical error boundary protection - Emergency stabilization mode
+// ABOUTME: Main application component with hierarchical error boundary protection - Root tier (Tier 1)
 
 import React from 'react';
 import { AppRouter } from './router/AppRouter';
 import { AppProviders } from './components/providers/AppProviders';
-import { SimpleAuthProvider } from './components/auth/SimpleAuthProvider';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import './App.css';
 
 function App() {
-  console.log('App: Emergency stabilization mode - simplified provider chain');
-  
   return (
-    <AppProviders>
-      <SimpleAuthProvider>
+    <React.StrictMode>
+      <AppProviders>
         {/* Tier 1: Root Error Boundary - Ultimate safety net for entire application */}
         <ErrorBoundary 
           tier="root"
@@ -24,8 +21,8 @@ function App() {
         >
           <AppRouter />
         </ErrorBoundary>
-      </SimpleAuthProvider>
-    </AppProviders>
+      </AppProviders>
+    </React.StrictMode>
   );
 }
 

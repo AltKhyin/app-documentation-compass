@@ -1,5 +1,5 @@
 
-// ABOUTME: Profile dropdown menu component that provides logout and theme selection functionality with emergency auth support.
+// ABOUTME: Profile dropdown menu component that provides logout and theme selection functionality.
 
 import React from 'react';
 import { LogOut, Settings, Monitor, Moon, Sun } from 'lucide-react';
@@ -18,7 +18,6 @@ import {
 import { UserProfileBlock } from './UserProfileBlock';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/components/auth/SimpleAuthProvider';
 
 interface ProfileMenuProps {
   isCollapsed: boolean;
@@ -28,20 +27,15 @@ export const ProfileMenu = ({ isCollapsed }: ProfileMenuProps) => {
   const { setTheme, theme } = useTheme();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
 
   const handleLogout = async () => {
     try {
-      console.log('ProfileMenu: Starting logout process...');
-      
       // Clean up any existing auth state
       localStorage.clear();
       sessionStorage.clear();
       
       // Sign out from Supabase
       await supabase.auth.signOut({ scope: 'global' });
-      
-      console.log('ProfileMenu: Logout completed successfully');
       
       // Show success message
       toast({
@@ -52,7 +46,7 @@ export const ProfileMenu = ({ isCollapsed }: ProfileMenuProps) => {
       // Navigate to login page
       navigate('/auth');
     } catch (error) {
-      console.error('ProfileMenu: Logout error:', error);
+      console.error('Logout error:', error);
       toast({
         title: "Erro no logout",
         description: "Houve um problema ao desconectar. Tente novamente.",
@@ -68,20 +62,6 @@ export const ProfileMenu = ({ isCollapsed }: ProfileMenuProps) => {
       description: `Tema alterado para ${newTheme === 'light' ? 'claro' : newTheme === 'dark' ? 'escuro' : 'sistema'}.`,
     });
   };
-
-  // If no user, show login button
-  if (!user) {
-    return (
-      <div className="p-3">
-        <button 
-          onClick={() => navigate('/auth')}
-          className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
-        >
-          Fazer Login
-        </button>
-      </div>
-    );
-  }
 
   return (
     <DropdownMenu>

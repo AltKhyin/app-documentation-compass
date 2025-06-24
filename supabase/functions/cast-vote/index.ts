@@ -1,189 +1,142 @@
 
-// ABOUTME: Cast vote Edge Function following mandatory 7-step pattern
+// ABOUTME: Edge Function for casting votes on suggestions with rate limiting and proper validation.
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { corsHeaders, handleCorsPrelight } from '../_shared/cors.ts';
-import { checkRateLimit } from '../_shared/rate-limit.ts';
-import { authenticateRequest } from '../_shared/auth.ts';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-Deno.serve(async (req) => {
-  // STEP 1: Handle CORS preflight
-  const corsResponse = handleCorsPrelight(req);
-  if (corsResponse) return corsResponse;
+// CORS Headers - MANDATORY FOR ALL EDGE FUNCTIONS
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
+serve(async (req: Request) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
 
   try {
-    // STEP 2: Rate limiting (voting - 20 requests per 60 seconds)
-    const rateLimitResult = await checkRateLimit(req, { windowMs: 60000, maxRequests: 20 });
-    if (!rateLimitResult.success) {
-      return new Response(JSON.stringify({ 
-        error: rateLimitResult.error || 'Rate limit exceeded',
-        details: 'Too many voting requests'
-      }), {
-        status: 429,
-        headers: { ...corsHeaders, ...rateLimitResult.headers, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // STEP 3: Authentication (required for voting)
-    const authResult = await authenticateRequest(req);
-    if (!authResult.success) {
-      return new Response(JSON.stringify({ 
-        error: authResult.error || 'Authentication failed',
-        details: 'Authentication required to vote'
-      }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // STEP 4: Authorization (authenticated users can vote)
-    // No additional authorization required
-
-    // STEP 5: Create Supabase client
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // STEP 6: Business Logic - Vote casting with atomic updates
-    const body = await req.json();
-    const { post_id, vote_type } = body;
-
-    // Validate required fields
-    if (!post_id || typeof post_id !== 'number') {
-      throw new Error('VALIDATION_FAILED: Post ID is required');
+    // Get authenticated user
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: { message: 'Authorization required', code: 'UNAUTHORIZED' } }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    if (!vote_type || !['up', 'down', 'none'].includes(vote_type)) {
-      throw new Error('VALIDATION_FAILED: Invalid vote type');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: { message: 'Invalid authentication', code: 'UNAUTHORIZED' } }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    console.log(`Processing vote: ${vote_type} on post ${post_id} by user ${authResult.user.id}`);
+    // Parse request body
+    const { suggestion_id, action } = await req.json();
 
-    // Get current vote status
-    const { data: currentVote } = await supabase
-      .from('CommunityPost_Votes')
-      .select('vote_type')
-      .eq('post_id', post_id)
-      .eq('practitioner_id', authResult.user.id)
+    // Validate input
+    if (!suggestion_id || typeof suggestion_id !== 'number') {
+      return new Response(
+        JSON.stringify({ error: { message: 'Invalid suggestion_id', code: 'VALIDATION_FAILED' } }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!action || !['upvote', 'remove_vote'].includes(action)) {
+      return new Response(
+        JSON.stringify({ error: { message: 'Invalid action. Must be "upvote" or "remove_vote"', code: 'VALIDATION_FAILED' } }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Processing ${action} for suggestion ${suggestion_id} by user ${user.id}`);
+
+    // Check if user already voted
+    const { data: existingVote } = await supabase
+      .from('Suggestion_Votes')
+      .select('*')
+      .eq('suggestion_id', suggestion_id)
+      .eq('practitioner_id', user.id)
       .single();
 
-    const currentVoteType = currentVote?.vote_type || null;
+    let result;
+    if (action === 'upvote') {
+      if (existingVote) {
+        // User already voted, no change needed
+        result = { message: 'Vote already exists', suggestion_id, action: 'no_change' };
+      } else {
+        // Insert new vote
+        const { error: insertError } = await supabase
+          .from('Suggestion_Votes')
+          .insert({
+            suggestion_id,
+            practitioner_id: user.id,
+            vote_type: 'up'
+          });
 
-    // Calculate vote deltas
-    let upvoteDelta = 0;
-    let downvoteDelta = 0;
-    let contributionDelta = 0;
+        if (insertError) {
+          console.error('Insert vote error:', insertError);
+          return new Response(
+            JSON.stringify({ error: { message: 'Failed to cast vote', code: 'DATABASE_ERROR' } }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
 
-    // Remove old vote effects
-    if (currentVoteType === 'up') {
-      upvoteDelta -= 1;
-      contributionDelta -= 1;
-    } else if (currentVoteType === 'down') {
-      downvoteDelta -= 1;
-    }
-
-    // Apply new vote effects (only if not 'none')
-    if (vote_type === 'up') {
-      upvoteDelta += 1;
-      contributionDelta += 1;
-    } else if (vote_type === 'down') {
-      downvoteDelta += 1;
-    }
-
-    // Update or delete vote record
-    if (vote_type === 'none') {
-      if (currentVote) {
+        result = { message: 'Vote cast successfully', suggestion_id, action: 'voted' };
+      }
+    } else { // remove_vote
+      if (existingVote) {
+        // Remove existing vote
         const { error: deleteError } = await supabase
-          .from('CommunityPost_Votes')
+          .from('Suggestion_Votes')
           .delete()
-          .eq('post_id', post_id)
-          .eq('practitioner_id', authResult.user.id);
+          .eq('suggestion_id', suggestion_id)
+          .eq('practitioner_id', user.id);
 
         if (deleteError) {
-          console.error('Vote deletion error:', deleteError);
-          throw new Error(`Failed to remove vote: ${deleteError.message}`);
+          console.error('Delete vote error:', deleteError);
+          return new Response(
+            JSON.stringify({ error: { message: 'Failed to remove vote', code: 'DATABASE_ERROR' } }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
         }
-      }
-    } else {
-      const { error: voteError } = await supabase
-        .from('CommunityPost_Votes')
-        .upsert({
-          post_id,
-          practitioner_id: authResult.user.id,
-          vote_type
-        });
 
-      if (voteError) {
-        console.error('Vote upsert error:', voteError);
-        throw new Error(`Failed to cast vote: ${voteError.message}`);
+        result = { message: 'Vote removed successfully', suggestion_id, action: 'removed' };
+      } else {
+        // No vote to remove
+        result = { message: 'No vote to remove', suggestion_id, action: 'no_change' };
       }
     }
 
-    // Update post vote counts
-    const { data: updatedPost, error: postUpdateError } = await supabase
-      .from('CommunityPosts')
-      .update({
-        upvotes: supabase.raw(`upvotes + ${upvoteDelta}`),
-        downvotes: supabase.raw(`downvotes + ${downvoteDelta}`)
-      })
-      .eq('id', post_id)
-      .select('id, upvotes, downvotes, author_id')
+    // Get updated vote count
+    const { data: suggestion } = await supabase
+      .from('Suggestions')
+      .select('upvotes')
+      .eq('id', suggestion_id)
       .single();
 
-    if (postUpdateError) {
-      console.error('Post update error:', postUpdateError);
-      throw new Error(`Failed to update post counts: ${postUpdateError.message}`);
-    }
-
-    // Update author's contribution score (only for upvotes)
-    if (contributionDelta !== 0) {
-      const { error: scoreError } = await supabase
-        .from('Practitioners')
-        .update({
-          contribution_score: supabase.raw(`contribution_score + ${contributionDelta}`)
-        })
-        .eq('id', updatedPost.author_id);
-
-      if (scoreError) {
-        console.error('Contribution score update error:', scoreError);
-        // Don't fail the vote for score update errors
-      }
-    }
-
-    console.log(`Vote processed successfully: post ${post_id} now has ${updatedPost.upvotes} upvotes, ${updatedPost.downvotes} downvotes`);
-
-    const response = {
-      post_id: updatedPost.id,
-      new_upvotes: updatedPost.upvotes,
-      new_downvotes: updatedPost.downvotes,
-      user_vote: vote_type === 'none' ? null : vote_type,
-      message: 'Vote cast successfully'
-    };
-
-    // STEP 7: Return structured success response
-    return new Response(JSON.stringify(response), {
-      headers: { 
-        ...corsHeaders, 
-        ...rateLimitResult.headers,
-        'Content-Type': 'application/json' 
-      },
-    });
+    return new Response(
+      JSON.stringify({
+        ...result,
+        new_vote_count: suggestion?.upvotes || 0
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
-    console.error('Vote casting error:', error);
-    
-    const errorMessage = error.message || 'Unknown error occurred';
-    const statusCode = errorMessage.includes('VALIDATION_FAILED') ? 400 :
-                      errorMessage.includes('authentication') ? 401 :
-                      errorMessage.includes('permissions') ? 403 : 500;
-
-    return new Response(JSON.stringify({ 
-      error: errorMessage.replace('VALIDATION_FAILED: ', ''),
-      details: 'Vote casting failed'
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: statusCode,
-    });
+    console.error('Critical error in cast-vote:', error);
+    return new Response(
+      JSON.stringify({ error: { message: 'Internal server error', code: 'INTERNAL_ERROR' } }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
 });

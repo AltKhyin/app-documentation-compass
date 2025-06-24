@@ -1,8 +1,8 @@
 
-// ABOUTME: Zustand store for managing authentication state - TEMPORARILY DISABLED for emergency stabilization.
-
+// ABOUTME: Zustand store for managing authentication state without making API calls.
 import { create } from 'zustand';
 import { Session, User } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 type AuthState = {
   session: Session | null;
@@ -13,22 +13,26 @@ type AuthState = {
 };
 
 /**
- * EMERGENCY STABILIZATION MODE:
- * This auth store is temporarily disabled to isolate React context issues.
- * Use SimpleAuthProvider in src/components/auth/SimpleAuthProvider.tsx instead.
+ * Auth store that ONLY manages authentication state.
+ * Does NOT fetch user profile data - that comes from AppDataContext.
+ * Follows the principle of minimal API calls.
  */
 export const useAuthStore = create<AuthState>((set, get) => ({
   session: null,
   user: null,
   isLoading: true,
-  setSession: (session) => {
-    console.warn('AuthStore: DISABLED during emergency stabilization');
-  },
+  setSession: (session) => set({ session, user: session?.user ?? null }),
   initialize: () => {
-    console.warn('AuthStore: DISABLED during emergency stabilization');
-    return () => {}; // No-op cleanup function
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        set({ session, user: session?.user ?? null, isLoading: false });
+        // NOTE: We do NOT fetch practitioner data here anymore
+        // That is handled by AppDataContext via the consolidated hook
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
   },
 }));
-
-// Export a warning for any existing usage
-export const EMERGENCY_MODE_WARNING = 'Auth store disabled during emergency stabilization. Use SimpleAuthProvider instead.';

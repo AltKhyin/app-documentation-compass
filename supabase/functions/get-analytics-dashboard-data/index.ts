@@ -1,5 +1,5 @@
 
-// ABOUTME: Analytics dashboard Edge Function using standardized 7-step pattern
+// ABOUTME: Analytics dashboard Edge Function using standardized pattern
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { corsHeaders, handleCorsPrelight } from '../_shared/cors.ts';
@@ -7,12 +7,12 @@ import { checkAnalyticsRateLimit } from '../_shared/rate-limit.ts';
 import { authenticateRequest, requireRole } from '../_shared/auth.ts';
 
 Deno.serve(async (req) => {
-  // STEP 1: Handle CORS preflight
+  // Step 1: Handle CORS preflight
   const corsResponse = handleCorsPrelight(req);
   if (corsResponse) return corsResponse;
 
   try {
-    // STEP 2: Rate limiting (analytics-specific)
+    // Step 2: Rate limiting
     const rateLimitResult = await checkAnalyticsRateLimit(req);
     if (!rateLimitResult.success) {
       return new Response(JSON.stringify({ 
@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // STEP 3: Authentication
+    // Step 3: Authentication
     const authResult = await authenticateRequest(req);
     if (!authResult.success) {
       return new Response(JSON.stringify({ 
@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // STEP 4: Authorization (admin or editor only)
+    // Step 4: Authorization (admin or editor only)
     const roleCheck = requireRole(authResult.user, ['admin', 'editor']);
     if (!roleCheck.success) {
       return new Response(JSON.stringify({ 
@@ -48,43 +48,35 @@ Deno.serve(async (req) => {
       });
     }
 
-    // STEP 5: Create Supabase client
+    // Step 5: Create Supabase client
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // STEP 6: Execute business logic
+    // Step 6: Execute business logic
     console.log('Fetching analytics dashboard data...');
 
-    // Fetch analytics data using the RPC functions with proper error handling
-    const userStatsPromise = supabase.rpc('get_user_analytics')
-      .then(result => ({ success: true, data: result.data, error: result.error }))
-      .catch(err => ({ success: false, data: null, error: err }));
-
-    const contentStatsPromise = supabase.rpc('get_content_analytics')
-      .then(result => ({ success: true, data: result.data, error: result.error }))
-      .catch(err => ({ success: false, data: null, error: err }));
-
-    const engagementStatsPromise = supabase.rpc('get_engagement_analytics')
-      .then(result => ({ success: true, data: result.data, error: result.error }))
-      .catch(err => ({ success: false, data: null, error: err }));
-
+    // Fetch analytics data using the RPC functions
     const [userStatsResult, contentStatsResult, engagementStatsResult] = await Promise.all([
-      userStatsPromise,
-      contentStatsPromise,
-      engagementStatsPromise
+      supabase.rpc('get_user_analytics'),
+      supabase.rpc('get_content_analytics'),
+      supabase.rpc('get_engagement_analytics')
     ]);
 
-    // Handle errors gracefully with fallback data
-    if (!userStatsResult.success || userStatsResult.error) {
-      console.warn('User analytics error (using fallback):', userStatsResult.error);
+    if (userStatsResult.error) {
+      console.error('Error fetching user analytics:', userStatsResult.error);
+      throw new Error(`User analytics error: ${userStatsResult.error.message}`);
     }
-    if (!contentStatsResult.success || contentStatsResult.error) {
-      console.warn('Content analytics error (using fallback):', contentStatsResult.error);
+
+    if (contentStatsResult.error) {
+      console.error('Error fetching content analytics:', contentStatsResult.error);
+      throw new Error(`Content analytics error: ${contentStatsResult.error.message}`);
     }
-    if (!engagementStatsResult.success || engagementStatsResult.error) {
-      console.warn('Engagement analytics error (using fallback):', engagementStatsResult.error);
+
+    if (engagementStatsResult.error) {
+      console.error('Error fetching engagement analytics:', engagementStatsResult.error);
+      throw new Error(`Engagement analytics error: ${engagementStatsResult.error.message}`);
     }
 
     // System stats (mock data as specified in Blueprint)
@@ -119,7 +111,7 @@ Deno.serve(async (req) => {
 
     console.log('Analytics dashboard response prepared successfully');
 
-    // STEP 7: Return success response
+    // Step 7: Return success response
     return new Response(JSON.stringify(analyticsData), {
       headers: { 
         ...corsHeaders, 
