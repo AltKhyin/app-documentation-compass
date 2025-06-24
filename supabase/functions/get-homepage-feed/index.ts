@@ -1,128 +1,151 @@
-// supabase/functions/get-homepage-feed/index.ts
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+// ABOUTME: Homepage feed Edge Function using simplified pattern proven to work in production
 
-// Define standard CORS headers for all responses
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// --- Define TypeScript interfaces for our data shapes for type safety ---
-interface Review {
-  id: number;
-  title: string;
-  description: string;
-  cover_image_url: string;
-  published_at: string;
-  view_count: number;
-}
-interface Suggestion {
-  id: number;
-  title: string;
-  description: string | null;
-  upvotes: number;
-  created_at: string;
-  Practitioners: { full_name: string } | null;
-  user_has_voted?: boolean;
-}
-interface UserProfile {
-  id: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  role: string;
-  subscription_tier: string;
-}
-interface ConsolidatedHomepageData {
-  layout: string[];
-  featured: Review | null;
-  recent: Review[];
-  popular: Review[];
-  recommendations: Review[];
-  suggestions: Suggestion[];
-  userProfile: UserProfile | null;
-  notificationCount: number;
-}
-
-// Helper to safely extract data from settled promises
-const getResultData = (result: PromiseSettledResult<any>, fallback: any = null) => {
-  if (result.status === 'fulfilled' && result.value && result.value.data !== undefined) {
-    return result.value.data;
-  }
-  if (result.status === 'rejected') {
-    console.error("A promise failed:", result.reason);
-  }
-  return fallback;
-};
-
-// --- Main server logic ---
-serve(async (req: Request) => {
+Deno.serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const supabase: SupabaseClient = createClient(
+    // Create Supabase client
+    const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // --- Robust User Identification ---
+    console.log('Fetching homepage feed data...');
+
+    // Get authenticated user (optional for homepage)
     const authHeader = req.headers.get('Authorization');
-    let practitionerId: string | null = null;
+    let userId = null;
+    
     if (authHeader) {
-      const userResponse = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-      if (userResponse.data?.user) {
-        practitionerId = userResponse.data.user.id;
+      const { data: { user } } = await supabase.auth.getUser(
+        authHeader.replace('Bearer ', '')
+      );
+      userId = user?.id;
+    }
+
+    // Fetch recent published reviews
+    const { data: recentReviews, error: reviewsError } = await supabase
+      .from('Reviews')
+      .select(`
+        review_id,
+        title,
+        description,
+        cover_image_url,
+        published_at,
+        view_count,
+        Practitioners!author_id(
+          full_name,
+          avatar_url
+        )
+      `)
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .limit(6);
+
+    if (reviewsError) {
+      console.error('Error fetching recent reviews:', reviewsError);
+    }
+
+    // Fetch featured community posts
+    const { data: featuredPosts, error: postsError } = await supabase
+      .from('CommunityPosts')
+      .select(`
+        id,
+        title,
+        content,
+        created_at,
+        upvotes,
+        category,
+        Practitioners!author_id(
+          full_name,
+          avatar_url
+        )
+      `)
+      .is('parent_post_id', null)
+      .eq('is_pinned', true)
+      .order('created_at', { ascending: false })
+      .limit(3);
+
+    if (postsError) {
+      console.error('Error fetching featured posts:', postsError);
+    }
+
+    // Fetch trending suggestions using the dedicated function
+    let suggestions = [];
+    if (userId) {
+      const { data: suggestionsData, error: suggestionsError } = await supabase.rpc(
+        'get_homepage_suggestions',
+        { p_user_id: userId }
+      );
+
+      if (suggestionsError) {
+        console.error('Error fetching suggestions:', suggestionsError);
+      } else {
+        suggestions = suggestionsData || [];
+      }
+    } else {
+      // For anonymous users, get top suggestions
+      const { data: anonSuggestions, error: anonError } = await supabase
+        .from('Suggestions')
+        .select(`
+          id,
+          title,
+          description,
+          upvotes,
+          created_at,
+          Practitioners!submitted_by(full_name)
+        `)
+        .eq('status', 'pending')
+        .order('upvotes', { ascending: false })
+        .limit(5);
+
+      if (anonError) {
+        console.error('Error fetching anonymous suggestions:', anonError);
+      } else {
+        suggestions = (anonSuggestions || []).map(s => ({
+          ...s,
+          user_has_voted: false,
+          Practitioners: s.Practitioners
+        }));
       }
     }
 
-    // --- Define all data queries ---
-    const promises = [
-      supabase.from('SiteSettings').select('value').eq('key', 'homepage_layout').single(),
-      supabase.from('Reviews').select('id, title, description, cover_image_url, published_at, view_count').eq('status', 'published').order('published_at', { ascending: false }).limit(1).maybeSingle(),
-      supabase.from('Reviews').select('id, title, description, cover_image_url, published_at, view_count').eq('status', 'published').order('published_at', { ascending: false }).limit(10),
-      // Use the robust RPC function to get suggestions with user vote status and recency boost
-      supabase.rpc('get_homepage_suggestions', { p_user_id: practitionerId }),
-      supabase.from('Reviews').select('id, title, description, cover_image_url, published_at, view_count').eq('status', 'published').order('view_count', { ascending: false }).limit(10),
-      practitionerId ? supabase.functions.invoke('get-personalized-recommendations', { body: { practitionerId } }) : Promise.resolve({ data: [] }),
-      practitionerId ? supabase.from('Practitioners').select('*').eq('id', practitionerId).single() : Promise.resolve({ data: null }),
-      practitionerId ? supabase.from('Notifications').select('*', { count: 'exact', head: true }).eq('practitioner_id', practitionerId).eq('is_read', false) : Promise.resolve({ data: null, count: 0 })
-    ];
-
-    const results = await Promise.allSettled(promises);
-    const [
-      layoutResult,
-      featuredResult,
-      recentResult,
-      suggestionsResult,
-      popularResult,
-      recommendationsResult,
-      userProfileResult,
-      notificationCountResult
-    ] = results;
-
-    // --- CORRECTLY Assemble the final response object ---
-    const responseData: ConsolidatedHomepageData = {
-      // THE FIX: Directly access the 'value' property. It's already an array.
-      layout: getResultData(layoutResult)?.value || ["featured", "recent", "suggestions", "popular"],
-      featured: getResultData(featuredResult, null),
-      recent: getResultData(recentResult, []),
-      popular: getResultData(popularResult, []),
-      suggestions: getResultData(suggestionsResult, []),
-      recommendations: getResultData(recommendationsResult, []),
-      userProfile: getResultData(userProfileResult, null),
-      notificationCount: (notificationCountResult.status === 'fulfilled' && notificationCountResult.value.count) ? notificationCountResult.value.count : 0,
+    const result = {
+      recentReviews: recentReviews || [],
+      featuredPosts: featuredPosts || [],
+      suggestions: suggestions || []
     };
 
-    return new Response(JSON.stringify(responseData), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    console.log('Homepage feed response:', {
+      reviewsCount: result.recentReviews.length,
+      postsCount: result.featuredPosts.length,
+      suggestionsCount: result.suggestions.length
+    });
+
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
   } catch (error) {
-    console.error('Critical error in get-homepage-feed:', error.message);
-    return new Response(
-      JSON.stringify({ error: { message: 'Internal server error', code: 'INTERNAL_ERROR' } }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    console.error('Homepage feed error:', error);
+    
+    return new Response(JSON.stringify({ 
+      error: error.message || 'Unknown error occurred',
+      details: 'Homepage feed fetch failed'
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500,
+    });
   }
 });
