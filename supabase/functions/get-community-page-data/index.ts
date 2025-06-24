@@ -1,56 +1,58 @@
 
-// ABOUTME: Community page data Edge Function using simplified working pattern
+// ABOUTME: Community page data Edge Function following [DOC_5] mandatory 7-step pattern
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  authenticateUser,
+  RateLimitError
+} from '../_shared/api-helpers.ts';
+import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
+  // STEP 1: CORS Preflight Handling (MANDATORY FIRST)
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return handleCorsPreflightRequest();
   }
 
   // Only allow POST requests for this endpoint
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ 
-      error: 'Method not allowed',
-      details: 'Only POST requests are supported'
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 405,
-    });
+    return createErrorResponse(new Error('Method not allowed'), 405);
   }
 
   try {
     console.log('Starting community page data fetch...');
     
-    // Create Supabase client
+    // STEP 2: Manual Authentication (requires verify_jwt = false in config.toml)
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get user ID for personalization
+    // Get user ID for personalization and rate limiting
     let userId = '00000000-0000-0000-0000-000000000000'; // Default UUID for anonymous
     
     const authHeader = req.headers.get('Authorization');
     if (authHeader) {
       try {
-        const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-        if (user) {
-          userId = user.id;
-          console.log(`Authenticated user: ${userId}`);
-        }
+        const user = await authenticateUser(supabase, authHeader);
+        userId = user.id;
+        console.log(`Authenticated user: ${userId}`);
       } catch (authError) {
         console.warn('Auth verification failed, continuing as anonymous:', authError);
       }
     }
 
-    // Parse request body
+    // STEP 3: Rate Limiting Implementation
+    const rateLimitResult = await checkRateLimit(supabase, 'get-community-page-data', userId, 30, 60);
+    if (!rateLimitResult.allowed) {
+      console.log('Rate limit exceeded for user:', userId);
+      throw RateLimitError;
+    }
+
+    // STEP 4: Input Parsing & Validation
     let requestBody = {};
     try {
       const bodyText = await req.text();
@@ -67,6 +69,8 @@ Deno.serve(async (req) => {
 
     console.log(`Fetching community page data: page=${page}, limit=${actualLimit}, user=${userId}`);
 
+    // STEP 5: Core Business Logic Execution
+    
     // Fetch main feed posts with fallback strategy
     let posts = [];
     try {
@@ -254,23 +258,12 @@ Deno.serve(async (req) => {
 
     console.log('Successfully prepared community page data');
 
-    return new Response(JSON.stringify(response), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    // STEP 6: Standardized Success Response
+    return createSuccessResponse(response, rateLimitHeaders(rateLimitResult));
 
   } catch (error) {
+    // STEP 7: Centralized Error Handling
     console.error('Community page data fetch error:', error);
-    
-    const errorMessage = error.message || 'Unknown error occurred';
-    const statusCode = errorMessage.includes('authentication') ? 401 :
-                      errorMessage.includes('permissions') ? 403 : 500;
-
-    return new Response(JSON.stringify({ 
-      error: errorMessage,
-      details: 'Community page data fetch failed'
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: statusCode,
-    });
+    return createErrorResponse(error);
   }
 });

@@ -1,45 +1,56 @@
 
-// ABOUTME: Acervo data Edge Function using simplified working pattern
+// ABOUTME: Acervo data Edge Function following [DOC_5] mandatory 7-step pattern
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  authenticateUser,
+  RateLimitError
+} from '../_shared/api-helpers.ts';
+import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limit.ts';
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
+  // STEP 1: CORS Preflight Handling (MANDATORY FIRST)
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return handleCorsPreflightRequest();
   }
 
   try {
-    // Create Supabase client
+    // STEP 2: Manual Authentication (requires verify_jwt = false in config.toml)
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get user for access level filtering (optional for this endpoint)
+    // Get user for rate limiting and RLS (optional for this endpoint)
     let userId = 'anonymous';
     let userSubscriptionTier = 'free';
     
     const authHeader = req.headers.get('Authorization');
     if (authHeader) {
       try {
-        const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-        if (user) {
-          userId = user.id;
-          userSubscriptionTier = user.user_metadata?.subscription_tier || 'free';
-        }
+        const user = await authenticateUser(supabase, authHeader);
+        userId = user.id;
+        userSubscriptionTier = user.user_metadata?.subscription_tier || 'free';
       } catch (authError) {
         console.warn('Auth verification failed, continuing as anonymous:', authError);
       }
     }
 
+    // STEP 3: Rate Limiting Implementation
+    const rateLimitResult = await checkRateLimit(supabase, 'get-acervo-data', userId, 30, 60);
+    if (!rateLimitResult.allowed) {
+      throw RateLimitError;
+    }
+
+    // STEP 4: Input Parsing & Validation
+    // No input validation needed for this GET-like endpoint
+
     console.log(`Starting Acervo data fetch for user: ${userId}`);
 
+    // STEP 5: Core Business Logic Execution
     // Fetch published reviews with RLS applied through access_level filtering
     const reviewsQuery = supabase
       .from('Reviews')
@@ -134,23 +145,11 @@ Deno.serve(async (req) => {
       tags: tags || []
     };
 
-    return new Response(JSON.stringify(response), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    // STEP 6: Standardized Success Response
+    return createSuccessResponse(response, rateLimitHeaders(rateLimitResult));
 
   } catch (error) {
-    console.error('Acervo data fetch error:', error);
-    
-    const errorMessage = error.message || 'Unknown error occurred';
-    const statusCode = errorMessage.includes('authentication') ? 401 :
-                      errorMessage.includes('permissions') ? 403 : 500;
-
-    return new Response(JSON.stringify({ 
-      error: errorMessage,
-      details: 'Acervo data fetch failed'
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: statusCode,
-    });
+    // STEP 7: Centralized Error Handling
+    return createErrorResponse(error);
   }
 });
