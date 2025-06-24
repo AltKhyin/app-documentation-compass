@@ -1,9 +1,10 @@
 
-// ABOUTME: Minimal unified provider component for emergency stabilization with consistent React imports.
+// ABOUTME: Minimal unified provider component for emergency stabilization with consistent React imports and PWA support.
 
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { CustomThemeProvider } from '../theme/CustomThemeProvider';
+import PWAProvider from '../pwa/PWAProvider';
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -32,12 +33,14 @@ const queryClient = new QueryClient({
 });
 
 export const AppProviders = ({ children }: AppProvidersProps) => {
-  console.log('AppProviders: Emergency stabilization mode - minimal providers');
+  console.log('AppProviders: Emergency stabilization mode with PWA support - minimal providers');
   
   return (
     <QueryClientProvider client={queryClient}>
       <CustomThemeProvider defaultTheme="dark" storageKey="evidens-theme">
-        {children}
+        <PWAProvider>
+          {children}
+        </PWAProvider>
       </CustomThemeProvider>
     </QueryClientProvider>
   );
